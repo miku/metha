@@ -59,3 +59,18 @@ Use a [release](https://github.com/miku/metha/releases) or
 ```
 $ go get github.com/miku/metha/cmd/...
 ```
+
+Harvesting Roulette
+-------------------
+
+$ metha-sync $(sort -R contrib/sites.tsv | head -1)
+
+Errors this harvester can somewhat handle
+-----------------------------------------
+
+* responses with resumption tokens that lead to empty responses
+* gzipped responses, that are not advertised as such
+* funny (illegal) control characters in XML responses
+* repositories, that won't respond unless the dates are given with the exact granualarity
+* repositories with endless token loops
+* repositories that do not support selective harvesting (use `metha-sync -disable-selective URL`)
