@@ -1,9 +1,11 @@
 package perimorph
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -29,6 +31,39 @@ type Request struct {
 	CleanBeforeDecode bool
 }
 
+type Values struct {
+	url.Values
+}
+
+func NewValues() Values {
+	return Values{url.Values{}}
+}
+
+// EncodeVerbatim is like Encode(), but does not escape the keys and values.
+func (v Values) EncodeVerbatim() string {
+	if v.Values == nil {
+		return ""
+	}
+	var buf bytes.Buffer
+	keys := make([]string, 0, len(v.Values))
+	for k := range v.Values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := v.Values[k]
+		prefix := k + "="
+		for _, v := range vs {
+			if buf.Len() > 0 {
+				buf.WriteByte('&')
+			}
+			buf.WriteString(prefix)
+			buf.WriteString(v)
+		}
+	}
+	return buf.String()
+}
+
 // URL returns the URL for a given request. Invalid verbs and missing parameters
 // are reported here.
 func (r *Request) URL() (*url.URL, error) {
@@ -36,7 +71,7 @@ func (r *Request) URL() (*url.URL, error) {
 		return nil, ErrMissingURL
 	}
 
-	v := url.Values{}
+	v := NewValues()
 	v.Add("verb", r.Verb)
 
 	// An exclusive argument with a value that is the flow control token
@@ -92,5 +127,5 @@ func (r *Request) URL() (*url.URL, error) {
 		return nil, ErrInvalidVerb
 	}
 	// TODO(miku): some endpoints do not like encoded urls, e.g. http://web2.bium.univ-paris5.fr/oai-img/oai2.php
-	return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.Encode()))
+	return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.EncodeVerbatim()))
 }
