@@ -1,10 +1,12 @@
 package metha
 
 import (
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -16,6 +18,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/jinzhu/now"
 )
 
 const Day = 24 * time.Hour
@@ -91,7 +95,7 @@ func (h *Harvest) MkdirAll() error {
 
 // files returns all already harvested files (no temporary files).
 func (h *Harvest) Files() []string {
-	return MustGlob(filepath.Join(h.Dir(), "*.xml"))
+	return MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
 }
 
 // DateLayout converts the repository endpoints advertised granularity to Go
@@ -161,6 +165,34 @@ func (h *Harvest) setupInterruptHandler() {
 	}()
 }
 
+func moveAndCompress(src, dst string) error {
+	// compress files
+	tmp := fmt.Sprintf("%s-tmp-%d", dst, rand.Intn(999999999))
+
+	f, err := os.Create(tmp)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	defer gw.Close()
+
+	ff, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer ff.Close()
+
+	if _, err := io.Copy(gw, ff); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, dst); err != nil {
+		return err
+	}
+	return os.Remove(src)
+}
+
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
 	// collect all successfully renamed files
@@ -171,8 +203,10 @@ func (h *Harvest) finalize(suffix string) error {
 	defer h.Unlock()
 
 	for _, filename := range h.temporaryFilesSuffix(suffix) {
-		dst := strings.Replace(filename, suffix, "", -1)
-		if err := os.Rename(filename, dst); err != nil {
+		dst := fmt.Sprintf("%s.gz", strings.Replace(filename, suffix, "", -1))
+
+		// if err := os.Rename(filename, dst); err != nil {
+		if err := moveAndCompress(filename, dst); err != nil {
 			// try to cleanup all the already renamed files
 			for _, fn := range renamed {
 				if e := os.Remove(fn); err != nil {
@@ -234,12 +268,24 @@ func (h *Harvest) run() (err error) {
 	if err != nil {
 		return err
 	}
+
 	begin, err := time.Parse("2006-01-02", last)
 	if err != nil {
 		return err
 	}
 
-	interval := Interval{Begin: begin, End: h.Started}
+	if last != laster.DefaultValue {
+		// add a single day, only if we are not just starting
+		begin = begin.AddDate(0, 0, 1)
+	}
+
+	end := now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
+
+	if last == end.Format("2006-01-02") {
+		return ErrAlreadySynced
+	}
+
+	interval := Interval{Begin: begin, End: end}
 	for _, iv := range interval.MonthlyIntervals() {
 		if err := h.runInterval(iv); err != nil {
 			return err
@@ -268,12 +314,13 @@ func (h *Harvest) runInterval(iv Interval) error {
 
 		var filedate string
 
-		if !h.DisableSelectiveHarvesting {
+		if h.DisableSelectiveHarvesting {
+			// used, when endpoint cannot handle from and until
+			filedate = h.Started.Format("2006-01-02")
+		} else {
 			filedate = iv.End.Format("2006-01-02")
 			req.From = iv.Begin.Format(h.DateLayout())
 			req.Until = iv.End.Format(h.DateLayout())
-		} else {
-			filedate = h.Started.Format("2006-01-02")
 		}
 
 		// do request, return any http error
