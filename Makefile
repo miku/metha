@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-TARGETS = metha-sync
+TARGETS = metha-sync metha-cat metha-id metha-ls
 
 PKGNAME = metha
 

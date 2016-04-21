@@ -7,7 +7,7 @@ Usage
 -----
 
 ```sh
-$ metha-info http://export.arxiv.org/oai2
+$ metha-id http://export.arxiv.org/oai2
 {
     "identify": ...,
     "formats": ...,

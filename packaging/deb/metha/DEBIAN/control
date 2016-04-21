@@ -1,0 +1,9 @@
+Package: metha
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Essential: no
+Depends: libc6 (>= 2.12)
+Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+Description: No frills incremental OAI harvesting for the command line.
