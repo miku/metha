@@ -15,14 +15,13 @@ $ METHA_DIR=/tmp/harvest metha-sync -dir http://export.arxiv.org/oai2
 /tmp/harvest/I29haV9kYyNodHRwOi8vZXhwb3J0LmFyeGl2Lm9yZy9vYWky
 ```
 
-The default METHA_DIR is `$HOME/.metha`.
+The default `METHA_DIR` is `$HOME/.metha`.
 
 Harvesting can be CTRL-C'd any time. The data is harvested up to the last full
 day, so there is a small latency. The HTTP client is resilient.
 
-Example: If the current date would be: Thu Apr 21 14:28:10 CEST 2016, the harvester
-would request all data since the repositories earliest date and 2016-04-20
-23:59:59.
+Example: If the current date would be *Thu Apr 21 14:28:10 CEST 2016*, the harvester
+would request all data since the repositories earliest date and *2016-04-20 23:59:59*.
 
 You can stream records to stdout, too.
 
