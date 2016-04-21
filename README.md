@@ -76,3 +76,4 @@ Errors this harvester can somewhat handle
 * repositories, that won't respond unless the dates are given with the exact granualarity
 * repositories with endless token loops
 * repositories that do not support selective harvesting (use `metha-sync -disable-selective URL`)
+* limited repositories, metha will try up to 8 times with an exponential backoff
