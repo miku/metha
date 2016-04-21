@@ -21,7 +21,7 @@ deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/sbin
 	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/sbin
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
-	mv packaging/deb/oaix_*.deb .
+	mv packaging/deb/$(PKGNAME)_*.deb .
 
 rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
