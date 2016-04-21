@@ -28,10 +28,10 @@
 _metha_endpoints()
 {
     hash metha-ls 2>/dev/null || { return 1; }
-    # local cur=${COMP_WORDS[COMP_CWORD]}
-    local cur
+    local cur=${COMP_WORDS[COMP_CWORD]}
     _get_comp_words_by_ref -n : cur
     COMPREPLY=( $(compgen -W "$(metha-ls|cut -f4)" -- $cur) )
+    __ltrim_colon_completions "$cur"
 }
 
 complete -F _metha_endpoints metha-cat
