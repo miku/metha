@@ -1,4 +1,4 @@
-package perimorph
+package metha
 
 import (
 	"io/ioutil"

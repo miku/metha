@@ -1,4 +1,4 @@
-package perimorph
+package metha
 
 import (
 	"encoding/base64"
@@ -22,7 +22,7 @@ const Day = 24 * time.Hour
 
 var (
 	// BaseDir is where all downloaded data is stored
-	BaseDir     = filepath.Join(UserHomeDir(), ".perimorph")
+	BaseDir     = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern   = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 	datePattern = regexp.MustCompile("[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2}")
 
@@ -354,7 +354,11 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 
 func (h *Harvest) identify() error {
 	req := Request{Verb: "Identify", BaseURL: h.BaseURL}
-	resp, err := Do(&req)
+
+	// use a less resilient client for indentify requests
+	c := CreateClient(1*time.Second, 2)
+
+	resp, err := c.Do(&req)
 	if err != nil {
 		return err
 	}
@@ -363,7 +367,7 @@ func (h *Harvest) identify() error {
 }
 
 func init() {
-	if dir := os.Getenv("PERIMORPH_DIR"); dir != "" {
+	if dir := os.Getenv("METHA_DIR"); dir != "" {
 		BaseDir = dir
 	}
 }

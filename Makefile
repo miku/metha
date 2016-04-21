@@ -1,7 +1,7 @@
 SHELL = /bin/bash
-TARGETS = perimorph-cat perimorph-info perimorph-records perimorph-sync
+TARGETS = metha-sync
 
-PKGNAME = perimorph
+PKGNAME = metha
 
 all: $(TARGETS)
 

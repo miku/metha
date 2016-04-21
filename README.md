@@ -1,24 +1,22 @@
-Perimorph
-=========
+metha
+=====
 
-> A mineral enclosed within another.
-
-Command line OAI-PMH client and incremental harvester.
+Command line OAI-PMH incremental harvester.
 
 Usage
 -----
 
 ```sh
-$ perimorph-info http://export.arxiv.org/oai2
+$ metha-info http://export.arxiv.org/oai2
 {
-	"identify": ...,
-	"formats": ...,
-	"sets": ...
+    "identify": ...,
+    "formats": ...,
+    "sets": ...
 }
-$ perimorph-sync http://export.arxiv.org/oai2
+$ metha-sync http://export.arxiv.org/oai2
 ...
-$ perimorph-cat http://export.arxiv.org/oai2
+$ metha-cat http://export.arxiv.org/oai2
 ...
-$ perimorph-records http://export.arxiv.org/oai2
+$ metha-records http://export.arxiv.org/oai2
 ...
 ```

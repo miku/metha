@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/miku/perimorph"
+	"github.com/miku/metha"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Println(perimorph.Version)
+		fmt.Println(metha.Version)
 		os.Exit(0)
 	}
 
@@ -29,7 +29,21 @@ func main() {
 		log.Fatal("endpoint required")
 	}
 
-	harvest, err := perimorph.NewHarvest(perimorph.PrependSchema(flag.Arg(0)))
+	baseURL := metha.PrependSchema(flag.Arg(0))
+
+	if *showDir {
+		// showDir only needs these parameters
+		harvest := metha.Harvest{
+			BaseURL: baseURL,
+			Format:  *format,
+			Set:     *set,
+		}
+		fmt.Println(harvest.Dir())
+		os.Exit(0)
+	}
+
+	// NewHarvest ensures the endpoint is sane, before we start
+	harvest, err := metha.NewHarvest(baseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -40,11 +54,6 @@ func main() {
 	harvest.CleanBeforeDecode = true
 	harvest.DisableSelectiveHarvesting = *disableSelectiveHarvesting
 	harvest.MaxEmptyResponses = 10
-
-	if *showDir {
-		fmt.Println(harvest.Dir())
-		os.Exit(0)
-	}
 
 	log.Printf("harvest: %+v", harvest)
 

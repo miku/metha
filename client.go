@@ -1,4 +1,4 @@
-package perimorph
+package metha
 
 import (
 	"bytes"
@@ -20,17 +20,9 @@ const (
 	DefaultMaxRetries = 8
 )
 
-// defaultDoer is a resilient http client with retries and longer timeout.
-var defaultDoer = func() Doer {
-	c := pester.New()
-	c.Timeout = DefaultTimeout
-	c.MaxRetries = DefaultMaxRetries
-	c.Backoff = pester.ExponentialBackoff
-	return c
-}()
-
 var (
-	DefaultClient = Client{Doer: defaultDoer}
+	StdClient     = Client{Doer: http.DefaultClient}
+	DefaultClient = Client{Doer: CreateDoer(DefaultTimeout, DefaultMaxRetries)}
 	// Example for broken XML: http://eprints.vu.edu.au/perl/oai2. Add more
 	// weird things to be cleaned before XML parsing here. Another faulty:
 	// http://digitalcommons.gardner-webb.edu/do/oai/?from=2016-02-29&metadataPr
@@ -48,6 +40,24 @@ var (
 		"\u001B", "", "\u001C", "", "\u001D", "",
 		"\u001E", "", "\u001F", "")
 )
+
+// CreateDoer will return http request clients with specific timeout and retry
+// properties.
+func CreateDoer(timeout time.Duration, retries int) Doer {
+	if timeout == 0 && retries == 0 {
+		return http.DefaultClient
+	}
+	c := pester.New()
+	c.Timeout = timeout
+	c.MaxRetries = retries
+	c.Backoff = pester.ExponentialBackoff
+	return c
+}
+
+// Create a client with timeout and retry properties.
+func CreateClient(timeout time.Duration, retries int) Client {
+	return Client{Doer: CreateDoer(timeout, retries)}
+}
 
 // Doer is a minimal HTTP interface.
 type Doer interface {
