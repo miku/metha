@@ -28,7 +28,9 @@
 _metha_endpoints()
 {
     hash metha-ls 2>/dev/null || { return 1; }
-    local cur=${COMP_WORDS[COMP_CWORD]}
+    # local cur=${COMP_WORDS[COMP_CWORD]}
+    local cur
+    _get_comp_words_by_ref -n : cur
     COMPREPLY=( $(compgen -W "$(metha-ls|cut -f4)" -- $cur) )
 }
 
