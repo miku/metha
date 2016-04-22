@@ -37,3 +37,4 @@ _metha_endpoints()
 complete -F _metha_endpoints metha-cat
 complete -F _metha_endpoints metha-sync
 complete -F _metha_endpoints metha-id
+complete -F _metha_endpoints metha-files
