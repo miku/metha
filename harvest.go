@@ -24,9 +24,8 @@ const Day = 24 * time.Hour
 
 var (
 	// BaseDir is where all downloaded data is stored
-	BaseDir     = filepath.Join(UserHomeDir(), ".metha")
-	fnPattern   = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
-	datePattern = regexp.MustCompile("[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2}")
+	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
+	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
 	ErrAlreadySynced       = errors.New("already synced")
 	ErrInvalidEarliestDate = errors.New("invalid earliest date")
