@@ -46,6 +46,7 @@ func PrependSchema(s string) string {
 // (e.g. zvdd.org/oai2). Set "DisableSelectiveHarvesting" to try to grab
 // metadata from these repositories. Set "SkipBroken" to ignore errors. From and
 // Until must always be given with 2006-01-02 layout.
+// TODO(miku): make zero type work (lazily run identify).
 type Harvest struct {
 	BaseURL string
 	Format  string
