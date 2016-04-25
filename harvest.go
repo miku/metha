@@ -1,12 +1,10 @@
 package metha
 
 import (
-	"compress/gzip"
 	"encoding/base64"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -165,34 +163,6 @@ func (h *Harvest) setupInterruptHandler() {
 	}()
 }
 
-func moveAndCompress(src, dst string) error {
-	// compress files
-	tmp := fmt.Sprintf("%s-tmp-%d", dst, rand.Intn(999999999))
-
-	f, err := os.Create(tmp)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	gw := gzip.NewWriter(f)
-	defer gw.Close()
-
-	ff, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer ff.Close()
-
-	if _, err := io.Copy(gw, ff); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, dst); err != nil {
-		return err
-	}
-	return os.Remove(src)
-}
-
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
 	// collect all successfully renamed files
@@ -204,9 +174,7 @@ func (h *Harvest) finalize(suffix string) error {
 
 	for _, filename := range h.temporaryFilesSuffix(suffix) {
 		dst := fmt.Sprintf("%s.gz", strings.Replace(filename, suffix, "", -1))
-
-		// if err := os.Rename(filename, dst); err != nil {
-		if err := moveAndCompress(filename, dst); err != nil {
+		if err := MoveAndCompress(filename, dst); err != nil {
 			// try to cleanup all the already renamed files
 			for _, fn := range renamed {
 				if e := os.Remove(fn); err != nil {
@@ -214,7 +182,7 @@ func (h *Harvest) finalize(suffix string) error {
 						continue
 					}
 					return &MultiError{[]error{err, e,
-						fmt.Errorf("error during rename and subsequent cleanup: inconsistent cache state, start over and purge %s", h.Dir())}}
+						fmt.Errorf("inconsistent cache state; start over and purge %s", h.Dir())}}
 				}
 			}
 			// stop with an error, but still in a consistent state
