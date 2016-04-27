@@ -15,7 +15,7 @@ func main() {
 	set := flag.String("set", "", "set name")
 	showDir := flag.Bool("dir", false, "show target directory")
 	maxRequests := flag.Int("max", 65536, "maximum number of token loops")
-	disableSelectiveHarvesting := flag.Bool("disable-selective", false, "no intervals")
+	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	version := flag.Bool("v", false, "show version")
 
 	logFile := flag.String("log", "", "filename to log to")
