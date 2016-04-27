@@ -39,7 +39,6 @@ func main() {
 			BaseURL: baseURL,
 			Format:  *format,
 			Set:     *set,
-			MaxFollow: 10,
 		}
 		fmt.Println(harvest.Dir())
 		os.Exit(0)

@@ -58,7 +58,6 @@ type Harvest struct {
 	CleanBeforeDecode          bool
 	SkipBroken                 bool
 	MaxEmptyResponses          int
-	MaxFollow int
 
 	Identify *Identify
 	Started  time.Time
@@ -303,16 +302,13 @@ func (h *Harvest) runInterval(iv Interval) error {
 			// Rare case, where a resumptionToken is given, but it leads to noRecordsMatch, e.g. https://goo.gl/K3gpQB
 			// we still want to save, whatever we got up until this point, so we break here.
 			if resp.Error.Code == "noRecordsMatch" {
-				link, err := req.URL()
-				if err != nil {
-					return err
-				}
-				if i > h.MaxFollow {
-					log.Printf("broken server: resumptionToken leads to noRecordsMatch (%s)", link)
+				if !resp.HasResumptionToken() {
+					break
 				} else {
-					log.Printf("following despite resumptionToken/noRecordsMatch: %d/%d (%s)", i, h.MaxEmptyResponses, link)
+					log.Printf("resumptionToken set and noRecordsMatch, continuing")
 				}
-				break
+			} else {
+				return resp.Error
 			}
 		}
 
