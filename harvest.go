@@ -365,10 +365,12 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 	case "YYYY-MM-DD":
 		if len(h.Identify.EarliestDatestamp) <= 10 {
 			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp)
-		} else {
-			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp[:10])
 		}
+		return time.Parse("2006-01-02", h.Identify.EarliestDatestamp[:10])
 	case "YYYY-MM-DDThh:mm:ssZ":
+		if len(h.Identify.EarliestDatestamp) <= 10 {
+			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp)
+		}
 		return time.Parse("2006-01-02T15:04:05Z", h.Identify.EarliestDatestamp)
 	default:
 		return time.Time{}, ErrInvalidEarliestDate
