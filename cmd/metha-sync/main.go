@@ -69,7 +69,10 @@ func main() {
 	log.Printf("harvest: %+v", harvest)
 
 	if err := harvest.Run(); err != nil {
-		log.Fatal(err)
+		if err == metha.ErrAlreadySynced {
+			log.Println(err)
+		} else {
+			log.Fatal(err)
+		}
 	}
-	flag.Parse()
 }
