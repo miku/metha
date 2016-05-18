@@ -1,12 +1,13 @@
 package metha
 
 import (
-	"compress/gzip"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
+
+	gzip "github.com/klauspost/pgzip"
 )
 
 // MustGlob is like filepath.Glob, but panics on bad pattern.

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	gzip "github.com/klauspost/pgzip"
 
 	"github.com/miku/metha"
 )
