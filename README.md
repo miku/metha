@@ -39,6 +39,10 @@ This will only stream records with a datestamp equal or after 2016-01-01.
 
 To just stream all data really fast, use find and zcat on the harvesting dir.
 
+```sh
+$ find $(metha-sync -dir http://export.arxiv.org/oai2) -name "*gz" | xargs unpigz -c
+```
+
 To display basic repository information:
 
 ```sh
