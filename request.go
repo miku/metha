@@ -113,7 +113,7 @@ func (r *Request) URL() (*url.URL, error) {
 		}
 		addOptional("from", r.From)
 		addOptional("until", r.Until)
-		addOptional("set", url.QueryEscape(r.Set))
+		addOptional("set", r.Set)
 	case "Identify":
 		addOptional("identifier", r.Identifier)
 	case "GetRecord":
