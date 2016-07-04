@@ -57,6 +57,7 @@ type Harvest struct {
 	DisableSelectiveHarvesting bool
 	CleanBeforeDecode          bool
 	SkipBroken                 bool
+	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
 
 	Identify *Identify
@@ -291,9 +292,15 @@ func (h *Harvest) runInterval(iv Interval) error {
 			req.Until = iv.End.Format(h.DateLayout())
 		}
 
-		// do request, return any http error
+		// do request, return any http error, except when we ignore HTTPErrors - in that case, break out early
 		resp, err := Do(&req)
 		if err != nil {
+			if e, ok := err.(*HTTPError); ok {
+				if h.IgnoreHTTPErrors {
+					log.Printf("stopping early due to HTTP error (ignored): %s", e)
+					break
+				}
+			}
 			return err
 		}
 

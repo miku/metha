@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -40,6 +41,16 @@ var (
 		"\u001B", "", "\u001C", "", "\u001D", "",
 		"\u001E", "", "\u001F", "")
 )
+
+type HTTPError struct {
+	URL          *url.URL
+	StatusCode   int
+	RequestError error
+}
+
+func (e HTTPError) Error() string {
+	return fmt.Sprintf("failed with %s on %s: %s", http.StatusText(e.StatusCode), e.URL, e.RequestError)
+}
 
 // CreateDoer will return http request clients with specific timeout and retry
 // properties.
@@ -106,7 +117,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("error: server returned %s for %s", http.StatusText(resp.StatusCode), link)
+		return nil, HTTPError{URL: link, RequestError: err, StatusCode: resp.StatusCode}
 	}
 	defer resp.Body.Close()
 

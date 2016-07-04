@@ -16,6 +16,7 @@ func main() {
 	showDir := flag.Bool("dir", false, "show target directory")
 	maxRequests := flag.Int("max", 65536, "maximum number of token loops")
 	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
+	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
 	version := flag.Bool("v", false, "show version")
 
 	logFile := flag.String("log", "", "filename to log to")
@@ -65,6 +66,7 @@ func main() {
 	harvest.CleanBeforeDecode = true
 	harvest.DisableSelectiveHarvesting = *disableSelectiveHarvesting
 	harvest.MaxEmptyResponses = 10
+	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
 
 	log.Printf("harvest: %+v", harvest)
 
