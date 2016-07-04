@@ -295,11 +295,9 @@ func (h *Harvest) runInterval(iv Interval) error {
 		// do request, return any http error, except when we ignore HTTPErrors - in that case, break out early
 		resp, err := Do(&req)
 		if err != nil {
-			if e, ok := err.(*HTTPError); ok {
-				if h.IgnoreHTTPErrors {
-					log.Printf("stopping early due to HTTP error (ignored): %s", e)
-					break
-				}
+			if h.IgnoreHTTPErrors {
+				log.Printf("stopping early due to failed request (IgnoreHTTPErrors=true): %s", err)
+				break
 			}
 			return err
 		}
