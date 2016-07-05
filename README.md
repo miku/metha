@@ -79,5 +79,6 @@ Errors this harvester can somewhat handle
 * funny (illegal) control characters in XML responses
 * repositories, that won't respond unless the dates are given with the exact granualarity
 * repositories with endless token loops
-* repositories that do not support selective harvesting (use `metha-sync -no-intervals URL`)
+* repositories that do not support selective harvesting, use `-no-intervals` flag
 * limited repositories, metha will try up to 8 times with an exponential backoff
+* repositories, which throw occasional HTTP errors, although most of the responses look good, use `-ignore-http-errors` flag
