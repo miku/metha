@@ -140,6 +140,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 	}
 
 	dec := xml.NewDecoder(reader)
+	dec.Strict = false
 
 	var response Response
 	if err := dec.Decode(&response); err != nil {
