@@ -64,6 +64,18 @@ Use a [release](https://github.com/miku/metha/releases) or
 $ go get github.com/miku/metha/cmd/...
 ```
 
+Limitations
+-----------
+
+Currently the endpoint URL, the format and the set are concatenated and base64 encoded to form the target directory, e.g:
+
+```
+$ echo "U291bmRzI29haV9kYyNodHRwOi8vY29wYWMuamlzYy5hYy51ay9vYWktcG1o" | base64 -d
+Sounds#oai_dc#http://copac.jisc.ac.uk/oai-pmh
+```
+
+If you have very long set names or a very long URL and the target directory exceeds e.g. 255 chars (on ext4), the harvest won't work.
+
 Harvesting Roulette
 -------------------
 
@@ -82,3 +94,4 @@ Errors this harvester can somewhat handle
 * repositories that do not support selective harvesting, use `-no-intervals` flag
 * limited repositories, metha will try up to 8 times with an exponential backoff
 * repositories, which throw occasional HTTP errors, although most of the responses look good, use `-ignore-http-errors` flag
+* funny XML entities (non-strict XML)
