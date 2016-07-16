@@ -49,7 +49,7 @@ type HTTPError struct {
 }
 
 func (e HTTPError) Error() string {
-	return fmt.Sprintf("failed with %s on %s: %s", http.StatusText(e.StatusCode), e.URL, e.RequestError)
+	return fmt.Sprintf("failed with %s on %s: %v", http.StatusText(e.StatusCode), e.URL, e.RequestError)
 }
 
 // CreateDoer will return http request clients with specific timeout and retry
