@@ -1,21 +1,21 @@
 metha
 =====
 
-Command line OAI-PMH incremental harvester. Data is harvested in chunks.
+Command line OAI-PMH incremental harvester. Data is harvested in monthly chunks.
 
 ```sh
 $ metha-sync http://export.arxiv.org/oai2
 ...
 ```
 
-All downloaded files are written to
+All downloaded files are written to a directory below a base directory. The base
+directory is `~/.metha` by default and can be adjusted with the `METHA_DIR`
+environment variable.
 
 ```sh
 $ METHA_DIR=/tmp/harvest metha-sync -dir http://export.arxiv.org/oai2
 /tmp/harvest/I29haV9kYyNodHRwOi8vZXhwb3J0LmFyeGl2Lm9yZy9vYWky
 ```
-
-The default `METHA_DIR` is `$HOME/.metha`.
 
 Harvesting can be CTRL-C'd any time. The data is harvested up to the last full
 day, so there is a small latency. The HTTP client is resilient.
