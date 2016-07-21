@@ -80,7 +80,7 @@ Harvesting Roulette
 -------------------
 
 ```sh
-$ metha-sync $(sort -R <(curl -s https://raw.githubusercontent.com/miku/metha/master/contrib/sites.tsv) | head -1)
+$ URL=$(sort -R <(curl -Lsf https://git.io/vKXFv) | head -1); metha-sync $URL && metha-cat $URL
 ```
 
 Errors this harvester can somewhat handle
