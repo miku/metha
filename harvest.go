@@ -57,6 +57,7 @@ type Harvest struct {
 	CleanBeforeDecode          bool
 	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
+	SuppressFormatParameter    bool
 
 	Identify *Identify
 	Started  time.Time
@@ -271,12 +272,13 @@ func (h *Harvest) runInterval(iv Interval) error {
 
 	for {
 		req := Request{
-			BaseURL:           h.BaseURL,
-			MetadataPrefix:    h.Format,
-			Verb:              "ListRecords",
-			Set:               h.Set,
-			ResumptionToken:   token,
-			CleanBeforeDecode: h.CleanBeforeDecode,
+			BaseURL:                 h.BaseURL,
+			MetadataPrefix:          h.Format,
+			Verb:                    "ListRecords",
+			Set:                     h.Set,
+			ResumptionToken:         token,
+			CleanBeforeDecode:       h.CleanBeforeDecode,
+			SuppressFormatParameter: h.SuppressFormatParameter,
 		}
 
 		var filedate string

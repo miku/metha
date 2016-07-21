@@ -20,15 +20,16 @@ var (
 // A Request can express any request, that can be sent to an OAI server. Not all
 // combination of values will yield valid requests.
 type Request struct {
-	BaseURL           string
-	Verb              string
-	Identifier        string
-	MetadataPrefix    string
-	From              string
-	Until             string
-	Set               string
-	ResumptionToken   string
-	CleanBeforeDecode bool
+	BaseURL                 string
+	Verb                    string
+	Identifier              string
+	MetadataPrefix          string
+	From                    string
+	Until                   string
+	Set                     string
+	ResumptionToken         string
+	CleanBeforeDecode       bool
+	SuppressFormatParameter bool
 }
 
 type Values struct {
@@ -108,8 +109,10 @@ func (r *Request) URL() (*url.URL, error) {
 	switch r.Verb {
 	case "ListMetadataFormats", "ListSets":
 	case "ListIdentifiers", "ListRecords":
-		if err := addRequired("metadataPrefix", r.MetadataPrefix); err != nil {
-			return nil, err
+		if !r.SuppressFormatParameter {
+			if err := addRequired("metadataPrefix", r.MetadataPrefix); err != nil {
+				return nil, err
+			}
 		}
 		addOptional("from", r.From)
 		addOptional("until", r.Until)
@@ -120,8 +123,10 @@ func (r *Request) URL() (*url.URL, error) {
 		if err := addRequired("identifier", r.Identifier); err != nil {
 			return nil, err
 		}
-		if err := addRequired("metadataPrefix", r.MetadataPrefix); err != nil {
-			return nil, err
+		if !r.SuppressFormatParameter {
+			if err := addRequired("metadataPrefix", r.MetadataPrefix); err != nil {
+				return nil, err
+			}
 		}
 	default:
 		return nil, ErrInvalidVerb
