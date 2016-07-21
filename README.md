@@ -83,7 +83,7 @@ Harvesting Roulette
 $ URL=$(sort -R <(curl -Lsf https://git.io/vKXFv) | head -1); metha-sync $URL && metha-cat $URL
 ```
 
-* https://asciinema.org/a/0hafkza6zyvuhzkikelbe1vrg
+* https://asciinema.org/a/0hafkza6zyvuhzkikelbe1vrg?autoplay=1
 
 Errors this harvester can somewhat handle
 -----------------------------------------
