@@ -1,3 +1,3 @@
 package metha
 
-const Version = "0.1.10"
+const Version = "0.1.11"
