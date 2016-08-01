@@ -67,6 +67,8 @@ func main() {
 		}
 
 		dec := xml.NewDecoder(r)
+		dec.Strict = false
+
 		var resp metha.Response
 		if err := dec.Decode(&resp); err != nil {
 			log.Fatal(err)
