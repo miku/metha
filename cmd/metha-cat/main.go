@@ -23,6 +23,8 @@ func main() {
 	from := flag.String("from", "", "ignore records before this date")
 	until := flag.String("until", "", "ignore records after this date")
 
+	root := flag.String("root", "", "root element to wrap records into")
+
 	flag.Parse()
 
 	if *version {
@@ -46,6 +48,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if *root != "" {
+		fmt.Printf("<%s>\n", *root)
+		defer fmt.Printf("</%s>\n", *root)
+	}
+
 	for _, file := range files {
 		if !strings.HasSuffix(file.Name(), ".xml.gz") {
 			continue
