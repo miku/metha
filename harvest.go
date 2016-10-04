@@ -352,7 +352,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			empty++
 			log.Printf("warning: successive empty response: %d/%d", empty, h.MaxEmptyResponses)
 		}
-		if empty > h.MaxEmptyResponses {
+		if empty == h.MaxEmptyResponses {
 			log.Printf("max number of empty responses reached")
 			break
 		}
