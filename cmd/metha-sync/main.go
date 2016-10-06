@@ -19,6 +19,7 @@ func main() {
 	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
 	suppressFormatParameter := flag.Bool("suppress-format-parameter", false, "do not send format parameter")
 	version := flag.Bool("v", false, "show version")
+	daily := flag.Bool("daily", false, "use daily intervals for harvesting")
 
 	logFile := flag.String("log", "", "filename to log to")
 
@@ -69,6 +70,7 @@ func main() {
 	harvest.MaxEmptyResponses = 10
 	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
 	harvest.SuppressFormatParameter = *suppressFormatParameter
+	harvest.DailyInterval = *daily
 
 	log.Printf("harvest: %+v", harvest)
 

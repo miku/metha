@@ -1,6 +1,7 @@
 package metha
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/now"
@@ -10,6 +11,10 @@ import (
 type Interval struct {
 	Begin time.Time
 	End   time.Time
+}
+
+func (iv Interval) String() string {
+	return fmt.Sprintf("[%s--%s]", iv.Begin, iv.End)
 }
 
 // MonthlyIntervals segments a given interval into montly chunks.
@@ -27,6 +32,24 @@ func (iv Interval) MonthlyIntervals() []Interval {
 		}
 		ivals = append(ivals, Interval{Begin: start, End: end})
 		start = now.New(start.AddDate(0, 1, 0)).BeginningOfMonth()
+	}
+	return ivals
+}
+
+func (iv Interval) DailyIntervals() []Interval {
+	var ivals []Interval
+	start := iv.Begin
+	for {
+		if start.After(iv.End) {
+			break
+		}
+		end := now.New(start).EndOfDay()
+		if end.After(iv.End) {
+			ivals = append(ivals, Interval{Begin: start, End: end})
+			break
+		}
+		ivals = append(ivals, Interval{Begin: start, End: end})
+		start = now.New(start.AddDate(0, 0, 1)).BeginningOfDay()
 	}
 	return ivals
 }

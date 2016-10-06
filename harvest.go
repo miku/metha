@@ -58,6 +58,8 @@ type Harvest struct {
 	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
 	SuppressFormatParameter    bool
+	// TODO: use more flexible intervals
+	DailyInterval bool
 
 	Identify *Identify
 	Started  time.Time
@@ -254,9 +256,17 @@ func (h *Harvest) run() (err error) {
 	}
 
 	interval := Interval{Begin: begin, End: end}
-	for _, iv := range interval.MonthlyIntervals() {
-		if err := h.runInterval(iv); err != nil {
-			return err
+	if h.DailyInterval {
+		for _, iv := range interval.DailyIntervals() {
+			if err := h.runInterval(iv); err != nil {
+				return err
+			}
+		}
+	} else {
+		for _, iv := range interval.MonthlyIntervals() {
+			if err := h.runInterval(iv); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
