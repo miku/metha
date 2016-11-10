@@ -20,6 +20,7 @@ func main() {
 	suppressFormatParameter := flag.Bool("suppress-format-parameter", false, "do not send format parameter")
 	version := flag.Bool("v", false, "show version")
 	daily := flag.Bool("daily", false, "use daily intervals for harvesting")
+	from := flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
 
 	logFile := flag.String("log", "", "filename to log to")
 
@@ -62,6 +63,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	harvest.From = *from
 	harvest.Format = *format
 	harvest.Set = *set
 	harvest.MaxRequests = *maxRequests

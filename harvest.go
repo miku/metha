@@ -198,27 +198,21 @@ func (h *Harvest) finalize(suffix string) error {
 	return nil
 }
 
-// run runs a harvest (one request plus subsequent tokens).
-func (h *Harvest) run() (err error) {
-	defer func() {
-		// however we exit, cleanup any temporary files
-		if e := h.cleanupTemporaryFiles(); e != nil {
-			if err != nil {
-				// we had a previous error and cleanup failed, too
-				err = &MultiError{[]error{err, e}}
-			}
-			err = e
-		}
-	}()
+// defaultInterval returns a harvesting interval based on the cached
+// state or earliest date, if this endpoint was not harvested before.
+// If the harvest already has a From value set, we use it as earliest date.
+func (h *Harvest) defaultInterval() (Interval, error) {
+	var earliestDate time.Time
+	var err error
 
-	if h.DisableSelectiveHarvesting {
-		return h.runInterval(Interval{})
+	// refs. #9100
+	if h.From == "" {
+		earliestDate, err = h.earliestDate()
+	} else {
+		earliestDate, err = time.Parse("2006-01-02", h.From)
 	}
-
-	// earliest date as default value
-	earliestDate, err := h.earliestDate()
 	if err != nil {
-		return err
+		return Interval{}, err
 	}
 
 	// last value for this directory
@@ -236,12 +230,12 @@ func (h *Harvest) run() (err error) {
 
 	last, err := laster.Last()
 	if err != nil {
-		return err
+		return Interval{}, err
 	}
 
 	begin, err := time.Parse("2006-01-02", last)
 	if err != nil {
-		return err
+		return Interval{}, err
 	}
 
 	if last != laster.DefaultValue {
@@ -252,10 +246,33 @@ func (h *Harvest) run() (err error) {
 	end := now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
 
 	if last == end.Format("2006-01-02") {
-		return ErrAlreadySynced
+		return Interval{}, ErrAlreadySynced
+	}
+	return Interval{Begin: begin, End: end}, nil
+}
+
+// run runs a harvest (one request plus subsequent tokens).
+func (h *Harvest) run() (err error) {
+	defer func() {
+		// however we exit, cleanup any temporary files
+		if e := h.cleanupTemporaryFiles(); e != nil {
+			if err != nil {
+				// we had a previous error and cleanup failed, too
+				err = &MultiError{[]error{err, e}}
+			}
+			err = e
+		}
+	}()
+
+	if h.DisableSelectiveHarvesting {
+		return h.runInterval(Interval{})
 	}
 
-	interval := Interval{Begin: begin, End: end}
+	interval, err := h.defaultInterval()
+	if err != nil {
+		return err
+	}
+
 	if h.DailyInterval {
 		for _, iv := range interval.DailyIntervals() {
 			if err := h.runInterval(iv); err != nil {
