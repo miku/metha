@@ -414,7 +414,7 @@ func (h *Harvest) identify() error {
 	req := Request{Verb: "Identify", BaseURL: h.BaseURL}
 
 	// use a less resilient client for indentify requests
-	c := CreateClient(1*time.Second, 2)
+	c := CreateClient(30 * time.Second, 2)
 
 	resp, err := c.Do(&req)
 	if err != nil {
