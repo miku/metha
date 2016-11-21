@@ -85,7 +85,7 @@ func Do(r *Request) (*Response, error) {
 	return DefaultClient.Do(r)
 }
 
-// anyReadCloser detects compressed content and decompresses it on the fly.
+// maybeCompressed detects compressed content and decompresses it on the fly.
 func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	buf, err := ioutil.ReadAll(r)
 	if err != nil {
