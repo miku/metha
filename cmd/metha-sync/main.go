@@ -14,7 +14,7 @@ func main() {
 	format := flag.String("format", "oai_dc", "metadata format")
 	set := flag.String("set", "", "set name")
 	showDir := flag.Bool("dir", false, "show target directory")
-	maxRequests := flag.Int("max", 65536, "maximum number of token loops")
+	maxRequests := flag.Int("max", 1048576, "maximum number of token loops")
 	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
 	suppressFormatParameter := flag.Bool("suppress-format-parameter", false, "do not send format parameter")
