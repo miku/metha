@@ -303,6 +303,13 @@ func (h *Harvest) runInterval(iv Interval) error {
 	var i, empty int
 
 	for {
+
+		// Limit the number of total requests.
+		if h.MaxRequests == i {
+			log.Printf("max requests limit (%d) reached", h.MaxRequests)
+			break
+		}
+
 		req := Request{
 			BaseURL:                 h.BaseURL,
 			MetadataPrefix:          h.Format,
@@ -338,13 +345,21 @@ func (h *Harvest) runInterval(iv Interval) error {
 		if resp.Error.Code != "" {
 			// Rare case, where a resumptionToken is given, but it leads to noRecordsMatch, e.g. https://goo.gl/K3gpQB
 			// we still want to save, whatever we got up until this point, so we break here.
-			if resp.Error.Code == "noRecordsMatch" {
+			switch resp.Error.Code {
+			case "noRecordsMatch":
 				if !resp.HasResumptionToken() {
 					break
 				} else {
 					log.Printf("resumptionToken set and noRecordsMatch, continuing")
 				}
-			} else {
+			case "InternalException":
+				// #9717, InternalException Could not send Message.
+				log.Println("InternalException: retrying request in a few instants ...")
+				time.Sleep(30 * time.Second)
+				// Count towards the total request limit.
+				i++
+				continue
+			default:
 				return resp.Error
 			}
 		}
@@ -370,12 +385,6 @@ func (h *Harvest) runInterval(iv Interval) error {
 		}
 
 		i++
-
-		// the other stop conditions
-		if h.MaxRequests == i {
-			log.Printf("max requests limit (%d) reached", h.MaxRequests)
-			break
-		}
 
 		// stop, if we have too many empty responses, despite resumption tokens
 		if len(resp.ListRecords.Records) > 0 {
