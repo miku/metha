@@ -28,7 +28,7 @@ func TestURL(t *testing.T) {
 		{req: Request{BaseURL: "http://example.com", Verb: "ListRecords", Set: "x"}, u: nil, err: ErrParameterMissing},
 		{req: Request{BaseURL: "http://example.com", Verb: "ListRecords", MetadataPrefix: "x"}, u: mustParseURL("http://example.com?metadataPrefix=x&verb=ListRecords"), err: nil},
 		{req: Request{BaseURL: "http://example.com", Verb: "ListRecords", MetadataPrefix: "x", From: "20"}, u: mustParseURL("http://example.com?from=20&metadataPrefix=x&verb=ListRecords"), err: nil},
-		{req: Request{BaseURL: "http://example.com", Verb: "ListRecords", MetadataPrefix: "x", From: "20", ResumptionToken: "1"}, u: mustParseURL("http://example.com?verb=ListRecords&resumptionToken=1"), err: nil},
+		{req: Request{BaseURL: "http://example.com", Verb: "ListRecords", MetadataPrefix: "x", From: "20", ResumptionToken: "1"}, u: mustParseURL("http://example.com?resumptionToken=1&verb=ListRecords"), err: nil},
 	}
 
 	for _, test := range tests {

@@ -88,8 +88,7 @@ func (r *Request) URL() (*url.URL, error) {
 		}
 		// Some repos, e.g. http://dash.harvard.edu/oai/request seem to have
 		// problems with encoded tokens.
-		return url.Parse(fmt.Sprintf("%s?verb=%s&resumptionToken=%s",
-			r.BaseURL, v.Get("verb"), v.Get("resumptionToken")))
+		return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.EncodeVerbatim()))
 	}
 
 	// Only add parameter, if it is not the zero value.
