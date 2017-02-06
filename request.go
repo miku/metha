@@ -32,10 +32,12 @@ type Request struct {
 	SuppressFormatParameter bool
 }
 
+// Values enhances the builtin url.Values.
 type Values struct {
 	url.Values
 }
 
+// NewValues create a new Values container.
 func NewValues() Values {
 	return Values{url.Values{}}
 }

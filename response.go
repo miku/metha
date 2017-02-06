@@ -60,6 +60,7 @@ type Metadata struct {
 	Body []byte `xml:",innerxml"`
 }
 
+// MarshalJSON marshals the metadata body.
 func (md Metadata) MarshalJSON() ([]byte, error) {
 	if len(md.Body) == 0 {
 		return []byte("{}"), nil
@@ -71,7 +72,7 @@ func (md Metadata) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// Formatter for Metadata content.
+// GoString is a formatter for Metadata content.
 func (md Metadata) GoString() string { return fmt.Sprintf("%s", md.Body) }
 
 // About has addition record information.
@@ -79,7 +80,7 @@ type About struct {
 	Body []byte `xml:",innerxml" json:"body,omitempty"`
 }
 
-// Formatter for About content
+// GoString is a formatter for About content.
 func (ab About) GoString() string { return fmt.Sprintf("%s", ab.Body) }
 
 // Record represents a single record.
@@ -113,7 +114,7 @@ type RequestNode struct {
 	MetadataPrefix string `xml:"metadataPrefix,attr" json:"metadataPrefix,omitempty"`
 }
 
-// An OAI protocol error.
+// OAIError is an OAI protocol error.
 type OAIError struct {
 	Code    string `xml:"code,attr" json:"code,omitempty"`
 	Message string `xml:",chardata" json:"message,omitempty"`
@@ -141,7 +142,7 @@ type Description struct {
 	Body []byte `xml:",innerxml"`
 }
 
-// Formatter for Description content.
+// GoString is a formatter for Description content.
 func (desc Description) GoString() string { return fmt.Sprintf("%s", desc.Body) }
 
 // HasResumptionToken determines if the request has a ResumptionToken.

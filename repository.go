@@ -1,9 +1,11 @@
 package metha
 
+// Repository represents an OAI endpoint.
 type Repository struct {
 	BaseURL string
 }
 
+// Formats returns a list of metadata formats.
 func (r Repository) Formats() ([]MetadataFormat, error) {
 	var formats []MetadataFormat
 	var token string
@@ -22,6 +24,7 @@ func (r Repository) Formats() ([]MetadataFormat, error) {
 	return formats, nil
 }
 
+// Sets returns a list of sets.
 func (r Repository) Sets() ([]Set, error) {
 	var sets []Set
 	var token string

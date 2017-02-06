@@ -20,6 +20,7 @@ import (
 	"github.com/jinzhu/now"
 )
 
+// Day has 24 hours.
 const Day = 24 * time.Hour
 
 var (
@@ -27,11 +28,13 @@ var (
 	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
-	ErrAlreadySynced       = errors.New("already synced")
+	// ErrAlreadySynced is not really an error, only signals completion.
+	ErrAlreadySynced = errors.New("already synced")
+	// ErrInvalidEarliestDate signals an unparsable earliest date value in the endpoint.
 	ErrInvalidEarliestDate = errors.New("invalid earliest date")
 )
 
-// Prepends http, if missing.
+// PrependSchema prepends http, if its missing.
 func PrependSchema(s string) string {
 	if !strings.HasPrefix(s, "http") {
 		return fmt.Sprintf("http://%s", s)
@@ -69,6 +72,7 @@ type Harvest struct {
 	sync.Mutex
 }
 
+// NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
 func NewHarvest(baseURL string) (*Harvest, error) {
 	h := Harvest{BaseURL: baseURL}
 	if err := h.identify(); err != nil {
@@ -93,7 +97,7 @@ func (h *Harvest) MkdirAll() error {
 	return nil
 }
 
-// files returns all already harvested files (no temporary files).
+// Files returns all files for a given harvest, without the temporary files.
 func (h *Harvest) Files() []string {
 	return MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
 }
@@ -110,6 +114,7 @@ func (h *Harvest) DateLayout() string {
 	return ""
 }
 
+// Run starts the harvest.
 func (h *Harvest) Run() error {
 	if err := h.MkdirAll(); err != nil {
 		return err
@@ -124,8 +129,7 @@ func (h *Harvest) temporaryFiles() []string {
 	return MustGlob(filepath.Join(h.Dir(), "*.xml-tmp*"))
 }
 
-// temporaryFiles list all temporary files in the harvesting dir having a
-// suffix.
+// temporaryFiles list all temporary files in the harvesting dir having a suffix.
 func (h *Harvest) temporaryFilesSuffix(suffix string) []string {
 	return MustGlob(filepath.Join(h.Dir(), fmt.Sprintf("*.xml%s", suffix)))
 }
@@ -289,6 +293,7 @@ func (h *Harvest) run() (err error) {
 	return nil
 }
 
+// runInterval runs a selective harvest on the given interval.
 func (h *Harvest) runInterval(iv Interval) error {
 	// suffix for this batch
 	suffix := fmt.Sprintf("-tmp-%d", rand.Intn(999999999))
@@ -391,6 +396,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 	return nil
 }
 
+// earliestDate returns the earliest date as a time.Time value.
 func (h *Harvest) earliestDate() (time.Time, error) {
 	// different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
 	switch h.Identify.Granularity {
@@ -410,11 +416,12 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 	}
 }
 
+// identify runs an OAI identify request and caches the result.
 func (h *Harvest) identify() error {
 	req := Request{Verb: "Identify", BaseURL: h.BaseURL}
 
 	// use a less resilient client for indentify requests
-	c := CreateClient(30 * time.Second, 2)
+	c := CreateClient(30*time.Second, 2)
 
 	resp, err := c.Do(&req)
 	if err != nil {
@@ -424,6 +431,7 @@ func (h *Harvest) identify() error {
 	return nil
 }
 
+// init takes configuration from the environment, if there's any.
 func init() {
 	if dir := os.Getenv("METHA_DIR"); dir != "" {
 		BaseDir = dir
