@@ -23,7 +23,7 @@ func main() {
 	from := flag.String("from", "", "ignore records before this date")
 	until := flag.String("until", "", "ignore records after this date")
 
-	root := flag.String("root", "", "root element to wrap records into")
+	root := flag.String("root", "Records", "root element to wrap records into")
 
 	flag.Parse()
 
