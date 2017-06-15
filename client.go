@@ -17,14 +17,18 @@ import (
 )
 
 const (
-	DefaultTimeout    = 5 * time.Minute
+	// DefaultTimeout on requests.
+	DefaultTimeout = 5 * time.Minute
+	// DefaultMaxRetries is the default number of retries on a single request.
 	DefaultMaxRetries = 8
 )
 
 var (
-	StdClient     = Client{Doer: http.DefaultClient}
+	// StdClient is the standard lib http client.
+	StdClient = Client{Doer: http.DefaultClient}
+	// DefaultClient is the more resilient client, that will retry and timeout.
 	DefaultClient = Client{Doer: CreateDoer(DefaultTimeout, DefaultMaxRetries)}
-	// Example for broken XML: http://eprints.vu.edu.au/perl/oai2. Add more
+	// ControlCharReplacer helps to deal with broken XML: http://eprints.vu.edu.au/perl/oai2. Add more
 	// weird things to be cleaned before XML parsing here. Another faulty:
 	// http://digitalcommons.gardner-webb.edu/do/oai/?from=2016-02-29&metadataPr
 	// efix=oai_dc&until=2016-03-31&verb=ListRecords. Replace control chars
@@ -42,12 +46,14 @@ var (
 		"\u001E", "", "\u001F", "")
 )
 
+// HTTPError saves details of an HTTP error.
 type HTTPError struct {
 	URL          *url.URL
 	StatusCode   int
 	RequestError error
 }
 
+// Error prints the error message.
 func (e HTTPError) Error() string {
 	return fmt.Sprintf("failed with %s on %s: %v", http.StatusText(e.StatusCode), e.URL, e.RequestError)
 }
@@ -65,7 +71,7 @@ func CreateDoer(timeout time.Duration, retries int) Doer {
 	return c
 }
 
-// Create a client with timeout and retry properties.
+// CreateClient creates a client with timeout and retry properties.
 func CreateClient(timeout time.Duration, retries int) Client {
 	return Client{Doer: CreateDoer(timeout, retries)}
 }
@@ -75,7 +81,7 @@ type Doer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-// A client that can execute requests.
+// Client can execute requests.
 type Client struct {
 	Doer Doer
 }
@@ -121,7 +127,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 	}
 	defer resp.Body.Close()
 
-	var reader io.ReadCloser = resp.Body
+	var reader = resp.Body
 
 	// detect compressed response
 	reader, err = maybeCompressed(reader)

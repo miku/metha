@@ -13,6 +13,7 @@ type Interval struct {
 	End   time.Time
 }
 
+// String formats the interval.
 func (iv Interval) String() string {
 	return fmt.Sprintf("[%s--%s]", iv.Begin, iv.End)
 }
@@ -36,6 +37,7 @@ func (iv Interval) MonthlyIntervals() []Interval {
 	return ivals
 }
 
+// DailyIntervals segments a given interval into daily chunks.
 func (iv Interval) DailyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin

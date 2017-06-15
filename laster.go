@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// Extracts some maximum value as string.
+// Laster extracts some maximum value as string.
 type Laster interface {
 	Last() (string, error)
 }
@@ -21,8 +21,7 @@ type DirLaster struct {
 	ExtractorFunc func(os.FileInfo) string
 }
 
-// Last extracts the maximum value from a directory, given an extractor
-// function.
+// Last extracts the maximum value from a directory, given an extractor function.
 func (l DirLaster) Last() (string, error) {
 	files, err := ioutil.ReadDir(l.Dir)
 	if err != nil {
