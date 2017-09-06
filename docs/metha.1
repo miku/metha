@@ -1,0 +1,102 @@
+.TH METHA 1 "JANUAR 2017" "Leipzig University Library" "Manuals"
+.SH NAME
+.PP
+metha \- harvest OAI\-PMH conform endpoints
+.SH SYNOPSIS
+.PP
+\fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP, \fB\fC\-dir\fR \fIDIRECTORY\fP] \fIendpoint\fP
+.PP
+\fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
+.PP
+\fB\fCmetha\-id\fR \fIendpoint\fP
+.PP
+\fB\fCmetha\-ls\fR [\fB\fC\-a\fR] \fIendpoint\fP
+.PP
+\fB\fCmetha\-files\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
+.SH DESCRIPTION
+.PP
+The Open Archives Initiative Protocol for Metadata Harvesting (OAI\-PMH) is a
+protocol developed for harvesting metadata descriptions of records in an
+archive.
+.PP
+This tool harvests and caches data, so incremental invocations are fast.
+.SH OPTIONS
+.TP
+\fB\fC\-format\fR \fIstring\fP
+Metadata format, default \fIoai_dc\fP\&.
+.TP
+\fB\fC\-set\fR \fIstring\fP
+Set name.
+.TP
+\fB\fC\-dir\fR
+Show target directory.
+.TP
+\fB\fC\-log\fR \fIstring\fP
+Log to filename, not to stderr.
+.TP
+\fB\fC\-ignore\-http\-errors\fR \fIstring\fP
+Do not stop on HTTP errors, just skip to the next interval.
+.TP
+\fB\fC\-daily\fR
+Use daily intervals for harvesting.
+.TP
+\fB\fC\-max\fR \fIint\fP
+Maximum number of token loops, default \fI1048576\fP\&.
+.TP
+\fB\fC\-no\-intervals\fR
+Harvest in one go, for funny endpoints.
+.TP
+\fB\fC\-suppress\-format\-parameter\fR
+Do not send format parameter.
+.TP
+\fB\fC\-v\fR
+Program version.
+.SH EXAMPLES
+.PP
+Show metadata about endpoint in JSON format:
+.IP
+\fB\fCmetha\-id http://export.arxiv.org/oai2\fR
+.PP
+Harvest data in the default \fB\fCoai_dc\fR format:
+.IP
+\fB\fCmetha\-sync arXivRaw http://export.arxiv.org/oai2\fR
+.PP
+Harvest data in a specific format:
+.IP
+\fB\fCmetha\-sync \-format arXivRaw http://export.arxiv.org/oai2\fR
+.PP
+Harvest a set in a specific format:
+.IP
+\fB\fCmetha\-sync \-set cs \-format arXivRaw http://export.arxiv.org/oai2\fR
+.PP
+Show harvested data:
+.IP
+\fB\fCmetha\-cat http://export.arxiv.org/oai2\fR
+.PP
+Show harvested data for a given set and format:
+.IP
+\fB\fCmetha\-cat \-set cs \-format arXivRaw http://export.arxiv.org/oai2\fR
+.PP
+The options \fB\fC\-daily\fR, \fB\fC\-ignore\-http\-errors\fR, \fB\fC\-suppress\-format\-parameter\fR,
+\fB\fC\-no\-intervals\fR and \fB\fC\-max\fR are used to work around non\-standard server
+implementations.
+.SH ENVIRONMENT
+.PP
+The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
+variable.
+.SH LIMITATIONS
+.PP
+Endpoints URLs longer than about 200 characters are not supported.
+.PP
+Currently the harvest will be up to the last full day, so there will be latency
+in the data of at most 24 hours.
+.SH BUGS
+.PP
+Please report bugs to \[la]https://github.com/miku/metha/issues\[ra]\&.
+.SH AUTHOR
+.PP
+Martin Czygan \[la]martin.czygan@uni-leipzig.de\[ra]
+.SH SEE ALSO
+.PP
+.BR yaz-marcdump (1),
+.BR xmllint (1)

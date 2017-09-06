@@ -27,6 +27,8 @@ install -m 755 metha-sync $RPM_BUILD_ROOT/usr/local/sbin
 install -m 755 metha-ls $RPM_BUILD_ROOT/usr/local/sbin
 install -m 755 metha-files $RPM_BUILD_ROOT/usr/local/sbin
 
+mkdir -p $RPM_BUILD_ROOT/usr/local/share/man/man1
+install -m 644 metha.1 $RPM_BUILD_ROOT/usr/local/share/man/man1/metha.1
 %post
 
 %clean
@@ -42,6 +44,7 @@ rm -rf %{_topdir}/BUILD/%{name}
 /usr/local/sbin/metha-ls
 /usr/local/sbin/metha-sync
 /usr/local/sbin/metha-files
+/usr/local/share/man/man1/metha.1
 
 %changelog
 * Thu Apr 21 2016 Martin Czygan
