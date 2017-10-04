@@ -70,7 +70,7 @@ Show metadata about endpoint in JSON format:
 
 Harvest data in the default `oai_dc` format:
 
-  `metha-sync arXivRaw http://export.arxiv.org/oai2`
+  `metha-sync http://export.arxiv.org/oai2`
 
 Harvest data in a specific format:
 
