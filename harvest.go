@@ -24,7 +24,7 @@ import (
 const Day = 24 * time.Hour
 
 var (
-	// BaseDir is where all downloaded data is stored
+	// BaseDir is where all downloaded data is stored.
 	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
@@ -67,7 +67,7 @@ type Harvest struct {
 	Identify *Identify
 	Started  time.Time
 
-	// protects the (rare) case, where we are in the process of renaming
+	// Protects the (rare) case, where we are in the process of renaming
 	// harvested files and get a termination signal at the same time.
 	sync.Mutex
 }
@@ -129,7 +129,7 @@ func (h *Harvest) temporaryFiles() []string {
 	return MustGlob(filepath.Join(h.Dir(), "*.xml-tmp*"))
 }
 
-// temporaryFiles list all temporary files in the harvesting dir having a suffix.
+// temporaryFilesSuffix list all temporary files in the harvesting dir having a suffix.
 func (h *Harvest) temporaryFilesSuffix(suffix string) []string {
 	return MustGlob(filepath.Join(h.Dir(), fmt.Sprintf("*.xml%s", suffix)))
 }
@@ -156,12 +156,12 @@ func (h *Harvest) setupInterruptHandler() {
 		<-sigc
 
 		log.Println("waiting for any rename to finish...")
-		// allow h.finalize() to finish
+		// Allow h.finalize() to finish.
 		h.Lock()
-		// for good measure
+		// For good measure.
 		defer h.Unlock()
 
-		// cleanup anything left over
+		// Cleanup anything left over.
 		if err := h.cleanupTemporaryFiles(); err != nil {
 			log.Fatal(err)
 		}
@@ -171,17 +171,17 @@ func (h *Harvest) setupInterruptHandler() {
 
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
-	// collect all successfully renamed files
+	// Collect all successfully renamed files.
 	var renamed []string
 
-	// lock, so we can finish even in the presence of an term signal.
+	// Lock, so we can finish even in the presence of an term signal.
 	h.Lock()
 	defer h.Unlock()
 
 	for _, filename := range h.temporaryFilesSuffix(suffix) {
 		dst := fmt.Sprintf("%s.gz", strings.Replace(filename, suffix, "", -1))
 		if err := MoveAndCompress(filename, dst); err != nil {
-			// try to cleanup all the already renamed files
+			// Try to cleanup all the already renamed files.
 			for _, fn := range renamed {
 				if e := os.Remove(fn); err != nil {
 					if ee, ok := err.(*os.PathError); ok && ee.Err == syscall.ENOENT {
@@ -191,7 +191,7 @@ func (h *Harvest) finalize(suffix string) error {
 						fmt.Errorf("inconsistent cache state; start over and purge %s", h.Dir())}}
 				}
 			}
-			// stop with an error, but still in a consistent state
+			// Stop with an error, but still in a consistent state.
 			return err
 		}
 		renamed = append(renamed, dst)
@@ -219,7 +219,7 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 		return Interval{}, err
 	}
 
-	// last value for this directory
+	// Last value for this directory.
 	laster := DirLaster{
 		Dir:          h.Dir(),
 		DefaultValue: earliestDate.Format("2006-01-02"),
@@ -243,7 +243,7 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	}
 
 	if last != laster.DefaultValue {
-		// add a single day, only if we are not just starting
+		// Add a single day, only if we are not just starting.
 		begin = begin.AddDate(0, 0, 1)
 	}
 
@@ -398,11 +398,8 @@ func (h *Harvest) runInterval(iv Interval) error {
 			break
 		}
 	}
-	// rename files
-	if err := h.finalize(suffix); err != nil {
-		return err
-	}
-	return nil
+	// Rename files.
+	return h.finalize(suffix)
 }
 
 // earliestDate returns the earliest date as a time.Time value.

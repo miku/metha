@@ -81,14 +81,17 @@ func (r *Request) URL() (*url.URL, error) {
 	// returned by a previous a request that issued an incomplete list.
 	if r.ResumptionToken != "" {
 		v.Add("resumptionToken", r.ResumptionToken)
-		// http://opencontext.org/oai/request has spaces in tokens so encode in
-		// this case.
+		var encodedValues string
 		if strings.Contains(r.ResumptionToken, " ") {
-			return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.Encode()))
+			// http://opencontext.org/oai/request has spaces in tokens so encode in
+			// this case.
+			encodedValues = v.Encode()
+		} else {
+			// Some repos, e.g. http://dash.harvard.edu/oai/request seem to have
+			// problems with encoded tokens.
+			encodedValues = v.EncodeVerbatim()
 		}
-		// Some repos, e.g. http://dash.harvard.edu/oai/request seem to have
-		// problems with encoded tokens.
-		return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.EncodeVerbatim()))
+		return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, encodedValues))
 	}
 
 	// Only add parameter, if it is not the zero value.
