@@ -105,3 +105,13 @@ Errors this harvester can somewhat handle
 * limited repositories, metha will try up to 8 times with an exponential backoff
 * repositories, which throw occasional HTTP errors, although most of the responses look good, use `-ignore-http-errors` flag
 * funny XML entities (non-strict XML)
+
+Misc
+----
+
+Show formats of random repository:
+
+```shell
+$ sort -R contrib/sites.tsv | head -1 | xargs -I {} metha-id {} | jq .formats
+```
+
