@@ -20,6 +20,7 @@ func ellipsis(s string, length int) string {
 
 func main() {
 	showAll := flag.Bool("a", false, "show full path")
+	bestEffort := flag.Bool("b", false, "continue in the presence of errors")
 	flag.Parse()
 
 	files, err := ioutil.ReadDir(metha.BaseDir)
@@ -30,7 +31,11 @@ func main() {
 	for _, file := range files {
 		b, err := base64.RawURLEncoding.DecodeString(file.Name())
 		if err != nil {
-			log.Fatal(err)
+			if *bestEffort {
+				log.Println(err)
+			} else {
+				log.Fatal(err)
+			}
 		}
 
 		parts := strings.SplitN(string(b), "#", 3)
