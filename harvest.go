@@ -24,13 +24,13 @@ import (
 const Day = 24 * time.Hour
 
 var (
-	// BaseDir is where all downloaded data is stored.
+	// BaseDir is where all data is stored.
 	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
-	// ErrAlreadySynced is not really an error, only signals completion.
+	// ErrAlreadySynced only signals completion.
 	ErrAlreadySynced = errors.New("already synced")
-	// ErrInvalidEarliestDate signals an unparsable earliest date value in the endpoint.
+	// ErrInvalidEarliestDate for unparsable earliest date.
 	ErrInvalidEarliestDate = errors.New("invalid earliest date")
 )
 
@@ -61,8 +61,7 @@ type Harvest struct {
 	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
 	SuppressFormatParameter    bool
-	// TODO: use more flexible intervals
-	DailyInterval bool
+	DailyInterval              bool
 
 	Identify *Identify
 	Started  time.Time
