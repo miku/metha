@@ -155,12 +155,9 @@ func (h *Harvest) setupInterruptHandler() {
 		<-sigc
 
 		log.Println("waiting for any rename to finish...")
-		// Allow h.finalize() to finish.
 		h.Lock()
-		// For good measure.
 		defer h.Unlock()
 
-		// Cleanup anything left over.
 		if err := h.cleanupTemporaryFiles(); err != nil {
 			log.Fatal(err)
 		}
@@ -170,10 +167,8 @@ func (h *Harvest) setupInterruptHandler() {
 
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
-	// Collect all successfully renamed files.
 	var renamed []string
 
-	// Lock, so we can finish even in the presence of an term signal.
 	h.Lock()
 	defer h.Unlock()
 
@@ -190,7 +185,6 @@ func (h *Harvest) finalize(suffix string) error {
 						fmt.Errorf("inconsistent cache state; start over and purge %s", h.Dir())}}
 				}
 			}
-			// Stop with an error, but still in a consistent state.
 			return err
 		}
 		renamed = append(renamed, dst)
@@ -208,7 +202,7 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	var earliestDate time.Time
 	var err error
 
-	// refs. #9100
+	// refs #9100
 	if h.From == "" {
 		earliestDate, err = h.earliestDate()
 	} else {
@@ -254,13 +248,11 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	return Interval{Begin: begin, End: end}, nil
 }
 
-// run runs a harvest (one request plus subsequent tokens).
+// run runs a harvest: one request plus subsequent tokens.
 func (h *Harvest) run() (err error) {
 	defer func() {
-		// however we exit, cleanup any temporary files
 		if e := h.cleanupTemporaryFiles(); e != nil {
 			if err != nil {
-				// we had a previous error and cleanup failed, too
 				err = &MultiError{[]error{err, e}}
 			}
 			err = e
@@ -276,17 +268,18 @@ func (h *Harvest) run() (err error) {
 		return err
 	}
 
-	if h.DailyInterval {
-		for _, iv := range interval.DailyIntervals() {
-			if err := h.runInterval(iv); err != nil {
-				return err
-			}
-		}
-	} else {
-		for _, iv := range interval.MonthlyIntervals() {
-			if err := h.runInterval(iv); err != nil {
-				return err
-			}
+	var intervals []Interval
+
+	switch {
+	case h.DailyInterval:
+		intervals = interval.DailyIntervals()
+	default:
+		intervals = interval.MonthlyIntervals()
+	}
+
+	for _, iv := range intervals {
+		if err := h.runInterval(iv); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -294,16 +287,11 @@ func (h *Harvest) run() (err error) {
 
 // runInterval runs a selective harvest on the given interval.
 func (h *Harvest) runInterval(iv Interval) error {
-	// suffix for this batch
 	suffix := fmt.Sprintf("-tmp-%d", rand.Intn(999999999))
-	// current resumption token
 	var token string
-	// number of responses, empty responses
 	var i, empty int
 
 	for {
-
-		// Limit the number of total requests.
 		if h.MaxRequests == i {
 			log.Printf("max requests limit (%d) reached", h.MaxRequests)
 			break
@@ -322,7 +310,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 		var filedate string
 
 		if h.DisableSelectiveHarvesting {
-			// used, when endpoint cannot handle from and until
+			// Used, when endpoint cannot handle from and until.
 			filedate = h.Started.Format("2006-01-02")
 		} else {
 			filedate = iv.End.Format("2006-01-02")
@@ -330,7 +318,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			req.Until = iv.End.Format(h.DateLayout())
 		}
 
-		// do request, return any http error, except when we ignore HTTPErrors - in that case, break out early
+		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
 		resp, err := Do(&req)
 		if err != nil {
 			if h.IgnoreHTTPErrors {
@@ -340,16 +328,16 @@ func (h *Harvest) runInterval(iv Interval) error {
 			return err
 		}
 
-		// handle OAI specific errors
+		// Handle OAI specific errors.
 		if resp.Error.Code != "" {
 			// Rare case, where a resumptionToken is given, but it leads to noRecordsMatch, e.g. https://goo.gl/K3gpQB
 			// we still want to save, whatever we got up until this point, so we break here.
 			switch resp.Error.Code {
 			case "noRecordsMatch":
-				if !resp.HasResumptionToken() {
-					break
-				} else {
+				if resp.HasResumptionToken() {
 					log.Printf("resumptionToken set and noRecordsMatch, continuing")
+				} else {
+					break
 				}
 			case "InternalException":
 				// #9717, InternalException Could not send Message.
@@ -363,12 +351,11 @@ func (h *Harvest) runInterval(iv Interval) error {
 			}
 		}
 
-		// filename consists of the right boundary (until), the serial
-		// number of the request and a suffix, marking this request in
-		// progress
+		// The filename consists of the right boundary (until), the
+		// serial number of the request and a suffix, marking this
+		// request in progress.
 		filename := filepath.Join(h.Dir(), fmt.Sprintf("%s-%08d.xml%s", filedate, i, suffix))
 
-		// write response to file
 		if b, err := xml.Marshal(resp); err == nil {
 			if e := ioutil.WriteFile(filename, b, 0644); e != nil {
 				return e
@@ -378,14 +365,12 @@ func (h *Harvest) runInterval(iv Interval) error {
 			return err
 		}
 
-		// the usual stop condition
 		if token = resp.GetResumptionToken(); token == "" {
 			break
 		}
 
 		i++
 
-		// stop, if we have too many empty responses, despite resumption tokens
 		if len(resp.ListRecords.Records) > 0 {
 			empty = 0
 		} else {
@@ -397,7 +382,6 @@ func (h *Harvest) runInterval(iv Interval) error {
 			break
 		}
 	}
-	// Rename files.
 	return h.finalize(suffix)
 }
 
@@ -425,7 +409,6 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 func (h *Harvest) identify() error {
 	req := Request{Verb: "Identify", BaseURL: h.BaseURL}
 
-	// use a less resilient client for indentify requests
 	c := CreateClient(30*time.Second, 2)
 
 	resp, err := c.Do(&req)

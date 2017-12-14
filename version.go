@@ -1,4 +1,4 @@
 package metha
 
-// Version of the tools.
+// Version of tools.
 const Version = "0.1.23"

@@ -55,7 +55,7 @@ type Header struct {
 	SetSpec    []string `xml:"setSpec,omitempty" json:"setSpec,omitempty"`
 }
 
-// Metadata contains the actual metadata, conforming to various schemas.
+// Metadata contains the actual metadata, conforming to varying schemas.
 type Metadata struct {
 	Body []byte `xml:",innerxml"`
 }
