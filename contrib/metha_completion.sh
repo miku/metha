@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 #  Copyright 2016 by Leipzig University Library, http://ub.uni-leipzig.de
 #                    The Finc Authors, http://finc.info
 #                    Martin Czygan, <martin.czygan@uni-leipzig.de>
@@ -20,10 +20,6 @@
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #
 # @license GPL-3.0+ <http://spdx.org/licenses/GPL-3.0+>
-
-# siskin task name completion
-#
-# TODO(miku): autocomplete task parameters, too
 
 _metha_endpoints()
 {
