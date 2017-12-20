@@ -3,6 +3,7 @@ package metha
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/tls"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/html/charset"
 
 	"github.com/sethgrid/pester"
 )
@@ -65,13 +68,18 @@ func (e HTTPError) Error() string {
 // CreateDoer will return http request clients with specific timeout and retry
 // properties.
 func CreateDoer(timeout time.Duration, retries int) Doer {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	if timeout == 0 && retries == 0 {
-		return http.DefaultClient
+		client := &http.Client{Transport: tr}
+		return client
 	}
 	c := pester.New()
 	c.Timeout = timeout
 	c.MaxRetries = retries
 	c.Backoff = pester.ExponentialBackoff
+	c.Transport = tr
 	return c
 }
 
@@ -151,6 +159,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 	}
 
 	dec := xml.NewDecoder(reader)
+	dec.CharsetReader = charset.NewReaderLabel
 	dec.Strict = false
 
 	var response Response
