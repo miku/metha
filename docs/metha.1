@@ -4,7 +4,9 @@
 metha \- harvest OAI\-PMH conform endpoints
 .SH SYNOPSIS
 .PP
-\fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP, \fB\fC\-dir\fR \fIDIRECTORY\fP] \fIendpoint\fP
+\fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
+.PP
+\fB\fCmetha\-sync\fR [\fB\fC\-dir\fR \fIDIRECTORY\fP] \fIendpoint\fP
 .PP
 \fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
 .PP
@@ -17,9 +19,11 @@ metha \- harvest OAI\-PMH conform endpoints
 .PP
 The Open Archives Initiative Protocol for Metadata Harvesting (OAI\-PMH) is a
 protocol developed for harvesting metadata descriptions of records in an
-archive.
+archive. The specification can be found under
+\[la]https://www.openarchives.org/pmh/\[ra]\&.
 .PP
-This tool harvests and caches data, so incremental invocations are fast.
+This tool harvests and caches data, so incremental invocations on the same
+endpoint are fast.
 .SH OPTIONS
 .TP
 \fB\fC\-format\fR \fIstring\fP
@@ -59,7 +63,7 @@ Show metadata about endpoint in JSON format:
 .PP
 Harvest data in the default \fB\fCoai_dc\fR format:
 .IP
-\fB\fCmetha\-sync arXivRaw http://export.arxiv.org/oai2\fR
+\fB\fCmetha\-sync http://export.arxiv.org/oai2\fR
 .PP
 Harvest data in a specific format:
 .IP
@@ -80,6 +84,15 @@ Show harvested data for a given set and format:
 The options \fB\fC\-daily\fR, \fB\fC\-ignore\-http\-errors\fR, \fB\fC\-suppress\-format\-parameter\fR,
 \fB\fC\-no\-intervals\fR and \fB\fC\-max\fR are used to work around non\-standard server
 implementations.
+.SH INTEGRATION
+.PP
+The \fB\fCmetha\-cat\fR tool emits valid XML to stdout, which can be fed into XML
+processing tools like 
+.BR xmllint (1).
+.PP
+To remove a harvest completely, remove the harvest directory:
+.IP
+\fB\fCrm \-rf $(metha\-sync \-dir\fR \fIendpoint\fP\fB\fC)\fR
 .SH ENVIRONMENT
 .PP
 The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
@@ -98,5 +111,5 @@ Please report bugs to \[la]https://github.com/miku/metha/issues\[ra]\&.
 Martin Czygan \[la]martin.czygan@uni-leipzig.de\[ra]
 .SH SEE ALSO
 .PP
-.BR yaz-marcdump (1),
+.BR yaz-marcdump (1), 
 .BR xmllint (1)

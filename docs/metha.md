@@ -9,7 +9,9 @@ metha - harvest OAI-PMH conform endpoints
 SYNOPSIS
 --------
 
-`metha-sync` [`-format` *FORMAT*, `-set` *SET*, `-dir` *DIRECTORY*] *endpoint*
+`metha-sync` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
+
+`metha-sync` [`-dir` *DIRECTORY*] *endpoint*
 
 `metha-cat` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
@@ -24,9 +26,11 @@ DESCRIPTION
 
 The Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) is a
 protocol developed for harvesting metadata descriptions of records in an
-archive.
+archive. The specification can be found under
+https://www.openarchives.org/pmh/.
 
-This tool harvests and caches data, so incremental invocations are fast.
+This tool harvests and caches data, so incremental invocations on the same
+endpoint are fast.
 
 OPTIONS
 -------
@@ -92,6 +96,16 @@ The options `-daily`, `-ignore-http-errors`, `-suppress-format-parameter`,
 `-no-intervals` and `-max` are used to work around non-standard server
 implementations.
 
+INTEGRATION
+-----------
+
+The `metha-cat` tool emits valid XML to stdout, which can be fed into XML
+processing tools like xmllint(1).
+
+To remove a harvest completely, remove the harvest directory:
+
+  `rm -rf $(metha-sync -dir` *endpoint*`)`
+
 ENVIRONMENT
 -----------
 
@@ -120,3 +134,4 @@ SEE ALSO
 --------
 
 yaz-marcdump(1), xmllint(1)
+
