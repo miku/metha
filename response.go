@@ -155,10 +155,9 @@ func (response *Response) HasResumptionToken() bool {
 // GetResumptionToken returns the resumption token or an empty string
 // if it does not have a token
 func (response *Response) GetResumptionToken() string {
-	var resumptionToken string
 
 	// First attempt to obtain a resumption token from a ListIdentifiers response
-	resumptionToken = response.ListIdentifiers.ResumptionToken
+	resumptionToken := response.ListIdentifiers.ResumptionToken
 
 	// Then attempt to obtain a resumption token from a ListRecords response
 	if resumptionToken == "" {
