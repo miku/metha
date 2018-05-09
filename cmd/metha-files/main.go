@@ -25,10 +25,8 @@ func main() {
 		log.Fatal("endpoint required")
 	}
 
-	baseURL := metha.PrependSchema(flag.Arg(0))
-
 	harvest := metha.Harvest{
-		BaseURL: baseURL,
+		BaseURL: metha.PrependSchema(flag.Arg(0)),
 		Format:  *format,
 		Set:     *set,
 	}

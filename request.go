@@ -17,8 +17,8 @@ var (
 	ErrParameterMissing = errors.New("missing required parameter")
 )
 
-// A Request can express any request, that can be sent to an OAI server. Not all
-// combination of values will yield valid requests.
+// A Request can express any OAI request. Not all combination of values will
+// yield valid requests.
 type Request struct {
 	BaseURL                 string
 	Verb                    string

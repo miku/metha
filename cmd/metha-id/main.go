@@ -33,25 +33,22 @@ func main() {
 	resp, err := metha.StdClient.Do(&req)
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		m["identify"] = resp.Identify
 	}
+	m["identify"] = resp.Identify
 
 	if formats, err := repo.Formats(); err == nil {
 		m["formats"] = formats
 	} else {
 		log.Println(err)
 	}
-
 	if sets, err := repo.Sets(); err == nil {
 		m["sets"] = sets
 	} else {
 		log.Println(err)
 	}
 
-	b, err := json.Marshal(m)
-	if err != nil {
+	if err := json.NewEncoder(os.Stdout).Encode(m); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(b))
+	fmt.Println()
 }

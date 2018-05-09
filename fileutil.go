@@ -19,8 +19,9 @@ func MustGlob(pattern string) []string {
 	return m
 }
 
-// MoveAndCompress will move src to dst, gzipping in the process.
-func MoveAndCompress(src, dst string) error {
+// MoveCompressFile will atomically move and compress a source file to a
+// destination file.
+func MoveCompressFile(src, dst string) (err error) {
 	tmp := fmt.Sprintf("%s-tmp-%d", dst, rand.Intn(999999999))
 
 	f, err := os.Create(tmp)
@@ -44,5 +45,6 @@ func MoveAndCompress(src, dst string) error {
 	if err := os.Rename(tmp, dst); err != nil {
 		return err
 	}
+
 	return os.Remove(src)
 }

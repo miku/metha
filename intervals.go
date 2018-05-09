@@ -18,7 +18,7 @@ func (iv Interval) String() string {
 	return fmt.Sprintf("[%s--%s]", iv.Begin, iv.End)
 }
 
-// MonthlyIntervals segments a given interval into montly chunks.
+// MonthlyIntervals segments a given interval into monthly intervals.
 func (iv Interval) MonthlyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin
@@ -37,7 +37,7 @@ func (iv Interval) MonthlyIntervals() []Interval {
 	return ivals
 }
 
-// DailyIntervals segments a given interval into daily chunks.
+// DailyIntervals segments a given interval into daily intervals.
 func (iv Interval) DailyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin

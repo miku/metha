@@ -32,6 +32,8 @@ https://www.openarchives.org/pmh/.
 This tool harvests and caches data, so incremental invocations on the same
 endpoint are fast.
 
+A list of over 5000 (more or less usable) endpoints can be found here: https://is.gd/UrST8m.
+
 OPTIONS
 -------
 
@@ -124,6 +126,43 @@ BUGS
 ----
 
 Please report bugs to <https://github.com/miku/metha/issues>.
+
+ENDPOINTS
+---------
+
+A random sample (N=30) from https://is.gd/UrST8m:
+
+* http://ojs.academypublisher.com/index.php/jcp/oai
+* http://sc.lib.muohio.edu/oai/request
+* http://tees.openrepository.com/tees/oai/request
+* http://citeseerx.ist.psu.edu/oai2
+* http://www.bibliotecaescolardigital.es/oaiBidig2/oai2.php
+* http://www.revistahipogrifo.com/index.php/hipogrifo/oai
+* http://jurnal.ugm.ac.id/ifnp/oai
+* https://journals.aijr.in/index.php/ias/oai
+* http://etheses.nottingham.ac.uk/cgi/oai2
+* http://touroscholar.touro.edu/do/oai/
+* http://mahider.cgiar.org/cgi/oai
+* http://aasrc.org/aasrj/index.php/aasrj/oai
+* http://www.repositorio.ufma.br
+* http://insight.cumbria.ac.uk/perl/oai2
+* http://repository.javeriana.edu.co/oai/request
+* http://www.irosss.org/ojs/index.php/IJAEES/oai
+* http://fofj.org/index.php/journal/oai
+* http://archiveouverte.campus-insep.net:81/oaicat/OAIHandler
+* http://masters.kubg.edu.ua/index.php/pi/oai
+* http://journal.ui.ac.id/v2/index.php/index/oai
+* http://journal2.um.ac.id/index.php/jct/oai
+* http://spectrum.library.concordia.ca/cgi/oai2
+* http://journal.sadra.ac.id/index.php/tanzil/oai
+* http://www.hstl.crhst.cnrs.fr/tools/oai/oai2.php
+* http://mdc.cbuc.cat/cgi-bin/oai.exe
+* http://bfheepsucv.oai.alejandria.biz/cgi-win/be_oai.exe
+* http://sowiport.gesis.org/OAI/Server
+* http://www.inter-disciplines.de/index.php/index/oai
+* http://www.actamonographica.org/ojs-2.2.4/index.php/actamonographica/oai
+* http://porto.polito.it/cgi/oai2
+
 
 AUTHOR
 ------

@@ -38,7 +38,6 @@ func main() {
 	baseURL := metha.PrependSchema(flag.Arg(0))
 
 	if *showDir {
-		// showDir only needs these parameters
 		harvest := metha.Harvest{
 			BaseURL: baseURL,
 			Format:  *format,
@@ -54,10 +53,8 @@ func main() {
 			log.Fatalf("error opening log file: %s", err)
 		}
 		log.SetOutput(file)
-
 	}
 
-	// NewHarvest ensures the endpoint is sane, before we start
 	harvest, err := metha.NewHarvest(baseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -78,7 +75,7 @@ func main() {
 
 	if err := harvest.Run(); err != nil {
 		if err == metha.ErrAlreadySynced {
-			log.Println(err)
+			log.Println("this repository is up-to date")
 		} else {
 			log.Fatal(err)
 		}

@@ -142,7 +142,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 
 	var reader = resp.Body
 
-	// detect compressed response
+	// Detect compressed response.
 	reader, err = maybeCompressed(reader)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (c *Client) Do(r *Request) (*Response, error) {
 	defer reader.Close()
 
 	if r.CleanBeforeDecode {
-		// remove some chars, that the XML decoder will complain about
+		// Remove some chars, that the XML decoder will complain about.
 		b, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return nil, err

@@ -37,16 +37,14 @@ func main() {
 				log.Fatal(err)
 			}
 		}
-
 		parts := strings.SplitN(string(b), "#", 3)
 		if len(parts) < 3 {
 			continue
 		}
+		name := ellipsis(file.Name(), 35)
 		if *showAll {
-			fmt.Printf("%s\t%s\n", file.Name(), strings.Join(parts, "\t"))
-		} else {
-			fmt.Printf("%s\t%s\n", ellipsis(file.Name(), 35), strings.Join(parts, "\t"))
+			name = file.Name()
 		}
-
+		fmt.Printf("%s\t%s\n", name, strings.Join(parts, "\t"))
 	}
 }

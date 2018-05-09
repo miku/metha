@@ -28,7 +28,7 @@ var (
 	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
-	// ErrAlreadySynced only signals completion.
+	// ErrAlreadySynced signals completion.
 	ErrAlreadySynced = errors.New("already synced")
 	// ErrInvalidEarliestDate for unparsable earliest date.
 	ErrInvalidEarliestDate = errors.New("invalid earliest date")
@@ -42,7 +42,7 @@ func PrependSchema(s string) string {
 	return s
 }
 
-// Harvest contains parameters for a mass-download. MaxRequests and
+// Harvest contains parameters for mass-download. MaxRequests and
 // CleanBeforeDecode are switches to handle broken token implementations and
 // funny chars in responses. Some repos do not support selective harvesting
 // (e.g. zvdd.org/oai2). Set "DisableSelectiveHarvesting" to try to grab
@@ -66,7 +66,7 @@ type Harvest struct {
 	Identify *Identify
 	Started  time.Time
 
-	// Protects the (rare) case, where we are in the process of renaming
+	// Protects the rare case, where we are in the process of renaming
 	// harvested files and get a termination signal at the same time.
 	sync.Mutex
 }
@@ -123,7 +123,7 @@ func (h *Harvest) Run() error {
 	return h.run()
 }
 
-// temporaryFiles list all temporary files in the harvesting dir.
+// temporaryFiles lists all temporary files in the harvesting dir.
 func (h *Harvest) temporaryFiles() []string {
 	return MustGlob(filepath.Join(h.Dir(), "*.xml-tmp*"))
 }
@@ -172,25 +172,30 @@ func (h *Harvest) finalize(suffix string) error {
 	h.Lock()
 	defer h.Unlock()
 
-	for _, filename := range h.temporaryFilesSuffix(suffix) {
-		dst := fmt.Sprintf("%s.gz", strings.Replace(filename, suffix, "", -1))
-		if err := MoveAndCompress(filename, dst); err != nil {
-			// Try to cleanup all the already renamed files.
-			for _, fn := range renamed {
-				if e := os.Remove(fn); err != nil {
-					if ee, ok := err.(*os.PathError); ok && ee.Err == syscall.ENOENT {
-						continue
-					}
-					return &MultiError{[]error{err, e,
-						fmt.Errorf("inconsistent cache state; start over and purge %s", h.Dir())}}
+	for _, src := range h.temporaryFilesSuffix(suffix) {
+		dst := fmt.Sprintf("%s.gz", strings.Replace(src, suffix, "", -1))
+		var err error
+		if err = MoveCompressFile(src, dst); err == nil {
+			renamed = append(renamed, dst)
+			continue
+		}
+		// Try to cleanup all the already renamed files.
+		for _, fn := range renamed {
+			if e := os.Remove(fn); err != nil {
+				if ee, ok := err.(*os.PathError); ok && ee.Err == syscall.ENOENT {
+					continue
+				}
+				return &MultiError{[]error{
+					err,
+					e,
+					fmt.Errorf("inconsistent cache state; start over and purge %s", h.Dir())},
 				}
 			}
-			return err
 		}
-		renamed = append(renamed, dst)
+		return err
 	}
 	if len(renamed) > 0 {
-		log.Printf("moved %d files into place", len(renamed))
+		log.Printf("moved %d file(s) into place", len(renamed))
 	}
 	return nil
 }
@@ -334,17 +339,15 @@ func (h *Harvest) runInterval(iv Interval) error {
 			// we still want to save, whatever we got up until this point, so we break here.
 			switch resp.Error.Code {
 			case "noRecordsMatch":
-				if resp.HasResumptionToken() {
-					log.Printf("resumptionToken set and noRecordsMatch, continuing")
-				} else {
+				if !resp.HasResumptionToken() {
 					break
 				}
+				log.Printf("resumptionToken set and noRecordsMatch, continuing")
 			case "InternalException":
 				// #9717, InternalException Could not send Message.
-				log.Println("InternalException: retrying request in a few instants ...")
+				log.Println("InternalException: retrying request in a few instants...")
 				time.Sleep(30 * time.Second)
-				// Count towards the total request limit.
-				i++
+				i++ // Count towards the total request limit.
 				continue
 			default:
 				return resp.Error
@@ -387,7 +390,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 
 // earliestDate returns the earliest date as a time.Time value.
 func (h *Harvest) earliestDate() (time.Time, error) {
-	// different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
+	// Different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
 	switch h.Identify.Granularity {
 	case "YYYY-MM-DD":
 		if len(h.Identify.EarliestDatestamp) <= 10 {
@@ -419,7 +422,7 @@ func (h *Harvest) identify() error {
 	return nil
 }
 
-// init takes configuration from the environment, if there's any.
+// init takes configuration from the environment, if there is any.
 func init() {
 	if dir := os.Getenv("METHA_DIR"); dir != "" {
 		BaseDir = dir
