@@ -129,9 +129,8 @@ func main() {
 			fmt.Println(record.Description[0].Text)
 			fmt.Println()
 			fmt.Printf("    -- %s\n", ep)
+			os.Exit(0)
 		}
-
-		os.Exit(0)
 	}
 	fmt.Println("No fortunes available at this time.")
 	os.Exit(1)
