@@ -6,6 +6,7 @@ PKGNAME = metha
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
+	go get ./...
 	go build -o $@ $<
 
 clean:
