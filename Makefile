@@ -1,12 +1,12 @@
 SHELL = /bin/bash
-TARGETS = metha-sync metha-cat metha-id metha-ls metha-files
+TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune
 
 PKGNAME = metha
 
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
-	go build -o $@ $< 
+	go build -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
