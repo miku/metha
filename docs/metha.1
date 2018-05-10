@@ -108,6 +108,10 @@ To get a list of available sets from an endpoint:
 To remove a harvest completely, remove the harvest directory:
 .IP
 \fB\fCrm \-rf $(metha\-sync \-dir\fR \fIendpoint\fP\fB\fC)\fR
+.PP
+To list cached endpoints you can combine \fB\fCmetha\-ls\fR and \fB\fCcolumn\fR formatter:
+.IP
+\fB\fC$ metha\-ls \-a | column \-t\fR
 .SH ENVIRONMENT
 .PP
 The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
