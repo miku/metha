@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -83,14 +84,16 @@ func First(ctx context.Context, endpoints ...Search) Result {
 		go search(ep)
 	}
 	for {
+		log.Println("select")
 		select {
 		case <-ctx.Done():
+			log.Printf("context done")
 			return Result{Err: ctx.Err()}
 		case r := <-c:
-			if r.Err == nil {
+			if r.Err == nil && len(r.Fortune) > 0 {
 				return r
 			}
-			log.Printf("backend returned with an error: %v", r.Err)
+			log.Printf("backend returned with an error or an empty description: %v", r.Err)
 		}
 	}
 }
@@ -98,7 +101,7 @@ func First(ctx context.Context, endpoints ...Search) Result {
 // createSearcher assembles a search type.
 func createSearcher(endpoint string) Search {
 	f := func(ctx context.Context) Result {
-		client := metha.CreateClient(5*time.Second, 3)
+		client := metha.CreateClient(8*time.Second, 3)
 		req := metha.Request{
 			BaseURL:        endpoint,
 			Verb:           "ListIdentifiers",
@@ -136,7 +139,7 @@ func createSearcher(endpoint string) Search {
 		}
 		if len(record.Description) > 0 {
 			if len(record.Description[0].Text) == 0 {
-				return Result{Err: err}
+				return Result{Err: fmt.Errorf("empty description")}
 			}
 			var buf bytes.Buffer
 			fmt.Fprintf(&buf, record.Description[0].Text)
@@ -150,28 +153,43 @@ func createSearcher(endpoint string) Search {
 }
 
 func main() {
-	log.SetOutput(ioutil.Discard)
+	debug := flag.Bool("d", false, "debug output")
+	k := flag.Int("k", 16, "number of endpoints to query in parallel")
+
+	flag.Parse()
+
+	if !*debug {
+		log.SetOutput(ioutil.Discard)
+	}
+
 	rand.Seed(time.Now().UnixNano())
-	k := 16
 
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
 
 	var searchers []Search
-	for i := 0; i < k; i++ {
+	for i := 0; i < *k; i++ {
 		searchers = append(searchers, createSearcher(metha.RandomEndpoint()))
 	}
 
 	s := spinner.New(spinner.CharSets[25], 100*time.Millisecond)
-	s.Writer = os.Stderr
-	s.Start()
+	if !*debug {
+		s.Writer = os.Stderr
+		s.Start()
+	}
 
 	result := First(ctx, searchers...)
 
-	s.Stop()
+	if !*debug {
+		s.Stop()
+	}
 
 	if result.Err != nil || result.Fortune == "" {
-		fmt.Printf("No fortune available at this time.")
+		fmt.Printf("No fortune available at this time.\n")
+		if *debug {
+			log.Printf("%v", result.Err)
+		}
+		os.Exit(1)
 	}
 	fmt.Println(result.Fortune)
 }
