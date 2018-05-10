@@ -6,7 +6,7 @@ metha \- harvest OAI\-PMH conform endpoints
 .PP
 \fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
 .PP
-\fB\fCmetha\-sync\fR [\fB\fC\-dir\fR \fIDIRECTORY\fP] \fIendpoint\fP
+\fB\fCmetha\-sync\fR [\fB\fC\-dir\fR] \fIendpoint\fP
 .PP
 \fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
 .PP
@@ -91,6 +91,16 @@ implementations.
 The \fB\fCmetha\-cat\fR tool emits valid XML to stdout, which can be fed into XML
 processing tools like 
 .BR xmllint (1).
+.IP
+`metha\-cat \-from 2018\-01\-01 \[la]http://export.arxiv.org/oai2\[ra] | xmllint \-\-format \-
+.PP
+To get a list of supported formats from an endpoint:
+.IP
+\fB\fCmetha\-id http://export.arxiv.org/oai2 | jq \-r '.formats[].metadataPrefix'\fR
+.PP
+To get a list of available sets from an endpoint:
+.IP
+\fB\fCmetha\-id http://export.arxiv.org/oai2 | jq \-r '.sets[].setSpec'\fR
 .PP
 To remove a harvest completely, remove the harvest directory:
 .IP
@@ -110,7 +120,7 @@ in the data of at most 24 hours.
 Please report bugs to \[la]https://github.com/miku/metha/issues\[ra]\&.
 .SH ENDPOINTS
 .PP
-A random sample (N=30) from \[la]https://is.gd/UrST8m\[ra]
+A random sample from \[la]https://is.gd/UrST8m\[ra]
 .PP
 \[la]http://ojs.academypublisher.com/index.php/jcp/oai\[ra]
 \[la]http://sc.lib.muohio.edu/oai/request\[ra]
@@ -148,4 +158,5 @@ Martin Czygan \[la]martin.czygan@uni-leipzig.de\[ra]
 .SH SEE ALSO
 .PP
 .BR yaz-marcdump (1), 
-.BR xmllint (1)
+.BR xmllint (1), 
+.BR jq (1)

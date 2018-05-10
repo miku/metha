@@ -11,7 +11,7 @@ SYNOPSIS
 
 `metha-sync` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
-`metha-sync` [`-dir` *DIRECTORY*] *endpoint*
+`metha-sync` [`-dir`] *endpoint*
 
 `metha-cat` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
@@ -104,6 +104,16 @@ INTEGRATION
 The `metha-cat` tool emits valid XML to stdout, which can be fed into XML
 processing tools like xmllint(1).
 
+  `metha-cat -from 2018-01-01 http://export.arxiv.org/oai2 | xmllint --format -
+
+To get a list of supported formats from an endpoint:
+
+  `metha-id http://export.arxiv.org/oai2 | jq -r '.formats[].metadataPrefix'`
+
+To get a list of available sets from an endpoint:
+
+  `metha-id http://export.arxiv.org/oai2 | jq -r '.sets[].setSpec'`
+
 To remove a harvest completely, remove the harvest directory:
 
   `rm -rf $(metha-sync -dir` *endpoint*`)`
@@ -130,7 +140,7 @@ Please report bugs to <https://github.com/miku/metha/issues>.
 ENDPOINTS
 ---------
 
-A random sample (N=30) from https://is.gd/UrST8m
+A random sample from https://is.gd/UrST8m
 
 http://ojs.academypublisher.com/index.php/jcp/oai
 http://sc.lib.muohio.edu/oai/request
@@ -172,5 +182,5 @@ Martin Czygan <martin.czygan@uni-leipzig.de>
 SEE ALSO
 --------
 
-yaz-marcdump(1), xmllint(1)
+yaz-marcdump(1), xmllint(1), jq(1)
 
