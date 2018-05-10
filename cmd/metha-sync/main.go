@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -21,6 +22,7 @@ func main() {
 	version := flag.Bool("v", false, "show version")
 	daily := flag.Bool("daily", false, "use daily intervals for harvesting")
 	from := flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
+	quiet := flag.Bool("q", false, "suppress all output")
 
 	logFile := flag.String("log", "", "filename to log to")
 
@@ -45,6 +47,10 @@ func main() {
 		}
 		fmt.Println(harvest.Dir())
 		os.Exit(0)
+	}
+
+	if *quiet {
+		log.SetOutput(ioutil.Discard)
 	}
 
 	if *logFile != "" {
