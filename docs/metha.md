@@ -187,6 +187,10 @@ Curious about the contents of a random endpoint? Run a harvesting roulette with:
 
   `URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL`
 
+Select a random record from a random endpoint and display its description:
+
+  `metha-fortune`
+
 AUTHOR
 ------
 
