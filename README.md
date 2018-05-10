@@ -119,6 +119,21 @@ $ URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-c
 
 * https://asciinema.org/a/0hafkza6zyvuhzkikelbe1vrg?autoplay=1
 
+In 0.1.27 a `metha-fortune` command was added, which fetches a random article desciption and displays it.
+
+```shell
+$ metha-fortune | fold -s
+Active Networking is concerned with the rapid definition and deployment of
+innovative, but reliable and robust, networking services. Towards this end we
+have developed a composite protocol and networking services architecture that
+encourages re-use of protocol functions, is well defined, and facilitates
+automatic checking of interfaces and protocol component properties. The
+architecture has been used to implement common Internet protocols and services.
+We will report on this work at the workshop.
+
+    -- http://drops.dagstuhl.de/opus/phpoai/oai2.php
+```
+
 Errors this harvester can somewhat handle
 -----------------------------------------
 
