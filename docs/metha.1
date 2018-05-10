@@ -55,6 +55,9 @@ Harvest in one go, for funny endpoints.
 \fB\fC\-suppress\-format\-parameter\fR
 Do not send format parameter.
 .TP
+\fB\fC\-q\fR
+Be quiet.
+.TP
 \fB\fC\-v\fR
 Program version.
 .SH EXAMPLES
@@ -152,6 +155,10 @@ A random sample from \[la]https://is.gd/UrST8m\[ra]
 \[la]http://www.inter-disciplines.de/index.php/index/oai\[ra]
 \[la]http://www.actamonographica.org/ojs-2.2.4/index.php/actamonographica/oai\[ra]
 \[la]http://porto.polito.it/cgi/oai2\[ra]
+.PP
+Curious about the contents of a random endpoint? Run a harvesting roulette with:
+.IP
+\fB\fCURL=$(shuf \-n 1 <(curl \-Lsf https://git.io/vKXFv)); metha\-sync $URL && metha\-cat $URL\fR
 .SH AUTHOR
 .PP
 Martin Czygan \[la]martin.czygan@uni-leipzig.de\[ra]
