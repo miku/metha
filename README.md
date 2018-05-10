@@ -149,6 +149,25 @@ thought of in terms of computers, and describe the writing of a computer
 program which generates the undecidable Gödel sentence.
 
     -- http://quantropy.org/cgi/oai2
+
+$ metha-fortune | fold -s
+Nigeria, a country in West Africa, sits on the Atlantic coast with a land area
+of approximately 90 million hectares and a population of more than 140 million
+people. The southern part of the country falls within the tropical rainforest
+which has now been largely depleted and is in dire need of reforestation. About
+10 percent of the land area was constituted into forest reserves for purposes
+of conservation but this has suffered perturbations over the years to the
+extent that what remains of the constituted forest reserves currently is less
+than 4 percent of the country land area. As at today about 382,000 ha have been
+reforested with indigenous and exotic species representing about 4 percent of
+the remaining forest estate. Regrettably, funding of the Forestry sector in
+Nigeria has been critically low, rendering reforestation programme near
+impossible, especially in the last two decades. To revive the forestry sector
+government at all levels must re-strategize and involve the local communities
+as co-managers of the forest estates in order to create mutual dependence and
+interaction in resource conservation.
+
+    -- http://journal.reforestationchallenges.org/index.php/REFOR/oai
 ```
 
 Errors this harvester can somewhat handle
