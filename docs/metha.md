@@ -107,7 +107,7 @@ INTEGRATION
 The `metha-cat` tool emits valid XML to stdout, which can be fed into XML
 processing tools like xmllint(1).
 
-  `metha-cat -from 2018-01-01 http://export.arxiv.org/oai2 | xmllint --format -
+  `metha-cat -from 2018-01-01 http://export.arxiv.org/oai2 | xmllint --format -`
 
 To get a list of supported formats from an endpoint:
 
