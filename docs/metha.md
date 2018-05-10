@@ -67,6 +67,9 @@ OPTIONS
 `-q`
   Be quiet.
 
+`-list`
+  List a selection of known OAI endpoints.
+
 `-v`
   Program version.
 
