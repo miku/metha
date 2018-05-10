@@ -199,5 +199,5 @@ Martin Czygan <martin.czygan@uni-leipzig.de>
 SEE ALSO
 --------
 
-yaz-marcdump(1), xmllint(1), jq(1)
+yaz-marcdump(1), xmllint(1), jq(1), fortune(1)
 
