@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -66,72 +67,111 @@ type Dc struct {
 	} `xml:"rights"`
 }
 
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	log.SetOutput(ioutil.Discard)
-	maxEndpoints := 4
+type Result struct {
+	Fortune string
+	Err     error
+}
 
-	client := metha.CreateClient(5*time.Second, 3)
+type Search func(ctx context.Context) Result
 
-	for i := 0; i < maxEndpoints; i++ {
+func First(ctx context.Context, endpoints ...Search) Result {
+	c := make(chan Result, len(endpoints))
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	search := func(endpoint Search) { c <- endpoint(ctx) }
+	for _, ep := range endpoints {
+		go search(ep)
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return Result{Err: ctx.Err()}
+		case r := <-c:
+			if r.Err == nil {
+				return r
+			}
+			log.Printf("backend returned with an error: %v", r.Err)
+		}
+	}
+}
 
-		s := spinner.New(spinner.CharSets[25], 100*time.Millisecond)
-
-		s.Writer = os.Stderr
-		s.Start()
-
-		ep := metha.RandomEndpoint()
-
+// createSearcher assembles a search type.
+func createSearcher(endpoint string) Search {
+	f := func(ctx context.Context) Result {
+		client := metha.CreateClient(5*time.Second, 3)
 		req := metha.Request{
-			BaseURL:        ep,
+			BaseURL:        endpoint,
 			Verb:           "ListIdentifiers",
 			MetadataPrefix: "oai_dc",
 		}
 		resp, err := client.Do(&req)
 		if err != nil {
-			s.Stop()
-			continue
+			return Result{Err: err}
 		}
 		var ids []string
 		for _, h := range resp.ListIdentifiers.Headers {
 			ids = append(ids, h.Identifier)
 		}
 		if len(ids) == 0 {
-			s.Stop()
-			continue
+			return Result{Err: err}
 		}
 		rid := ids[rand.Intn(len(ids))]
 
+		// Fetch a random record.
 		req = metha.Request{
-			BaseURL:        ep,
+			BaseURL:        endpoint,
 			Verb:           "GetRecord",
 			MetadataPrefix: "oai_dc",
 			Identifier:     rid,
 		}
 		resp, err = client.Do(&req)
 		if err != nil {
-			s.Stop()
-			continue
+			return Result{Err: err}
 		}
-
 		var record Dc
 		dec := xml.NewDecoder(bytes.NewReader(resp.GetRecord.Record.Metadata.Body))
 		dec.Strict = false
 		if err := dec.Decode(&record); err != nil {
-			s.Stop()
-			continue
+			return Result{Err: err}
 		}
 		if len(record.Description) > 0 {
-			s.Stop()
 			if len(record.Description[0].Text) == 0 {
-				continue
+				return Result{Err: err}
 			}
-			fmt.Println(record.Description[0].Text)
-			fmt.Println()
-			fmt.Printf("    -- %s\n", ep)
-			os.Exit(0)
+			var buf bytes.Buffer
+			fmt.Fprintf(&buf, record.Description[0].Text)
+			fmt.Fprintf(&buf, "\n\n")
+			fmt.Fprintf(&buf, "    -- %s", endpoint)
+			return Result{Fortune: buf.String(), Err: nil}
 		}
+		return Result{Err: fmt.Errorf("could not fetch fortune from %s", endpoint)}
 	}
-	fmt.Println("No fortunes available at this time.")
-	os.Exit(1)
+	return f
+}
+
+func main() {
+	log.SetOutput(ioutil.Discard)
+	rand.Seed(time.Now().UnixNano())
+	k := 16
+
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+
+	var searchers []Search
+	for i := 0; i < k; i++ {
+		searchers = append(searchers, createSearcher(metha.RandomEndpoint()))
+	}
+
+	s := spinner.New(spinner.CharSets[25], 100*time.Millisecond)
+	s.Writer = os.Stderr
+	s.Start()
+
+	result := First(ctx, searchers...)
+
+	s.Stop()
+
+	if result.Err != nil || result.Fortune == "" {
+		fmt.Printf("No fortune available at this time.")
+	}
+	fmt.Println(result.Fortune)
 }
