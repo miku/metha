@@ -141,6 +141,13 @@ question whether such an equality holds was posed by Abouhajar et al. in J.
 Geom. Anal. 17(4), 717–750 (2007).
 
     -- http://ruj.uj.edu.pl/oai/request
+
+$ metha-fortune | fold -s
+I argue that Gödel's incompleteness theorem is much easier to understand when
+thought of in terms of computers, and describe the writing of a computer
+program which generates the undecidable Gödel sentence.
+
+    -- http://quantropy.org/cgi/oai2
 ```
 
 Errors this harvester can somewhat handle
