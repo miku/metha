@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -142,9 +143,8 @@ func createSearcher(endpoint string) Search {
 				return Result{Err: fmt.Errorf("empty description")}
 			}
 			var buf bytes.Buffer
-			fmt.Fprintf(&buf, record.Description[0].Text)
-			fmt.Fprintf(&buf, "\n\n")
-			fmt.Fprintf(&buf, "    -- %s", endpoint)
+			io.WriteString(&buf, record.Description[0].Text)
+			fmt.Fprintf(&buf, "\n\n    -- %s", endpoint)
 			return Result{Fortune: buf.String(), Err: nil}
 		}
 		return Result{Err: fmt.Errorf("could not fetch fortune from %s", endpoint)}
