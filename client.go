@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"golang.org/x/net/html/charset"
-
 	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/html/charset"
 )
 
 const (

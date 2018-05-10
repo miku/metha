@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 
 	"github.com/miku/metha"
+	log "github.com/sirupsen/logrus"
 )
 
 func ellipsis(s string, length int) string {

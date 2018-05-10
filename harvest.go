@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -18,6 +17,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/now"
+	log "github.com/sirupsen/logrus"
 )
 
 // Day has 24 hours.

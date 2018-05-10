@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	gzip "github.com/klauspost/pgzip"
 
 	"github.com/miku/metha"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

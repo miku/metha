@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/miku/metha"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
