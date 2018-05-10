@@ -10,11 +10,18 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	debug   = flag.Bool("d", false, "debug output")
+	k       = flag.Int("k", 16, "number of endpoints to query in parallel")
+	timeout = flag.Duration("t", 8*time.Second, "timeout")
 )
 
 // Dc was generated 2018-05-10 14:57:24 by tir on sol.
@@ -85,10 +92,8 @@ func First(ctx context.Context, endpoints ...Search) Result {
 		go search(ep)
 	}
 	for {
-		log.Println("select")
 		select {
 		case <-ctx.Done():
-			log.Printf("context done")
 			return Result{Err: ctx.Err()}
 		case r := <-c:
 			if r.Err == nil && len(r.Fortune) > 0 {
@@ -119,9 +124,12 @@ func createSearcher(endpoint string) Search {
 		if len(ids) == 0 {
 			return Result{Err: err}
 		}
+		if *debug {
+			events := len(ids) * len(metha.Endpoints)
+			log.Printf("estimated probability of record: 1/%d", events)
+		}
 		rid := ids[rand.Intn(len(ids))]
 
-		// Fetch a random record.
 		req = metha.Request{
 			BaseURL:        endpoint,
 			Verb:           "GetRecord",
@@ -138,43 +146,41 @@ func createSearcher(endpoint string) Search {
 		if err := dec.Decode(&record); err != nil {
 			return Result{Err: err}
 		}
-		if len(record.Description) > 0 {
-			if len(record.Description[0].Text) == 0 {
-				return Result{Err: fmt.Errorf("empty description")}
-			}
-			var buf bytes.Buffer
-			io.WriteString(&buf, record.Description[0].Text)
-			fmt.Fprintf(&buf, "\n\n    -- %s", endpoint)
-			return Result{Fortune: buf.String(), Err: nil}
+		if len(record.Description) == 0 {
+			return Result{Err: fmt.Errorf("no descriptions")}
 		}
-		return Result{Err: fmt.Errorf("could not fetch fortune from %s", endpoint)}
+		text := strings.TrimSpace(record.Description[0].Text)
+		if len(text) == 0 {
+			return Result{Err: fmt.Errorf("empty description")}
+		}
+		var buf bytes.Buffer
+		io.WriteString(&buf, text)
+		fmt.Fprintf(&buf, "\n\n    -- %s", endpoint)
+		return Result{Fortune: buf.String()}
 	}
 	return f
 }
 
 func main() {
-	debug := flag.Bool("d", false, "debug output")
-	k := flag.Int("k", 16, "number of endpoints to query in parallel")
-
 	flag.Parse()
 
 	if !*debug {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
+	rand.Seed(time.Now().UnixNano())
 	var searchers []Search
 	for i := 0; i < *k; i++ {
 		searchers = append(searchers, createSearcher(metha.RandomEndpoint()))
 	}
 
 	s := spinner.New(spinner.CharSets[25], 100*time.Millisecond)
+	s.Writer = os.Stderr
+
 	if !*debug {
-		s.Writer = os.Stderr
 		s.Start()
 	}
 
