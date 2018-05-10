@@ -64,6 +64,9 @@ OPTIONS
 `-suppress-format-parameter`
   Do not send format parameter.
 
+`-q`
+  Be quiet.
+
 `-v`
   Program version.
 
@@ -173,6 +176,9 @@ http://www.inter-disciplines.de/index.php/index/oai
 http://www.actamonographica.org/ojs-2.2.4/index.php/actamonographica/oai
 http://porto.polito.it/cgi/oai2
 
+Curious about the contents of a random endpoint? Run a harvesting roulette with:
+
+  `URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL`
 
 AUTHOR
 ------
