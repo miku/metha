@@ -132,6 +132,15 @@ architecture has been used to implement common Internet protocols and services.
 We will report on this work at the workshop.
 
     -- http://drops.dagstuhl.de/opus/phpoai/oai2.php
+
+$ metha-fortune | fold -s
+In this paper we show that the Lempert property (i.e., the equality between the
+Lempert function and the Carathéodory distance) holds in the tetrablock, a
+bounded hyperconvex domain which is not biholomorphic to a convex domain. The
+question whether such an equality holds was posed by Abouhajar et al. in J.
+Geom. Anal. 17(4), 717–750 (2007).
+
+    -- http://ruj.uj.edu.pl/oai/request
 ```
 
 Errors this harvester can somewhat handle
