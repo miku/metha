@@ -23,6 +23,7 @@ func main() {
 	daily := flag.Bool("daily", false, "use daily intervals for harvesting")
 	from := flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
 	quiet := flag.Bool("q", false, "suppress all output")
+	endpointList := flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
 
 	logFile := flag.String("log", "", "filename to log to")
 
@@ -33,8 +34,15 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *endpointList {
+		for _, u := range metha.Endpoints {
+			fmt.Println(u)
+		}
+		os.Exit(0)
+	}
+
 	if flag.NArg() == 0 {
-		log.Fatal("endpoint required")
+		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
 
 	baseURL := metha.PrependSchema(flag.Arg(0))
