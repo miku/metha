@@ -126,7 +126,7 @@ To remove a harvest completely, remove the harvest directory:
 
 To list cached endpoints you can combine `metha-ls` and `column` formatter:
 
-  `$ metha-ls -a | column -t`
+  `metha-ls -a | column -t`
 
 ENVIRONMENT
 -----------
