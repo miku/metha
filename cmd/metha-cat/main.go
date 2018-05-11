@@ -46,7 +46,29 @@ func main() {
 
 	files, err := ioutil.ReadDir(harvest.Dir())
 	if err != nil {
-		log.Fatal(err)
+		// Fallback to fragment of base URL, e.g. allow "metha-cat xyz", if xyz
+		// is not ambiguous.
+		candidates, err := metha.FindRepositoriesByString(flag.Arg(0))
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(candidates) == 0 {
+			log.Fatal("not an endpoint url nor fragment")
+		}
+		if len(candidates) > 1 {
+			log.Fatalf("ambiguous fragment %v matches %d values: %v",
+				flag.Arg(0),
+				len(candidates),
+				strings.Join(candidates, ", "),
+			)
+		}
+		log.Printf("falling back to %s", candidates[0])
+		harvest.BaseURL = candidates[0]
+
+		files, err = ioutil.ReadDir(harvest.Dir())
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if *root != "" {

@@ -1,5 +1,11 @@
 package metha
 
+import (
+	"encoding/base64"
+	"io/ioutil"
+	"strings"
+)
+
 // Repository represents an OAI endpoint.
 type Repository struct {
 	BaseURL string
@@ -41,4 +47,28 @@ func (r Repository) Sets() ([]Set, error) {
 		token = resp.GetResumptionToken()
 	}
 	return sets, nil
+}
+
+// FindRepositoriesByString returns a list of already harvested base URLs given a
+// fragment of the base URL.
+func FindRepositoriesByString(s string) (urls []string, err error) {
+	files, err := ioutil.ReadDir(BaseDir)
+	if err != nil {
+		return urls, err
+	}
+	for _, file := range files {
+		b, err := base64.RawURLEncoding.DecodeString(file.Name())
+		if err != nil {
+			return urls, err
+		}
+		parts := strings.SplitN(string(b), "#", 3)
+		if len(parts) < 3 {
+			continue
+		}
+		baseURL := parts[2]
+		if strings.Contains(baseURL, s) {
+			urls = append(urls, baseURL)
+		}
+	}
+	return urls, nil
 }
