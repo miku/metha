@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"html"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -149,7 +150,7 @@ func createSearcher(endpoint string) Search {
 		if len(record.Description) == 0 {
 			return Result{Err: fmt.Errorf("no descriptions")}
 		}
-		text := strings.TrimSpace(record.Description[0].Text)
+		text := html.UnescapeString(strings.TrimSpace(record.Description[0].Text))
 		if len(text) == 0 {
 			return Result{Err: fmt.Errorf("empty description")}
 		}
