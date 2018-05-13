@@ -16,13 +16,15 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/miku/metha"
+	"github.com/neurosnap/sentences/english"
 	log "github.com/sirupsen/logrus"
 )
 
 var (
-	debug   = flag.Bool("d", false, "debug output")
-	k       = flag.Int("k", 16, "number of endpoints to query in parallel")
-	timeout = flag.Duration("t", 8*time.Second, "timeout")
+	debug    = flag.Bool("d", false, "debug output")
+	k        = flag.Int("k", 16, "number of endpoints to query in parallel")
+	timeout  = flag.Duration("t", 8*time.Second, "timeout")
+	sentence = flag.Bool("s", false, "only one sentence")
 )
 
 // Dc was generated 2018-05-10 14:57:24 by tir on sol.
@@ -155,7 +157,21 @@ func createSearcher(endpoint string) Search {
 			return Result{Err: fmt.Errorf("empty description")}
 		}
 		var buf bytes.Buffer
-		io.WriteString(&buf, text)
+		if *sentence {
+			tokenizer, err := english.NewSentenceTokenizer(nil)
+			if err != nil {
+				log.Println(err)
+				io.WriteString(&buf, text)
+			}
+			sentences := tokenizer.Tokenize(text)
+			if len(sentences) > 0 {
+				io.WriteString(&buf, sentences[0].Text)
+			} else {
+				io.WriteString(&buf, text)
+			}
+		} else {
+			io.WriteString(&buf, text)
+		}
 		fmt.Fprintf(&buf, "\n\n    -- %s", endpoint)
 		return Result{Fortune: buf.String()}
 	}
