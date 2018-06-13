@@ -72,7 +72,7 @@ func main() {
 	}
 
 	if *root != "" {
-		fmt.Printf(`<%s xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\n`, *root)
+		fmt.Printf("<%s xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n", *root)
 		defer fmt.Printf("</%s>\n", *root)
 	}
 
