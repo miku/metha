@@ -191,3 +191,11 @@ Show formats of random repository:
 $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .formats
 ```
 
+Metha elsewhere
+---------------
+
+* [The finc project](https://finc.info/de/datenquellen)
+* [Getting a dump of arXiv metadata](https://academia.stackexchange.com/questions/38969/getting-a-dump-of-arxiv-metadata) at [academia.stackexchange.com](https://academia.stackexchange.com/)
+* [Keyword Extraction from arXiv - Part 1](http://akumano.xyz/posts/arxiv-keyword-extraction-part1/)
+* [Openrefine wse case: Automated workflow for harvesting, transforming and indexing of bibliographic metadata](https://groups.google.com/forum/#!topic/openrefine/RqQwlF-ll1c)
+* [Sammeln und Finden. Über das Sichtbarmachen von Open Science in Hamburg](https://opus4.kobv.de/opus4-bib-info/files/3645/HOS+Bibliothekartag.pdf) (PDF)
