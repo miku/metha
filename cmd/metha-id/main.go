@@ -21,7 +21,7 @@ func main() {
 	}
 
 	if flag.NArg() == 0 {
-		log.Fatal("endpoint required")
+		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
 
 	baseURL := metha.PrependSchema(flag.Arg(0))
