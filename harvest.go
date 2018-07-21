@@ -333,7 +333,8 @@ func (h *Harvest) runInterval(iv Interval) error {
 			return err
 		}
 
-		// Handle OAI specific errors.
+		// Handle OAI specific errors. XXX: An badResumptionToken kind of error
+		// might be recoverable, by simply restarting the harvest.
 		if resp.Error.Code != "" {
 			// Rare case, where a resumptionToken is given, but it leads to noRecordsMatch, e.g. https://goo.gl/K3gpQB
 			// we still want to save, whatever we got up until this point, so we break here.
