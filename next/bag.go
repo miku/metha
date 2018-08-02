@@ -1,5 +1,5 @@
 // Package bag contains a refactored version of the harvesting logic.
-package bag
+package next
 
 import (
 	"crypto/sha1"
@@ -15,7 +15,7 @@ import (
 )
 
 // BaseDir for harvests, XXX(miku): use env.
-var BaseDir = filepath.Join(metha.UserHomeDir(), ".methax")
+var BaseDir = filepath.Join(metha.UserHomeDir(), ".metha-next")
 
 // Harvest contains the basic information on the harvest. Additionally some
 // options.
