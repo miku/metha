@@ -271,6 +271,8 @@ func (h *Harvest) run() error {
 		start = time.Unix(i, 0)
 	}
 	log.Printf("start of next slice: %s", start.Format(time.RFC3339))
+	// Try various skips, from one month, to one day, to 30 minutes.
+	// skips := []int64{2592000, 86400, 1800}
 
 	// Depending on the current interval, request next slice.
 	// Resumptiontokens.
