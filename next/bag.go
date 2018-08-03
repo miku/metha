@@ -8,12 +8,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/miku/metha"
+	log "github.com/sirupsen/logrus"
 )
 
 // BaseDir for harvests, XXX(miku): use env.
@@ -44,6 +47,7 @@ type HarvestOptions struct {
 	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
 	SuppressFormatParameter    bool
+	Window                     string
 }
 
 // Description describes a harvest, and some metadata. This will be serialized
@@ -107,8 +111,8 @@ func (h *Harvest) Description() (*Description, error) {
 }
 
 // writeDescription persist a description of the harvest to a file.
-func (h *Harvest) writeDescription() error {
-	if err := h.mkdirAll(); err != nil {
+func (h *Harvest) writeDescription() (err error) {
+	if err = h.mkdirAll(); err != nil {
 		return err
 	}
 	desc := Description{
@@ -117,12 +121,9 @@ func (h *Harvest) writeDescription() error {
 		Set:       h.Set,
 		UpdatedAt: time.Now(),
 	}
-	files, err := ioutil.ReadDir(h.Dir())
+	desc.Files, err = h.Files()
 	if err != nil {
 		return err
-	}
-	for _, f := range files {
-		desc.Files = append(desc.Files, f.Name())
 	}
 	f, err := os.Create(h.descriptorPath())
 	if err != nil {
@@ -177,12 +178,46 @@ func (h *Harvest) GranularityToLayout() (string, error) {
 	}
 }
 
+// Files returns a list of harvested files, which have a common prefix.
+func (h *Harvest) Files() (files []string, err error) {
+	fis, err := ioutil.ReadDir(h.Dir())
+	if err != nil {
+		return
+	}
+	for _, f := range fis {
+		if f.Name() == "about.json" {
+			continue
+		}
+		if !strings.HasPrefix(f.Name(), "slice-") {
+			continue
+		}
+		files = append(files, f.Name())
+	}
+	return
+}
+
+// LatestFile that has been harvested.
+func (h *Harvest) LatestFile() (string, error) {
+	files, err := h.Files()
+	if err != nil {
+		return "", err
+	}
+	if len(files) == 0 {
+		return "", nil
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(files)))
+	return files[0], nil
+}
+
 // XXX(miku): Find last successful date (load from about.json, fallback to
 // filesystem), choose an interval (option, force by error), attempt download
 // (retry, hoops, as one way out of errors, restart with a smaller window
 // size).
 func (h *Harvest) Run() error {
 	defer h.writeDescription()
+	if _, err := h.Identify(); err != nil {
+		return err
+	}
 	if err := h.mkdirAll(); err != nil {
 		return err
 	}
@@ -201,7 +236,42 @@ func (h *Harvest) Run() error {
 
 // run runs the next request. Will signal no more updates available with an error value.
 func (h *Harvest) run() error {
+	// Get supported granularity as layout.
+	layout, err := h.GranularityToLayout()
+	if err != nil {
+		return err
+	}
 	// Find last date.
+	latest, err := h.LatestFile()
+	if err != nil {
+		return err
+	}
+	// Find the start of the next slice.
+	var start time.Time
+
+	switch {
+	case latest == "":
+		log.Println("no previous files found")
+		// XXX: Timestamp can be falsely advertised.
+		var err error
+		if start, err = time.Parse(layout, h.MustIdentify().EarliestDatestamp); err != nil {
+			return err
+		}
+		log.Printf("using %s as first date", start)
+	default:
+		// Parse latest date from filename (slice_start_end_serial.xml).
+		parts := strings.Split(latest, "_")
+		if len(parts) != 4 {
+			return fmt.Errorf("invalid file pattern: %s", latest)
+		}
+		i, err := strconv.ParseInt(parts[2], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid end date: %s", parts[2])
+		}
+		start = time.Unix(i, 0)
+	}
+	log.Printf("start of next slice: %s", start.Format(time.RFC3339))
+
 	// Depending on the current interval, request next slice.
 	// Resumptiontokens.
 	// Finalize files

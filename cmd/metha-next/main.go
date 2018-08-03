@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/miku/metha/next"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -12,14 +10,20 @@ func main() {
 		Endpoint: "http://dspace.mit.edu/oai/request",
 		Format:   "oai_dc",
 	}
-	fmt.Println(h)
-	fmt.Println(h.Dir())
+	log.Println(h)
+	log.Println(h.Dir())
 	desc, err := h.Description()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%v\n", desc)
+	log.Printf("%v", desc)
 	if err := h.Run(); err != nil {
 		log.Fatal(err)
 	}
+
+	files, err := h.Files()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("This harvest contains %d file(s).", len(files))
 }
