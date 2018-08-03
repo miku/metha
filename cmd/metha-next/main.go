@@ -14,6 +14,11 @@ func main() {
 	}
 	fmt.Println(h)
 	fmt.Println(h.Dir())
+	desc, err := h.Description()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%v\n", desc)
 	if err := h.Run(); err != nil {
 		log.Fatal(err)
 	}

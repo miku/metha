@@ -4,9 +4,11 @@ package next
 import (
 	"crypto/sha1"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,6 +18,8 @@ import (
 
 // BaseDir for harvests, XXX(miku): use env.
 var BaseDir = filepath.Join(metha.UserHomeDir(), ".metha-next")
+
+var ErrNoMoreUpdates = errors.New("no more updates")
 
 // Harvest contains the basic information on the harvest. Additionally some
 // options.
@@ -42,13 +46,16 @@ type HarvestOptions struct {
 	SuppressFormatParameter    bool
 }
 
-// Descriptor describes a harvest. This will be serialized into a file.
-type Descriptor struct {
+// Description describes a harvest, and some metadata. This will be serialized
+// into a file. It is required, because we do not want a full database, but
+// also do not want to put down all information in the names. The Descriptor
+// does not contain any historical facts, it should be recreatable from a
+// harvest value alone.
+type Description struct {
 	Endpoint  string    `json:"endpoint"`
 	Format    string    `json:"format"`
 	Set       string    `json:"set"`
 	Files     []string  `json:"files"`
-	CreatedAt time.Time `json:"created"`
 	UpdatedAt time.Time `json:"updated"`
 }
 
@@ -75,8 +82,61 @@ func (h *Harvest) MustIdentify() *metha.Identify {
 	return r
 }
 
+// Description returns the description of this harvest. It loads it from a
+// fixed file in the harvesting directory or otherwise creates a minimal
+// object.
+func (h *Harvest) Description() (*Description, error) {
+	if _, err := os.Stat(h.descriptorPath()); os.IsNotExist(err) {
+		return &Description{
+			Endpoint:  h.Endpoint,
+			Format:    h.Format,
+			Set:       h.Set,
+			UpdatedAt: time.Now(),
+		}, nil
+	}
+	f, err := os.Open(h.descriptorPath())
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var desc Description
+	if err := json.NewDecoder(f).Decode(&desc); err != nil {
+		return nil, err
+	}
+	return &desc, nil
+}
+
+// writeDescription persist a description of the harvest to a file.
+func (h *Harvest) writeDescription() error {
+	if err := h.mkdirAll(); err != nil {
+		return err
+	}
+	desc := Description{
+		Endpoint:  h.Endpoint,
+		Format:    h.Format,
+		Set:       h.Set,
+		UpdatedAt: time.Now(),
+	}
+	files, err := ioutil.ReadDir(h.Dir())
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		desc.Files = append(desc.Files, f.Name())
+	}
+	f, err := os.Create(h.descriptorPath())
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if err := json.NewEncoder(f).Encode(desc); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Path to file, that describes this harvest briefly.
-func (h *Harvest) DescriptorPath() string {
+func (h *Harvest) descriptorPath() string {
 	return filepath.Join(h.Dir(), "about.json")
 }
 
@@ -89,8 +149,8 @@ func (h *Harvest) Dir() string {
 	return filepath.Join(BaseDir, fmt.Sprintf("%x", hash.Sum(nil)))
 }
 
-// MkdirAll creates directories required for this harvest.
-func (h *Harvest) MkdirAll() error {
+// mkdirAll creates directories required for this harvest.
+func (h *Harvest) mkdirAll() error {
 	if _, err := os.Stat(h.Dir()); os.IsNotExist(err) {
 		if err := os.MkdirAll(h.Dir(), 0755); err != nil {
 			return err
@@ -117,32 +177,34 @@ func (h *Harvest) GranularityToLayout() (string, error) {
 	}
 }
 
-// Write harvest description out. This replaces the awkward base64 encoding,
-// which tied endpoint, format, set length to filesystem limits.
-func (h *Harvest) WriteDescriptor() error {
-	b, err := json.Marshal(h)
-	if err != nil {
-		return nil
-	}
-	return ioutil.WriteFile(h.DescriptorPath(), b, 0644)
-}
-
-// Files returns the absolute filenames that make up this harvest. XXX(miku):
-// This will be expensive to run on each request.
-func (h *Harvest) Files() []string {
-	return nil
-}
-
-// lastWindow returns the left and right time boundary of the last successful
-// window. Error, if there is none (new harvest).
-func (h *Harvest) lastWindow() (left, right time.Time, err error) {
-	return time.Time{}, time.Time{}, nil
-}
-
 // XXX(miku): Find last successful date (load from about.json, fallback to
 // filesystem), choose an interval (option, force by error), attempt download
 // (retry, hoops, as one way out of errors, restart with a smaller window
 // size).
 func (h *Harvest) Run() error {
+	defer h.writeDescription()
+	if err := h.mkdirAll(); err != nil {
+		return err
+	}
+	for {
+		err := h.run()
+		if err == ErrNoMoreUpdates {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		log.Println("fetched ...")
+	}
 	return nil
+}
+
+// run runs the next request. Will signal no more updates available with an error value.
+func (h *Harvest) run() error {
+	// Find last date.
+	// Depending on the current interval, request next slice.
+	// Resumptiontokens.
+	// Finalize files
+	// Done.
+	return ErrNoMoreUpdates
 }
