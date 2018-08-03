@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/miku/metha/next"
 )
@@ -13,4 +14,7 @@ func main() {
 	}
 	fmt.Println(h)
 	fmt.Println(h.Dir())
+	if err := h.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
