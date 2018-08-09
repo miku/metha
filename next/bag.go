@@ -19,7 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// BaseDir for harvests, XXX(miku): use env.
+// BaseDir for harvests, XXX(miku): use env, globalconf or similar.
 var BaseDir = filepath.Join(metha.UserHomeDir(), ".metha-next")
 
 var ErrNoMoreUpdates = errors.New("no more updates")
@@ -33,14 +33,14 @@ type Harvest struct {
 	Format   string
 	Set      string
 
-	Options *HarvestOptions
+	Options *Options
 	cache   struct {
 		identify *metha.Identify
 	}
 }
 
-// HarvestOptions groups options.
-type HarvestOptions struct {
+// Options groups options.
+type Options struct {
 	MaxRequest                 int
 	DisableSelectiveHarvesting bool
 	CleanBeforeDecode          bool
@@ -52,9 +52,9 @@ type HarvestOptions struct {
 
 // Description describes a harvest, and some metadata. This will be serialized
 // into a file. It is required, because we do not want a full database, but
-// also do not want to put down all information in the names. The Descriptor
+// also do not want to put down all information in the names. The Description
 // does not contain any historical facts, it should be recreatable from a
-// harvest value alone.
+// harvest value and filesystem state alone.
 type Description struct {
 	Endpoint  string    `json:"endpoint"`
 	Format    string    `json:"format"`
@@ -90,7 +90,7 @@ func (h *Harvest) MustIdentify() *metha.Identify {
 // fixed file in the harvesting directory or otherwise creates a minimal
 // object.
 func (h *Harvest) Description() (*Description, error) {
-	if _, err := os.Stat(h.descriptorPath()); os.IsNotExist(err) {
+	if _, err := os.Stat(h.descriptionPath()); os.IsNotExist(err) {
 		return &Description{
 			Endpoint:  h.Endpoint,
 			Format:    h.Format,
@@ -98,7 +98,7 @@ func (h *Harvest) Description() (*Description, error) {
 			UpdatedAt: time.Now(),
 		}, nil
 	}
-	f, err := os.Open(h.descriptorPath())
+	f, err := os.Open(h.descriptionPath())
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (h *Harvest) writeDescription() (err error) {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(h.descriptorPath())
+	f, err := os.Create(h.descriptionPath())
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (h *Harvest) writeDescription() (err error) {
 }
 
 // Path to file, that describes this harvest briefly.
-func (h *Harvest) descriptorPath() string {
+func (h *Harvest) descriptionPath() string {
 	return filepath.Join(h.Dir(), "about.json")
 }
 
