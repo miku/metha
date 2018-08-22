@@ -6,10 +6,10 @@ metha
 > repositories that expose structured metadata via OAI-PMH. Service Providers
 > then make OAI-PMH service requests to harvest that metadata. -- https://www.openarchives.org/pmh/
 
-The metha command line tools can gather information on OAI-PMH endpoints and to
+The metha command line tools can gather information on OAI-PMH endpoints and
 harvest data incrementally.
 
-The functionality is spread accross a few different executable:
+The functionality is spread accross a few different executables:
 
 * metha-sync for harvesting
 * metha-cat for viewing
