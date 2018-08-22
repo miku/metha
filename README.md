@@ -123,7 +123,7 @@ In 0.1.27 a `metha-fortune` command was added, which fetches a random article
 description and displays it.
 
 ```shell
-$ metha-fortune | fold -s
+$ metha-fortune
 Active Networking is concerned with the rapid definition and deployment of
 innovative, but reliable and robust, networking services. Towards this end we
 have developed a composite protocol and networking services architecture that
@@ -134,7 +134,7 @@ We will report on this work at the workshop.
 
     -- http://drops.dagstuhl.de/opus/phpoai/oai2.php
 
-$ metha-fortune | fold -s
+$ metha-fortune
 In this paper we show that the Lempert property (i.e., the equality between the
 Lempert function and the Carathéodory distance) holds in the tetrablock, a
 bounded hyperconvex domain which is not biholomorphic to a convex domain. The
@@ -143,14 +143,14 @@ Geom. Anal. 17(4), 717–750 (2007).
 
     -- http://ruj.uj.edu.pl/oai/request
 
-$ metha-fortune | fold -s
+$ metha-fortune
 I argue that Gödel's incompleteness theorem is much easier to understand when
 thought of in terms of computers, and describe the writing of a computer
 program which generates the undecidable Gödel sentence.
 
     -- http://quantropy.org/cgi/oai2
 
-$ metha-fortune | fold -s
+$ metha-fortune
 Nigeria, a country in West Africa, sits on the Atlantic coast with a land area
 of approximately 90 million hectares and a population of more than 140 million
 people. The southern part of the country falls within the tropical rainforest

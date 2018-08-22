@@ -55,6 +55,7 @@ type Harvest struct {
 	From    string
 	Until   string
 
+	// XXX: Factor these out into options.
 	MaxRequests                int
 	DisableSelectiveHarvesting bool
 	CleanBeforeDecode          bool
@@ -63,6 +64,7 @@ type Harvest struct {
 	SuppressFormatParameter    bool
 	DailyInterval              bool
 
+	// XXX: Lazy via sync.Once?
 	Identify *Identify
 	Started  time.Time
 
