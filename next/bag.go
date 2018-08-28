@@ -37,6 +37,8 @@ type Harvest struct {
 	cache   struct {
 		identify *metha.Identify
 	}
+
+	UpdatedAt time.Time
 }
 
 // Options groups options.

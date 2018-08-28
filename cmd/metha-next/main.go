@@ -10,8 +10,10 @@ func main() {
 		Endpoint: "http://dspace.mit.edu/oai/request",
 		Format:   "oai_dc",
 	}
+
 	log.Println(h)
 	log.Println(h.Dir())
+
 	desc, err := h.Description()
 	if err != nil {
 		log.Fatal(err)
@@ -25,5 +27,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("This harvest contains %d file(s).", len(files))
+	log.Printf("this harvest contains %d file(s)", len(files))
 }
