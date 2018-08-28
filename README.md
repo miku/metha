@@ -1,5 +1,4 @@
-metha
-=====
+# metha
 
 > The Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) is a
 > low-barrier mechanism for repository interoperability. Data Providers are
@@ -7,7 +6,25 @@ metha
 > then make OAI-PMH service requests to harvest that metadata. -- https://www.openarchives.org/pmh/
 
 The metha command line tools can gather information on OAI-PMH endpoints and
-harvest data incrementally.
+harvest data incrementally. The goal of metha is to make it simple to get
+access to data, it's focus is not to manage it.
+
+## Why yet another OAI harvester?
+
+* I wanted to crawl [Arxiv](http://export.arxiv.org/oai2) but found that existing tools would timeout.
+* Some harvesters would start to download all records anew, if I interrupted a running harvest.
+* There are many OAI
+  [endpoints](https://github.com/miku/metha/blob/master/contrib/sites.tsv) out
+  there. It is a widely used
+  [protocol](http://www.openarchives.org/OAI/openarchivesprotocol.html) and
+  somewhat worth knowing.
+* I wanted something simple for the command line; also fast and robust - metha
+  as it is implemented now, is relatively robust and more efficient than
+  requesting all record one-by-one (there is one
+  [annoyance](https://github.com/miku/metha/issues/6) which will hopefully be
+  fixed soon).
+
+## How it works
 
 The functionality is spread accross a few different executables:
 
@@ -87,8 +104,7 @@ Further examples can be found in the metha [man page](https://github.com/miku/me
 $ man metha
 ```
 
-Installation
-------------
+## Installation
 
 Use a deb or rpm [release](https://github.com/miku/metha/releases) or
 
@@ -96,8 +112,7 @@ Use a deb or rpm [release](https://github.com/miku/metha/releases) or
 $ go get github.com/miku/metha/cmd/...
 ```
 
-Limitations
------------
+## Limitations
 
 Currently the endpoint URL, the format and the set are concatenated and base64
 encoded to form the target directory, e.g:
@@ -110,8 +125,7 @@ Sounds#oai_dc#http://copac.jisc.ac.uk/oai-pmh
 If you have very long set names or a very long URL and the target directory
 exceeds e.g. 255 chars (on ext4), the harvest won't work.
 
-Harvesting Roulette
--------------------
+## Harvesting Roulette
 
 ```sh
 $ URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL
@@ -170,8 +184,7 @@ interaction in resource conservation.
     -- http://journal.reforestationchallenges.org/index.php/REFOR/oai
 ```
 
-Errors this harvester can somewhat handle
------------------------------------------
+## Errors this harvester can somewhat handle
 
 * responses with resumption tokens that lead to empty responses
 * gzipped responses, that are not advertised as such
@@ -182,8 +195,7 @@ Errors this harvester can somewhat handle
 * limited repositories, metha will try a few times with an exponential backoff
 * repositories, which throw occasional HTTP errors, although most of the responses look good, use `-ignore-http-errors` flag
 
-Misc
-----
+## Misc
 
 Show formats of random repository:
 
@@ -191,8 +203,7 @@ Show formats of random repository:
 $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .formats
 ```
 
-Metha elsewhere
----------------
+## Metha elsewhere
 
 * [The finc project](https://finc.info/de/datenquellen)
 * [Getting a dump of arXiv metadata](https://academia.stackexchange.com/questions/38969/getting-a-dump-of-arxiv-metadata) at [academia.stackexchange.com](https://academia.stackexchange.com/)
