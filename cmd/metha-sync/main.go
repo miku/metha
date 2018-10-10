@@ -24,6 +24,7 @@ func main() {
 	from := flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
 	quiet := flag.Bool("q", false, "suppress all output")
 	endpointList := flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
+	maxEmptyReponses := flag.Int("max-empty-responses", 10, "allow a number of empty responses before failing")
 
 	logFile := flag.String("log", "", "filename to log to")
 
@@ -80,7 +81,7 @@ func main() {
 	harvest.MaxRequests = *maxRequests
 	harvest.CleanBeforeDecode = true
 	harvest.DisableSelectiveHarvesting = *disableSelectiveHarvesting
-	harvest.MaxEmptyResponses = 10
+	harvest.MaxEmptyResponses = *maxEmptyReponses
 	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
 	harvest.SuppressFormatParameter = *suppressFormatParameter
 	harvest.DailyInterval = *daily
