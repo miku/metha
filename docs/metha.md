@@ -64,6 +64,9 @@ OPTIONS
 `-suppress-format-parameter`
   Do not send format parameter.
 
+`-max-empty-responses`
+  Allow a number of empty responses before failing (default 10).
+
 `-q`
   Be quiet.
 
