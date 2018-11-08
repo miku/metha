@@ -2,4 +2,5 @@
 metha*.deb
 metha*.rpm
 /packaging/deb/metha/usr/*
+/TODO.md
 
