@@ -1,0 +1,34 @@
+# Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+
+pkgname=metha
+pkgver=0.1.31
+pkgrel=1
+pkgdesc="No frills command line OAI-PMH protocol harvester and cache."
+arch=('i686' 'x86_64')
+url="https://github.com/miku/metha"
+license=('GPL')
+makedepends=('go' 'git')
+options=('!strip' '!emptydirs')
+conflicts=("${pkgname}-bin")
+replaces=("${pkgname}-bin")
+source=("${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('634eaa588a4468804d24051afc3f146618daae7b4788d32fccb29bafae03c3cc')
+_gourl='github.com/miku/metha/cmd/...'
+
+prepare() {
+  export GOPATH="${srcdir}"
+  go get -u -v -f ${_gourl}
+}
+
+package() {
+  install -Dm 775 "${srcdir}/bin/${pkgname}-cat" "${pkgdir}/usr/bin/${pkgname}-cat"
+  install -Dm 775 "${srcdir}/bin/${pkgname}-files" "${pkgdir}/usr/bin/${pkgname}-files"
+  install -Dm 775 "${srcdir}/bin/${pkgname}-fortune" "${pkgdir}/usr/bin/${pkgname}-fortune"
+  install -Dm 775 "${srcdir}/bin/${pkgname}-id" "${pkgdir}/usr/bin/${pkgname}-id"
+  install -Dm 775 "${srcdir}/bin/${pkgname}-ls" "${pkgdir}/usr/bin/${pkgname}-ls"
+  install -Dm 775 "${srcdir}/bin/${pkgname}-sync" "${pkgdir}/usr/bin/${pkgname}-sync"
+  install -Dm 775 "${srcdir}/src/github.com/miku/${pkgname}/docs/${pkgname}.1" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
+}
+
+# vim:set ft=sh ts=2 sw=2 et:
+
