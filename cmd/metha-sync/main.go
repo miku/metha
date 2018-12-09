@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
@@ -15,6 +16,7 @@ func main() {
 	format := flag.String("format", "oai_dc", "metadata format")
 	set := flag.String("set", "", "set name")
 	showDir := flag.Bool("dir", false, "show target directory")
+	baseDir := flag.String("base-dir", filepath.Join(metha.UserHomeDir(), ".metha"), "base dir for harvested files")
 	maxRequests := flag.Int("max", 1048576, "maximum number of token loops")
 	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
@@ -46,6 +48,7 @@ func main() {
 		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
 
+	metha.BaseDir = *baseDir
 	baseURL := metha.PrependSchema(flag.Arg(0))
 
 	if *showDir {
