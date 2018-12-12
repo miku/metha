@@ -106,7 +106,9 @@ $ man metha
 
 ## Installation
 
-Use a deb or rpm [release](https://github.com/miku/metha/releases) or
+Use a deb, rpm [release](https://github.com/miku/metha/releases),
+[PKGBUILD](https://github.com/miku/metha/blob/master/packaging/arch/PKGBUILD)
+or the go tool:
 
 ```sh
 $ go get github.com/miku/metha/cmd/...
