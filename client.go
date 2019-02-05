@@ -20,7 +20,7 @@ import (
 
 const (
 	// DefaultTimeout on requests.
-	DefaultTimeout = 5 * time.Minute
+	DefaultTimeout = 10 * time.Minute
 	// DefaultMaxRetries is the default number of retries on a single request.
 	DefaultMaxRetries = 8
 )
