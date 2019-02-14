@@ -25,8 +25,7 @@ const Day = 24 * time.Hour
 
 var (
 	// BaseDir is where all data is stored.
-	BaseDir string
-
+	BaseDir   = filepath.Join(UserHomeDir(), ".metha")
 	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
 
 	// ErrAlreadySynced signals completion.
@@ -430,7 +429,5 @@ func (h *Harvest) identify() error {
 func init() {
 	if dir := os.Getenv("METHA_DIR"); dir != "" {
 		BaseDir = dir
-	} else {
-		BaseDir = filepath.Join(UserHomeDir(), ".metha")
 	}
 }
