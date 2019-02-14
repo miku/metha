@@ -7,7 +7,7 @@ all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
 	go get ./...
-	go build -o $@ $<
+	CGO_ENABLED=0 go build -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
