@@ -369,7 +369,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			if e := ioutil.WriteFile(filename, b, 0644); e != nil {
 				return e
 			}
-			log.Printf("written %s", filename)
+			log.Printf("wrote %s", filename)
 		} else {
 			return err
 		}
