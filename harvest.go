@@ -345,7 +345,10 @@ func (h *Harvest) runInterval(iv Interval) error {
 				if !resp.HasResumptionToken() {
 					break
 				}
-				log.Printf("resumptionToken set and noRecordsMatch, continuing")
+				log.Println("resumptionToken set and noRecordsMatch, continuing")
+			case "badResumptionToken":
+				log.Println("badResumptionToken, might signal end-of-harvest")
+				break
 			case "InternalException":
 				// #9717, InternalException Could not send Message.
 				log.Println("InternalException: retrying request in a few instants...")

@@ -8,6 +8,14 @@ import (
 	"github.com/nytlabs/mxj"
 )
 
+// ResupmtionToken with optional extra information.
+type ResumptionToken struct {
+	Text             string `xml:",chardata"` // eyJhIjogWyIyMDE5LTAyLTIxV...
+	CompleteListSize string `xml:"completeListSize,attr"`
+	Cursor           string `xml:"cursor,attr"`
+	ExpirationDate   string `xml:"expirationDate,attr"`
+}
+
 // Response is the envelope. It can hold any OAI response kind.
 type Response struct {
 	ResponseDate string      `xml:"responseDate,omitempty" json:"responseDate,omitempty"`
@@ -36,8 +44,8 @@ type Identify struct {
 
 // ListSets lists available sets. TODO(miku): resumptiontoken can have expiration date, etc.
 type ListSets struct {
-	Set             []Set  `xml:"set,omitempty"  json:"set,omitempty"`
-	ResumptionToken string `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
+	Set             []Set           `xml:"set,omitempty"  json:"set,omitempty"`
+	ResumptionToken ResumptionToken `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
 }
 
 // A Set has a spec, name and description.
@@ -92,14 +100,14 @@ type Record struct {
 
 // ListIdentifiers lists headers only.
 type ListIdentifiers struct {
-	Headers         []Header `xml:"header,omitempty" json:"header,omitempty"`
-	ResumptionToken string   `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
+	Headers         []Header        `xml:"header,omitempty" json:"header,omitempty"`
+	ResumptionToken ResumptionToken `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
 }
 
 // ListRecords lists records.
 type ListRecords struct {
-	Records         []Record `xml:"record" json:"record"`
-	ResumptionToken string   `xml:"resumptionToken" json:"resumptionToken"`
+	Records         []Record        `xml:"record" json:"record"`
+	ResumptionToken ResumptionToken `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
 }
 
 // GetRecord returns a single record.
@@ -147,25 +155,60 @@ func (desc Description) GoString() string { return fmt.Sprintf("%s", desc.Body) 
 
 // HasResumptionToken determines if the request has a ResumptionToken.
 func (response *Response) HasResumptionToken() bool {
-	return response.ListSets.ResumptionToken != "" ||
-		response.ListIdentifiers.ResumptionToken != "" ||
-		response.ListRecords.ResumptionToken != ""
+	return response.ListSets.ResumptionToken.Text != "" ||
+		response.ListIdentifiers.ResumptionToken.Text != "" ||
+		response.ListRecords.ResumptionToken.Text != ""
 }
 
-// GetResumptionToken returns the resumption token or an empty string
-// if it does not have a token
+// CompleteListSize returns the value of completeListSize, if it exists.
+func (response *Response) CompleteListSize() string {
+	if response.ListSets.ResumptionToken.CompleteListSize != "" {
+		return response.ListSets.ResumptionToken.CompleteListSize
+	}
+	if response.ListIdentifiers.ResumptionToken.CompleteListSize != "" {
+		return response.ListIdentifiers.ResumptionToken.CompleteListSize
+	}
+	if response.ListRecords.ResumptionToken.CompleteListSize != "" {
+		return response.ListRecords.ResumptionToken.CompleteListSize
+	}
+	return ""
+}
+
+// CompleteListSize returns the value of completeListSize, if it exists.
+func (response *Response) Cursor() string {
+	if response.ListSets.ResumptionToken.Cursor != "" {
+		return response.ListSets.ResumptionToken.Cursor
+	}
+	if response.ListIdentifiers.ResumptionToken.Cursor != "" {
+		return response.ListIdentifiers.ResumptionToken.Cursor
+	}
+	if response.ListRecords.ResumptionToken.Cursor != "" {
+		return response.ListRecords.ResumptionToken.Cursor
+	}
+	return ""
+}
+
+// GetResumptionToken returns the resumption token or an empty string if it
+// does not have a token. In addition, return an empty string, if cursor and
+// complete list size are defined and are equal (doaj, refs #14865).
 func (response *Response) GetResumptionToken() string {
 
+	// If cursor and complete list size are non-empty and equal, we take it as
+	// a signal to stop harvesting.
+	if len(response.CompleteListSize()) > 0 && len(response.Cursor()) > 0 && response.CompleteListSize() == response.Cursor() {
+		return ""
+	}
+
 	// First attempt to obtain a resumption token from a ListIdentifiers response
-	resumptionToken := response.ListIdentifiers.ResumptionToken
+	resumptionToken := response.ListIdentifiers.ResumptionToken.Text
 
 	// Then attempt to obtain a resumption token from a ListRecords response
 	if resumptionToken == "" {
-		resumptionToken = response.ListRecords.ResumptionToken
+		resumptionToken = response.ListRecords.ResumptionToken.Text
 	}
 	// Then attempt to obtain a resumption token from a ListSets response
 	if resumptionToken == "" {
-		resumptionToken = response.ListSets.ResumptionToken
+		resumptionToken = response.ListSets.ResumptionToken.Text
 	}
 	return resumptionToken
 }
