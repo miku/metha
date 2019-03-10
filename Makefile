@@ -1,13 +1,14 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune
+GO111MODULE = on
 
 PKGNAME = metha
 
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
-	go get ./...
-	CGO_ENABLED=0 go build -o $@ $<
+	GO111MODULE=$(GO111MODULE) go get ./...
+	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go build -o $@ $<
 
 clean:
 	rm -f $(TARGETS)
