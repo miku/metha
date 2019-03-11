@@ -212,3 +212,6 @@ $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .fo
 * [Keyword Extraction from arXiv - Part 1](http://akumano.xyz/posts/arxiv-keyword-extraction-part1/)
 * [Openrefine use case: Automated workflow for harvesting, transforming and indexing of bibliographic metadata](https://groups.google.com/forum/#!topic/openrefine/RqQwlF-ll1c)
 * [Sammeln und Finden. Über das Sichtbarmachen von Open Science in Hamburg](https://opus4.kobv.de/opus4-bib-info/files/3645/HOS+Bibliothekartag.pdf) (PDF)
+* [acohan/arxiv-tools](https://github.com/acohan/arxiv-tools)
+* [Metadata analysis of 80,000 arxiv:physics/astro-ph articles](https://quantumdynamics.wordpress.com/2016/06/12/metadata-analysis-of-80000-arxivastro-ph-articles-reveals-biased-moderation/)
+
