@@ -194,10 +194,13 @@ Select a random record from a random endpoint and display its description:
 
   `metha-fortune`
 
-AUTHOR
-------
+AUTHORS
+-------
 
-Martin Czygan <martin.czygan@uni-leipzig.de>
+* Martin Czygan <martin.czygan@uni-leipzig.de>
+* Natanael Arndt, https://github.com/white-gecko
+* Gunnar Þór Magnússon, https://github.com/gunnihinn
+
 
 SEE ALSO
 --------
