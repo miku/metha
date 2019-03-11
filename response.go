@@ -43,7 +43,7 @@ type Identify struct {
 	Description       []Description `xml:"description,omitempty" json:"description,omitempty"`
 }
 
-// ListSets lists available sets. TODO(miku): resumptiontoken can have expiration date, etc.
+// ListSets lists available sets.
 type ListSets struct {
 	Set             []Set           `xml:"set,omitempty"  json:"set,omitempty"`
 	ResumptionToken ResumptionToken `xml:"resumptionToken,omitempty" json:"resumptionToken,omitempty"`
