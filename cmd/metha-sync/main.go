@@ -99,9 +99,10 @@ func main() {
 	log.Printf("harvest: %+v", harvest)
 
 	if err := harvest.Run(); err != nil {
-		if err == metha.ErrAlreadySynced {
-			log.Println("this repository is up-to date")
-		} else {
+		switch err {
+		case metha.ErrAlreadySynced:
+			log.Println("this repository is up-to-date")
+		default:
 			log.Fatal(err)
 		}
 	}
