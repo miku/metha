@@ -36,6 +36,7 @@ func main() {
 	maxEmptyReponses := flag.Int("max-empty-responses", 10, "allow a number of empty responses before failing")
 
 	logFile := flag.String("log", "", "filename to log to")
+	logStderr := flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
 
 	flag.Parse()
 
@@ -78,6 +79,15 @@ func main() {
 			log.Fatalf("error opening log file: %s", err)
 		}
 		log.SetOutput(file)
+	}
+
+	if *logStderr {
+		if !*quiet && *logFile == "" {
+			log.Warn(`The default logger writes to STDERR. Writing errors there was explicitly requested, but -q or -log were not specified. Writing entire log to STDOUT to avoid double-writing error messages.`)
+			log.SetOutput(os.Stdout)
+		}
+
+		log.AddHook(metha.NewCopyHook(os.Stderr))
 	}
 
 	harvest, err := metha.NewHarvest(baseURL)
