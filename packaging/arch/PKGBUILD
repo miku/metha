@@ -10,7 +10,7 @@ license=('GPL')
 makedepends=('go' 'git')
 options=('!strip' '!emptydirs')
 source=("${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('f34734565be61e489c4138dacca4956a65268512ae453f73b28ab11dd9600f5c')
+sha256sums=('0b9f5cbaf0e9bbdadb1b6626a9e7f10011793113586b96b9fb4c36da868a1dc1')
 _gourl='github.com/miku/metha/cmd/...'
 
 prepare() {
@@ -25,7 +25,7 @@ package() {
   install -Dm 775 "${srcdir}/bin/${pkgname}-id" "${pkgdir}/usr/bin/${pkgname}-id"
   install -Dm 775 "${srcdir}/bin/${pkgname}-ls" "${pkgdir}/usr/bin/${pkgname}-ls"
   install -Dm 775 "${srcdir}/bin/${pkgname}-sync" "${pkgdir}/usr/bin/${pkgname}-sync"
-  install -Dm 775 "${srcdir}/src/github.com/miku/${pkgname}/docs/${pkgname}.1" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
+  install -Dm 775 "${srcdir}/${pkgname}-${pkgver}/docs/${pkgname}.1" "${pkgdir}/usr/share/man/man1/${pkgname}.1"
 }
 
 # vim:set ft=sh ts=2 sw=2 et:
