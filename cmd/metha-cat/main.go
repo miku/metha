@@ -62,7 +62,11 @@ func main() {
 				strings.Join(candidates, ", "),
 			)
 		}
-		log.Printf("falling back to %s", candidates[0])
+		// It is a bit irritating to fallback to the same URL, so only log, if
+		// there's actually a difference.
+		if candidates[0] != harvest.BaseURL {
+			log.Printf("falling back from %s to %s", harvest.BaseURL, candidates[0])
+		}
 		harvest.BaseURL = candidates[0]
 
 		files, err = ioutil.ReadDir(harvest.Dir())
