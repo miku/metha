@@ -73,6 +73,9 @@ OPTIONS
 `-list`
   List a selection of known OAI endpoints.
 
+`-rm`
+  Purge harvesting directory.
+
 `-v`
   Program version.
 
