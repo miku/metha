@@ -34,6 +34,7 @@ func main() {
 	quiet := flag.Bool("q", false, "suppress all output")
 	endpointList := flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
 	maxEmptyReponses := flag.Int("max-empty-responses", 10, "allow a number of empty responses before failing")
+	removeCached := flag.Bool("rm", false, "remove all cached files before starting anew")
 
 	logFile := flag.String("log", "", "filename to log to")
 	logStderr := flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
@@ -93,6 +94,11 @@ func main() {
 	harvest, err := metha.NewHarvest(baseURL)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *removeCached {
+		log.Printf("removing already cached files from %s", harvest.Dir())
+		os.Remove(harvest.Dir())
 	}
 
 	harvest.From = *from
