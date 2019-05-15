@@ -5,25 +5,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
 )
-
-func getBaseDir() string {
-	if dir := os.Getenv("METHA_DIR"); dir != "" {
-		return dir
-	}
-	return filepath.Join(metha.UserHomeDir(), ".metha")
-}
 
 func main() {
 
 	format := flag.String("format", "oai_dc", "metadata format")
 	set := flag.String("set", "", "set name")
 	showDir := flag.Bool("dir", false, "show target directory")
-	baseDir := flag.String("base-dir", getBaseDir(), "base dir for harvested files")
+	baseDir := flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	maxRequests := flag.Int("max", 1048576, "maximum number of token loops")
 	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")

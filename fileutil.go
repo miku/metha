@@ -48,3 +48,11 @@ func MoveCompressFile(src, dst string) (err error) {
 
 	return os.Remove(src)
 }
+
+// GetBaseDir returns the base directory for the cache.
+func GetBaseDir() string {
+	if dir := os.Getenv("METHA_DIR"); dir != "" {
+		return dir
+	}
+	return filepath.Join(UserHomeDir(), ".metha")
+}

@@ -19,6 +19,7 @@ func main() {
 	format := flag.String("format", "oai_dc", "metadata format")
 	set := flag.String("set", "", "set name")
 	version := flag.Bool("v", false, "show version")
+	baseDir := flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 
 	from := flag.String("from", "", "ignore records before this date")
 	until := flag.String("until", "", "ignore records after this date")
@@ -38,6 +39,7 @@ func main() {
 
 	baseURL := metha.PrependSchema(flag.Arg(0))
 
+	metha.BaseDir = *baseDir
 	harvest := metha.Harvest{
 		BaseURL: baseURL,
 		Format:  *format,
