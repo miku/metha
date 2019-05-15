@@ -133,8 +133,6 @@ exceeds e.g. 255 chars (on ext4), the harvest won't work.
 $ URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL
 ```
 
-* https://asciinema.org/a/0hafkza6zyvuhzkikelbe1vrg?autoplay=1
-
 In 0.1.27 a `metha-fortune` command was added, which fetches a random article
 description and displays it.
 
