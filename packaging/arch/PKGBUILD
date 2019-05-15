@@ -10,7 +10,7 @@ license=('GPL')
 makedepends=('go' 'git')
 options=('!strip' '!emptydirs')
 source=("${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('1ba0760cd1ddef248ec661cc9911ea38820908e42a41fcfb72b3a8e58b5a290b')
+sha256sums=('bde3953accc3394b490f36b22640e7f142f4a23e65f56ece9ee1ba5f8cb0a003')
 _gourl='github.com/miku/metha/cmd/...'
 
 prepare() {
