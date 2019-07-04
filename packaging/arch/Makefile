@@ -1,5 +1,5 @@
 NAME = metha
-VERSION = 0.1.43
+VERSION = 0.1.44
 RELEASE = 0
 
 $(NAME)-$(VERSION)-$(RELEASE)-x86_64.pkg.tar.xz: PKGBUILD
