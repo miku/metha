@@ -9,6 +9,8 @@ The metha command line tools can gather information on OAI-PMH endpoints and
 harvest data incrementally. The goal of metha is to make it simple to get
 access to data, its focus is not to manage it.
 
+[![DOI](https://zenodo.org/badge/56384577.svg)](https://zenodo.org/badge/latestdoi/56384577)
+
 ## Why yet another OAI harvester?
 
 * I wanted to crawl [Arxiv](http://export.arxiv.org/oai2) but found that existing tools would timeout.
