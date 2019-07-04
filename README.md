@@ -11,6 +11,9 @@ access to data, its focus is not to manage it.
 
 [![DOI](https://zenodo.org/badge/56384577.svg)](https://zenodo.org/badge/latestdoi/56384577)
 
+The metha tool has been developed for [Project finc](https://finc.info) at
+[Leipzig University Library](https://ub.uni-Leipzig.de).
+
 ## Why yet another OAI harvester?
 
 * I wanted to crawl [Arxiv](http://export.arxiv.org/oai2) but found that existing tools would timeout.
