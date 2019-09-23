@@ -79,6 +79,9 @@ OPTIONS
 `-v`
   Program version.
 
+`-H` *header*
+  Extra header to pass to the request; syntax like curl, e.g. -H "Token: 123"
+
 EXAMPLES
 --------
 
