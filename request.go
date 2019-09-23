@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strings"
@@ -30,6 +31,7 @@ type Request struct {
 	ResumptionToken         string
 	CleanBeforeDecode       bool
 	SuppressFormatParameter bool
+	ExtraHeaders            http.Header
 }
 
 // Values enhances the builtin url.Values.

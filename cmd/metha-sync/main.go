@@ -4,11 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/xflag"
 	log "github.com/sirupsen/logrus"
 )
+
+var extraHeaders xflag.Array
 
 func main() {
 
@@ -30,6 +35,8 @@ func main() {
 
 	logFile := flag.String("log", "", "filename to log to")
 	logStderr := flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
+
+	flag.Var(&extraHeaders, "H", `extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123" `)
 
 	flag.Parse()
 
@@ -83,6 +90,15 @@ func main() {
 		log.AddHook(metha.NewCopyHook(os.Stderr))
 	}
 
+	var extra http.Header
+	for _, s := range extraHeaders {
+		parts := strings.SplitN(s, ":", 1)
+		if len(parts) != 2 {
+			log.Fatal(`extra headers notation is "Some-Key: Some-Value"`)
+		}
+		extra.Add(parts[0], parts[1])
+	}
+
 	harvest, err := metha.NewHarvest(baseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -103,6 +119,7 @@ func main() {
 	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
 	harvest.SuppressFormatParameter = *suppressFormatParameter
 	harvest.DailyInterval = *daily
+	harvest.ExtraHeaders = extra
 
 	log.Printf("harvest: %+v", harvest)
 

@@ -129,6 +129,11 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", DefaultUserAgent) // Maybe https://codereview.appspot.com/7532043.
+	for name, values := range r.ExtraHeaders {
+		for _, value := range values {
+			req.Header.Add(name, value)
+		}
+	}
 
 	resp, err := c.Doer.Do(req)
 	if err != nil {

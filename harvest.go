@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -63,6 +64,7 @@ type Harvest struct {
 	MaxEmptyResponses          int
 	SuppressFormatParameter    bool
 	DailyInterval              bool
+	ExtraHeaders               http.Header
 
 	// XXX: Lazy via sync.Once?
 	Identify *Identify
@@ -312,6 +314,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			ResumptionToken:         token,
 			CleanBeforeDecode:       h.CleanBeforeDecode,
 			SuppressFormatParameter: h.SuppressFormatParameter,
+			ExtraHeaders:            h.ExtraHeaders,
 		}
 
 		var filedate string
@@ -416,7 +419,11 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 
 // identify runs an OAI identify request and caches the result.
 func (h *Harvest) identify() error {
-	req := Request{Verb: "Identify", BaseURL: h.BaseURL}
+	req := Request{
+		Verb:         "Identify",
+		BaseURL:      h.BaseURL,
+		ExtraHeaders: h.ExtraHeaders,
+	}
 
 	c := CreateClient(30*time.Second, 2)
 
