@@ -90,13 +90,13 @@ func main() {
 		log.AddHook(metha.NewCopyHook(os.Stderr))
 	}
 
-	var extra http.Header
+	var extra = make(http.Header)
 	for _, s := range extraHeaders {
-		parts := strings.SplitN(s, ":", 1)
+		parts := strings.SplitN(s, ":", 2)
 		if len(parts) != 2 {
-			log.Fatal(`extra headers notation is "Some-Key: Some-Value"`)
+			log.Fatalf(`extra headers notation is "Some-Key: Some-Value", got %v`, parts)
 		}
-		extra.Add(parts[0], parts[1])
+		extra.Set(parts[0], parts[1])
 	}
 
 	harvest, err := metha.NewHarvest(baseURL)
