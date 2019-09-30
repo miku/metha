@@ -14,8 +14,8 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/objx v0.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
-	golang.org/x/net v0.0.0-20190923162816-aa69164e4478
-	golang.org/x/sys v0.0.0-20190922100055-0a153f010e69 // indirect
+	golang.org/x/net v0.0.0-20190926025831-c00fd9afed17
+	golang.org/x/sys v0.0.0-20190927073244-c990c680b611 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20190716221150-e98af2309876 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
