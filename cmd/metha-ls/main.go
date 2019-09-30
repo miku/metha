@@ -26,7 +26,7 @@ func ellipsis(s string, length int) string {
 func main() {
 	flag.Parse()
 
-	files, err := ioutil.ReadDir(metha.BaseDir)
+	files, err := ioutil.ReadDir(metha.GetBaseDir())
 	if err != nil {
 		log.Fatal(err)
 	}
