@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/adrg/xdg"
 	gzip "github.com/klauspost/pgzip"
 )
 
@@ -54,5 +55,5 @@ func GetBaseDir() string {
 	if dir := os.Getenv("METHA_DIR"); dir != "" {
 		return dir
 	}
-	return filepath.Join(UserHomeDir(), ".metha")
+	return filepath.Join(xdg.CacheHome, "metha")
 }

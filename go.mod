@@ -1,6 +1,7 @@
 module github.com/miku/metha
 
 require (
+	github.com/adrg/xdg v0.0.0-20190319220657-88e5137d2444
 	github.com/briandowns/spinner v1.7.0
 	github.com/jinzhu/now v1.0.1
 	github.com/klauspost/compress v1.8.4 // indirect
