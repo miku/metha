@@ -219,3 +219,6 @@ $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .fo
 * [Arxiv on Archive](https://archive.org/details/arxiv-bulk-metadata)
 * [Metadata analysis of 80,000 arxiv:physics/astro-ph articles](https://quantumdynamics.wordpress.com/2016/06/12/metadata-analysis-of-80000-arxivastro-ph-articles-reveals-biased-moderation/)
 
+## Asciicast
+
+[![asciicast](https://asciinema.org/a/271660.svg)](https://asciinema.org/a/271660)
