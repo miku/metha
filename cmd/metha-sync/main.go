@@ -13,31 +13,29 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var extraHeaders xflag.Array
+var (
+	baseDir                    = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
+	daily                      = flag.Bool("daily", false, "use daily intervals for harvesting")
+	disableSelectiveHarvesting = flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
+	endpointList               = flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
+	format                     = flag.String("format", "oai_dc", "metadata format")
+	from                       = flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
+	ignoreHTTPErrors           = flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
+	logFile                    = flag.String("log", "", "filename to log to")
+	logStderr                  = flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
+	maxEmptyReponses           = flag.Int("max-empty-responses", 10, "allow a number of empty responses before failing")
+	maxRequests                = flag.Int("max", 1048576, "maximum number of token loops")
+	quiet                      = flag.Bool("q", false, "suppress all output")
+	removeCached               = flag.Bool("rm", false, "remove all cached files before starting anew")
+	set                        = flag.String("set", "", "set name")
+	showDir                    = flag.Bool("dir", false, "show target directory")
+	suppressFormatParameter    = flag.Bool("suppress-format-parameter", false, "do not send format parameter")
+	version                    = flag.Bool("v", false, "show version")
+	extraHeaders               xflag.Array // Extra HTTP header.
+)
 
 func main() {
-
-	format := flag.String("format", "oai_dc", "metadata format")
-	set := flag.String("set", "", "set name")
-	showDir := flag.Bool("dir", false, "show target directory")
-	baseDir := flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
-	maxRequests := flag.Int("max", 1048576, "maximum number of token loops")
-	disableSelectiveHarvesting := flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
-	ignoreHTTPErrors := flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
-	suppressFormatParameter := flag.Bool("suppress-format-parameter", false, "do not send format parameter")
-	version := flag.Bool("v", false, "show version")
-	daily := flag.Bool("daily", false, "use daily intervals for harvesting")
-	from := flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
-	quiet := flag.Bool("q", false, "suppress all output")
-	endpointList := flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
-	maxEmptyReponses := flag.Int("max-empty-responses", 10, "allow a number of empty responses before failing")
-	removeCached := flag.Bool("rm", false, "remove all cached files before starting anew")
-
-	logFile := flag.String("log", "", "filename to log to")
-	logStderr := flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
-
 	flag.Var(&extraHeaders, "H", `extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123" `)
-
 	flag.Parse()
 
 	if *version {

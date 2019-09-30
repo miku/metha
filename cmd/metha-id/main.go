@@ -10,8 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var version = flag.Bool("v", false, "show version")
+
 func main() {
-	version := flag.Bool("v", false, "show version")
 
 	flag.Parse()
 

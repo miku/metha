@@ -11,6 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	showAll    = flag.Bool("a", false, "show full path")
+	bestEffort = flag.Bool("b", false, "continue in the presence of errors")
+)
+
 func ellipsis(s string, length int) string {
 	if len(s) > length {
 		return s[:length] + "..."
@@ -19,8 +24,6 @@ func ellipsis(s string, length int) string {
 }
 
 func main() {
-	showAll := flag.Bool("a", false, "show full path")
-	bestEffort := flag.Bool("b", false, "continue in the presence of errors")
 	flag.Parse()
 
 	files, err := ioutil.ReadDir(metha.BaseDir)

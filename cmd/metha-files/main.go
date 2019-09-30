@@ -9,10 +9,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	format  = flag.String("format", "oai_dc", "metadata format")
+	set     = flag.String("set", "", "set name")
+	version = flag.Bool("v", false, "show version")
+)
+
 func main() {
-	format := flag.String("format", "oai_dc", "metadata format")
-	set := flag.String("set", "", "set name")
-	version := flag.Bool("v", false, "show version")
 
 	flag.Parse()
 

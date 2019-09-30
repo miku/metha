@@ -15,16 +15,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	format  = flag.String("format", "oai_dc", "metadata format")
+	set     = flag.String("set", "", "set name")
+	version = flag.Bool("v", false, "show version")
+	baseDir = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
+	from    = flag.String("from", "", "ignore records before this date")
+	until   = flag.String("until", "", "ignore records after this date")
+	root    = flag.String("root", "Records", "root element to wrap records into")
+)
+
 func main() {
-	format := flag.String("format", "oai_dc", "metadata format")
-	set := flag.String("set", "", "set name")
-	version := flag.Bool("v", false, "show version")
-	baseDir := flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
-
-	from := flag.String("from", "", "ignore records before this date")
-	until := flag.String("until", "", "ignore records after this date")
-
-	root := flag.String("root", "Records", "root element to wrap records into")
 
 	flag.Parse()
 
