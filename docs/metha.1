@@ -126,8 +126,12 @@ To list cached endpoints you can combine \fB\fCmetha\-ls\fR and \fB\fCcolumn\fR 
 \fB\fCmetha\-ls \-a | column \-t\fR
 .SH ENVIRONMENT
 .PP
-The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
-variable.
+Deprecated: The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
+variable. Use the \fB\fC\-base\-dir\fR flag instead.
+.PP
+Since metha 0.2.0 the XDG Base Directory
+Specification \[la]https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html\[ra]
+is followed.
 .SH LIMITATIONS
 .PP
 Endpoints URLs longer than about 200 characters are not supported.
@@ -179,6 +183,12 @@ Curious about the contents of a random endpoint? Run a harvesting roulette with:
 Select a random record from a random endpoint and display its description:
 .IP
 \fB\fCmetha\-fortune\fR
+.SH UPGRADE TO 0.2.0
+.PP
+To continue using data harvested with previous metha versions, just rename the
+cache directory. For example, if you used the default, this would be:
+.IP
+\fB\fCmkdir \-p $HOME/.cache && mv $HOME/.metha $HOME/.cache/metha\fR
 .SH AUTHORS
 .RS
 .IP \(bu 2

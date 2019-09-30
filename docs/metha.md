@@ -140,8 +140,12 @@ To list cached endpoints you can combine `metha-ls` and `column` formatter:
 ENVIRONMENT
 -----------
 
-The harvesting directory can be controlled by the `METHA_DIR` environment
-variable.
+Deprecated: The harvesting directory can be controlled by the `METHA_DIR` environment
+variable. Use the `-base-dir` flag instead.
+
+Since metha 0.2.0 the [XDG Base Directory
+Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+is followed.
 
 LIMITATIONS
 -----------
@@ -199,6 +203,14 @@ Curious about the contents of a random endpoint? Run a harvesting roulette with:
 Select a random record from a random endpoint and display its description:
 
   `metha-fortune`
+
+UPGRADE TO 0.2.0
+----------------
+
+To continue using data harvested with previous metha versions, just rename the
+cache directory. For example, if you used the default, this would be:
+
+  `mkdir -p $HOME/.cache && mv $HOME/.metha $HOME/.cache/metha`
 
 AUTHORS
 -------
