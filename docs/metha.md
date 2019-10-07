@@ -37,6 +37,9 @@ A list of over 5000 (more or less usable) endpoints can be found here: https://i
 OPTIONS
 -------
 
+-base-dir *string*
+  Base directory for harvested files (default "~/.cache/metha").
+
 `-format` *string*
   Metadata format, default *oai_dc*.
 
