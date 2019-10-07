@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	baseDir = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	format  = flag.String("format", "oai_dc", "metadata format")
 	set     = flag.String("set", "", "set name")
 	version = flag.Bool("v", false, "show version")
@@ -28,6 +29,7 @@ func main() {
 		log.Fatal("endpoint required")
 	}
 
+	metha.BaseDir = *baseDir
 	harvest := metha.Harvest{
 		BaseURL: metha.PrependSchema(flag.Arg(0)),
 		Format:  *format,
