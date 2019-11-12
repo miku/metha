@@ -64,6 +64,7 @@ http://acikerisim.bingol.edu.tr:8080/oai/request
 http://acikerisim.cumhuriyet.edu.tr/oai/request
 http://acikerisim.demiroglu.bilim.edu.tr:8080/oai/request
 http://acikerisim.deu.edu.tr:8080/oai/request
+http://acikerisim.ege.edu.tr/oai/request
 http://acikerisim.erbakan.edu.tr/oai/request
 http://acikerisim.gelisim.edu.tr/oai/request
 http://acikerisim.igdir.edu.tr:8080/oai/request
@@ -89,6 +90,7 @@ http://aei.pitt.edu/perl/oai2
 http://aemjournal.org/index.php/AEM/oai
 http://aerospace.elpub.ru/jour/oai
 http://aespa.revistas.csic.es/index.php/aespa/oai
+http://aggr.ukm.um.si/vufind/OAI/Server
 http://agrimaroc.org/index.php/Actes_IAVH2/oai
 http://agriprima.polije.ac.id/index.php/journal/oai
 http://agriscience.scientific-work.org/index.php/agriscience/oai
@@ -456,6 +458,7 @@ http://czasopisma.upjp2.edu.pl/annalescanonici/oai
 http://czasopisma.upjp2.edu.pl/foliahistoricacracoviensia/oai
 http://czasopisma.upjp2.edu.pl/logosiethos/oai
 http://czasopisma.upjp2.edu.pl/poloniasacra/oai
+http://dais.sanu.ac.rs/oai/request
 http://dalea.du.se/oai/
 http://dar.aucegypt.edu:8080/oai/request
 http://darchive.mblwhoilibrary.org/oai/request
@@ -501,7 +504,6 @@ http://digilib.stikesicme-jbg.ac.id/ojs/index.php/jib/oai
 http://digilib.stikesicme-jbg.ac.id/ojs/index.php/jic/oai
 http://digilib.stikesicme-jbg.ac.id/ojs/index.php/jip/oai
 http://digital.bibliotekabijeljina.rs.ba/greenstone/cgi-bin/oaiserver.cgi
-http://digital.bl.fcen.uba.ar/gsdl-282/cgi-bin/oaiserver.cgi
 http://digital.cjh.org/OAI-PUB
 http://digitalcollections.lib.ucf.edu/cgi-bin/oai.exe
 http://digitalcommons.auctr.edu/do/oai/
@@ -765,6 +767,7 @@ http://e-journal.perpustakaanstainpsp.net/index.php/SMD/oai
 http://ejournal.polbeng.ac.id/index.php/IBP/oai
 http://ejournal.polinpdg.ac.id/index.php/JAM/oai
 http://e-journal.politanisamarinda.ac.id/index.php/jagr/oai
+http://ejournal.polman-babel.ac.id/index.php/manutech/oai
 http://e-journal.poltekkesjogja.ac.id/index.php/kia/oai
 http://ejournal.poltektegal.ac.id/index.php/informatika/oai
 http://ejournal.raharja.ac.id/index.php/ccit/oai
@@ -801,6 +804,7 @@ http://ejournal.stkip-pgri-sumbar.ac.id/index.php/index/oai
 http://e-journal.stmik-bnj.ac.id/index.php/JB/oai
 http://e-journals.unmul.ac.id/index.php/JIM/oai
 http://e-journals.unmul.ac.id/index.php/JParadigma/oai
+http://e-journals.unmul.ac.id/index.php/plakat/oai
 http://e-journals.unmul.ac.id/index.php/PSIKO/oai
 http://ejournal.uigm.ac.id/index.php/EG/oai
 http://ejournal.uin-malang.ac.id/index.php/el-muhasaba/oai.
@@ -1044,6 +1048,7 @@ http://export.arxiv.org/oai2
 http://extensioneducation.org/index.php/jee/oai
 http://eyereports.org/index.php/eyereports/oai
 http://ezid.cdlib.org/oai
+http://fada.birzeit.edu/oai/request
 http://fc1.to.cnr.it/oaiprovider/
 http://fdat.escience.uni-tuebingen.de/portal/rest/oai
 http://fepbl.com/index.php/ijmer/oai
@@ -1738,6 +1743,7 @@ http://jurnal.uinsu.ac.id/index.php/ansiru/oai
 http://jurnal.uinsu.ac.id/index.php/assais/oai
 http://jurnal.uinsu.ac.id/index.php/attafahum/oai
 http://jurnal.uinsu.ac.id/index.php/attahdits/oai
+http://jurnal.uinsu.ac.id/index.php/consilium/oai
 http://jurnal.uinsu.ac.id/index.php/ihya/oai
 http://jurnal.uinsu.ac.id/index.php/ijlres/oai
 http://jurnal.uinsu.ac.id/index.php/JCIMS/oai
@@ -1870,6 +1876,7 @@ http://library.wur.nl/oai
 http://lib-repos.fun.ac.jp/dspace-oai/request
 http://libres.uncg.edu/ir/oai/oai.aspx
 http://libros.metabiblioteca.org/oai/request
+http://libros.ul.edu.co/index.php/libros/oai
 http://libtextcenter.unl.edu:2000/cgi-bin/oai.exe
 http://libucd.ucd.ie/oaiprovider/
 http://lib.ueh.edu.vn/oai.aspx
@@ -2188,8 +2195,10 @@ http://openaccess.ihu.edu.tr/oai/request
 http://openaccess.iste.edu.tr/oai/request
 http://openaccess.iyte.edu.tr:8080/oai/request
 http://openaccess.izu.edu.tr/oai/request
+http://openaccess.kavram.edu.tr/oai/request
 http://openaccess.maltepe.edu.tr/oai/request
 http://openaccess.mef.edu.tr/oai/request
+http://openaccess.mku.edu.tr/oai/request
 http://openaccess.nisantasi.edu.tr:8080/oai/request
 http://openaccess.ogu.edu.tr:8080/oai/request
 http://openaccess.osmaniye.edu.tr/oai/request
@@ -2211,6 +2220,7 @@ http://opensaldru.uct.ac.za/oai/request
 http://ophcj.nuph.edu.ua/oai
 http://opubs.com/cys/index.php/cys/oai
 http://opubs.com/jpbs/index.php/jpbs/oai
+http://oracc.org/oai
 http://oralhistories.library.caltech.edu/perl/oai2
 http://orbilu.uni.lu/oai/request
 http://orbi.ulg.ac.be/oai/request
@@ -2246,6 +2256,7 @@ http://pensarsalud.cesarrivera.cl/index.php/ps/oai
 http://periodicos.fbuni.edu.br/index.php/index/oai
 http://periodicos.franca.unesp.br/index.php/historiaecultura/oai
 http://periodicos.ifpb.edu.br/index.php/principia/oai
+http://periodicos.processus.com.br/index.php/ppds/oai
 http://periodicos.ufc.br/informacaoempauta/oai
 http://periodicos.ufes.br/simbiotica/oai
 http://periodicos.ufpb.br/ojs2/index.php/arf/oai
@@ -2413,6 +2424,7 @@ http://radiooptics.elpub.ru/jour/oai
 http://raigal.unvm.edu.ar/ojs/index.php/raigal/oai
 http://raiith.iith.ac.in/cgi/oai2
 http://ran.udec.cl/ojs/index.php/ran/oai
+http://rbmv.org/index.php/BJVM/oai
 http://rccp.udea.edu.co/index.php/index/oai
 http://rcientificas.uninorte.edu.co/index.php/index/oai
 http://rdi.uncoma.edu.ar/oai/snrd
@@ -2484,7 +2496,6 @@ http://repository.bilkent.edu.tr/oai/request
 http://repository.center.wakayama-u.ac.jp/oai/request
 http://repository.corp.at/cgi/oai2
 http://repository.cshl.edu/cgi/oai2
-http://repository.dl.itc.u-tokyo.ac.jp/dspace-oai/request
 http://repository.dl.itc.u-tokyo.ac.jp/oai
 http://repository.dwc.doshisha.ac.jp/modules/xoonips/oai.php
 http://repository.eafit.edu.co/oai/request
@@ -2588,6 +2599,7 @@ http://research-repository.st-andrews.ac.uk/dspace-oai/request
 http://researchspace.ukzn.ac.za/oai/request
 http://researth.iars.info/index.php/curie/oai
 http://resgenchem15.chem.wisc.edu/spt/SPT--OAI.php
+http://revcmhabana.sld.cu/index.php/rcmh/oai
 http://revcom2.portcom.intercom.org.br/index.php/anuariolusofono/oai
 http://revcom2.portcom.intercom.org.br/index.php/contemporanea/oai
 http://revcom2.portcom.intercom.org.br/index.php/contracampo/oai
@@ -2608,6 +2620,7 @@ http://revintsociologia.revistas.csic.es/index.php/revintsociologia/oai
 http://re-visiones.net/ojs/index.php/RE-VISIONES/oai
 http://revista-academica.utb.edu.ec/index.php/pertacade/oai
 http://revistaaen.es/index.php/aen/oai
+http://revista-agroproductividad.org/index.php/agroproductividad/oai
 http://revista.anaceo.cl/index.php/anaceo/oai
 http://revistabuengobierno.org/home/OAI-PMH/
 http://revistachasqui.org/index.php/chasqui/oai
@@ -2621,6 +2634,7 @@ http://revistahad.eu/index.php/revistahad/oai
 http://revista-iberoamericana.pitt.edu/ojs/index.php/Iberoamericana/oai
 http://revista.institutobolivar.edu.pe/index.php/gerencia/oai
 http://revista.isced-hbo.ed.ao/rop/index.php/ROP/oai
+http://revistajrg.com/index.php/jrg/oai
 http://revistajrg.top/ojs/index.php/jrg/oai
 http://revistanuestramerica.cl/ojs/index.php/index/oai
 http://revistapsicologia.org/index.php/index/oai
@@ -2795,6 +2809,7 @@ https://abked.de/index.php/abked/oai
 https://academicworks.cuny.edu/do/oai/
 https://acikarsiv.com/Home/Oai/
 https://acikerisim.hacibayram.edu.tr/Home/Oai/
+https://acikerisim.isikun.edu.tr/oai/request
 https://agriprima.polije.ac.id/index.php/journal/oai
 https://agroteknika.id/index.php/agtk/oai
 https://aisyah.journalpress.id/index.php/jika/oai
@@ -2819,10 +2834,13 @@ https://arminda.whitman.edu/do/oai/
 https://asrjetsjournal.org/index.php/American_Scientific_Journal/oai
 http://sat.bntu.by/jour/oai
 https://avances.adide.org/index.php/ase/oai
+https://avesis.erciyes.edu.tr/api/oai2
 http://savoirspartages.get-telecom.fr/z_savoirs_partages_oai/oai2.php
 http://savoirs.usherbrooke.ca/oai/request
+https://bcnroc.ajuntament.barcelona.cat/oai/request
 https://bearworks.missouristate.edu/do/oai/
 https://bia.unibz.it/oai/request
+https://bibliotecadigital.exactas.uba.ar/greenstone3/oaiserver
 https://biomedgrid.com/oai.xml
 https://biomedres.us/oai-pmh.xml
 https://bioone.org/action/oai
@@ -2997,6 +3015,9 @@ https://ejournal.ikmi.ac.id/index.php/jict-ikmi/oai
 https://ejournal.imperiuminstitute.org/index.php/AKURASI/oai
 https://ejournal.imperiuminstitute.org/index.php/SERAMBI/oai
 https://ejournal.inaifas.ac.id/index.php/auladuna/oai
+https://ejournal.lppmsttpagaralam.ac.id/index.php/betrik/oai
+https://e-journal.my.id/jsgp/oai
+https://e-journal.my.id/onoma/oai
 https://ejournal-pps.unsuri.id/index.php/jmpai/oai
 https://e-journal.sospublication.co.in/index.php/jalrb/oai
 https://ejournal.stib.ac.id/index.php/mmt/oai
@@ -3033,6 +3054,7 @@ https://eksplora.stikom-bali.ac.id/index.php/eksplora/oai
 http://seminar.sentrinov.org/index.php/sentrinov/sentrinov2016/oai
 http://semnas.radenfatah.ac.id/index.php/semnasfst/oai
 http://senatik.stta.ac.id/index.php/senatik/oai
+https://epistemehealth.com/index.php/nab/oai
 http://s-epub.in/ojs/index.php/index/oai
 https://epublications.regis.edu/do/oai/
 https://e-pub.uni-weimar.de/opus4/oai
@@ -3065,6 +3087,7 @@ http://shashi.pitt.edu/ojs/index.php/shashi/oai
 https://helvia.uco.es/oai/request
 http://shizuoka.repo.nii.ac.jp/oai
 http://shoin.repo.nii.ac.jp/oai
+http://showa.repo.nii.ac.jp/oai
 https://hrcak.srce.hr/oai/
 http://sht.ut.ee/index.php/sht/oai
 https://hull-repository.worktribe.com/oaiprovider
@@ -3072,6 +3095,7 @@ https://iberoamericasocial.com/ojs/index.php/index/oai
 https://idea.library.drexel.edu/oai/request
 https://ihrjournal.com/index.php/ihrj/oai
 https://ijcbr.com/index.php/ijcbr/oai
+https://ijcbr.com/ojs/index.php/ijcbrjournal/oai
 https://ijcbr.sumathipublications.com/index.php/ijcbr/oai
 https://ijcc.chemoprev.org/index.php/ijcc/oai
 https://ijcrpp.com/index.php/home/oai
@@ -3081,6 +3105,7 @@ https://ijcrpp.tk/index.php/ijcrpp/oai
 https://ijfac.unsri.ac.id/index.php/ijfac/oai
 https://ijops.com/jms/index.php/up/oai/
 https://ijpefs.com/index.php/ijpefs/oai
+https://imjbr.arcaeducacional.ga/index.php/imjbr/oai
 https://inabj.org/index.php/ibj/oai
 https://indonesiaprime.id/index.php/id/oai
 https://indonesiaprime.or.id/index.php/id/oai
@@ -3147,6 +3172,13 @@ https://journals.eleyon.org/index.php/nr/oai
 https://journals.gre.ac.uk/index.php/gswr/oai
 https://journals.iorpress.org/index.php/ajir/oai
 https://journals.matheo.si/index.php/index/oai
+https://journals.psmpublishers.org/index.php/biolres/oai
+https://journals.psmpublishers.org/index.php/ijafe/oai
+https://journals.psmpublishers.org/index.php/ijmm/oai
+https://journals.psmpublishers.org/index.php/ijnas/oai
+https://journals.psmpublishers.org/index.php/index/oai
+https://journals.psmpublishers.org/index.php/microbiol/oai
+https://journals.psmpublishers.org/index.php/vetres/oai
 https://journals.shareok.org/arp/oai
 https://journals.shareok.org/jheai/oai
 https://journals.shareok.org/studyandscrutiny/oai
@@ -3173,6 +3205,7 @@ https://jpprepo.polije.ac.id/cgi/oai2
 https://jrenhep.com/index.php/jrenhep/oai
 https://jrmds.in/index.php/JRMDS/oai
 https://jsgp.web.id/index.php/jsgp/oai
+https://juriskes.com/ojs/index.php/jrk/oai
 https://jurnalbhumi.stpn.ac.id/index.php/JB/oai
 https://jurnaliainpontianak.or.id/index.php/alhikmah/oai
 https://jurnaliainpontianak.or.id/index.php/khatulistiwa/oai
@@ -3188,10 +3221,12 @@ https://jurnal.stainkediri.ac.id/index.php/jeels/oai
 https://jurnal.stie.asia.ac.id/index.php/jibeka/oai
 https://jurnal.stiq-amuntai.ac.id/index.php/al-miyar/oai
 https://jurnal.stmik-aub.ac.id/index.php/goinfotech/oai
+https://jurnal.stts.edu/index.php/insight/oai
 https://jurnal.tarjih.or.id/index.php/tarjih/oai
 https://jurnal.ugm.ac.id/jae/oai
 https://jurnal.ugm.ac.id/pancasila/oai
 https://jurnal.ugm.ac.id/rpcpe/oai
+https://jurnal.unigal.ac.id/index.php/jall/oai
 https://jurnal.unitri.ac.id/index.php/refrensi/oai
 https://jurnal.uns.ac.id/jpk/oai
 https://jurnal.unsur.ac.id/je/oai
@@ -3243,6 +3278,7 @@ http://sojo-u.repo.nii.ac.jp/oai
 https://ojs3.unpatti.ac.id/index.php/barekeng/oai
 https://ojs.aut.ac.nz/applied-finance-letters/oai
 https://ojs.aut.ac.nz/pacific-journalism-review/oai
+https://ojs.cimedoc.uniba.it/index.php/entomol/oai
 https://ojs.cimedoc.uniba.it/index.php/fc/oai
 https://ojs.cimedoc.uniba.it/index.php/glottodidattica/oai
 https://ojs.cimedoc.uniba.it/index.php/law/oai
@@ -3250,9 +3286,11 @@ https://ojs.cvut.cz/ojs/index.php/gi/oai
 https://ojs.deakin.edu.au/index.php/index/oai
 https://ojs.indrastra.com/index.php/dossier/oai
 https://ojs.indrastra.com/index.php/indrastra/oai
+https://ojs.seabs.ac.id/index.php/Veritas/oai
 https://ojs.stkippgri-lubuklinggau.ac.id/index.php/SIBISA/oai
 https://ojs.uajy.ac.id/index.php/jik/oai
 https://ojs.umrah.ac.id/index.php/jiafi/oai
+https://ojs.unikom.ac.id/index.php/artic/oai
 https://ojs.unikom.ac.id/index.php/visualita/oai
 https://ojs.uph.edu/index.php/JHIV/oai
 https://ojs.uph.edu/index.php/JOHME/oai
@@ -3268,6 +3306,7 @@ https://open.bu.edu/oai/request
 https://openhardware.metajnl.com/jms/index.php/up/oai/
 https://openhealthdata.metajnl.com/jms/index.php/up/oai/
 https://openhumanitiesdata.metajnl.com/jms/index.php/up/oai/
+https://openlibrary.cmre.nato.int/oai/request
 https://open.mitchellhamline.edu/do/oai/
 https://openprairie.sdstate.edu/do/oai/
 https://openpsychologydata.metajnl.com/jms/index.php/up/oai/
@@ -3292,6 +3331,11 @@ https://patrimoniodocumental.icam.es/i18n/oai/oai_patrimoniodocumental.icam.es.d
 http://spectrum.library.concordia.ca/cgi/oai2
 http://sphhcj.nuph.edu.ua/oai
 https://phm.cuspu.edu.ua/ojs/index.php/SNYS/oai
+https://ph.pollub.pl/index.php/bia/oai
+https://ph.pollub.pl/index.php/jcsi/oai
+https://ph.pollub.pl/index.php/jteme/oai
+https://ph.pollub.pl/index.php/odk/oai
+https://ph.pollub.pl/index.php/teka/oai
 https://phsreda.com/oai
 https://pillars.taylor.edu/do/oai/
 https://pilotscholars.up.edu/do/oai/
@@ -3305,6 +3349,7 @@ https://presentpasts.info/jms/index.php/up/oai/
 https://press.ierek.com/index.php/Baheth/oai
 https://press.ierek.com/index.php/Resourceedings/oai
 https://prism.ucalgary.ca/oai/request
+https://proceeding.iconss.id/ips/oai
 https://produccioncientificaluz.org/index.php/kasmera/oai
 https://pub.h-brs.de/oai
 https://publicaciones.banrepcultural.org/index.php/index/oai
@@ -3326,6 +3371,7 @@ https://rdw.rowan.edu/do/oai/
 https://red.library.usd.edu/do/oai/
 https://red.mnstate.edu/do/oai/
 https://re.eltech.ru/jour/oai
+https://remix.berklee.edu/do/oai/
 https://reports.nlr.nl/oai/request
 https://repositorio.uloyola.es/oai/request
 https://repositorio.uniandes.edu.co/oai/request
@@ -3347,11 +3393,13 @@ https://research.upjohn.org/do/oai/
 https://resokamer.com/oai
 https://revije.ff.uni-lj.si/keria/oai
 https://revistaentreciencias.enes.unam.mx/index.php/Entreciencias/oai
+https://revista.estudioidea.org/ojs/index.php/eidea/oai
 https://revista.ibp.co.cu/index.php/BV/oai
 https://revistapublicando.org/revista/index.php/crv/oai
 https://revistas.isfodosu.edu.do/index.php/recie/oai
 https://revistas.uece.br/index.php/index/oai
 https://revistas.ufpr.br/biofix/oai
+https://revistas.ufpr.br/sclplr/oai
 https://revistas.unc.edu.ar/index.php/integracionyconocimiento/oai
 https://revistas.unicartagena.edu.co/index.php/eltallerdelahistoria/oai
 https://revistas.unicartagena.edu.co/index.php/marioalariodfilippo/oai
@@ -3406,6 +3454,7 @@ https://scholarworks.uttyler.edu/do/oai/
 https://scholarworks.uvm.edu/do/oai/
 https://scholarworks.waldenu.edu/do/oai/
 https://secularismandnonreligion.org/jms/index.php/up/oai/
+https://seer.ufrgs.br/debates/oai
 https://seer.ufrgs.br/Poled/oai
 https://sempiternelia.com/udm/oai
 https://silkroadjournal.online/jms/index.php/up/oai/
@@ -3413,6 +3462,7 @@ https://sjms.nu/jms/index.php/up/oai/
 http://ssjournals.com/index.php/ijasr/oai
 https://skripsi.sttjaffray.ac.id/index.php/skripsi/oai
 https://skyfox.co/ojs/index.php/IJALS/oai
+https://soar.usa.edu/do/oai/
 https://society.fisip.ubb.ac.id/index.php/society/oai
 https://soils-journal.ru/index.php/POS/oai
 https://source.sheridancollege.ca/do/oai/
@@ -3550,6 +3600,7 @@ https://www.journalofaltmetrics.org/jms/index.php/up/oai/
 https://www.journalofbabylon.com/index.php/JUBES/oai
 https://www.journalofbabylon.com/index.php/JUBPAS/oai
 https://www.journalofcognition.org/jms/index.php/up/oai/
+https://www.journals.us.edu.pl/index.php/PLS/oai
 https://www.journalzbr.com/index.php/jzbr/oai
 https://www.jrmdc.com/journal/oai
 https://www.jsdrm.ru/jour/oai
@@ -3558,6 +3609,7 @@ https://www.lightweight-structures.de/oai
 https://www.littlebaypublishers.com/index.php/seajournalms/oai
 https://www.mahkuscript.com/jms/index.php/up/oai/
 https://www.mamsie.bbk.ac.uk/jms/index.php/up/oai/
+https://www.maspolitiques.com/ojs/index.php/ajps/oai
 https://www.materialmetalurgi.id/index.php/JMMI/oai
 https://www.myresearchjournals.com/index.php/index/oai
 https://www.neiconjournal.com/jour/oai
@@ -3655,6 +3707,7 @@ http://toyo.repo.nii.ac.jp/oai
 http://tp.revistas.csic.es/index.php/tp/oai
 http://transmed.almazovcentre.ru/jour/oai
 http://travesia.mcu.es/portalnb/oai/request
+http://trencadis.diba.cat/OAI-PUB
 http://trilogi.ac.id/journal/ks/index.php/JISA/oai
 http://trudy.ruslang.ru/jour/oai
 http://tsukuba.repo.nii.ac.jp/oai
@@ -3706,6 +3759,7 @@ http://vcoai.lib.harvard.edu/vcoai/vc
 http://vegsci.isvs.org.in/index.php/index/oai
 http://ven.chdtu.edu.ua/index.php/2306-4420/oai
 http://veprints.unica.it/cgi/oai2
+http://veredes.es/vad/index.php/vad/oai
 http://vestiagr.belnauka.by/jour/oai
 http://vestichem.belnauka.by/jour/oai
 http://vestifm.belnauka.by/jour/oai
@@ -4210,7 +4264,6 @@ http://www.riuc.bc.uc.edu.ve/oai/request
 http://www.rivisteclueb.it/riviste/index.php/rilune/oai
 http://www.rivoluzionimolecolari.it/index.php/rivoluzionimolecolari/oai
 http://www.rmjournal.ru/jour/oai
-http://www.rmlconsultores.com/revista/index.php/index/oai
 http://www.rmojs.unina.it/index.php/rm/oai
 http://www.ronpub.com/oai/
 http://www.rpmgf.pt/ojs/index.php/index/oai
@@ -4287,6 +4340,7 @@ http://www.ubka.uni-karlsruhe.de/oai/gap-c/oai2.php
 http://www.ub.uit.no/munin-oai/request
 http://www.uco.es/docencia/grupos/reduca/index.php/reduca/oai
 http://www.uco.es/servicios/publicaciones/revistas/index.php/cco/oai
+http://www.uco.es/ucopress/ojs/index.php/alfinge/oai
 http://www.ucs.br/etc/revistas/index.php/conjectura/oai
 http://www.ucs.br/etc/revistas/index.php/scientiacumindustria/oai
 http://www.uiskbh.ba/ojs/index.php/journal-tec/oai
@@ -4331,6 +4385,7 @@ http://xn--archivoespaoldearte-53b.revistas.csic.es/index.php/aea/oai
 http://xn--revistadefilologiaespaola-uoc.revistas.csic.es/index.php/rfe/oai
 http://yamagata.repo.nii.ac.jp/oai
 http://yasar.mitosweb.com/services_oai2/
+http://ynu.repo.nii.ac.jp/oai
 http://yonbildergi.com/index.php/YONBIL/oai
 http://yrd.scientific-work.org/index.php/yrd/oai
 http://yurisdiksi.scientific-work.org/index.php/yrd/oai
