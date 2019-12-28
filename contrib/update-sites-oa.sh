@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Update sites-oa.tsv from various sources.
+#
+# To join all, run: cat sites-* | sort -u > sites.tsv
+#
+# TODO: Add, http://roar.eprints.org/listfriends.xml
+
+set -e
+
 command -v xmlstarlet >/dev/null 2>&1 || { echo >&2 "xmlstarlet required"; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl required"; exit 1; }
 curl -s "http://www.openarchives.org/pmh/registry/ListFriends" | xmlstarlet sel -t -m "/BaseURLs/baseURL/text()" -c . -n - | grep -v '^$$' > sites-oa.tsv
