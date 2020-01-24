@@ -13,3 +13,4 @@ some known OAI provides ([OJS](https://pkp.sfu.ca/ojs/),
 URL hints.
 
 * [OAIProvider](https://www.google.com/search?q=inurl%3AOAIProvider)
+* [index.php AND oai](https://www.google.com/search?q=inurl%3Aindex.php+AND+inurl%3Aoai)
