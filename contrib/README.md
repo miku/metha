@@ -10,3 +10,6 @@ some known OAI provides ([OJS](https://pkp.sfu.ca/ojs/),
 * [BASE sources](https://www.base-search.net/about/en/about_sources.php)
 * [ISSN ROAD](https://road.issn.org/)
 
+URL hints.
+
+* [OAIProvider](https://www.google.com/search?q=inurl%3AOAIProvider)
