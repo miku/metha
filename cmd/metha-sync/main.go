@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/miku/metha"
 	"github.com/miku/metha/xflag"
@@ -35,6 +37,7 @@ var (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	flag.Var(&extraHeaders, "H", `extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123" `)
 	flag.Parse()
 

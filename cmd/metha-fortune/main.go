@@ -179,6 +179,7 @@ func createSearcher(endpoint string) Search {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
 
 	if !*debug {

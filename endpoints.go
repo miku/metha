@@ -2,11 +2,9 @@ package metha
 
 import (
 	"math/rand"
-	"time"
 )
 
 func RandomEndpoint() string {
-	rand.Seed(time.Now().UnixNano())
 	return Endpoints[rand.Intn(len(Endpoints))]
 }
 
