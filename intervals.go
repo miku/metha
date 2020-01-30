@@ -55,3 +55,22 @@ func (iv Interval) DailyIntervals() []Interval {
 	}
 	return ivals
 }
+
+// HourlyIntervals segments a given interval into hourly intervals.
+func (iv Interval) HourlyIntervals() []Interval {
+	var ivals []Interval
+	start := iv.Begin
+	for {
+		if start.After(iv.End) {
+			break
+		}
+		end := now.New(start).EndOfHour()
+		if end.After(iv.End) {
+			ivals = append(ivals, Interval{Begin: start, End: end})
+			break
+		}
+		ivals = append(ivals, Interval{Begin: start, End: end})
+		start = now.New(start.AddDate(0, 0, 0, 1)).BeginningOfHour()
+	}
+	return ivals
+}
