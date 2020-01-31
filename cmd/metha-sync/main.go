@@ -15,6 +15,7 @@ import (
 
 var (
 	baseDir                    = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
+	hourly                     = flag.Bool("hourly", false, "use hourly intervals for harvesting")
 	daily                      = flag.Bool("daily", false, "use daily intervals for harvesting")
 	disableSelectiveHarvesting = flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	endpointList               = flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
@@ -116,6 +117,7 @@ func main() {
 	harvest.MaxEmptyResponses = *maxEmptyReponses
 	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
 	harvest.SuppressFormatParameter = *suppressFormatParameter
+	harvest.HourlyInterval = *hourly
 	harvest.DailyInterval = *daily
 	harvest.ExtraHeaders = extra
 
