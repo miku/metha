@@ -200,6 +200,13 @@ interaction in resource conservation.
 * limited repositories, metha will try a few times with an exponential backoff
 * repositories, which throw occasional HTTP errors, although most of the responses look good, use `-ignore-http-errors` flag
 
+## Authors
+
+* Martin Czygan <martin.czygan@uni-leipzig.de>
+* Natanael Arndt, https://github.com/white-gecko
+* Gunnar Þór Magnússon, https://github.com/gunnihinn
+* Thomas Gersch, https://github.com/titabo2k
+
 ## Misc
 
 Show formats of random repository:

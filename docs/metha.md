@@ -221,6 +221,7 @@ AUTHORS
 * Martin Czygan <martin.czygan@uni-leipzig.de>
 * Natanael Arndt, https://github.com/white-gecko
 * Gunnar Þór Magnússon, https://github.com/gunnihinn
+* Thomas Gersch, https://github.com/titabo2k
 
 
 SEE ALSO
