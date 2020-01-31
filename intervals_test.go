@@ -53,3 +53,44 @@ func TestDailyIntervals(t *testing.T) {
 	}
 
 }
+
+func TestHourlyIntervals(t *testing.T) {
+	var cases = []struct {
+		Interval Interval
+		Result   []Interval
+	}{
+		{
+			Interval: Interval{
+				Begin: TimeMustParse("2006-01-02 15:04:05", "2016-01-02 17:00:00"),
+				End:   TimeMustParse("2006-01-02 15:04:05", "2016-01-02 19:00:00"),
+			},
+			Result: []Interval{
+				Interval{
+					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 17:00:00"),
+					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T17:59:59.999999999"),
+				},
+				Interval{
+					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 18:00:00"),
+					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T18:59:59.999999999"),
+				},
+				Interval{
+					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 19:00:00"),
+					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T19:59:59.999999999"),
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		r := c.Interval.HourlyIntervals()
+		if len(r) != len(c.Result) {
+			t.Errorf("got %v, want %v", len(r), len(c.Result))
+		}
+		for i := range r {
+			if r[i].String() != c.Result[i].String() {
+				t.Errorf("got %v, want %s", r[i].String(), c.Result[i].String())
+			}
+		}
+	}
+
+}
