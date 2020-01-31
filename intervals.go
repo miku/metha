@@ -70,7 +70,7 @@ func (iv Interval) HourlyIntervals() []Interval {
 			break
 		}
 		ivals = append(ivals, Interval{Begin: start, End: end})
-		start = now.New(start.AddDate(0, 0, 0, 1)).BeginningOfHour()
+		start = now.New(start.Add(time.Hour * 1)).BeginningOfHour()
 	}
 	return ivals
 }
