@@ -63,6 +63,7 @@ type Harvest struct {
 	IgnoreHTTPErrors           bool
 	MaxEmptyResponses          int
 	SuppressFormatParameter    bool
+	HourlyInterval             bool
 	DailyInterval              bool
 	ExtraHeaders               http.Header
 
@@ -280,6 +281,8 @@ func (h *Harvest) run() (err error) {
 	var intervals []Interval
 
 	switch {
+	case h.HourlyInterval:
+		intervals = interval.HourlyIntervals()
 	case h.DailyInterval:
 		intervals = interval.DailyIntervals()
 	default:
