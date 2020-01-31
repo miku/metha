@@ -10,6 +10,9 @@ $(TARGETS): %: cmd/%/main.go
 	GO111MODULE=$(GO111MODULE) go get ./...
 	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go build -o $@ $<
 
+test:
+	CGO_ENABLED=0 go test -v .
+
 clean:
 	rm -f $(TARGETS)
 	rm -f $(PKGNAME)_*deb
