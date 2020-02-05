@@ -14,3 +14,12 @@ URL hints.
 
 * [OAIProvider](https://www.google.com/search?q=inurl%3AOAIProvider)
 * [index.php AND oai](https://www.google.com/search?q=inurl%3Aindex.php+AND+inurl%3Aoai)
+
+OJS index pages.
+
+```
+$ curl -sL "https://recyt.fecyt.es/index.php/index/about" | \
+    grep -Eo 'https://recyt.fecyt.es/index.php/[^"]*' | \
+    grep -v current | grep -v register | sort -u | grep -v '/index/' | \
+    awk '{print $0"/oai"}'
+```
