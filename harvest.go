@@ -302,13 +302,11 @@ func (h *Harvest) runInterval(iv Interval) error {
 	suffix := fmt.Sprintf("-tmp-%d", rand.Intn(999999999))
 	var token string
 	var i, empty int
-
 	for {
 		if h.MaxRequests == i {
 			log.Printf("max requests limit (%d) reached", h.MaxRequests)
 			break
 		}
-
 		req := Request{
 			BaseURL:                 h.BaseURL,
 			MetadataPrefix:          h.Format,
@@ -319,9 +317,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			SuppressFormatParameter: h.SuppressFormatParameter,
 			ExtraHeaders:            h.ExtraHeaders,
 		}
-
 		var filedate string
-
 		if h.DisableSelectiveHarvesting {
 			// Used, when endpoint cannot handle from and until.
 			filedate = h.Started.Format("2006-01-02")
@@ -330,7 +326,6 @@ func (h *Harvest) runInterval(iv Interval) error {
 			req.From = iv.Begin.Format(h.DateLayout())
 			req.Until = iv.End.Format(h.DateLayout())
 		}
-
 		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
 		resp, err := Do(&req)
 		if err != nil {
@@ -340,7 +335,6 @@ func (h *Harvest) runInterval(iv Interval) error {
 			}
 			return err
 		}
-
 		// Handle OAI specific errors. XXX: An badResumptionToken kind of error
 		// might be recoverable, by simply restarting the harvest.
 		if resp.Error.Code != "" {
@@ -366,12 +360,10 @@ func (h *Harvest) runInterval(iv Interval) error {
 				return resp.Error
 			}
 		}
-
 		// The filename consists of the right boundary (until), the
 		// serial number of the request and a suffix, marking this
 		// request in progress.
 		filename := filepath.Join(h.Dir(), fmt.Sprintf("%s-%08d.xml%s", filedate, i, suffix))
-
 		if b, err := xml.Marshal(resp); err == nil {
 			if e := ioutil.WriteFile(filename, b, 0644); e != nil {
 				return e
@@ -380,13 +372,19 @@ func (h *Harvest) runInterval(iv Interval) error {
 		} else {
 			return err
 		}
-
+		// Issue first observed at
+		// https://gssrjournal.com/gssroai/?resumptionToken=33NjdYRs708&verb=ListRecords,
+		// would spill the disk.
+		prev := token
 		if token = resp.GetResumptionToken(); token == "" {
 			break
 		}
-
+		if prev == token {
+			url, _ := req.URL()
+			log.Printf("token %q did not change, assume server issue, moving to next window for: %s", token, url)
+			break
+		}
 		i++
-
 		if len(resp.ListRecords.Records) > 0 {
 			empty = 0
 		} else {
