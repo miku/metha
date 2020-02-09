@@ -23,3 +23,10 @@ $ curl -sL "https://recyt.fecyt.es/index.php/index/about" | \
     grep -v current | grep -v register | sort -u | grep -v '/index/' | \
     awk '{print $0"/oai"}'
 ```
+
+* [PKP Index](https://index.pkp.sfu.ca/)
+
+> The PKP Index is a database of articles, books, and conference proceedings
+> using PKP's free, open source Open Journal Systems, Open Monograph Press, and
+> Open Conference Systems software applications. The PKP Index includes 1264043
+> records indexed from 4960 publications.
