@@ -3,6 +3,8 @@
 //
 // https://pkp.sfu.ca/2015/10/23/introducing-the-pkp-index/
 //
+// Notes.
+//
 // Index page will not yield 404 on invalid page, so max page needs to be set
 // manually for now. Pagination seems to require more, maybe cookies.
 //
