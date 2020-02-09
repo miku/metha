@@ -34,12 +34,15 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/adrg/xdg"
@@ -57,6 +60,34 @@ var (
 	maxID     = flag.Int("x", 7000, "upper bound, exclusive; max id to fetch")
 	userAgent = flag.String("ua", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)", "user agent to use")
 )
+
+type JournalInfo struct {
+	Name     string
+	Homepage string
+	Endpoint string
+}
+
+func runPup(html string, selector string) string {
+	var buf bytes.Buffer
+	cmd := exec.Command("pup", selector)
+	cmd.Stdin = strings.NewReader(html)
+	cmd.Stdout = &buf
+	if err := cmd.Run(); err != nil {
+		log.Printf("runPup failed with %v", err)
+		return ""
+	}
+	return strings.TrimSpace(buf.String())
+}
+
+// extractJournalInfo extracts name and URL from raw HTML. Be insane and shellout to use pup.
+func extractJournalInfo(html string) (*Journal, error) {
+	// cat page-000281.html | pup 'h3 text{}' # Journal of Modern Materials
+	// cat page-000281.html | pup 'p.archiveLinks > a:nth-child(2) attr{href}' # https://journals.aijr.in/index.php/jmm/index
+	return &JournalInfo{
+		Name:     runPup(html, "'h3 text{}'"),
+		Homepage: runPup(html, "'p.archiveLinks > a:nth-child(2) attr{href}'"),
+	}
+}
 
 func main() {
 	flag.Parse()
