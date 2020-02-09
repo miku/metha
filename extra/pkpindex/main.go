@@ -80,13 +80,13 @@ func runPup(html string, selector string) string {
 }
 
 // extractJournalInfo extracts name and URL from raw HTML. Be insane and shellout to use pup.
-func extractJournalInfo(html string) (*Journal, error) {
+func extractJournalInfo(html string) (*JournalInfo, error) {
 	// cat page-000281.html | pup 'h3 text{}' # Journal of Modern Materials
 	// cat page-000281.html | pup 'p.archiveLinks > a:nth-child(2) attr{href}' # https://journals.aijr.in/index.php/jmm/index
 	return &JournalInfo{
 		Name:     runPup(html, "'h3 text{}'"),
 		Homepage: runPup(html, "'p.archiveLinks > a:nth-child(2) attr{href}'"),
-	}
+	}, nil
 }
 
 func main() {
@@ -102,40 +102,48 @@ func main() {
 	client.SetRetryOnHTTP429(true)
 	id := 0
 	for i := 0; i < *maxID; i++ {
-		id++
-		// https: //index.pkp.sfu.ca/index.php/browse/archiveInfo/5000
-		link := fmt.Sprintf("%s/archiveInfo/%d", *baseURL, id)
-		filename := fmt.Sprintf("page-%06d.html", id)
-		dst := path.Join(target, filename)
-		if _, err := os.Stat(dst); err == nil {
-			log.Printf("already cached %s %s", dst, link)
-			continue
+		// wrapFunc, so we can enjoy the defer on resp.Body.
+		wrapFunc := func() {
+			id++
+			// https: //index.pkp.sfu.ca/index.php/browse/archiveInfo/5000
+			link := fmt.Sprintf("%s/archiveInfo/%d", *baseURL, id)
+			filename := fmt.Sprintf("page-%06d.html", id)
+			dst := path.Join(target, filename)
+			if _, err := os.Stat(dst); err == nil {
+				log.Printf("already cached %s %s", dst, link)
+				return
+			}
+			resp, err := client.Get(link)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if resp.StatusCode >= 400 {
+				log.Fatal("failed with %s", resp.Status)
+			}
+			defer resp.Body.Close()
+			// refresh: 0; url=https://index.pkp.sfu.ca/index.php/browse
+			refresh := resp.Header.Get("refresh")
+			if refresh != "" {
+				log.Printf("[touch] refresh found for %s", link)
+				// Just touch.
+				if err := WriteFileAtomic(dst, []byte{}, 0644); err != nil {
+					log.Fatal(err)
+				}
+				return
+			}
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := WriteFileAtomic(dst, b, 0644); err != nil {
+				log.Fatal(err)
+			}
+			if *verbose {
+				log.Printf("done: %s %s", dst, link)
+			}
+			time.Sleep(*sleep)
 		}
-		resp, err := client.Get(link)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if resp.StatusCode >= 400 {
-			log.Fatal("failed with %s", resp.Status)
-		}
-		defer resp.Body.Close()
-		// refresh: 0; url=https://index.pkp.sfu.ca/index.php/browse
-		refresh := resp.Header.Get("refresh")
-		if refresh != "" {
-			log.Printf("[skip] refresh found for %s", link)
-			continue
-		}
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := WriteFileAtomic(dst, b, 0644); err != nil {
-			log.Fatal(err)
-		}
-		if *verbose {
-			log.Printf("done: %s %s", dst, link)
-		}
-		time.Sleep(*sleep)
+		wrapFunc()
 	}
 }
 
