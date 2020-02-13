@@ -61,6 +61,7 @@ var (
 	verbose   = flag.Bool("verbose", false, "verbose output")
 	maxID     = flag.Int("x", 7000, "upper bound, exclusive; max id to fetch")
 	userAgent = flag.String("ua", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)", "user agent to use")
+	force     = flag.Bool("f", false, "force redownload of zero length files")
 )
 
 type JournalInfo struct {
@@ -111,9 +112,14 @@ func main() {
 			link := fmt.Sprintf("%s/archiveInfo/%d", *baseURL, id)
 			filename := fmt.Sprintf("page-%06d.html", id)
 			dst := path.Join(target, filename)
-			if _, err := os.Stat(dst); err == nil {
-				log.Printf("already cached %s %s", dst, link)
-				return
+			if fi, err := os.Stat(dst); err == nil {
+				if fi.Size() > 0 || !*force {
+					log.Printf("already cached %s %s", dst, link)
+					return
+				}
+				if *verbose {
+					log.Printf("force redownload: %s", link)
+				}
 			}
 			resp, err := client.Get(link)
 			if err != nil {
