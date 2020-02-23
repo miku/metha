@@ -3,6 +3,29 @@
 //
 // https://pkp.sfu.ca/2015/10/23/introducing-the-pkp-index/
 //
+// Usage:
+//
+// $ make
+// $ ./pkpindex
+//
+// Output will json lines (oai endpoint is guessed):
+//
+//     {
+//       "name": "Scholarly and Research Communication",
+//       "homepage": "http://src-online.ca/index.php/src",
+//       "oai": "http://src-online.ca/index.php/src/oai"
+//     }
+//     {
+//       "name": "Stream: Culture/Politics/Technology",
+//       "homepage": "http://journals.sfu.ca/stream/index.php/stream",
+//       "oai": "http://journals.sfu.ca/stream/index.php/stream/oai"
+//     }
+//
+// Additional ideas:
+//
+// * check, if journal site is part of a bigger installation (move path element
+// up and pattern match).
+//
 // Notes.
 //
 // Index page will not yield 404 on invalid page, so max page needs to be set
