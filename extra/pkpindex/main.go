@@ -37,6 +37,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -44,6 +45,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -70,6 +72,8 @@ type JournalInfo struct {
 	Endpoint string
 }
 
+// runPup runs https://github.com/ericchiang/pup selector over html (it does
+// not seem to have a convenient programmatic api, https://git.io/Jv09t).
 func runPup(html string, selector string) string {
 	var buf bytes.Buffer
 	cmd := exec.Command("pup", selector)
@@ -90,6 +94,22 @@ func extractJournalInfo(html string) (*JournalInfo, error) {
 		Name:     runPup(html, "'h3 text{}'"),
 		Homepage: runPup(html, "'p.archiveLinks > a:nth-child(2) attr{href}'"),
 	}, nil
+}
+
+// extractFromFiles extracts journal info from a list of files.
+func extractFromFiles(filenames []string) (result []*JournalInfo, err error) {
+	for _, fn := range filenames {
+		b, err := ioutil.ReadFile(fn)
+		if err != nil {
+			return result, err
+		}
+		ji, err := extractJournalInfo(string(b))
+		if err != nil {
+			return result, err
+		}
+		result = append(result, ji)
+	}
+	return result, nil
 }
 
 func main() {
@@ -152,6 +172,30 @@ func main() {
 			time.Sleep(*sleep)
 		}
 		wrapFunc()
+	}
+	// Find all files and extract journal info.
+	var files []string
+	err := filepath.Walk(target, func(path string, info os.FileInfo, err error) error {
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	if *verbose {
+		log.Printf("extracting journal info from %d files", len(files))
+	}
+	infos, err := extractFromFiles(files)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Write out JSON.
+	for _, info := range infos {
+		b, err := json.Marshal(info)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(b))
 	}
 }
 
