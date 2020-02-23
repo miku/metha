@@ -30,3 +30,5 @@ $ curl -sL "https://recyt.fecyt.es/index.php/index/about" | \
 > using PKP's free, open source Open Journal Systems, Open Monograph Press, and
 > Open Conference Systems software applications. The PKP Index includes 1264043
 > records indexed from 4960 publications.
+
+ID INDEX: [http://issn.lipi.go.id/issn.cgi?daftar&&76&654&2019&](http://issn.lipi.go.id/issn.cgi?daftar&&76&654&2019&)
