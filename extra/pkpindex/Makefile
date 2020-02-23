@@ -6,3 +6,8 @@ pkpindex: main.go
 .PHONY: clean
 clean:
 	rm -f pkpindex
+	rm -f pkp.ndjson
+
+pkp.ndjson: pkpindex
+	./pkpindex -verbose -mssr 10 > $@
+
