@@ -46,6 +46,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -56,31 +57,38 @@ import (
 const appName = "pkpindex"
 
 var (
-	cacheDir  = flag.String("d", path.Join(xdg.CacheHome, appName), "path to cache dir")
-	tag       = flag.String("t", time.Now().Format("2006-01-02"), "subdirectory under cache dir to store pages")
-	baseURL   = flag.String("b", "https://index.pkp.sfu.ca/index.php/browse", "base url")
-	sleep     = flag.Duration("s", 1*time.Second, "sleep between requests")
-	verbose   = flag.Bool("verbose", false, "verbose output")
-	maxID     = flag.Int("x", 8000, "upper bound, exclusive; max id to fetch")
-	userAgent = flag.String("ua", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)", "user agent to use")
-	force     = flag.Bool("f", false, "force redownload of zero length files")
+	cacheDir               = flag.String("d", path.Join(xdg.CacheHome, appName), "path to cache dir")
+	tag                    = flag.String("t", time.Now().Format("2006-01-02"), "subdirectory under cache dir to store pages")
+	baseURL                = flag.String("b", "https://index.pkp.sfu.ca/index.php/browse", "base url")
+	sleep                  = flag.Duration("s", 1*time.Second, "sleep between requests")
+	verbose                = flag.Bool("verbose", false, "verbose output")
+	maxID                  = flag.Int("x", 10000, "upper bound, exclusive; max id to fetch")
+	userAgent              = flag.String("ua", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)", "user agent to use")
+	force                  = flag.Bool("f", false, "force redownload of zero length files")
+	maxSubsequentRefreshes = flag.Int("mssr", 100, "maximum number of subsequent refreshes")
 )
 
+// JournalInfo gathers journal name and endpoint.
 type JournalInfo struct {
-	Name     string
-	Homepage string
-	Endpoint string
+	Name     string `json:"name"`
+	Homepage string `json:"homepage"`
+	Endpoint string `json:"oai"`
 }
 
 // runPup runs https://github.com/ericchiang/pup selector over html (it does
 // not seem to have a convenient programmatic api, https://git.io/Jv09t).
 func runPup(html string, selector string) string {
+	html = strings.TrimSpace(html)
+	if len(html) == 0 {
+		return ""
+	}
 	var buf bytes.Buffer
 	cmd := exec.Command("pup", selector)
 	cmd.Stdin = strings.NewReader(html)
 	cmd.Stdout = &buf
+	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
-		log.Printf("runPup failed with %v", err)
+		log.Printf("runPup failed with %v: %v on %s", err, buf.String())
 		return ""
 	}
 	return strings.TrimSpace(buf.String())
@@ -90,15 +98,34 @@ func runPup(html string, selector string) string {
 func extractJournalInfo(html string) (*JournalInfo, error) {
 	// cat page-000281.html | pup 'h3 text{}' # Journal of Modern Materials
 	// cat page-000281.html | pup 'p.archiveLinks > a:nth-child(2) attr{href}' # https://journals.aijr.in/index.php/jmm/index
+	name := runPup(html, "h3 text{}")
+	homepage := runPup(html, "p.archiveLinks > a:nth-child(2) attr{href}")
+	if name == "" {
+		log.Printf("empty name for: %s [%d]", html, len(html))
+	}
+	re := regexp.MustCompile(`/index$`)
+	endpoint := ""
+	switch {
+	case strings.HasSuffix(homepage, "/index"):
+		endpoint = re.ReplaceAllString(homepage, "/oai")
+	case strings.HasSuffix(homepage, "/"):
+		endpoint = homepage + "oai"
+	default:
+		endpoint = homepage + "/oai"
+	}
 	return &JournalInfo{
-		Name:     runPup(html, "'h3 text{}'"),
-		Homepage: runPup(html, "'p.archiveLinks > a:nth-child(2) attr{href}'"),
+		Name:     name,
+		Homepage: homepage,
+		Endpoint: endpoint,
 	}, nil
 }
 
 // extractFromFiles extracts journal info from a list of files.
 func extractFromFiles(filenames []string) (result []*JournalInfo, err error) {
-	for _, fn := range filenames {
+	for i, fn := range filenames {
+		if i%200 == 0 {
+			log.Printf("@%d", i)
+		}
 		b, err := ioutil.ReadFile(fn)
 		if err != nil {
 			return result, err
@@ -124,9 +151,13 @@ func main() {
 	client := pester.New()
 	client.SetRetryOnHTTP429(true)
 	id := 0
+	subsequentRefreshes := 0
 	for i := 0; i < *maxID; i++ {
 		// wrapFunc, so we can enjoy the defer on resp.Body.
 		wrapFunc := func() {
+			if subsequentRefreshes > *maxSubsequentRefreshes {
+				return
+			}
 			id++
 			// https: //index.pkp.sfu.ca/index.php/browse/archiveInfo/5000
 			link := fmt.Sprintf("%s/archiveInfo/%d", *baseURL, id)
@@ -157,8 +188,10 @@ func main() {
 				if err := WriteFileAtomic(dst, []byte{}, 0644); err != nil {
 					log.Fatal(err)
 				}
+				subsequentRefreshes++
 				return
 			}
+			subsequentRefreshes = 0
 			b, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				log.Fatal(err)
@@ -176,6 +209,12 @@ func main() {
 	// Find all files and extract journal info.
 	var files []string
 	err := filepath.Walk(target, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		if info.Size() == 0 {
+			return nil
+		}
 		files = append(files, path)
 		return nil
 	})
