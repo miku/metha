@@ -1,6 +1,10 @@
-# Extract basic journal info from PKP index
+# PKP Journal info
 
-* 2020-02-23, 5024 entries.
+
+* extract basic journal info from PKP index
+* TODO: check, if there is a database dump or real API
+* [https://index.pkp.sfu.ca/](https://index.pkp.sfu.ca/)
+* 2020-02-23, [5024 entries](https://raw.githubusercontent.com/miku/metha/master/extra/pkpindex/pkp.ndjson)
 
 ```
 $ make
