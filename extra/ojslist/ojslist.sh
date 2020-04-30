@@ -62,7 +62,7 @@ while true; do
 		break
 		;;
 	*)
-		echo "Programming error"
+		echo "failed to parse options"
 		exit 3
 		;;
 	esac
@@ -79,7 +79,7 @@ tmp=$(mktemp)
 curl -sL "$OJSHOME" >$tmp
 
 if [ "$index" == true ]; then
-	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' | awk '{print $0"/index/oai"}' | sed -e 's@//index@/index@g' | sort -u
+	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' | awk '{print $0"/index/oai"}' | sed -e 's@//index@/index@g' | sort -u | sed -e 's/^\s\+//g'
 else
-	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' | awk '{print $0"/oai"}' | sed -e 's@//oai@/oai@g' | sort -u
+	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' | awk '{print $0"/oai"}' | sed -e 's@//oai@/oai@g' | sort -u | sed -e 's/^\s\+//g'
 fi
