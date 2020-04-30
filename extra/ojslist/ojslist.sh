@@ -80,8 +80,10 @@ curl -sL "$OJSHOME" >$tmp
 
 if [ "$index" == true ]; then
 	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' |
-		awk '{print $0"/index/oai"}' | sed -e 's@//index@/index@g' | sort -u | sed -e 's/^\s\+//g'
+		grep -v "?searchInitial" | awk '{print $0"/index/oai"}' |
+		sed -e 's@//index@/index@g' | sort -u | sed -e 's/^\s\+//g'
 else
 	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' |
-		awk '{print $0"/oai"}' | sed -e 's@//oai@/oai@g' | sort -u | sed -e 's/^\s\+//g'
+		grep -v "?searchInitial" | awk '{print $0"/oai"}' |
+		sed -e 's@//oai@/oai@g' | sort -u | sed -e 's/^\s\+//g'
 fi
