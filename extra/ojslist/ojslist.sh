@@ -70,7 +70,7 @@ done
 
 # handle non-option arguments
 if [[ $# -ne 1 ]]; then
-	echo "$0: A single input file is required."
+	echo "$0: A URL is required."
 	exit 4
 fi
 
