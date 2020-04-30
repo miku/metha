@@ -3,11 +3,13 @@
 # Turn OJS homepage into list of journal OAI endpoint candidates. Note that not
 # all candidates will work (so sample manually).
 #
-# $ ojslist.sh URL
+# $ ojslist.sh [-i, --index] URL
+#
+#   -i, --index    appends /index/oai, not /oai to URL
 #
 # Example:
 #
-# $ osjlist.sh https://www.aaai.org/ocs/index.php
+# $ ojslist.sh -i https://www.aaai.org/ocs/index.php
 #
 # https:/www.aaai.org/ocs/index.php/AAAI/index/oai
 # https:/www.aaai.org/ocs/index.php/HCOMP/index/oai
@@ -17,7 +19,7 @@
 #
 # More sites to test:
 #
-# * https://publications.drdo.gov.in/ojs/index.php/
+# $ ojslist.sh https://publications.drdo.gov.in/ojs/index.php/
 #
 set -eu
 set -o errexit -o pipefail -o nounset
