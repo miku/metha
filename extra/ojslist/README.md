@@ -31,3 +31,8 @@ https://www.aaai.org/ocs/index.php/SOCS/index/oai
 https://www.aaai.org/ocs/index.php/SSS/index/oai
 https://www.aaai.org/ocs/index.php/WS/index/oai
 ```
+
+More examples:
+
+* http://www.uel.br/revistas/uel/index.php
+* https://www.uni-hildesheim.de/ojs/index.php/
