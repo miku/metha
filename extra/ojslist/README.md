@@ -36,3 +36,7 @@ More examples:
 
 * http://www.uel.br/revistas/uel/index.php
 * https://www.uni-hildesheim.de/ojs/index.php/
+
+Find more OJS instances:
+
+* [https://www.google.com/search?q=inurl:"ojs/index.php"](https://www.google.com/search?q=inurl:"ojs/index.php")
