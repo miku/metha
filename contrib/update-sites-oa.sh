@@ -7,6 +7,7 @@
 # TODO: Add, http://roar.eprints.org/listfriends.xml
 
 set -e
+set -o pipefail
 
 command -v xmlstarlet >/dev/null 2>&1 || { echo >&2 "xmlstarlet required"; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo >&2 "curl required"; exit 1; }
