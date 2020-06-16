@@ -15,6 +15,14 @@ URL hints.
 * [OAIProvider](https://www.google.com/search?q=inurl%3AOAIProvider)
 * [index.php AND oai](https://www.google.com/search?q=inurl%3Aindex.php+AND+inurl%3Aoai)
 
+List pages.
+
+```shell
+$ curl -sL "https://centres.clarin.eu/oai_pmh" | \
+    pup 'a json{}' | jq -rc '.[] | select(.text == "Query ...") | .href' | \
+    cut -d ? -f 1 | sort -u
+```
+
 OJS index pages.
 
 ```
