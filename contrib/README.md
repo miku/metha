@@ -1,5 +1,10 @@
 # Curated list of OAI endpoints
 
+```
+$ ./update-sites-oa.sh
+$ cat sites-* | sort -u > sites.tsv
+```
+
 Used for manual testing of metha. Might serve as a seed list for larger
 harvests. The endpoints have been found or put together by URL rewriting of
 some known OAI provides ([OJS](https://pkp.sfu.ca/ojs/),
