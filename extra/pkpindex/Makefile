@@ -9,5 +9,5 @@ clean:
 	rm -f pkp.ndjson
 
 pkp.ndjson: pkpindex
-	./pkpindex -verbose -mssr 10 > $@
+	./pkpindex -verbose -mssr 100 > $@
 
