@@ -1,6 +1,7 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune
 GO111MODULE = on
+VERSION = 0.2.10
 
 PKGNAME = metha
 
@@ -37,3 +38,10 @@ rpm: $(TARGETS)
 	cp docs/$(PKGNAME).1 $(HOME)/rpmbuild/BUILD
 	./packaging/rpm/buildrpm.sh $(PKGNAME)
 	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)*.rpm .
+
+.PHONY: update-version
+update-version:
+	sed -i -e 's@^const Version =.*@const Version = "$(VERSION)"@' version.go
+	sed -i -e 's@^Version:.*@Version: $(VERSION)@' packaging/deb/metha/DEBIAN/control
+	sed -i -e 's@^Version:.*@Version:    $(VERSION)@' packaging/rpm/metha.spec
+
