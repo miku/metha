@@ -5,24 +5,29 @@ VERSION = 0.2.11
 
 PKGNAME = metha
 
+.PHONY: all
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
 	GO111MODULE=$(GO111MODULE) go get ./...
 	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go build -o $@ $<
 
+.PHONY: test
 test:
 	CGO_ENABLED=0 go test -v .
 
+.PHONY: clean
 clean:
 	rm -f $(TARGETS)
 	rm -f $(PKGNAME)_*deb
 	rm -f $(PKGNAME)-*rpm
 	rm -rf packaging/deb/$(PKGNAME)/usr
 
+.PHONY: imports
 imports:
 	goimports -w .
 
+.PHONY: deb
 deb: $(TARGETS)
 	mkdir -p packaging/deb/$(PKGNAME)/usr/sbin
 	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/sbin
@@ -31,6 +36,7 @@ deb: $(TARGETS)
 	cd packaging/deb && fakeroot dpkg-deb --build $(PKGNAME) .
 	mv packaging/deb/$(PKGNAME)_*.deb .
 
+.PHONY: rpm
 rpm: $(TARGETS)
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
 	cp ./packaging/rpm/$(PKGNAME).spec $(HOME)/rpmbuild/SPECS
