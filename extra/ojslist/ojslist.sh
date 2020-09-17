@@ -76,7 +76,7 @@ fi
 
 OJSHOME=$1
 tmp=$(mktemp)
-curl -sL "$OJSHOME" >$tmp
+curl -k -sL "$OJSHOME" >$tmp
 
 if [ "$index" == true ]; then
 	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' |
