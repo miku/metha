@@ -7,46 +7,101 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
+	filename    = flag.String("f", "", "filename with endpoints")
 	baseDir     = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	format      = flag.String("format", "oai_dc", "metadata format")
 	maxRequests = flag.Int("max", 1048576, "maximum number of token loops")
 	quiet       = flag.Bool("q", false, "suppress all output")
+	numWorkers  = flag.Int("w", 64, "workers")
 )
 
 func main() {
 	flag.Parse()
-	var failed []string
-	for i, u := range metha.Endpoints {
-		log.Printf("%d/%d", i, len(metha.Endpoints))
-		harvest, err := metha.NewHarvest(u)
+	var (
+		endpoints = metha.Endpoints
+		failed    []string
+	)
+	if *filename != "" {
+		b, err := ioutil.ReadFile(*filename)
 		if err != nil {
-			failed = append(failed, u)
-			log.Printf("failed (init): %s", u)
-			continue
+			log.Fatal(err)
 		}
-		harvest.MaxRequests = *maxRequests
-		harvest.CleanBeforeDecode = true
-		harvest.Format = *format
-		if err := harvest.Run(); err != nil {
-			switch err {
-			case metha.ErrAlreadySynced:
-				log.Println("this repository is up-to-date")
-			default:
-				harvest.DisableSelectiveHarvesting = true
-				if err := harvest.Run(); err != nil {
+		endpoints = strings.Split(string(b), "\n")
+	}
+	g := new(errgroup.Group)
+	urlC := make(chan string) // produce URL
+	g.Go(func() error {
+		defer close(urlC)
+		for _, endpoint := range endpoints {
+			urlC <- endpoint
+		}
+		return nil
+	})
+	for i := 0; i < *numWorkers; i++ {
+		g.Go(func() error {
+			for u := range urlC {
+				log.Printf("%d/%d", i, len(endpoints))
+				harvest, err := metha.NewHarvest(u)
+				if err != nil {
 					failed = append(failed, u)
-					log.Printf("failed (harvest): %s", u)
+					log.Printf("failed (init): %s", u)
 					continue
 				}
+				harvest.MaxRequests = *maxRequests
+				harvest.CleanBeforeDecode = true
+				harvest.Format = *format
+				if err := harvest.Run(); err != nil {
+					switch err {
+					case metha.ErrAlreadySynced:
+						log.Println("this repository is up-to-date")
+					default:
+						harvest.DisableSelectiveHarvesting = true
+						if err := harvest.Run(); err != nil {
+							failed = append(failed, u)
+							log.Printf("failed (harvest): %s", u)
+							continue
+						}
+					}
+				}
 			}
-		}
+			return nil
+		})
 	}
+	g.Wait()
+
+	// for i, u := range endpoints {
+	// 	log.Printf("%d/%d", i, len(endpoints))
+	// 	harvest, err := metha.NewHarvest(u)
+	// 	if err != nil {
+	// 		failed = append(failed, u)
+	// 		log.Printf("failed (init): %s", u)
+	// 		continue
+	// 	}
+	// 	harvest.MaxRequests = *maxRequests
+	// 	harvest.CleanBeforeDecode = true
+	// 	harvest.Format = *format
+	// 	if err := harvest.Run(); err != nil {
+	// 		switch err {
+	// 		case metha.ErrAlreadySynced:
+	// 			log.Println("this repository is up-to-date")
+	// 		default:
+	// 			harvest.DisableSelectiveHarvesting = true
+	// 			if err := harvest.Run(); err != nil {
+	// 				failed = append(failed, u)
+	// 				log.Printf("failed (harvest): %s", u)
+	// 				continue
+	// 			}
+	// 		}
+	// 	}
+	// }
 	f, err := ioutil.TempFile("", "metha-snapshot-")
 	if err != nil {
 		for _, f := range failed {
