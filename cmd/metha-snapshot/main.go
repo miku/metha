@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"strings"
 
@@ -21,6 +22,7 @@ var (
 	maxRequests = flag.Int("max", 1048576, "maximum number of token loops")
 	quiet       = flag.Bool("q", false, "suppress all output")
 	numWorkers  = flag.Int("w", 64, "workers")
+	shuffle     = flag.Bool("S", false, "shuffle hosts")
 )
 
 func main() {
@@ -35,6 +37,11 @@ func main() {
 			log.Fatal(err)
 		}
 		endpoints = strings.Split(string(b), "\n")
+	}
+	if *shuffle {
+		rand.Shuffle(len(endpoints), func(i, j int) {
+			endpoints[i], endpoints[j] = endpoints[j], endpoints[i]
+		})
 	}
 	g := new(errgroup.Group)
 	urlC := make(chan string) // produce URL
