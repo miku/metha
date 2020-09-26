@@ -46,13 +46,16 @@ func main() {
 		return nil
 	})
 	for i := 0; i < *numWorkers; i++ {
+		name := fmt.Sprintf("worker-%03d", i)
 		g.Go(func() error {
+			var j int
 			for u := range urlC {
-				log.Printf("%d/%d", i, len(endpoints))
+				j++
+				log.Printf("[%s @%d] %s", name, j, u)
 				harvest, err := metha.NewHarvest(u)
 				if err != nil {
 					failed = append(failed, u)
-					log.Printf("failed (init): %s", u)
+					log.Printf("failed (init): %s, %v", u, err)
 					continue
 				}
 				harvest.MaxRequests = *maxRequests
@@ -66,7 +69,7 @@ func main() {
 						harvest.DisableSelectiveHarvesting = true
 						if err := harvest.Run(); err != nil {
 							failed = append(failed, u)
-							log.Printf("failed (harvest): %s", u)
+							log.Printf("failed (harvest): %s, %v", u, err)
 							continue
 						}
 					}
