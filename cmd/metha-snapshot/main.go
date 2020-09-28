@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	filename    = flag.String("f", "", "filename with endpoints")
+	filename    = flag.String("f", "", fmt.Sprintf("filename with endpoints, defaults to list of %d sites", len(metha.Endpoints)))
 	baseDir     = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	format      = flag.String("format", "oai_dc", "metadata format")
 	maxRequests = flag.Int("max", 1048576, "maximum number of token loops")
@@ -43,6 +44,10 @@ func main() {
 			endpoints[i], endpoints[j] = endpoints[j], endpoints[i]
 		})
 	}
+	if *quiet {
+		log.SetOutput(ioutil.Discard)
+	}
+	completed := sync.Map{}
 	g := new(errgroup.Group)
 	urlC := make(chan string) // produce URL
 	g.Go(func() error {
@@ -53,12 +58,14 @@ func main() {
 		return nil
 	})
 	for i := 0; i < *numWorkers; i++ {
-		name := fmt.Sprintf("worker-%03d", i)
+		name := fmt.Sprintf("%04d", i)
+		// Each worker starts a go routine that fetches urls off the urls
+		// channel and runs the harvest.
 		g.Go(func() error {
 			var j int
 			for u := range urlC {
 				j++
-				log.Printf("[%s @%d] %s", name, j, u)
+				log.Printf("[%s@%d] %s", name, j, u)
 				harvest, err := metha.NewHarvest(u)
 				if err != nil {
 					failed = append(failed, u)
@@ -71,7 +78,6 @@ func main() {
 				if err := harvest.Run(); err != nil {
 					switch err {
 					case metha.ErrAlreadySynced:
-						log.Println("this repository is up-to-date")
 					default:
 						harvest.DisableSelectiveHarvesting = true
 						if err := harvest.Run(); err != nil {
@@ -80,12 +86,16 @@ func main() {
 							continue
 						}
 					}
+				} else {
+					completed = append(completed, u)
 				}
 			}
 			return nil
 		})
 	}
 	g.Wait()
+
+	// Iterate over all successful endpoints and output JSON.
 
 	// for i, u := range endpoints {
 	// 	log.Printf("%d/%d", i, len(endpoints))
