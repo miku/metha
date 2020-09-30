@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
@@ -47,7 +46,6 @@ func main() {
 	if *quiet {
 		log.SetOutput(ioutil.Discard)
 	}
-	completed := sync.Map{}
 	g := new(errgroup.Group)
 	urlC := make(chan string) // produce URL
 	g.Go(func() error {
@@ -86,8 +84,6 @@ func main() {
 							continue
 						}
 					}
-				} else {
-					completed = append(completed, u)
 				}
 			}
 			return nil
