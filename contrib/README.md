@@ -45,3 +45,9 @@ $ curl -sL "https://recyt.fecyt.es/index.php/index/about" | \
 > records indexed from 4960 publications.
 
 ID INDEX: [http://issn.lipi.go.id/issn.cgi?daftar&&76&654&2019&](http://issn.lipi.go.id/issn.cgi?daftar&&76&654&2019&)
+
+## TODO
+
+Filter against:
+
+* [https://predatoryjournals.com/publishers/](https://predatoryjournals.com/publishers/)
