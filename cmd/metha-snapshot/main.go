@@ -37,15 +37,15 @@ func main() {
 		}
 		endpoints = strings.Split(string(b), "\n")
 	}
-	if *sample > 0 {
-		if len(endpoints) > *sample {
-			endpoints = endpoints[:*sample]
-		}
-	}
 	if *shuffle {
 		rand.Shuffle(len(endpoints), func(i, j int) {
 			endpoints[i], endpoints[j] = endpoints[j], endpoints[i]
 		})
+	}
+	if *sample > 0 {
+		if len(endpoints) > *sample {
+			endpoints = endpoints[:*sample]
+		}
 	}
 	if *quiet {
 		log.SetOutput(ioutil.Discard)
