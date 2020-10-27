@@ -4,10 +4,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
-	"os"
 	"strings"
 
 	"github.com/miku/metha"
@@ -23,6 +21,7 @@ var (
 	quiet       = flag.Bool("q", false, "suppress all output")
 	numWorkers  = flag.Int("w", 64, "workers")
 	shuffle     = flag.Bool("S", false, "shuffle hosts")
+	sample      = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
 )
 
 func main() {
@@ -38,6 +37,11 @@ func main() {
 		}
 		endpoints = strings.Split(string(b), "\n")
 	}
+	if *sample > 0 {
+		if len(endpoints) > *sample {
+			endpoints = endpoints[:*sample]
+		}
+	}
 	if *shuffle {
 		rand.Shuffle(len(endpoints), func(i, j int) {
 			endpoints[i], endpoints[j] = endpoints[j], endpoints[i]
@@ -46,8 +50,9 @@ func main() {
 	if *quiet {
 		log.SetOutput(ioutil.Discard)
 	}
+	// Run and wait until all harvests are done. XXX: add some timeout option.
 	g := new(errgroup.Group)
-	urlC := make(chan string) // produce URL
+	urlC := make(chan string)
 	g.Go(func() error {
 		defer close(urlC)
 		for _, endpoint := range endpoints {
@@ -56,14 +61,10 @@ func main() {
 		return nil
 	})
 	for i := 0; i < *numWorkers; i++ {
-		name := fmt.Sprintf("%04d", i)
-		// Each worker starts a go routine that fetches urls off the urls
-		// channel and runs the harvest.
 		g.Go(func() error {
 			var j int
 			for u := range urlC {
 				j++
-				log.Printf("[%s@%d] %s", name, j, u)
 				harvest, err := metha.NewHarvest(u)
 				if err != nil {
 					failed = append(failed, u)
@@ -77,6 +78,7 @@ func main() {
 					switch err {
 					case metha.ErrAlreadySynced:
 					default:
+						// Fall back to non-window mode.
 						harvest.DisableSelectiveHarvesting = true
 						if err := harvest.Run(); err != nil {
 							failed = append(failed, u)
@@ -90,46 +92,7 @@ func main() {
 		})
 	}
 	g.Wait()
-
-	// Iterate over all successful endpoints and output JSON.
-
-	// for i, u := range endpoints {
-	// 	log.Printf("%d/%d", i, len(endpoints))
-	// 	harvest, err := metha.NewHarvest(u)
-	// 	if err != nil {
-	// 		failed = append(failed, u)
-	// 		log.Printf("failed (init): %s", u)
-	// 		continue
-	// 	}
-	// 	harvest.MaxRequests = *maxRequests
-	// 	harvest.CleanBeforeDecode = true
-	// 	harvest.Format = *format
-	// 	if err := harvest.Run(); err != nil {
-	// 		switch err {
-	// 		case metha.ErrAlreadySynced:
-	// 			log.Println("this repository is up-to-date")
-	// 		default:
-	// 			harvest.DisableSelectiveHarvesting = true
-	// 			if err := harvest.Run(); err != nil {
-	// 				failed = append(failed, u)
-	// 				log.Printf("failed (harvest): %s", u)
-	// 				continue
-	// 			}
-	// 		}
-	// 	}
-	// }
-	f, err := ioutil.TempFile("", "metha-snapshot-")
-	if err != nil {
-		for _, f := range failed {
-			fmt.Println(f)
-		}
-		os.Exit(1)
+	for _, f := range failed {
+		log.Println(f)
 	}
-	defer f.Close()
-	for _, u := range failed {
-		if _, err := io.WriteString(f, u); err != nil {
-			log.Println(err)
-		}
-	}
-	log.Printf("wrote failed endpoints to %s", f.Name())
 }
