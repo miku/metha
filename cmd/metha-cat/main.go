@@ -1,16 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"encoding/xml"
+	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
-
-	gzip "github.com/klauspost/pgzip"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
@@ -43,80 +37,17 @@ func main() {
 		Format:  *format,
 		Set:     *set,
 	}
-	files, err := ioutil.ReadDir(harvest.Dir())
-	if err != nil {
-		// Fallback to fragment of base URL, e.g. allow "metha-cat xyz", if xyz
-		// is not ambiguous.
-		candidates, err := metha.FindRepositoriesByString(flag.Arg(0))
-		if err != nil {
-			log.Fatal(err)
-		}
-		if len(candidates) == 0 {
-			log.Fatal("not an endpoint url nor fragment")
-		}
-		if len(candidates) > 1 {
-			log.Fatalf("ambiguous fragment %v matches %d values: %v",
-				flag.Arg(0),
-				len(candidates),
-				strings.Join(candidates, ", "),
-			)
-		}
-		// It is a bit irritating to fallback to the same URL, so only log, if
-		// there's actually a difference.
-		if candidates[0] != harvest.BaseURL {
-			log.Printf("falling back from %s to %s", harvest.BaseURL, candidates[0])
-		}
-		harvest.BaseURL = candidates[0]
-		files, err = ioutil.ReadDir(harvest.Dir())
-		if err != nil {
-			log.Fatal(err)
-		}
+	bw := bufio.NewWriter(os.Stdout)
+	defer bw.Flush()
+	opts := &metha.RenderOpts{
+		Writer:  bw,
+		Harvest: harvest,
+		From:    *from,
+		Until:   *until,
+		Root:    *root,
+		UseJson: *useJson,
 	}
-	if *root != "" && !*useJson {
-		fmt.Printf("<%s xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n", *root)
-		defer fmt.Printf("</%s>\n", *root)
-	}
-	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".xml.gz") {
-			continue
-		}
-		if *from != "" && file.Name() < *from {
-			continue
-		}
-		abspath := filepath.Join(harvest.Dir(), file.Name())
-		fi, err := os.Open(abspath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		r, err := gzip.NewReader(fi)
-		if err != nil {
-			log.Fatal(err)
-		}
-		dec := xml.NewDecoder(r)
-		dec.Strict = false
-		var (
-			resp metha.Response
-			b    []byte
-		)
-		if err := dec.Decode(&resp); err != nil {
-			log.Fatal(err)
-		}
-		for _, rec := range resp.ListRecords.Records {
-			if *from != "" && rec.Header.DateStamp < *from {
-				continue
-			}
-			if *until != "" && rec.Header.DateStamp > *until {
-				continue
-			}
-			if *useJson {
-				b, err = json.Marshal(rec)
-			} else {
-				b, err = xml.Marshal(rec)
-			}
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(b))
-		}
+	if err := metha.Render(opts); err != nil {
+		log.Fatal(err)
 	}
 }
