@@ -41,3 +41,15 @@ Find more OJS instances:
 
 * [https://www.google.com/search?q=inurl:"ojs/index.php"](https://www.google.com/search?q=inurl:"ojs/index.php")
 * [https://www.google.com/search?client=ubuntu&channel=fs&q=inurl%3A%22article%2Fview%22+inurl%3A%22index.php%22&ie=utf-8&oe=utf-8](https://www.google.com/search?client=ubuntu&channel=fs&q=inurl%3A%22article%2Fview%22+inurl%3A%22index.php%22&ie=utf-8&oe=utf-8)
+
+Some exceptions:
+
+```
+$ curl -s https://royalliteglobal.com/ | \
+    pup 'a attr{href}' | \
+    sort -u | \
+    grep -Eo "https://royalliteglobal.com/[^/]*" | \
+    sort -u | \
+    grep -v index | \
+    awk '{ print $0"/oai" }'
+```
