@@ -2,11 +2,14 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/miku/metha"
 	log "github.com/sirupsen/logrus"
@@ -22,10 +25,12 @@ var (
 	numWorkers  = flag.Int("w", 64, "workers")
 	shuffle     = flag.Bool("S", false, "shuffle hosts")
 	sample      = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
+	seed        = flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed")
 )
 
 func main() {
 	flag.Parse()
+	rand.Seed(*seed)
 	var (
 		endpoints = metha.Endpoints
 		failed    []string
@@ -94,5 +99,29 @@ func main() {
 	g.Wait()
 	for _, f := range failed {
 		log.Println(f)
+	}
+	failedSet := make(map[string]struct{})
+	for _, f := range failed {
+		failedSet[f] = struct{}{}
+	}
+	bw := bufio.NewWriter(os.Stdout)
+	defer bw.Flush()
+	for _, u := range endpoints {
+		if _, ok := failedSet[u]; ok {
+			continue
+		}
+		metha.BaseDir = *baseDir
+		harvest := metha.Harvest{
+			BaseURL: u,
+			Format:  *format,
+		}
+		opts := &metha.RenderOpts{
+			Writer:  bw,
+			Harvest: harvest,
+			UseJson: true,
+		}
+		if err := metha.Render(opts); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
