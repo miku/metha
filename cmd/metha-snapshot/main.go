@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"strings"
 	"time"
 
@@ -28,12 +30,26 @@ var (
 	shuffle     = flag.Bool("S", false, "shuffle hosts")
 	sample      = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
 	seed        = flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed")
+	cpuprofile  = flag.String("cpuprofile", "", "cpu pprof file")
+	memprofile  = flag.String("memprofile", "", "mem pprof file")
+
+	endpoints = metha.Endpoints
 )
 
 func main() {
 	flag.Parse()
 	rand.Seed(*seed)
-	var endpoints = metha.Endpoints
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
 	if *filename != "" {
 		b, err := ioutil.ReadFile(*filename)
 		if err != nil {
@@ -119,6 +135,17 @@ func main() {
 				continue
 			}
 			log.Fatal(err)
+		}
+	}
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close() // error handling omitted for example
+		runtime.GC()    // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
 		}
 	}
 }
