@@ -4,3 +4,4 @@ metha*.rpm
 /packaging/deb/metha/usr/*
 /TODO.md
 /tmp
+*.pprof
