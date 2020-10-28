@@ -1,4 +1,5 @@
-// Download all known endpoints, generate a single JSON file.
+// Download metadata from all known endpoints (or some supplied list), generate
+// a single JSON file.
 package main
 
 import (
@@ -32,10 +33,7 @@ var (
 func main() {
 	flag.Parse()
 	rand.Seed(*seed)
-	var (
-		endpoints = metha.Endpoints
-		failed    []string
-	)
+	var endpoints = metha.Endpoints
 	if *filename != "" {
 		b, err := ioutil.ReadFile(*filename)
 		if err != nil {
@@ -57,8 +55,10 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	// Run and wait until all harvests are done. XXX: add some timeout option.
-	g := new(errgroup.Group)
-	urlC := make(chan string)
+	var (
+		g    = new(errgroup.Group)
+		urlC = make(chan string)
+	)
 	g.Go(func() error {
 		defer close(urlC)
 		for _, endpoint := range endpoints {
@@ -68,26 +68,28 @@ func main() {
 	})
 	for i := 0; i < *numWorkers; i++ {
 		g.Go(func() error {
-			var j int
+			var (
+				j       int
+				harvest *metha.Harvest
+				err     error
+			)
 			for u := range urlC {
 				j++
-				harvest, err := metha.NewHarvest(u)
+				harvest, err = metha.NewHarvest(u)
 				if err != nil {
-					failed = append(failed, u)
 					log.Printf("failed (init): %s, %v", u, err)
 					continue
 				}
 				harvest.MaxRequests = *maxRequests
 				harvest.CleanBeforeDecode = true
 				harvest.Format = *format
-				if err := harvest.Run(); err != nil {
+				if err = harvest.Run(); err != nil {
 					switch err {
 					case metha.ErrAlreadySynced:
 					default:
-						// Fall back to non-window mode.
+						// fall back to non-selective mode
 						harvest.DisableSelectiveHarvesting = true
-						if err := harvest.Run(); err != nil {
-							failed = append(failed, u)
+						if err = harvest.Run(); err != nil {
 							log.Printf("failed (harvest): %s, %v", u, err)
 							continue
 						}
@@ -98,19 +100,9 @@ func main() {
 		})
 	}
 	g.Wait()
-	for _, f := range failed {
-		log.Printf("failed: %v", f)
-	}
-	failedSet := make(map[string]struct{})
-	for _, f := range failed {
-		failedSet[f] = struct{}{}
-	}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	for _, u := range endpoints {
-		if _, ok := failedSet[u]; ok {
-			continue
-		}
 		metha.BaseDir = *baseDir
 		harvest := metha.Harvest{
 			BaseURL: u,
