@@ -99,7 +99,7 @@ func main() {
 	}
 	g.Wait()
 	for _, f := range failed {
-		log.Println(f)
+		log.Printf("failed: %v", f)
 	}
 	failedSet := make(map[string]struct{})
 	for _, f := range failed {
