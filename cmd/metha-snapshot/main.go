@@ -20,6 +20,7 @@ var (
 	filename    = flag.String("f", "", fmt.Sprintf("filename with endpoints, defaults to list of %d sites", len(metha.Endpoints)))
 	baseDir     = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	format      = flag.String("format", "oai_dc", "metadata format")
+	bestEffort  = flag.Bool("B", false, "ignore harvest errors")
 	maxRequests = flag.Int("max", 1048576, "maximum number of token loops")
 	quiet       = flag.Bool("q", false, "suppress all output")
 	numWorkers  = flag.Int("w", 64, "workers")
@@ -121,6 +122,10 @@ func main() {
 			UseJson: true,
 		}
 		if err := metha.Render(opts); err != nil {
+			if *bestEffort {
+				log.Printf("error rendering endpoint %v: %v", u, err)
+				continue
+			}
 			log.Fatal(err)
 		}
 	}
