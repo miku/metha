@@ -74,6 +74,8 @@ func (md Metadata) MarshalJSON() ([]byte, error) {
 	if len(md.Body) == 0 {
 		return []byte("{}"), nil
 	}
+	// TODO: Is there a more uniform way to create JSON, e.g. one that has some
+	// listify option, like xmltodict?
 	m, err := mxj.NewMapXmlReader(bytes.NewReader(md.Body))
 	if err != nil {
 		return nil, err

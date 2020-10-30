@@ -20,21 +20,33 @@ import (
 )
 
 var (
-	filename    = flag.String("f", "", fmt.Sprintf("filename with endpoints, defaults to list of %d sites", len(metha.Endpoints)))
-	baseDir     = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
-	format      = flag.String("format", "oai_dc", "metadata format")
-	bestEffort  = flag.Bool("B", false, "ignore harvest errors")
-	maxRequests = flag.Int("max", 1048576, "maximum number of token loops")
-	quiet       = flag.Bool("q", false, "suppress all output")
-	numWorkers  = flag.Int("w", 64, "workers")
-	shuffle     = flag.Bool("S", false, "shuffle hosts")
-	sample      = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
-	seed        = flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed")
-	cpuprofile  = flag.String("cpuprofile", "", "cpu pprof file")
-	memprofile  = flag.String("memprofile", "", "mem pprof file")
+	filename       = flag.String("f", "", fmt.Sprintf("filename with endpoints, defaults to list of %d sites", len(metha.Endpoints)))
+	baseDir        = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
+	format         = flag.String("format", "oai_dc", "metadata format")
+	bestEffort     = flag.Bool("B", false, "ignore harvest errors")
+	maxRequests    = flag.Int("max", 1048576, "maximum number of token loops")
+	quiet          = flag.Bool("q", false, "suppress all output")
+	numWorkers     = flag.Int("w", 64, "workers")
+	shuffle        = flag.Bool("S", false, "shuffle hosts")
+	sample         = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
+	seed           = flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed")
+	cpuprofile     = flag.String("cpuprofile", "", "cpu pprof file")
+	memprofile     = flag.String("memprofile", "", "mem pprof file")
+	singleEndpoint = flag.String("u", "", "use a single endpoint")
 
 	endpoints = metha.Endpoints
 )
+
+func cleanupEndpointList(endpoints []string) (result []string) {
+	for _, ep := range endpoints {
+		ep = strings.TrimSpace(ep)
+		if strings.HasPrefix(ep, "#") || strings.HasPrefix(ep, "//") || ep == "" {
+			continue
+		}
+		result = append(result, ep)
+	}
+	return result
+}
 
 func main() {
 	flag.Parse()
@@ -57,6 +69,9 @@ func main() {
 		}
 		endpoints = strings.Split(string(b), "\n")
 	}
+	if *singleEndpoint != "" {
+		endpoints = []string{*singleEndpoint}
+	}
 	if *shuffle {
 		rand.Shuffle(len(endpoints), func(i, j int) {
 			endpoints[i], endpoints[j] = endpoints[j], endpoints[i]
@@ -70,6 +85,7 @@ func main() {
 	if *quiet {
 		log.SetOutput(ioutil.Discard)
 	}
+	endpoints = cleanupEndpointList(endpoints)
 	// Run and wait until all harvests are done. XXX: add some timeout option.
 	var (
 		g    = new(errgroup.Group)
