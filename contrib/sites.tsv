@@ -1970,6 +1970,7 @@ http://dspace.remuna.org:8079/dspace-oai/request
 http://dspace-roma3.caspur.it/dspace-oai-roma3/request
 http://dspace.rri.res.in:8080/oai/request
 http://dspace.rri.res.in/oai/request
+http://dspace.rsu.lv/oai/request
 http://dspace.slu.edu.ph/dspace-oai/request
 http://dspace.smu.ac.uk/dspace-oai/request
 http://dspace.snu.edu.ua:8080/oai/request
@@ -9428,7 +9429,6 @@ http://oai.mdx.cat/request
 http://oa.imft.fr/cgi/oai2
 http://oai.mom.fr/digimom/oai
 http://oai.musee-mariemont.be/oai
-http://oai.mzk.cz/
 http://oai.narcis.nl/oai
 http://oai.openedition.org/
 http://oai.persee.fr/oai
@@ -10434,6 +10434,7 @@ http://oralhistories.library.caltech.edu/cgi/oai2
 http://oralhistories.library.caltech.edu/perl/oai2
 http://ora.ox.ac.uk/oai
 http://ora.ox.ac.uk/oai?verb=Identify
+http://orbisimagines.hdplus.es/oai2
 http://orbit.dtu.dk/ws/oai
 http://orbi.ulg.ac.be/oai/request
 http://orca.cf.ac.uk/cgi/oai2
@@ -15004,6 +15005,7 @@ https://e-journal.unair.ac.id/JGS/oai
 https://e-journal.unair.ac.id/JHPR/oai
 https://e-journal.unair.ac.id/JIPK/oai
 https://e-journal.unair.ac.id/JMTT/oai
+https://e-journal.unair.ac.id/JPKM/oai
 https://e-journal.unair.ac.id/juxta/oai
 https://e-journal.unair.ac.id/JVHS/oai
 https://e-journal.unair.ac.id/PMNJ/oai
@@ -15594,6 +15596,7 @@ https://ethicallingua.org/25409190/oai
 https://ethicallingua.org/index.php/25409190/oai
 https://eudl.eu/oai
 https://eudml.org/oai/OAIHandler
+https://eurjchem.com/index.php/eurjchem/oai
 https://european-cooperation.eu/index.php/EC/oai
 https://europeanjournalofhumour.org/index.php/ejhr/oai
 https://europepmc.org/OaiService
@@ -17994,6 +17997,7 @@ https://knepublishing.com/index.php/Kne-Social/oai
 https://knepublishing.com/index.php/SJMS/issue/archive/oai
 https://knepublishing.com/index.php/SJMS/oai
 https://kontekstypedagogiczne.pl/kp/oai
+https://kramerius.mzk.cz/oai/
 https://krishi.icar.gov.in/oai/request
 https://krus.brage.unit.no/krus-oai/request
 https://kubrj.ku-br.com/index.php/kubrj/oai
@@ -18184,6 +18188,7 @@ https://myresearchjournals.com/index.php/vidushi/oai
 https://myresearchspace.uws.ac.uk/ws/oai
 https://naditirawidya.kemdikbud.go.id/index.php/nw/oai
 https://nahje.com/index.php/main/oai
+https://nailos.org/index.php/nailos/oai
 http://snap.archivum.ws/dspace-oai/request
 https://nasoa-journal.com.ua/index.php/journal/oai
 https://naukajournal.org/index.php/naukajournal/oai
@@ -19822,6 +19827,7 @@ https://repositorio.konradlorenz.edu.co/oai/request
 https://repositorio.tec.mx/oai/request
 https://repositorio.uam.es/oai/request
 https://repositorio.uca.edu.ar/oai/request
+https://repositorio.ucaldas.edu.co/oai/request
 https://repositorio.udes.edu.co/oai/request
 https://repositorio.ufjf.br/jspui/
 https://repositorio.ufpb.br/oai/request
