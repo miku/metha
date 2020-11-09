@@ -10,7 +10,7 @@ import collections
 import fileinput
 import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     prefix = collections.defaultdict(set)
     for line in (line.strip() for line in fileinput.input()):
         if line.startswith("https://"):
