@@ -22,7 +22,7 @@ var (
 	disableSelectiveHarvesting = flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	endpointList               = flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
 	format                     = flag.String("format", "oai_dc", "metadata format")
-	from                       = flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
+	from                       = flag.String("from", "2020-09-01", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
 	ignoreHTTPErrors           = flag.Bool("ignore-http-errors", false, "do not stop on HTTP errors, just skip to the next interval")
 	logFile                    = flag.String("log", "", "filename to log to")
 	logStderr                  = flag.Bool("log-errors-to-stderr", false, "Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT")
@@ -33,6 +33,7 @@ var (
 	set                        = flag.String("set", "", "set name")
 	showDir                    = flag.Bool("dir", false, "show target directory")
 	suppressFormatParameter    = flag.Bool("suppress-format-parameter", false, "do not send format parameter")
+	until			   = flag.String("until", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
 	version                    = flag.Bool("v", false, "show version")
 	extraHeaders               xflag.Array // Extra HTTP header.
 )
@@ -112,6 +113,7 @@ func main() {
 	}
 
 	harvest.From = *from
+	harvest.Until = *until
 	harvest.Format = *format
 	harvest.Set = *set
 	harvest.MaxRequests = *maxRequests
