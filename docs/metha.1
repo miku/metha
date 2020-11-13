@@ -27,54 +27,47 @@ endpoint are fast.
 .PP
 A list of over 5000 (more or less usable) endpoints can be found here: \[la]https://is.gd/UrST8m\[ra]\&.
 .SH OPTIONS
-.TP
-\-base\-dir \fIstring\fP
-Base directory for harvested files (default "~/.cache/metha").
-.TP
-\fB\fC\-format\fR \fIstring\fP
-Metadata format, default \fIoai_dc\fP\&.
-.TP
-\fB\fC\-set\fR \fIstring\fP
-Set name.
-.TP
-\fB\fC\-dir\fR
-Show target directory.
-.TP
-\fB\fC\-log\fR \fIstring\fP
-Log to filename, not to stderr.
-.TP
-\fB\fC\-ignore\-http\-errors\fR \fIstring\fP
-Do not stop on HTTP errors, just skip to the next interval.
-.TP
+.PP
+Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to see flags for other commands.
+.PP
+\fB\fC\-H\fR \fIvalue\fP
+        extra HTTP header to pass to requests (repeatable); e.g. \-H "token: 123"
+\fB\fC\-base\-dir\fR \fIstring\fP
+        base dir for harvested files (default "~/.cache/metha")
 \fB\fC\-daily\fR
-Use daily intervals for harvesting.
-.TP
-\fB\fC\-max\fR \fIint\fP
-Maximum number of token loops, default \fI1048576\fP\&.
-.TP
-\fB\fC\-no\-intervals\fR
-Harvest in one go, for funny endpoints.
-.TP
-\fB\fC\-suppress\-format\-parameter\fR
-Do not send format parameter.
-.TP
-\fB\fC\-max\-empty\-responses\fR
-Allow a number of empty responses before failing (default 10).
-.TP
-\fB\fC\-q\fR
-Be quiet.
-.TP
+        use daily intervals for harvesting
+\fB\fC\-dir\fR
+        show target directory
+\fB\fC\-format\fR \fIstring\fP
+        metadata format (default "oai_dc")
+\fB\fC\-from\fR \fIstring\fP
+        set the start date, format: 2006\-01\-02, use only if you do not want the endpoints earliest date
+\fB\fC\-hourly\fR
+        use hourly intervals for harvesting
+\fB\fC\-ignore\-http\-errors\fR
+        do not stop on HTTP errors, just skip to the next interval
 \fB\fC\-list\fR
-List a selection of known OAI endpoints.
-.TP
+        list a selection of OAI endpoints (might be outdated)
+\fB\fC\-log\fR \fIstring\fP
+        filename to log to
+\fB\fC\-log\-errors\-to\-stderr\fR
+        Log errors and warnings to STDERR. If \-log or \-q are not given, write full log to STDOUT
+\fB\fC\-max\fR \fIint\fP
+        maximum number of token loops (default 1048576)
+\fB\fC\-max\-empty\-responses\fR \fIint\fP
+       allow a number of empty responses before failing (default 10)
+\fB\fC\-no\-intervals\fR
+        harvest in one go, for funny endpoints
+\fB\fC\-q\fR    suppress all output
 \fB\fC\-rm\fR
-Purge harvesting directory.
-.TP
-\fB\fC\-v\fR
-Program version.
-.TP
-\fB\fC\-H\fR \fIheader\fP
-Extra header to pass to the request; syntax like curl, e.g. \-H "Token: 123"
+        remove all cached files before starting anew
+\fB\fC\-set\fR \fIstring\fP
+        set name
+\fB\fC\-suppress\-format\-parameter\fR
+        do not send format parameter
+\fB\fC\-until\fR \fIstring\fP
+        set the end date, format: 2006\-01\-02, use only if you do not want got records till today
+\fB\fC\-v\fR    show version
 .SH EXAMPLES
 .PP
 Show metadata about endpoint in JSON format:
@@ -202,6 +195,8 @@ Natanael Arndt, \[la]https://github.com/white-gecko\[ra]
 Gunnar Þór Magnússon, \[la]https://github.com/gunnihinn\[ra]
 .IP \(bu 2
 Thomas Gersch, \[la]https://github.com/titabo2k\[ra]
+.IP \(bu 2
+ACz\-UniBi \[la]https://github.com/ACz-UniBi\[ra]
 .RE
 .SH SEE ALSO
 .PP

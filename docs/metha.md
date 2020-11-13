@@ -37,53 +37,47 @@ A list of over 5000 (more or less usable) endpoints can be found here: https://i
 OPTIONS
 -------
 
--base-dir *string*
-  Base directory for harvested files (default "~/.cache/metha").
+Options for the `metha-sync` command are as follows. Use `-h` to see flags for other commands.
 
-`-format` *string*
-  Metadata format, default *oai_dc*.
-
-`-set` *string*
-  Set name.
-
-`-dir`
-  Show target directory.
-
-`-log` *string*
-  Log to filename, not to stderr.
-
-`-ignore-http-errors` *string*
-  Do not stop on HTTP errors, just skip to the next interval.
-
+`-H` *value*
+        extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123"
+`-base-dir` *string*
+        base dir for harvested files (default "~/.cache/metha")
 `-daily`
-  Use daily intervals for harvesting.
-
-`-max` *int*
-  Maximum number of token loops, default *1048576*.
-
-`-no-intervals`
-  Harvest in one go, for funny endpoints.
-
-`-suppress-format-parameter`
-  Do not send format parameter.
-
-`-max-empty-responses`
-  Allow a number of empty responses before failing (default 10).
-
-`-q`
-  Be quiet.
-
+        use daily intervals for harvesting
+`-dir`
+        show target directory
+`-format` *string*
+        metadata format (default "oai_dc")
+`-from` *string*
+        set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date
+`-hourly`
+        use hourly intervals for harvesting
+`-ignore-http-errors`
+        do not stop on HTTP errors, just skip to the next interval
 `-list`
-  List a selection of known OAI endpoints.
-
+        list a selection of OAI endpoints (might be outdated)
+`-log` *string*
+        filename to log to
+`-log-errors-to-stderr`
+        Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT
+`-max` *int*
+        maximum number of token loops (default 1048576)
+`-max-empty-responses` *int*
+       allow a number of empty responses before failing (default 10)
+`-no-intervals`
+        harvest in one go, for funny endpoints
+`-q`    suppress all output
 `-rm`
-  Purge harvesting directory.
+        remove all cached files before starting anew
+`-set` *string*
+        set name
+`-suppress-format-parameter`
+        do not send format parameter
+`-until` *string*
+        set the end date, format: 2006-01-02, use only if you do not want got records till today
+`-v`    show version
 
-`-v`
-  Program version.
-
-`-H` *header*
-  Extra header to pass to the request; syntax like curl, e.g. -H "Token: 123"
 
 EXAMPLES
 --------
@@ -222,6 +216,7 @@ AUTHORS
 * Natanael Arndt, https://github.com/white-gecko
 * Gunnar Þór Magnússon, https://github.com/gunnihinn
 * Thomas Gersch, https://github.com/titabo2k
+* [ACz-UniBi](https://github.com/ACz-UniBi)
 
 
 SEE ALSO
