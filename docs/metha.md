@@ -41,41 +41,60 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 
 `-H` *value*
         extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123"
+
 `-base-dir` *string*
         base dir for harvested files (default "~/.cache/metha")
+
 `-daily`
         use daily intervals for harvesting
+
 `-dir`
         show target directory
+
 `-format` *string*
         metadata format (default "oai_dc")
+
 `-from` *string*
         set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date
+
 `-hourly`
         use hourly intervals for harvesting
+
 `-ignore-http-errors`
         do not stop on HTTP errors, just skip to the next interval
+
 `-list`
         list a selection of OAI endpoints (might be outdated)
+
 `-log` *string*
         filename to log to
+
 `-log-errors-to-stderr`
         Log errors and warnings to STDERR. If -log or -q are not given, write full log to STDOUT
+
 `-max` *int*
         maximum number of token loops (default 1048576)
+
 `-max-empty-responses` *int*
        allow a number of empty responses before failing (default 10)
+
 `-no-intervals`
         harvest in one go, for funny endpoints
+
 `-q`    suppress all output
+
 `-rm`
         remove all cached files before starting anew
+
 `-set` *string*
         set name
+
 `-suppress-format-parameter`
         do not send format parameter
+
 `-until` *string*
         set the end date, format: 2006-01-02, use only if you do not want got records till today
+
 `-v`    show version
 
 

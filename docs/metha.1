@@ -32,41 +32,60 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
 .PP
 \fB\fC\-H\fR \fIvalue\fP
         extra HTTP header to pass to requests (repeatable); e.g. \-H "token: 123"
+.PP
 \fB\fC\-base\-dir\fR \fIstring\fP
         base dir for harvested files (default "~/.cache/metha")
+.PP
 \fB\fC\-daily\fR
         use daily intervals for harvesting
+.PP
 \fB\fC\-dir\fR
         show target directory
+.PP
 \fB\fC\-format\fR \fIstring\fP
         metadata format (default "oai_dc")
+.PP
 \fB\fC\-from\fR \fIstring\fP
         set the start date, format: 2006\-01\-02, use only if you do not want the endpoints earliest date
+.PP
 \fB\fC\-hourly\fR
         use hourly intervals for harvesting
+.PP
 \fB\fC\-ignore\-http\-errors\fR
         do not stop on HTTP errors, just skip to the next interval
+.PP
 \fB\fC\-list\fR
         list a selection of OAI endpoints (might be outdated)
+.PP
 \fB\fC\-log\fR \fIstring\fP
         filename to log to
+.PP
 \fB\fC\-log\-errors\-to\-stderr\fR
         Log errors and warnings to STDERR. If \-log or \-q are not given, write full log to STDOUT
+.PP
 \fB\fC\-max\fR \fIint\fP
         maximum number of token loops (default 1048576)
+.PP
 \fB\fC\-max\-empty\-responses\fR \fIint\fP
        allow a number of empty responses before failing (default 10)
+.PP
 \fB\fC\-no\-intervals\fR
         harvest in one go, for funny endpoints
+.PP
 \fB\fC\-q\fR    suppress all output
+.PP
 \fB\fC\-rm\fR
         remove all cached files before starting anew
+.PP
 \fB\fC\-set\fR \fIstring\fP
         set name
+.PP
 \fB\fC\-suppress\-format\-parameter\fR
         do not send format parameter
+.PP
 \fB\fC\-until\fR \fIstring\fP
         set the end date, format: 2006\-01\-02, use only if you do not want got records till today
+.PP
 \fB\fC\-v\fR    show version
 .SH EXAMPLES
 .PP
