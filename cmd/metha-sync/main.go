@@ -33,7 +33,7 @@ var (
 	set                        = flag.String("set", "", "set name")
 	showDir                    = flag.Bool("dir", false, "show target directory")
 	suppressFormatParameter    = flag.Bool("suppress-format-parameter", false, "do not send format parameter")
-	until			   = flag.String("until", "", "set the end date, format: 2006-01-02, use only if you do not want got records till today")
+	until                      = flag.String("until", "", "set the end date, format: 2006-01-02, use only if you do not want got records till today")
 	version                    = flag.Bool("v", false, "show version")
 	extraHeaders               xflag.Array // Extra HTTP header.
 )
