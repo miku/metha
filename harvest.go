@@ -250,7 +250,16 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 		begin = begin.AddDate(0, 0, 1)
 	}
 
-	end := now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
+	var end time.Time
+	if h.Until != "" {
+		end, err = time.Parse("2006-01-02", h.Until)
+		if err != nil {
+			return Interval{}, err
+		}
+		log.Printf("using custom end date: %v", end)
+	} else {
+		end = now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
+	}
 
 	if last == end.Format("2006-01-02") {
 		return Interval{}, ErrAlreadySynced
