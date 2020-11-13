@@ -203,9 +203,10 @@ interaction in resource conservation.
 ## Authors
 
 * Martin Czygan <martin.czygan@uni-leipzig.de>
-* Natanael Arndt, https://github.com/white-gecko
-* Gunnar Þór Magnússon, https://github.com/gunnihinn
-* Thomas Gersch, https://github.com/titabo2k
+* Natanael Arndt, [https://github.com/white-gecko](https://github.com/white-gecko)
+* Gunnar Þór Magnússon, [https://github.com/gunnihinn](https://github.com/gunnihinn)
+* Thomas Gersch, [https://github.com/titabo2k](https://github.com/titabo2k)
+* [ACz-UniBi](https://github.com/ACz-UniBi)
 
 ## Misc
 
