@@ -1402,7 +1402,6 @@ http://datashare.is.ed.ac.uk/dspace-oai/request
 http://dataspace.princeton.edu/oai
 http://dataspace.princeton.edu/oai/request
 http://datastorre.stir.ac.uk/oai/request
-http://daten.digitale-sammlungen.de/~db/OAI/oai2.php
 http://da.uni-vt.bg/oai2/oai2.aspx
 http://dawidov.socionet.ru/oai/hmdzwu_1/oai.cgi
 http://dbis.eprints.uni-ulm.de/perl/oai2
@@ -1630,6 +1629,8 @@ http://digitale.bibliothek.uni-halle.de/vd16/oai
 http://digitale.bibliothek.uni-halle.de/vd17/oai
 http://digitale.bibliothek.uni-halle.de/vd18/oai
 http://digitale.bibliothek.uni-halle.de/zd/oai
+http://digitale-sammlungen.gwlb.de/oai2/
+http://digitale-sammlungen.ulb.uni-bonn.de/oai/
 http://digital.fides.org.pl/dlibra/oai-pmh-repository.xml
 http://digital.herder-institut.de/publications/oai
 http://digitalia.sbn.it/oai
@@ -14261,6 +14262,7 @@ https://dataverse.nioz.nl/oai
 https://dataverse.nl/oai
 https://dataverse.tdl.org/oai
 https://dataverse.unimi.it/oai?verb=Identify
+https://daten.digitale-sammlungen.de/~db/OAI/oai2.php
 https://davinci.lib.uoguelph.ca/index.php/davinci/oai
 https://dbkit.bibliothek.kit.edu/oai
 https://dbkit.bibliothek.kit.edu/oai/eva/
@@ -17418,6 +17420,7 @@ https://journal.uny.ac.id/index.php/sosia/oai
 https://journal.upy.ac.id/index.php/lppm/oai
 https://journal.utnd.ac.id/index.php/agri/article/view/80/oai
 https://journal.utnd.ac.id/index.php/agri/oai
+https://journaluts.emnuvens.com.br/journaluts/oai
 https://journal.uwks.ac.id/index.php/liability/oai
 https://journal.uwks.ac.id/index.php/trapsila/oai
 https://journal.walisongo.ac.id/index.php/hayat/oai
@@ -22679,6 +22682,7 @@ https://www.biotaxa.org/em/oai
 https://www.biotaxa.org/RSEA/oai
 https://www.bjrs.org.br/revista/index.php/index/oai
 https://www.bmeb-bi.org/index.php/BEMP/oai
+https://www.bmgn-lchr.nl/jms/index.php/up/oai/
 https://www.bohemia-online.de/index.php/bohemia/oai
 https://www.br-ie.org/pub/index.php/rbie/oai
 https://www.brjpd.com.br/index.php/brjpd/oai
@@ -24066,6 +24070,7 @@ https://www.sidm.it/ojs/index.php/ridm/oai
 https://www.sjdr.se/jms/index.php/up/oai/
 https://www.sjwop.com/jms/index.php/up/oai/
 https://www.slovetres.si/index.php/SVR/oai
+https://www.slub-dresden.de/sammlungen/digitale-sammlungen/oai
 https://www.smartscitech.com/index.php/ics/oai
 https://www.smartscitech.com/index.php/IOGR/oai
 https://www.smartscitech.com/index.php/rci/oai
