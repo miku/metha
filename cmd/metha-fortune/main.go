@@ -189,7 +189,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
-	rand.Seed(time.Now().UnixNano())
 	var searchers []Search
 	for i := 0; i < *k; i++ {
 		searchers = append(searchers, createSearcher(metha.RandomEndpoint()))
