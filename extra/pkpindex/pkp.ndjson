@@ -31,7 +31,7 @@
 {"name":"Medical Journal of Indonesia","homepage":"http://mji.ui.ac.id/journal/index.php/mji/","oai":"http://mji.ui.ac.id/journal/index.php/mji/oai"}
 {"name":"Papers. Revista de Sociologia","homepage":"http://papers.uab.cat","oai":"http://papers.uab.cat/oai"}
 {"name":"Athenea Digital. Revista de pensamiento e investigación social","homepage":"http://atheneadigital.net","oai":"http://atheneadigital.net/oai"}
-{"name":"Revista de Psicologia del Deporte","homepage":"http://rpd-online.com","oai":"http://rpd-online.com/oai"}
+{"name":"Revista de Psicologia del Deporte","homepage":"https://rpd-online.com/index.php/rpd","oai":"https://rpd-online.com/index.php/rpd/oai"}
 {"name":"Catalan Journal of Linguistics","homepage":"http://revistes.uab.cat/catJL","oai":"http://revistes.uab.cat/catJL/oai"}
 {"name":"Revista de Negócios","homepage":"http://proxy.furb.br/ojs/index.php/rn/index","oai":"http://proxy.furb.br/ojs/index.php/rn/oai"}
 {"name":"Anthropology Book Forum","homepage":"http://journals.sfu.ca/abf/index.php/abf/","oai":"http://journals.sfu.ca/abf/index.php/abf/oai"}
@@ -220,7 +220,7 @@
 {"name":"South East European Journal of Cardiology","homepage":"http://www.id-press.eu/seejca/index","oai":"http://www.id-press.eu/seejca/oai"}
 {"name":"South East European Journal of Human Genetics","homepage":"http://www.id-press.eu/seejhg/index","oai":"http://www.id-press.eu/seejhg/oai"}
 {"name":"Macedonian Medical Electronic Journal","homepage":"http://www.id-press.eu/mmej/index","oai":"http://www.id-press.eu/mmej/oai"}
-{"name":"JLIS.it","homepage":"http://leo.cineca.it/index.php/jlis/","oai":"http://leo.cineca.it/index.php/jlis/oai"}
+{"name":"LEO","homepage":"http://leo.cineca.it/","oai":"http://leo.cineca.it/oai"}
 {"name":"Macedonian Journal of Medical Sciences","homepage":"http://www.id-press.eu/oldmjms/index","oai":"http://www.id-press.eu/oldmjms/oai"}
 {"name":"Diametros – An Online Journal of Philosophy","homepage":"http://www.diametros.iphils.uj.edu.pl/index.php/diametros","oai":"http://www.diametros.iphils.uj.edu.pl/index.php/diametros/oai"}
 {"name":"Journal of Special Education and Rehabilitation","homepage":"http://dl.fzf.ukim.edu.mk/index.php/jser/index","oai":"http://dl.fzf.ukim.edu.mk/index.php/jser/oai"}
@@ -261,7 +261,7 @@
 {"name":"Anuario electrónico de estudios en Comunicación Social \u0026#34;Disertaciones\u0026#34;","homepage":"http://revistas.urosario.edu.co/index.php/disertaciones","oai":"http://revistas.urosario.edu.co/index.php/disertaciones/oai"}
 {"name":"Anuario Iberoamericano de Derecho Internacional Penal","homepage":"http://revistas.urosario.edu.co/index.php/anidip","oai":"http://revistas.urosario.edu.co/index.php/anidip/oai"}
 {"name":"Journal of Modern Materials","homepage":"https://journals.aijr.in/index.php/jmm/index","oai":"https://journals.aijr.in/index.php/jmm/oai"}
-{"name":"JOURNAL OF PHARMACEUTICAL CHEMISTRY","homepage":"http://www.vensel.org/index.php/jphchem/","oai":"http://www.vensel.org/index.php/jphchem/oai"}
+{"name":"JOURNAL OF PHARMACEUTICAL CHEMISTRY","homepage":"http://vensel.org/index.php/jphchem","oai":"http://vensel.org/index.php/jphchem/oai"}
 {"name":"Galician Medical Journal","homepage":"http://ojs.ifnmu.edu.ua/index.php/gmj","oai":"http://ojs.ifnmu.edu.ua/index.php/gmj/oai"}
 {"name":"Archive of Clinical Medicine","homepage":"http://ojs.ifnmu.edu.ua/index.php/acm","oai":"http://ojs.ifnmu.edu.ua/index.php/acm/oai"}
 {"name":"Inclusão Social","homepage":"http://revista.ibict.br/inclusao","oai":"http://revista.ibict.br/inclusao/oai"}
@@ -395,7 +395,7 @@
 {"name":"The bulletin of the Far Eastern Federal University. Economics and Management","homepage":"http://jem.dvfu.ru/index.php/jem","oai":"http://jem.dvfu.ru/index.php/jem/oai"}
 {"name":"Jurnal Pendidikan Geografi","homepage":"http://journal.um.ac.id/index.php/pendidikan-geografi/index","oai":"http://journal.um.ac.id/index.php/pendidikan-geografi/oai"}
 {"name":"Biodiversity and Natural History","homepage":"http://www.biodiversnathist.com/index.php/bnh","oai":"http://www.biodiversnathist.com/index.php/bnh/oai"}
-{"name":"Em Aberto","homepage":"http://emaberto.inep.gov.br/index.php/emaberto/index","oai":"http://emaberto.inep.gov.br/index.php/emaberto/oai"}
+{"name":"Em Aberto","homepage":"http://emaberto.inep.gov.br/ojs3/index.php/emaberto/index","oai":"http://emaberto.inep.gov.br/ojs3/index.php/emaberto/oai"}
 {"name":"Pensamiento Americano","homepage":"http://www.coruniamericana.edu.co/publicaciones/ojs/index.php/pensamientoamericano/index","oai":"http://www.coruniamericana.edu.co/publicaciones/ojs/index.php/pensamientoamericano/oai"}
 {"name":"Revista de Ciencias Económicas","homepage":"https://revistas.ucr.ac.cr/index.php/economicas","oai":"https://revistas.ucr.ac.cr/index.php/economicas/oai"}
 {"name":"Pediatric Neurology Briefs","homepage":"http://www.pediatricneurologybriefs.com/","oai":"http://www.pediatricneurologybriefs.com/oai"}
@@ -700,14 +700,14 @@
 {"name":"Educação e Pesquisa","homepage":"http://www.revistas.usp.br/index.php/ep","oai":"http://www.revistas.usp.br/index.php/ep/oai"}
 {"name":"GIS – Gesto, Imagem e Som – Revista de Antropologia","homepage":"http://www.revistas.usp.br/index.php/gis","oai":"http://www.revistas.usp.br/index.php/gis/oai"}
 {"name":"Psicologia USP","homepage":"http://www.revistas.usp.br/index.php/psicousp","oai":"http://www.revistas.usp.br/index.php/psicousp/oai"}
-{"name":"OASIS","homepage":"http://revistas.uexternado.edu.co/index.php/oasis","oai":"http://revistas.uexternado.edu.co/index.php/oasis/oai"}
-{"name":"OPERA","homepage":"http://revistas.uexternado.edu.co/index.php/opera","oai":"http://revistas.uexternado.edu.co/index.php/opera/oai"}
-{"name":"Revista de Derecho Privado","homepage":"http://revistas.uexternado.edu.co/index.php/derpri","oai":"http://revistas.uexternado.edu.co/index.php/derpri/oai"}
-{"name":"Revista de Economía Institucional","homepage":"http://revistas.uexternado.edu.co/index.php/ecoins","oai":"http://revistas.uexternado.edu.co/index.php/ecoins/oai"}
-{"name":"Revista Derecho del Estado","homepage":"http://revistas.uexternado.edu.co/index.php/derest","oai":"http://revistas.uexternado.edu.co/index.php/derest/oai"}
-{"name":"Revista Digital de Derecho Administrativo","homepage":"http://revistas.uexternado.edu.co/index.php/Deradm","oai":"http://revistas.uexternado.edu.co/index.php/Deradm/oai"}
-{"name":"La Propiedad Inmaterial","homepage":"http://revistas.uexternado.edu.co/index.php/propin","oai":"http://revistas.uexternado.edu.co/index.php/propin/oai"}
-{"name":"Turismo y Sociedad","homepage":"http://revistas.uexternado.edu.co/index.php/tursoc","oai":"http://revistas.uexternado.edu.co/index.php/tursoc/oai"}
+{"name":"OASIS","homepage":"https://revistas.uexternado.edu.co/index.php/oasis","oai":"https://revistas.uexternado.edu.co/index.php/oasis/oai"}
+{"name":"OPERA","homepage":"https://revistas.uexternado.edu.co/index.php/opera","oai":"https://revistas.uexternado.edu.co/index.php/opera/oai"}
+{"name":"Revista de Derecho Privado","homepage":"https://revistas.uexternado.edu.co/index.php/derpri","oai":"https://revistas.uexternado.edu.co/index.php/derpri/oai"}
+{"name":"Revista de Economía Institucional","homepage":"https://revistas.uexternado.edu.co/index.php/ecoins","oai":"https://revistas.uexternado.edu.co/index.php/ecoins/oai"}
+{"name":"Revista Derecho del Estado","homepage":"https://revistas.uexternado.edu.co/index.php/derest","oai":"https://revistas.uexternado.edu.co/index.php/derest/oai"}
+{"name":"Revista Digital de Derecho Administrativo","homepage":"https://revistas.uexternado.edu.co/index.php/Deradm","oai":"https://revistas.uexternado.edu.co/index.php/Deradm/oai"}
+{"name":"La Propiedad Inmaterial","homepage":"https://revistas.uexternado.edu.co/index.php/propin","oai":"https://revistas.uexternado.edu.co/index.php/propin/oai"}
+{"name":"Turismo y Sociedad","homepage":"https://revistas.uexternado.edu.co/index.php/tursoc","oai":"https://revistas.uexternado.edu.co/index.php/tursoc/oai"}
 {"name":"Estudos Econômicos (São Paulo)","homepage":"http://www.revistas.usp.br/index.php/ee","oai":"http://www.revistas.usp.br/index.php/ee/oai"}
 {"name":"Gestão \u0026amp; Tecnologia de Projetos","homepage":"http://www.revistas.usp.br/index.php/gestaodeprojetos","oai":"http://www.revistas.usp.br/index.php/gestaodeprojetos/oai"}
 {"name":"Novos Olhares","homepage":"http://www.revistas.usp.br/index.php/novosolhares","oai":"http://www.revistas.usp.br/index.php/novosolhares/oai"}
@@ -721,8 +721,8 @@
 {"name":"Letras Clássicas","homepage":"http://www.revistas.usp.br/index.php/letrasclassicas","oai":"http://www.revistas.usp.br/index.php/letrasclassicas/oai"}
 {"name":"Pandaemonium Germanicum","homepage":"http://www.revistas.usp.br/index.php/pg","oai":"http://www.revistas.usp.br/index.php/pg/oai"}
 {"name":"International Journal of Research on Service-Learning in Teacher Education","homepage":"https://journals.tdl.org/ijrslte/index.php/IJRSLTE","oai":"https://journals.tdl.org/ijrslte/index.php/IJRSLTE/oai"}
-{"name":"Revista Científica Fatecie","homepage":"http://fatecie.edu.br/revistacientifica/index.php/revistafatecie","oai":"http://fatecie.edu.br/revistacientifica/index.php/revistafatecie/oai"}
-{"name":"Semana Acadêmica Fatecie","homepage":"http://fatecie.edu.br/revistacientifica/index.php/SEMANAACADEMICA","oai":"http://fatecie.edu.br/revistacientifica/index.php/SEMANAACADEMICA/oai"}
+{"name":"Revista Científica Fatecie","homepage":"https://unifatecie.edu.br/revistacientifica/index.php/revistafatecie","oai":"https://unifatecie.edu.br/revistacientifica/index.php/revistafatecie/oai"}
+{"name":"Semana Acadêmica Fatecie","homepage":"https://unifatecie.edu.br/revistacientifica/index.php/SEMANAACADEMICA","oai":"https://unifatecie.edu.br/revistacientifica/index.php/SEMANAACADEMICA/oai"}
 {"name":"Madania","homepage":"http://ejournal.iainbengkulu.ac.id/index.php/madania","oai":"http://ejournal.iainbengkulu.ac.id/index.php/madania/oai"}
 {"name":"Ciencia Odontológica","homepage":"http://produccioncientificaluz.org/index.php/cienciao","oai":"http://produccioncientificaluz.org/index.php/cienciao/oai"}
 {"name":"Revista Valore - Revista Científica da FaSF Faculdade Sul Fluminense","homepage":"https://revistavalore.emnuvens.com.br/index.php/valore","oai":"https://revistavalore.emnuvens.com.br/index.php/valore/oai"}
@@ -1007,7 +1007,7 @@
 {"name":"Book of Squibs: Topics in the formal study of language","homepage":"http://www.periodicos.unb.br/index.php/cs","oai":"http://www.periodicos.unb.br/index.php/cs/oai"}
 {"name":"Jurnal Agrosains dan Teknologi","homepage":"http://jurnal.pertanian-umj.ac.id/index.php/jadt","oai":"http://jurnal.pertanian-umj.ac.id/index.php/jadt/oai"}
 {"name":"Jurnal Penelitian Dan Pembelajaran Matematika","homepage":"http://jurnal.untirta.ac.id/index.php/JPPM/index","oai":"http://jurnal.untirta.ac.id/index.php/JPPM/oai"}
-{"name":"Revista de Estudos Universitários","homepage":"http://periodicos.uniso.br/ojs3/index.php/reu","oai":"http://periodicos.uniso.br/ojs3/index.php/reu/oai"}
+{"name":"Revista de Estudos Universitários","homepage":"http://periodicos.uniso.br/ojs/index.php/reu","oai":"http://periodicos.uniso.br/ojs/index.php/reu/oai"}
 {"name":"A Cor das Letras","homepage":"http://periodicos.uefs.br/index.php/acordasletras","oai":"http://periodicos.uefs.br/index.php/acordasletras/oai"}
 {"name":"EnviroScienteae","homepage":"http://ppjp.ulm.ac.id/journal/index.php/es","oai":"http://ppjp.ulm.ac.id/journal/index.php/es/oai"}
 {"name":"Recoletos Multidisciplinary Research Journal","homepage":"http://rmrj.usjr.edu.ph/index.php/RMRJ","oai":"http://rmrj.usjr.edu.ph/index.php/RMRJ/oai"}
@@ -1217,7 +1217,7 @@
 {"name":"Majalah Kedokteran Andalas","homepage":"http://jurnalmka.fk.unand.ac.id/index.php/art","oai":"http://jurnalmka.fk.unand.ac.id/index.php/art/oai"}
 {"name":"Jurnal Solum","homepage":"http://jurnalsolum.faperta.unand.ac.id/index.php/solum/","oai":"http://jurnalsolum.faperta.unand.ac.id/index.php/solum/oai"}
 {"name":"JURNAL BIOLOGI UNAND","homepage":"http://jbioua.fmipa.unand.ac.id/index.php/jbioua/","oai":"http://jbioua.fmipa.unand.ac.id/index.php/jbioua/oai"}
-{"name":"The Indonesian Journal of Gastroenterology, Hepatology and Digestive Endoscopy","homepage":"http://ina-jghe.com/journal/index.php/jghe","oai":"http://ina-jghe.com/journal/index.php/jghe/oai"}
+{"name":"The Indonesian Journal of Gastroenterology, Hepatology and Digestive Endoscopy","homepage":"http://ina-jghe.com/index.php/jghe","oai":"http://ina-jghe.com/index.php/jghe/oai"}
 {"name":"Acta Biológica Colombiana","homepage":"http://www.revistas.unal.edu.co/index.php/actabiol","oai":"http://www.revistas.unal.edu.co/index.php/actabiol/oai"}
 {"name":"Journal of Education, Health and Sport","homepage":"http://ojs.ukw.edu.pl/index.php/johs","oai":"http://ojs.ukw.edu.pl/index.php/johs/oai"}
 {"name":"Jurnal Ilmu Sosial dan Ilmu Politik (JISPO)","homepage":"http://journal.uinsgd.ac.id/index.php/jispo/","oai":"http://journal.uinsgd.ac.id/index.php/jispo/oai"}
@@ -1368,7 +1368,7 @@
 {"name":"ProBank","homepage":"http://e-journal.stie-aub.ac.id/index.php/probank","oai":"http://e-journal.stie-aub.ac.id/index.php/probank/oai"}
 {"name":"Momentum: Physics Education Journal","homepage":"http://ejournal.unikama.ac.id/index.php/momentum/index","oai":"http://ejournal.unikama.ac.id/index.php/momentum/oai"}
 {"name":"Journal of Science and Research: Revista Ciencia e Investigación","homepage":"http://revistas.utb.edu.ec/index.php/sr/index","oai":"http://revistas.utb.edu.ec/index.php/sr/oai"}
-{"name":"Acta Agrícola y Pecuaria","homepage":"http://aap.uaem.mx/index.php/agricolaypecuaria/","oai":"http://aap.uaem.mx/index.php/agricolaypecuaria/oai"}
+{"name":"Acta Agrícola y Pecuaria","homepage":"http://aap.uaem.mx/index.php/aap","oai":"http://aap.uaem.mx/index.php/aap/oai"}
 {"name":"Jurnal Agroqua: Media Informasi Agronomi dan Budidaya Perairan","homepage":"http://journals.unihaz.ac.id/index.php/agroqua","oai":"http://journals.unihaz.ac.id/index.php/agroqua/oai"}
 {"name":"Jurnal TAM (Technology Acceptance Model)","homepage":"http://ojs.stmikpringsewu.ac.id/index.php/JurnalTam","oai":"http://ojs.stmikpringsewu.ac.id/index.php/JurnalTam/oai"}
 {"name":"Prometeica - Revista de Filosofía y Ciencias","homepage":"https://periodicos.unifesp.br/index.php/prometeica","oai":"https://periodicos.unifesp.br/index.php/prometeica/oai"}
@@ -1393,7 +1393,7 @@
 {"name":"Jurnal Keamanan Nasional","homepage":"http://jurnal.ubharajaya.ac.id/index.php/kamnas/index","oai":"http://jurnal.ubharajaya.ac.id/index.php/kamnas/oai"}
 {"name":"South African Journal of Enology and Viticulture","homepage":"http://www.journals.ac.za/index.php/sajev","oai":"http://www.journals.ac.za/index.php/sajev/oai"}
 {"name":"South African Journal of Higher Education","homepage":"http://www.journals.ac.za/index.php/sajhe","oai":"http://www.journals.ac.za/index.php/sajhe/oai"}
-{"name":"UPLanD - Journal of Urban Planning, Landscape \u0026amp; Environmental Design","homepage":"http://www.upland.it/index.php/index/index","oai":"http://www.upland.it/index.php/index/oai"}
+{"name":"UPLanD - Journal of Urban Planning, Landscape \u0026amp; Environmental Design","homepage":"http://www.upland.it/","oai":"http://www.upland.it/oai"}
 {"name":"International Journal of Advanced Statistics and IT\u0026amp;C for Economics and Life Sciences","homepage":"http://magazines.ulbsibiu.ro/ijasitels/index.php/IJASITELS/index","oai":"http://magazines.ulbsibiu.ro/ijasitels/index.php/IJASITELS/oai"}
 {"name":"International Journal on Informatics Visualization","homepage":"http://joiv.org/index.php/joiv/","oai":"http://joiv.org/index.php/joiv/oai"}
 {"name":"Acta Tecnológica","homepage":"http://portaldeperiodicos.ifma.edu.br/index.php/actatecnologica","oai":"http://portaldeperiodicos.ifma.edu.br/index.php/actatecnologica/oai"}
@@ -1479,7 +1479,6 @@
 {"name":"Septentrio Educational","homepage":"http://septentrio.uit.no/index.php/SapEdu/index","oai":"http://septentrio.uit.no/index.php/SapEdu/oai"}
 {"name":"Septentrio Reports","homepage":"http://septentrio.uit.no/index.php/SapReps/index","oai":"http://septentrio.uit.no/index.php/SapReps/oai"}
 {"name":"Sjuttonhundratal: Nordic Yearbook for Eighteenth-Century Studies","homepage":"http://septentrio.uit.no/index.php/1700/index","oai":"http://septentrio.uit.no/index.php/1700/oai"}
-{"name":"Revista Mosaico","homepage":"http://seer.ucg.br/index.php/mosaico/index","oai":"http://seer.ucg.br/index.php/mosaico/oai"}
 {"name":"Jurnal Matematika, Sains, Dan Teknologi","homepage":"http://jurnal.ut.ac.id/index.php/JMST","oai":"http://jurnal.ut.ac.id/index.php/JMST/oai"}
 {"name":"Jurnal Organisasi Dan Manajemen","homepage":"http://jurnal.ut.ac.id/index.php/JOM","oai":"http://jurnal.ut.ac.id/index.php/JOM/oai"}
 {"name":"Jurnal Pendidikan","homepage":"http://jurnal.ut.ac.id/index.php/JP","oai":"http://jurnal.ut.ac.id/index.php/JP/oai"}
@@ -1853,7 +1852,7 @@
 {"name":"Sains dan Teknologi Informasi","homepage":"http://jurnal.stmik-amik-riau.ac.id/index.php/satin/index","oai":"http://jurnal.stmik-amik-riau.ac.id/index.php/satin/oai"}
 {"name":"Edukasi: Jurnal Pendidikan","homepage":"http://journal.ikippgriptk.ac.id/index.php/edukasi","oai":"http://journal.ikippgriptk.ac.id/index.php/edukasi/oai"}
 {"name":"InfoTekJar (Jurnal Nasional Informatika dan Teknologi Jaringan)","homepage":"http://jurnal.uisu.ac.id/index.php/infotekjar","oai":"http://jurnal.uisu.ac.id/index.php/infotekjar/oai"}
-{"name":"Vita et Sanitas","homepage":"http://www.fug.edu.br/revista/index.php/VitaetSanitas/","oai":"http://www.fug.edu.br/revista/index.php/VitaetSanitas/oai"}
+{"name":"Vita et Sanitas","homepage":"http://fug.edu.br/revistas/index.php/VitaetSanitas","oai":"http://fug.edu.br/revistas/index.php/VitaetSanitas/oai"}
 {"name":"Plant Varieties Studying and Protection","homepage":"http://journal.sops.gov.ua/index.php/2312-749X/","oai":"http://journal.sops.gov.ua/index.php/2312-749X/oai"}
 {"name":"PASUPATI","homepage":"http://www.ojs.stahdnj.ac.id/index.php/pasupati","oai":"http://www.ojs.stahdnj.ac.id/index.php/pasupati/oai"}
 {"name":"Quinto Sol","homepage":"http://cerac.unlpam.edu.ar/index.php/quintosol/index","oai":"http://cerac.unlpam.edu.ar/index.php/quintosol/oai"}
@@ -1971,7 +1970,7 @@
 {"name":"E - Conference Unversitas Merdeka Malang","homepage":"http://seminar.unmer.ac.id/index.php/index/2017/index","oai":"http://seminar.unmer.ac.id/index.php/index/2017/oai"}
 {"name":"ENGAGEMENT : Jurnal Pengabdian Kepada Masyarakat","homepage":"http://engagement.kopertais4.or.id/index.php/engagement/","oai":"http://engagement.kopertais4.or.id/index.php/engagement/oai"}
 {"name":"ALEVİLİK-BEKTAŞİLİK ARAŞTIRMALARI DERGİSİ","homepage":"http://abked.de/index.php/abked/index","oai":"http://abked.de/index.php/abked/oai"}
-{"name":"Al-Izzah: Jurnal Hasil-Hasil Penelitian","homepage":"http://ejournal.iainkendari.ac.id/index.php/al-izzah/","oai":"http://ejournal.iainkendari.ac.id/index.php/al-izzah/oai"}
+{"name":"Al-Izzah: Jurnal Hasil-Hasil Penelitian","homepage":"https://ejournal.iainkendari.ac.id/index.php/al-izzah","oai":"https://ejournal.iainkendari.ac.id/index.php/al-izzah/oai"}
 {"name":"LiminaR. Estudios Sociales y Humanísticos","homepage":"http://liminar.cesmeca.mx/index.php/index/","oai":"http://liminar.cesmeca.mx/index.php/index/oai"}
 {"name":"Jurnal Selulosa","homepage":"http://jurnalselulosa.org/index.php/jselulosa/index","oai":"http://jurnalselulosa.org/index.php/jselulosa/oai"}
 {"name":"Journal of Scientific Perspectives (JSP)","homepage":"http://ratingacademy.com.tr/journals/index.php/jsp","oai":"http://ratingacademy.com.tr/journals/index.php/jsp/oai"}
@@ -2051,7 +2050,7 @@
 {"name":"JBKI (Jurnal Bimbingan Konseling Indonesia)","homepage":"http://journal.stkipsingkawang.ac.id/index.php/JBKI","oai":"http://journal.stkipsingkawang.ac.id/index.php/JBKI/oai"}
 {"name":"JPDI (Jurnal Pendidikan Dasar Indonesia)","homepage":"http://journal.stkipsingkawang.ac.id/index.php/JPDI","oai":"http://journal.stkipsingkawang.ac.id/index.php/JPDI/oai"}
 {"name":"Jurnal Global \u0026amp; Strategis","homepage":"http://e-journal.unair.ac.id/index.php/JGS","oai":"http://e-journal.unair.ac.id/index.php/JGS/oai"}
-{"name":"Buletin Kebun Raya","homepage":"http://jurnal2.krbogor.lipi.go.id/index.php/buletin","oai":"http://jurnal2.krbogor.lipi.go.id/index.php/buletin/oai"}
+{"name":"Buletin Kebun Raya","homepage":"https://publikasikr.lipi.go.id/index.php/buletin","oai":"https://publikasikr.lipi.go.id/index.php/buletin/oai"}
 {"name":"Advanced Nano Research","homepage":"http://journals.aijr.in/index.php/anr","oai":"http://journals.aijr.in/index.php/anr/oai"}
 {"name":"Revista Brasileira de Física Médica","homepage":"http://www.rbfm.org.br/index.php/rbfm/","oai":"http://www.rbfm.org.br/index.php/rbfm/oai"}
 {"name":"Revistas da Faculdade de Ciências e Tecnologia","homepage":"http://revista.fct.unesp.br/index.php/formacao","oai":"http://revista.fct.unesp.br/index.php/formacao/oai"}
@@ -2121,7 +2120,7 @@
 {"name":"Jurnal Ners dan Kebidanan (Journal of Ners and Midwifery)","homepage":"http://jnk.phb.ac.id/index.php/jnk","oai":"http://jnk.phb.ac.id/index.php/jnk/oai"}
 {"name":"Revista Científica UMC","homepage":"http://seer.umc.br/index.php/revistaumc","oai":"http://seer.umc.br/index.php/revistaumc/oai"}
 {"name":"Qolamuna : Jurnal Studi Islam","homepage":"http://ejournal.stismu.ac.id/ojs/index.php/qolamuna/","oai":"http://ejournal.stismu.ac.id/ojs/index.php/qolamuna/oai"}
-{"name":"shautut tarbiyah","homepage":"http://ejournal.iainkendari.ac.id/index.php/shautut-tarbiyah","oai":"http://ejournal.iainkendari.ac.id/index.php/shautut-tarbiyah/oai"}
+{"name":"shautut tarbiyah","homepage":"https://ejournal.iainkendari.ac.id/index.php/shautut-tarbiyah","oai":"https://ejournal.iainkendari.ac.id/index.php/shautut-tarbiyah/oai"}
 {"name":"RHS-Revista Humanismo y Sociedad","homepage":"http://fer.uniremington.edu.co/ojs/index.php/RHS","oai":"http://fer.uniremington.edu.co/ojs/index.php/RHS/oai"}
 {"name":"Investigar y Aprender","homepage":"http://fer.uniremington.edu.co/ojs/index.php/IA","oai":"http://fer.uniremington.edu.co/ojs/index.php/IA/oai"}
 {"name":"INSPIRAMATIKA: Jurnal Inovasi Pendidikan dan Pembelajaran Matematika","homepage":"http://e-jurnal.unisda.ac.id/index.php/Inspiramatika","oai":"http://e-jurnal.unisda.ac.id/index.php/Inspiramatika/oai"}
@@ -2214,7 +2213,7 @@
 {"name":"Jurnal Kewirausahaan STIE LMII Medan","homepage":"http://jklmii.org/index.php/index/index","oai":"http://jklmii.org/index.php/index/oai"}
 {"name":"Faktor Exacta","homepage":"http://journal.lppmunindra.ac.id/index.php/Faktor_Exacta","oai":"http://journal.lppmunindra.ac.id/index.php/Faktor_Exacta/oai"}
 {"name":"PEMBELAJAR: Jurnal Ilmu Pendidikan, Keguruan, dan Pembelajaran","homepage":"http://ojs.unm.ac.id/index.php/pembelajar/index","oai":"http://ojs.unm.ac.id/index.php/pembelajar/oai"}
-{"name":"Revista Alergia México","homepage":"http://revistaalergia.mx/ojs/index.php/ram","oai":"http://revistaalergia.mx/ojs/index.php/ram/oai"}
+{"name":"Revista Alergia México","homepage":"https://revistaalergia.mx/ojs/index.php/ram","oai":"https://revistaalergia.mx/ojs/index.php/ram/oai"}
 {"name":"Jurnal ELTIKOM","homepage":"http://eltikom.poliban.ac.id/index.php/eltikom","oai":"http://eltikom.poliban.ac.id/index.php/eltikom/oai"}
 {"name":"Caderno de Educação Física e Esporte","homepage":"http://e-revista.unioeste.br/index.php/cadernoedfisica/index","oai":"http://e-revista.unioeste.br/index.php/cadernoedfisica/oai"}
 {"name":"Revista de Arqueologia","homepage":"http://www.revista.sabnet.org/index.php/SAB/","oai":"http://www.revista.sabnet.org/index.php/SAB/oai"}
@@ -2403,7 +2402,7 @@
 {"name":"Ijtihad : Jurnal Wacana Hukum Islam dan Kemanusiaan","homepage":"http://ijtihad.iainsalatiga.ac.id/index.php/ijtihad","oai":"http://ijtihad.iainsalatiga.ac.id/index.php/ijtihad/oai"}
 {"name":"METAL: Jurnal Sistem Mekanik dan Termal","homepage":"http://metal.ft.unand.ac.id/index.php/metal","oai":"http://metal.ft.unand.ac.id/index.php/metal/oai"}
 {"name":"Interconectando Saberes","homepage":"http://is.uv.mx/index.php/IS/index","oai":"http://is.uv.mx/index.php/IS/oai"}
-{"name":"Revista Cocar","homepage":"https://paginas.uepa.br/seer/index.php/cocar","oai":"https://paginas.uepa.br/seer/index.php/cocar/oai"}
+{"name":"Revista Cocar","homepage":"https://periodicos.uepa.br/index.php/cocar","oai":"https://periodicos.uepa.br/index.php/cocar/oai"}
 {"name":"Jurnal Teori dan Praksis Pembelajaran IPS","homepage":"http://journal2.um.ac.id/index.php/jtppips/index","oai":"http://journal2.um.ac.id/index.php/jtppips/oai"}
 {"name":"JURNAL MUQODDIMAH : Jurnal Ilmu Sosial, Politik dan Hummaniora","homepage":"http://jurnal.um-tapsel.ac.id/index.php/muqoddimah/index","oai":"http://jurnal.um-tapsel.ac.id/index.php/muqoddimah/oai"}
 {"name":"Jurnal Dinamika UMT","homepage":"https://jurnal.umt.ac.id/index.php/dinamika","oai":"https://jurnal.umt.ac.id/index.php/dinamika/oai"}
@@ -2577,7 +2576,7 @@
 {"name":"Engineering International","homepage":"https://abc.us.org/ojs/index.php/ei/","oai":"https://abc.us.org/ojs/index.php/ei/oai"}
 {"name":"Asian Journal of Applied Science and Engineering","homepage":"https://journals.abc.us.org/index.php/ajase","oai":"https://journals.abc.us.org/index.php/ajase/oai"}
 {"name":"HUMANIS : Jurnal Ilmu-Ilmu Sosial dan Humaniora","homepage":"http://e-jurnal.unisda.ac.id/index.php/Humanis","oai":"http://e-jurnal.unisda.ac.id/index.php/Humanis/oai"}
-{"name":"Acción","homepage":"http://accion.uccfd.cu/index.php/a","oai":"http://accion.uccfd.cu/index.php/a/oai"}
+{"name":"Acción","homepage":"http://accion.uccfd.cu/index.php/accion","oai":"http://accion.uccfd.cu/index.php/accion/oai"}
 {"name":"Purwadita: Jurnal Agama dan Budaya","homepage":"http://jurnal.stahnmpukuturan.ac.id/index.php/Purwadita","oai":"http://jurnal.stahnmpukuturan.ac.id/index.php/Purwadita/oai"}
 {"name":"IKRAITH-HUMANIORA","homepage":"http://journals.upi-yai.ac.id/index.php/ikraith-humaniora","oai":"http://journals.upi-yai.ac.id/index.php/ikraith-humaniora/oai"}
 {"name":"IKRAITH-INFORMATIKA","homepage":"http://journals.upi-yai.ac.id/index.php/ikraith-informatika","oai":"http://journals.upi-yai.ac.id/index.php/ikraith-informatika/oai"}
@@ -2609,7 +2608,7 @@
 {"name":"Revista Ciência, Tecnologia \u0026amp; Ambiente","homepage":"http://www.revistacta.ufscar.br/index.php/revistacta/index","oai":"http://www.revistacta.ufscar.br/index.php/revistacta/oai"}
 {"name":"Sisfotenika","homepage":"http://sisfotenika.stmikpontianak.ac.id/index.php/ST","oai":"http://sisfotenika.stmikpontianak.ac.id/index.php/ST/oai"}
 {"name":"Kindai Etam","homepage":"https://kindaietam.kemdikbud.go.id/index.php","oai":"https://kindaietam.kemdikbud.go.id/index.php/oai"}
-{"name":"Al-\u0026#39;Adl","homepage":"http://ejournal.iainkendari.ac.id/index.php/al-adl","oai":"http://ejournal.iainkendari.ac.id/index.php/al-adl/oai"}
+{"name":"Al-\u0026#39;Adl","homepage":"https://ejournal.iainkendari.ac.id/index.php/al-adl","oai":"https://ejournal.iainkendari.ac.id/index.php/al-adl/oai"}
 {"name":"Jurnal Pancar","homepage":"https://ejournal.unugha.ac.id/index.php/pancar/","oai":"https://ejournal.unugha.ac.id/index.php/pancar/oai"}
 {"name":"Annals of British Medical Sciences","homepage":"http://ambs-journal.co.uk/ojs-2.4.7-1/index.php/abms/index","oai":"http://ambs-journal.co.uk/ojs-2.4.7-1/index.php/abms/oai"}
 {"name":"Annals of Medical and Biomedical Sciences","homepage":"http://ambs-journal.co.uk/ojs-2.4.7-1/index.php/AMBS/index","oai":"http://ambs-journal.co.uk/ojs-2.4.7-1/index.php/AMBS/oai"}
@@ -2707,7 +2706,7 @@
 {"name":"Revista Projetar - Projeto e Percepção do Ambiente","homepage":"http://www.revistaprojetar.ct.ufrn.br/index.php/revprojetar/","oai":"http://www.revistaprojetar.ct.ufrn.br/index.php/revprojetar/oai"}
 {"name":"International Journal of Global Community","homepage":"https://journal.riksawan.com/index.php/IJGC/","oai":"https://journal.riksawan.com/index.php/IJGC/oai"}
 {"name":"SainHealth","homepage":"https://e-journal.umaha.ac.id/index.php/sainhealth","oai":"https://e-journal.umaha.ac.id/index.php/sainhealth/oai"}
-{"name":"Jurnal Informatika","homepage":"https://jurnal.stmikpasim.ac.id/index.php/jurin","oai":"https://jurnal.stmikpasim.ac.id/index.php/jurin/oai"}
+{"name":"Jurnal Informatika","homepage":"https://jurnal.alfath.ac.id/informatika","oai":"https://jurnal.alfath.ac.id/informatika/oai"}
 {"name":"AQUASAINS","homepage":"http://jurnal.fp.unila.ac.id/index.php/JPBP/index","oai":"http://jurnal.fp.unila.ac.id/index.php/JPBP/oai"}
 {"name":"Revista Arbitrada Interdisciplinaria Koinonía","homepage":"http://www.fundacionkoinonia.com.ve/ojs/index.php/revistakoinonia","oai":"http://www.fundacionkoinonia.com.ve/ojs/index.php/revistakoinonia/oai"}
 {"name":"Revista Arbitrada de Ciencias Jurídicas y Criminalísticas Iustitia Socialis","homepage":"http://www.fundacionkoinonia.com.ve/ojs/index.php/Iustitia_Socialis/index","oai":"http://www.fundacionkoinonia.com.ve/ojs/index.php/Iustitia_Socialis/oai"}
@@ -2897,7 +2896,7 @@
 {"name":"PRASASTI: Journal of Linguistics","homepage":"https://jurnal.uns.ac.id/pjl","oai":"https://jurnal.uns.ac.id/pjl/oai"}
 {"name":"Information System For Educators and professionals","homepage":"http://ejournal-binainsani.ac.id/index.php/ISBI","oai":"http://ejournal-binainsani.ac.id/index.php/ISBI/oai"}
 {"name":"Information Management for educators and professionals","homepage":"http://ejournal-binainsani.ac.id/index.php/IMBI","oai":"http://ejournal-binainsani.ac.id/index.php/IMBI/oai"}
-{"name":"Jurnal Ilmiah BISNIS \u0026amp; KEWIRAUSAHAAN","homepage":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/jibk","oai":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/jibk/oai"}
+{"name":"Jurnal Ilmiah BISNIS \u0026amp; KEWIRAUSAHAAN","homepage":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/jbk","oai":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/jbk/oai"}
 {"name":"AKMEN Jurnal Ilmiah","homepage":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/akmen","oai":"https://e-jurnal.stienobel-indonesia.ac.id/index.php/akmen/oai"}
 {"name":"Aqidah-Ta","homepage":"http://journal.uin-alauddin.ac.id/index.php/aqidah-ta","oai":"http://journal.uin-alauddin.ac.id/index.php/aqidah-ta/oai"}
 {"name":"International Journal of Machine Learning and Networked Collaborative Engineering","homepage":"http://www.mlnce.net/index.php/Home","oai":"http://www.mlnce.net/index.php/Home/oai"}
@@ -3460,8 +3459,8 @@
 {"name":"Bakti Cendana: Jurnal Pengabdian Masyarakat","homepage":"https://jurnal.unimor.ac.id/index.php/BC/","oai":"https://jurnal.unimor.ac.id/index.php/BC/oai"}
 {"name":"Scientific Journal of Reflection: Economic, Accounting, Management and Business","homepage":"http://ojspustek.com/index.php/SJR","oai":"http://ojspustek.com/index.php/SJR/oai"}
 {"name":"Cadernos do GPOSSHE On-line","homepage":"https://revistas.uece.br/index.php/CadernosdoGPOSSHE","oai":"https://revistas.uece.br/index.php/CadernosdoGPOSSHE/oai"}
-{"name":"Ranah Research : Journal of Multidisciplinary Research and Development","homepage":"https://ranahresearch.com/index.php/R2J","oai":"https://ranahresearch.com/index.php/R2J/oai"}
-{"name":"Literacy in Composition Studies","homepage":"http://licsjournal.org/OJS/index.php/index/index","oai":"http://licsjournal.org/OJS/index.php/index/oai"}
+{"name":"Ranah Research : Journal of Multidisciplinary Research and Development","homepage":"https://jurnal.ranahresearch.com/index.php/R2J/","oai":"https://jurnal.ranahresearch.com/index.php/R2J/oai"}
+{"name":"Literacy in Composition Studies","homepage":"https://licsjournal.org/index.php/LiCS","oai":"https://licsjournal.org/index.php/LiCS/oai"}
 {"name":"Inmaterial. DISEÑO, ARTE Y SOCIEDAD","homepage":"https://www.inmaterialdesign.com/index.php/mag","oai":"https://www.inmaterialdesign.com/index.php/mag/oai"}
 {"name":"Islamic Management: Jurnal Manajemen Pendidikan Islam","homepage":"http://jurnal.staialhidayahbogor.ac.id/index.php/jim","oai":"http://jurnal.staialhidayahbogor.ac.id/index.php/jim/oai"}
 {"name":"Al - Tadabbur: Jurnal Ilmu Al-Qur\u0026#39;an dan Tafsir","homepage":"http://jurnal.staialhidayahbogor.ac.id/index.php/alt","oai":"http://jurnal.staialhidayahbogor.ac.id/index.php/alt/oai"}
@@ -3517,7 +3516,7 @@
 {"name":"al-Iltizam: Jurnal Pendidikan Agama Islam","homepage":"http://jurnal.iainambon.ac.id/index.php/ALT/index","oai":"http://jurnal.iainambon.ac.id/index.php/ALT/oai"}
 {"name":"Jurnal Soshum Insentif","homepage":"https://jurnal.lldikti4.or.id/index.php/jurnalsoshum","oai":"https://jurnal.lldikti4.or.id/index.php/jurnalsoshum/oai"}
 {"name":"Jurnal Momentum","homepage":"https://ejournal.itp.ac.id/index.php/momentum/index","oai":"https://ejournal.itp.ac.id/index.php/momentum/oai"}
-{"name":"Revista de Investigación Talentos","homepage":"http://talentos.ueb.edu.ec/index.php/talentos","oai":"http://talentos.ueb.edu.ec/index.php/talentos/oai"}
+{"name":"Revista de Investigación Talentos","homepage":"https://talentos.ueb.edu.ec/index.php/talentos","oai":"https://talentos.ueb.edu.ec/index.php/talentos/oai"}
 {"name":"Jurnal Sainstek","homepage":"http://sttpekanbaru.net/sainstek/index.php/js/","oai":"http://sttpekanbaru.net/sainstek/index.php/js/oai"}
 {"name":"Homeros","homepage":"http://www.ratingacademy.com.tr/ojs/index.php/homeros","oai":"http://www.ratingacademy.com.tr/ojs/index.php/homeros/oai"}
 {"name":"Global Science and Technology","homepage":"https://rv.ifgoiano.edu.br/periodicos/index.php/gst","oai":"https://rv.ifgoiano.edu.br/periodicos/index.php/gst/oai"}
@@ -3600,7 +3599,7 @@
 {"name":"Legal Linguistics","homepage":"http://journal.asu.ru/index.php/urisl","oai":"http://journal.asu.ru/index.php/urisl/oai"}
 {"name":"Nations and Religions of Eurasia","homepage":"http://journal.asu.ru/wv","oai":"http://journal.asu.ru/wv/oai"}
 {"name":"Society and Security Insights","homepage":"http://journal.asu.ru/index.php/ssi","oai":"http://journal.asu.ru/index.php/ssi/oai"}
-{"name":"Revista Científica Foz","homepage":"http://www.ivc.br/revista/index.php/revistafoz","oai":"http://www.ivc.br/revista/index.php/revistafoz/oai"}
+{"name":"Revista Científica Foz","homepage":"https://revista.ivc.br/index.php/revistafoz","oai":"https://revista.ivc.br/index.php/revistafoz/oai"}
 {"name":"Jurnal Hummansi","homepage":"https://journal.stikomyos.ac.id/index.php/jurnal-hummansi","oai":"https://journal.stikomyos.ac.id/index.php/jurnal-hummansi/oai"}
 {"name":"Owner","homepage":"https://owner.polgan.ac.id/index.php/owner","oai":"https://owner.polgan.ac.id/index.php/owner/oai"}
 {"name":"Media Aplikom","homepage":"https://journal.stikomyos.ac.id/index.php/media-aplikom/index","oai":"https://journal.stikomyos.ac.id/index.php/media-aplikom/oai"}
@@ -3749,7 +3748,7 @@
 {"name":"ELS Journal on Interdisciplinary Studies in Humanities","homepage":"http://journal.unhas.ac.id/index.php/jish","oai":"http://journal.unhas.ac.id/index.php/jish/oai"}
 {"name":"Jurnal MediaTIK","homepage":"http://ojs.unm.ac.id/index.php/mediaTIK/","oai":"http://ojs.unm.ac.id/index.php/mediaTIK/oai"}
 {"name":"JEMPER (Jurnal Ekonomi Manajemen Perbankan)","homepage":"http://jurnal.usbypkp.ac.id/index.php/jemper","oai":"http://jurnal.usbypkp.ac.id/index.php/jemper/oai"}
-{"name":"PHILOLOGIA MEDIANA","homepage":"http://philologiamediana.com/index.php/philologiamediana/index","oai":"http://philologiamediana.com/index.php/philologiamediana/oai"}
+{"name":"PHILOLOGIA MEDIANA","homepage":"http://philologiamediana.com/index.php/phm","oai":"http://philologiamediana.com/index.php/phm/oai"}
 {"name":"Psychology, Evaluation, and Technology in Educational Research","homepage":"http://petier.org/index.php/PETIER","oai":"http://petier.org/index.php/PETIER/oai"}
 {"name":"Jurnal SORA","homepage":"http://jurnalsora.stba.ac.id/index.php/jurnal_sora/","oai":"http://jurnalsora.stba.ac.id/index.php/jurnal_sora/oai"}
 {"name":"Revista Hoplos","homepage":"http://periodicos.uff.br/index.php/hoplos/index","oai":"http://periodicos.uff.br/index.php/hoplos/oai"}
@@ -3841,7 +3840,7 @@
 {"name":"Tarbiyatuna: Jurnal Pendidikan Islam","homepage":"http://www.ejournal.iaisyarifuddin.ac.id/index.php/tarbiyatuna","oai":"http://www.ejournal.iaisyarifuddin.ac.id/index.php/tarbiyatuna/oai"}
 {"name":"Prociências","homepage":"http://prociencias.org/revista/ojs/index.php/prociencias","oai":"http://prociencias.org/revista/ojs/index.php/prociencias/oai"}
 {"name":"Abdau: Jurnal Pendidikan Madrasah Ibtidaiyah","homepage":"http://jurnal.stpi-bim.ac.id/index.php/ABDAU","oai":"http://jurnal.stpi-bim.ac.id/index.php/ABDAU/oai"}
-{"name":"Iniciação \u0026amp; Formação Docente","homepage":"http://seer.uftm.edu.br/revistaeletronica/index.php/revistagedeles","oai":"http://seer.uftm.edu.br/revistaeletronica/index.php/revistagedeles/oai"}
+{"name":"Iniciação \u0026amp; Formação Docente","homepage":"http://seer.uftm.edu.br/revistaeletronica/index.php/revistagepadle","oai":"http://seer.uftm.edu.br/revistaeletronica/index.php/revistagepadle/oai"}
 {"name":"Psicología desde el Caribe","homepage":"http://rcientificas.uninorte.edu.co/index.php/psicologia/index","oai":"http://rcientificas.uninorte.edu.co/index.php/psicologia/oai"}
 {"name":"IE Revista de Investigación Educativa de la REDIECH","homepage":"http://www.rediech.org/ojs/2017/index.php/ie_rie_rediech/index","oai":"http://www.rediech.org/ojs/2017/index.php/ie_rie_rediech/oai"}
 {"name":"RECIE. Revista Electrónica Científica de Investigación Educativa","homepage":"http://www.rediech.org/ojs/2017/index.php/recie/index","oai":"http://www.rediech.org/ojs/2017/index.php/recie/oai"}
@@ -3934,7 +3933,7 @@
 {"name":"XIKUA Boletín Científico de la Escuela Superior de Tlahuelilpan","homepage":"https://repository.uaeh.edu.mx/revistas/index.php/xikua","oai":"https://repository.uaeh.edu.mx/revistas/index.php/xikua/oai"}
 {"name":"Ingenio y Conciencia Boletín Científico de la Escuela Superior Ciudad Sahagún","homepage":"https://repository.uaeh.edu.mx/revistas/index.php/sahagun","oai":"https://repository.uaeh.edu.mx/revistas/index.php/sahagun/oai"}
 {"name":"Jurnal Teknologi dan Informasi (JATI)","homepage":"https://ojs.unikom.ac.id/index.php/jati","oai":"https://ojs.unikom.ac.id/index.php/jati/oai"}
-{"name":"Estudios del Discurso","homepage":"http://esdi.uaem.mx/index.php/estudiosdeldiscurso/","oai":"http://esdi.uaem.mx/index.php/estudiosdeldiscurso/oai"}
+{"name":"Estudios del Discurso","homepage":"http://esdi.uaem.mx/index.php/esdi","oai":"http://esdi.uaem.mx/index.php/esdi/oai"}
 {"name":"Gombe Technical Education Journal","homepage":"http://gotejfcetgombe.com.ng/index.php/gotej","oai":"http://gotejfcetgombe.com.ng/index.php/gotej/oai"}
 {"name":"Acta Judicial","homepage":"http://www.letradosdejusticia.es/revistaactajudicial/index.php/raj/index","oai":"http://www.letradosdejusticia.es/revistaactajudicial/index.php/raj/oai"}
 {"name":"Человек. Спорт. Медицина","homepage":"https://hsm.susu.ru/hsm/index.php","oai":"https://hsm.susu.ru/hsm/index.php/oai"}
@@ -4078,7 +4077,7 @@
 {"name":"Asian Research Journal of Agriculture","homepage":"http://journalarja.com/index.php/ARJA","oai":"http://journalarja.com/index.php/ARJA/oai"}
 {"name":"European Journal of Nutrition \u0026amp; Food Safety","homepage":"http://journalejnfs.com/index.php/EJNFS","oai":"http://journalejnfs.com/index.php/EJNFS/oai"}
 {"name":"International Journal of Plant \u0026amp; Soil Science","homepage":"http://journalijpss.com/index.php/IJPSS","oai":"http://journalijpss.com/index.php/IJPSS/oai"}
-{"name":"Journal of Experimental Agriculture International","homepage":"http://journaljeai.com/index.php/JEAI","oai":"http://journaljeai.com/index.php/JEAI/oai"}
+{"name":"Journal of Experimental Agriculture International","homepage":"https://journaljeai.com/index.php/JEAI","oai":"https://journaljeai.com/index.php/JEAI/oai"}
 {"name":"Annual Research \u0026amp; Review in Biology","homepage":"http://journalarrb.com/index.php/ARRB","oai":"http://journalarrb.com/index.php/ARRB/oai"}
 {"name":"Asian Journal of Biology","homepage":"http://journalajob.com/index.php/AJOB/","oai":"http://journalajob.com/index.php/AJOB/oai"}
 {"name":"Asian Journal of Biotechnology and Bioresource Technology","homepage":"http://journalajb2t.com/index.php/AJB2T","oai":"http://journalajb2t.com/index.php/AJB2T/oai"}
@@ -4101,7 +4100,7 @@
 {"name":"Asian Journal of Probability and Statistics","homepage":"http://journalajpas.com/index.php/AJPAS","oai":"http://journalajpas.com/index.php/AJPAS/oai"}
 {"name":"Asian Research Journal of Mathematics","homepage":"http://journalarjom.com/index.php/ARJOM","oai":"http://journalarjom.com/index.php/ARJOM/oai"}
 {"name":"Journal of Advances in Mathematics and Computer Science","homepage":"http://journaljamcs.com/index.php/JAMCS","oai":"http://journaljamcs.com/index.php/JAMCS/oai"}
-{"name":"Asian Journal of Medicine and Health","homepage":"http://journalajmah.com/index.php/AJMAH","oai":"http://journalajmah.com/index.php/AJMAH/oai"}
+{"name":"Asian Journal of Medicine and Health","homepage":"https://journalajmah.com/index.php/AJMAH","oai":"https://journalajmah.com/index.php/AJMAH/oai"}
 {"name":"Asian Journal of Research in Medical and Pharmaceutical Sciences","homepage":"http://journalajrimps.com/index.php/AJRIMPS","oai":"http://journalajrimps.com/index.php/AJRIMPS/oai"}
 {"name":"Cardiology and Angiology: An International Journal","homepage":"http://journalca.com/index.php/CA","oai":"http://journalca.com/index.php/CA/oai"}
 {"name":"European Journal of Medicinal Plants","homepage":"http://journalejmp.com/index.php/EJMP","oai":"http://journalejmp.com/index.php/EJMP/oai"}
@@ -4151,9 +4150,9 @@
 {"name":"Mahakim: Journal of Islamic Family Law","homepage":"https://jurnal.iainkediri.ac.id/index.php/mahakim/","oai":"https://jurnal.iainkediri.ac.id/index.php/mahakim/oai"}
 {"name":"Teknika: Jurnal Sains dan Teknologi","homepage":"http://jurnal.untirta.ac.id/index.php/ju-tek","oai":"http://jurnal.untirta.ac.id/index.php/ju-tek/oai"}
 {"name":"Diálogos Pedagógicos","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/prueba","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/prueba/oai"}
-{"name":"Diálogos Pedagógicos","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/prueba","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/prueba/oai"}
+{"name":"Diálogos Pedagógicos","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/dialogos","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/dialogos/oai"}
 {"name":"Stromata","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/STRO","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/STRO/oai"}
-{"name":"Studia Politicae","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/Prueba2/index","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/Prueba2/oai"}
+{"name":"Studia Politicae","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/SP","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/SP/oai"}
 {"name":"Cuadernos de Derecho Público","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/CDP","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/CDP/oai"}
 {"name":"Revista de Derecho Romano","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/rdr","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/rdr/oai"}
 {"name":"Anuario de Derecho Civil","homepage":"http://revistas.bibdigital.uccor.edu.ar/index.php/ADC/index","oai":"http://revistas.bibdigital.uccor.edu.ar/index.php/ADC/oai"}
@@ -4229,7 +4228,7 @@
 {"name":"Kyivan Academy","homepage":"http://ka.ukma.edu.ua/index.php/1995-025X/","oai":"http://ka.ukma.edu.ua/index.php/1995-025X/oai"}
 {"name":"Majalah Ilmiah Tabuah : Ta`limat, Budaya, Agama dan Humaniora","homepage":"https://ejournal.fah.uinib.ac.id/index.php/tabuah/index","oai":"https://ejournal.fah.uinib.ac.id/index.php/tabuah/oai"}
 {"name":"Politicon : Jurnal Ilmu Politik","homepage":"http://journal.uinsgd.ac.id/index.php/politicon","oai":"http://journal.uinsgd.ac.id/index.php/politicon/oai"}
-{"name":"Selecciones Matemáticas","homepage":"http://revistas.unitru.edu.pe/index.php/SSMM/index","oai":"http://revistas.unitru.edu.pe/index.php/SSMM/oai"}
+{"name":"Selecciones Matemáticas","homepage":"https://revistas.unitru.edu.pe/index.php/SSMM/index","oai":"https://revistas.unitru.edu.pe/index.php/SSMM/oai"}
 {"name":"Nation State: Journal of International Studies","homepage":"https://jurnal.amikom.ac.id/index.php/nsjis","oai":"https://jurnal.amikom.ac.id/index.php/nsjis/oai"}
 {"name":"Radiotekhnika","homepage":"http://rt.nure.ua/","oai":"http://rt.nure.ua/oai"}
 {"name":"Agroteknika","homepage":"https://agroteknika.id/index.php/agtk","oai":"https://agroteknika.id/index.php/agtk/oai"}
@@ -4283,7 +4282,7 @@
 {"name":"Movimiento Cientifico","homepage":"https://revmovimientocientifico.ibero.edu.co","oai":"https://revmovimientocientifico.ibero.edu.co/oai"}
 {"name":"Revista Iberoamericana de Psicología","homepage":"reviberopsicologia.ibero.edu.co","oai":"reviberopsicologia.ibero.edu.co/oai"}
 {"name":"Jurnal Restorative Justice","homepage":"https://ejournal.unmus.ac.id/index.php/hukum/","oai":"https://ejournal.unmus.ac.id/index.php/hukum/oai"}
-{"name":"Jurnal Fokus","homepage":"http://ojs.stkipypmbangko.ac.id/index.php/fokus/","oai":"http://ojs.stkipypmbangko.ac.id/index.php/fokus/oai"}
+{"name":"Jurnal Fokus","homepage":"http://journal.stkipypmbangko.ac.id/index.php/fokus","oai":"http://journal.stkipypmbangko.ac.id/index.php/fokus/oai"}
 {"name":"Journal of Economics and Trade","homepage":"http://www.ikprress.org/index.php/JET","oai":"http://www.ikprress.org/index.php/JET/oai"}
 {"name":"Journal of Global Economics, Management and Business Research","homepage":"http://www.ikprress.org/index.php/JGEMBR","oai":"http://www.ikprress.org/index.php/JGEMBR/oai"}
 {"name":"Jambura Agribusiness Journal","homepage":"http://ejurnal.ung.ac.id/index.php/jaj/","oai":"http://ejurnal.ung.ac.id/index.php/jaj/oai"}
@@ -4458,7 +4457,7 @@
 {"name":"Acta Universitatis Lodziensis. Folia Litteraria Polonica","homepage":"https://czasopisma.uni.lodz.pl/polonica","oai":"https://czasopisma.uni.lodz.pl/polonica/oai"}
 {"name":"Visitas al Patio","homepage":"https://revistas.unicartagena.edu.co/index.php/visitasalpatio","oai":"https://revistas.unicartagena.edu.co/index.php/visitasalpatio/oai"}
 {"name":"Jurnal Penelitian Pendidikan Geografi","homepage":"http://ojs.uho.ac.id/index.php/ppg","oai":"http://ojs.uho.ac.id/index.php/ppg/oai"}
-{"name":"PROCEEDING OF SARI MULIA UNIVERSITY MIDWIFERY NATIONAL SEMINARS","homepage":"http://ocs.unism.ac.id/index.php/PROBID/index","oai":"http://ocs.unism.ac.id/index.php/PROBID/oai"}
+{"name":"PROCEEDING OF SARI MULIA UNIVERSITY MIDWIFERY NATIONAL SEMINARS","homepage":"https://ocs.unism.ac.id/index.php/PROBID","oai":"https://ocs.unism.ac.id/index.php/PROBID/oai"}
 {"name":"Jurnal Sains dan Teknologi Reaksi","homepage":"http://e-jurnal.pnl.ac.id/index.php/JSTR","oai":"http://e-jurnal.pnl.ac.id/index.php/JSTR/oai"}
 {"name":"Przegląd Nauk Historycznych","homepage":"https://czasopisma.uni.lodz.pl/index.php/pnh","oai":"https://czasopisma.uni.lodz.pl/index.php/pnh/oai"}
 {"name":"Revista Mundo Livre","homepage":"http://periodicos.uff.br/index.php/mundolivre/","oai":"http://periodicos.uff.br/index.php/mundolivre/oai"}
@@ -4519,7 +4518,7 @@
 {"name":"Jurnal Ilmiah Platax","homepage":"https://ejournal.unsrat.ac.id/index.php/platax","oai":"https://ejournal.unsrat.ac.id/index.php/platax/oai"}
 {"name":"Going Concern : Jurnal Riset Akuntansi","homepage":"https://ejournal.unsrat.ac.id/index.php/gc/index","oai":"https://ejournal.unsrat.ac.id/index.php/gc/oai"}
 {"name":"Teknois : Jurnal Ilmiah Teknologi Informasi dan Sains","homepage":"http://teknois.stikombinaniaga.ac.id/index.php/JBS/","oai":"http://teknois.stikombinaniaga.ac.id/index.php/JBS/oai"}
-{"name":"Jurnal Ranah Komunikasi (JRK)","homepage":"http://ranahkomunikasi.fisip.unand.ac.id/index.php/vol1/","oai":"http://ranahkomunikasi.fisip.unand.ac.id/index.php/vol1/oai"}
+{"name":"Jurnal Ranah Komunikasi (JRK)","homepage":"http://ranahkomunikasi.fisip.unand.ac.id/index.php/rk","oai":"http://ranahkomunikasi.fisip.unand.ac.id/index.php/rk/oai"}
 {"name":"Jurnal Ilmiah Pendidikan Citra Bakti","homepage":"http://jurnalilmiahcitrabakti.ac.id/jil/index.php/jil/JIPCB","oai":"http://jurnalilmiahcitrabakti.ac.id/jil/index.php/jil/JIPCB/oai"}
 {"name":"Revista Direitos Humanos Fundamentais (Journal Fundamental Human Rights)","homepage":"https://intranet.unifieo.br/legado/edifieo/index.php/rmd/index","oai":"https://intranet.unifieo.br/legado/edifieo/index.php/rmd/oai"}
 {"name":"Buana Matematika : Jurnal Ilmiah Matematika dan Pendidikan Matematika","homepage":"http://jurnal.unipasby.ac.id/index.php/buana_matematika/index","oai":"http://jurnal.unipasby.ac.id/index.php/buana_matematika/oai"}
@@ -4573,8 +4572,8 @@
 {"name":"IMANENSI: Jurnal Ekonomi, Manajemen dan Akuntansi Islam","homepage":"http://jurnal.fordebi.or.id/index.php/home/","oai":"http://jurnal.fordebi.or.id/index.php/home/oai"}
 {"name":"Manutech : Jurnal Teknologi Manufaktur","homepage":"http://ejournal.polman-babel.ac.id/index.php/manutech","oai":"http://ejournal.polman-babel.ac.id/index.php/manutech/oai"}
 {"name":"Studi Multidisipliner: Jurnal Kajian Keislaman","homepage":"http://jurnal.iain-padangsidimpuan.ac.id/index.php/multd","oai":"http://jurnal.iain-padangsidimpuan.ac.id/index.php/multd/oai"}
-{"name":"Asian Journal Multidisciplinary Studies","homepage":"https://asianjournal.org/index.php/ajms","oai":"https://asianjournal.org/index.php/ajms/oai"}
-{"name":"Asian Journal of Business and Technology Studies","homepage":"https://asianjournal.org/index.php/ajbts","oai":"https://asianjournal.org/index.php/ajbts/oai"}
+{"name":"Asian Journal Multidisciplinary Studies","homepage":"https://asianjournal.org/online/index.php/ajms","oai":"https://asianjournal.org/online/index.php/ajms/oai"}
+{"name":"Asian Journal of Business and Technology Studies","homepage":"https://asianjournal.org/online/index.php/ajbts","oai":"https://asianjournal.org/online/index.php/ajbts/oai"}
 {"name":"Jurnal Inovtek Polbeng Seri Informatika","homepage":"http://ejournal.polbeng.ac.id/index.php/ISI","oai":"http://ejournal.polbeng.ac.id/index.php/ISI/oai"}
 {"name":"Ulumuddin: Jurnal Ilmu-ilmu Keislaman","homepage":"https://jurnal.ucy.ac.id/index.php/agama_islam/index","oai":"https://jurnal.ucy.ac.id/index.php/agama_islam/oai"}
 {"name":"Ensino e Tecnologia em Revista","homepage":"https://periodicos.utfpr.edu.br/etr/index","oai":"https://periodicos.utfpr.edu.br/etr/oai"}
@@ -4617,7 +4616,7 @@
 {"name":"JURNAL ILMIAH BAHASA DAN SASTRA","homepage":"http://ejournal.unikama.ac.id/index.php/JIBS/index","oai":"http://ejournal.unikama.ac.id/index.php/JIBS/oai"}
 {"name":"Journal of Social Politics and Governance","homepage":"https://journal.amikom.ac.id/index.php/jspg/index","oai":"https://journal.amikom.ac.id/index.php/jspg/oai"}
 {"name":"SUNDERMANN: Jurnal Ilmiah Teologi, Pendidikan, Sains, Humaniora dan Kebudayaan","homepage":"https://jurnal.sttsundermann.ac.id/index.php/sundermann","oai":"https://jurnal.sttsundermann.ac.id/index.php/sundermann/oai"}
-{"name":"Southeast Asian Journal of Science and Technology","homepage":"https://j.sajst.org/index.php/sajst","oai":"https://j.sajst.org/index.php/sajst/oai"}
+{"name":"Southeast Asian Journal of Science and Technology","homepage":"https://sajst.org/online/index.php/sajst/","oai":"https://sajst.org/online/index.php/sajst/oai"}
 {"name":"Jurnal Ekonomi dan Pembangunan","homepage":"https://jurnalekonomi.lipi.go.id/index.php/JEP","oai":"https://jurnalekonomi.lipi.go.id/index.php/JEP/oai"}
 {"name":"Medicina y Laboratorio","homepage":"https://medicinaylaboratorio.com/index.php/myl/","oai":"https://medicinaylaboratorio.com/index.php/myl/oai"}
 {"name":"Ethical Lingua: Journal of Language Teaching and Literature","homepage":"https://ethicallingua.org/index.php/25409190","oai":"https://ethicallingua.org/index.php/25409190/oai"}
@@ -4763,7 +4762,7 @@
 {"name":"International Research Journal of Tamil","homepage":"http://irjt.iorpress.org/index.php/irjt/","oai":"http://irjt.iorpress.org/index.php/irjt/oai"}
 {"name":"AvaCient","homepage":"http://www.itchetumal.edu.mx/avacient/index.php/revista/index","oai":"http://www.itchetumal.edu.mx/avacient/index.php/revista/oai"}
 {"name":"Geopauta","homepage":"http://periodicos2.uesb.br/index.php/geo/","oai":"http://periodicos2.uesb.br/index.php/geo/oai"}
-{"name":"Revista de Constitucionalização do Direito Brasileiro - RECONTO","homepage":"http://reconto.efatecie.com.br/index.php/Reconto/index","oai":"http://reconto.efatecie.com.br/index.php/Reconto/oai"}
+{"name":"Revista de Constitucionalização do Direito Brasileiro - RECONTO","homepage":"http://revistareconto.com.br/index.php/Reconto/index","oai":"http://revistareconto.com.br/index.php/Reconto/oai"}
 {"name":"Jurnal Inovasi Kebijakan","homepage":"https://jurnalinovkebijakan.com/index.php/JIK/","oai":"https://jurnalinovkebijakan.com/index.php/JIK/oai"}
 {"name":"Buana Information Technology and Computer Sciences (BIT and CS)","homepage":"http://journal.ubpkarawang.ac.id/index.php/bit-cs/","oai":"http://journal.ubpkarawang.ac.id/index.php/bit-cs/oai"}
 {"name":"Jurnal Kesehatan Andalas","homepage":"http://jurnal.fk.unand.ac.id/index.php/jka","oai":"http://jurnal.fk.unand.ac.id/index.php/jka/oai"}
@@ -4908,7 +4907,7 @@
 {"name":"Konseling: Jurnal Ilmiah Penelitian dan Penerapannya","homepage":"https://journal.ilininstitute.com/index.php/konseling/index","oai":"https://journal.ilininstitute.com/index.php/konseling/oai"}
 {"name":"EntomoBrasilis","homepage":"https://www.entomobrasilis.org/index.php/ebras","oai":"https://www.entomobrasilis.org/index.php/ebras/oai"}
 {"name":"Walennae : Jurnal Arkeologi Sulawesi Selatan dan Tenggara","homepage":"https://walennae.kemdikbud.go.id/index.php/walennae/index","oai":"https://walennae.kemdikbud.go.id/index.php/walennae/oai"}
-{"name":"Pakistan Journal of Psychological Research","homepage":"http://www.pjprnip.edu.pk/pjpr/index.php/index/index","oai":"http://www.pjprnip.edu.pk/pjpr/index.php/index/oai"}
+{"name":"Pakistan Journal of Psychological Research","homepage":"http://www.pjprnip.edu.pk/index.php/pjpr","oai":"http://www.pjprnip.edu.pk/index.php/pjpr/oai"}
 {"name":"JiiP: Jurnal Ilmu dan Industri Peternakan","homepage":"http://journal.uin-alauddin.ac.id/index.php/jiip","oai":"http://journal.uin-alauddin.ac.id/index.php/jiip/oai"}
 {"name":"Techno Jurnal Penelitian","homepage":"https://ejournal.unkhair.ac.id/index.php/Techno","oai":"https://ejournal.unkhair.ac.id/index.php/Techno/oai"}
 {"name":"Jurnal Hubungan Internasional","homepage":"https://e-journal.unair.ac.id/index.php/JHI/index","oai":"https://e-journal.unair.ac.id/index.php/JHI/oai"}
@@ -5011,7 +5010,6 @@
 {"name":"RADIAL : Jurnal Peradaban Sains, Rekayasa dan Teknologi","homepage":"https://stitek-binataruna.e-journal.id/index.php/radial/index","oai":"https://stitek-binataruna.e-journal.id/index.php/radial/oai"}
 {"name":"TRIDARMA: Pengabdian Kepada Masyarakat (PkM)","homepage":"https://iocscience.org/ejournal/index.php/abdimas/index","oai":"https://iocscience.org/ejournal/index.php/abdimas/oai"}
 {"name":"Jurnal Mantik","homepage":"https://iocscience.org/ejournal/index.php/mantik","oai":"https://iocscience.org/ejournal/index.php/mantik/oai"}
-{"name":"Journal Of Computer Networks, Architecture and High Performance Computing","homepage":"https://iocscience.org/ejournal/index.php/CNAPC","oai":"https://iocscience.org/ejournal/index.php/CNAPC/oai"}
 {"name":"Journal of Midwifery and Nursing","homepage":"https://iocscience.org/ejournal/index.php/JMN/","oai":"https://iocscience.org/ejournal/index.php/JMN/oai"}
 {"name":"Journal of Law Science","homepage":"https://iocscience.org/ejournal/index.php/JLS","oai":"https://iocscience.org/ejournal/index.php/JLS/oai"}
 {"name":"JUXTA: Jurnal Ilmiah Mahasiswa Kedokteran Universitas Airlangga","homepage":"https://e-journal.unair.ac.id/index.php/JUXTA","oai":"https://e-journal.unair.ac.id/index.php/JUXTA/oai"}
@@ -5070,7 +5068,7 @@
 {"name":"Jambura Early Childhood Education Journal","homepage":"https://ejournal-fip-ung.ac.id/ojs/index.php/jecej","oai":"https://ejournal-fip-ung.ac.id/ojs/index.php/jecej/oai"}
 {"name":"JEEMECS (Journal of Electrical Engineering, Mechatronic and Computer Science)","homepage":"http://jurnal.unmer.ac.id/index.php/jeemecs/index","oai":"http://jurnal.unmer.ac.id/index.php/jeemecs/oai"}
 {"name":"e-Journal Program Studi Teknik Mesin ITI","homepage":"https://www.jtmiti.org/index.php/JTM","oai":"https://www.jtmiti.org/index.php/JTM/oai"}
-{"name":"Dia: A Public Administration Journal","homepage":"https://jurnal.untag-sby.ac.id/index.php/dia","oai":"https://jurnal.untag-sby.ac.id/index.php/dia/oai"}
+{"name":"Dia: A Public Administration Journal","homepage":"http://jurnal.untag-sby.ac.id/index.php/dia","oai":"http://jurnal.untag-sby.ac.id/index.php/dia/oai"}
 {"name":"Jurnal al-Ulum","homepage":"http://journal.uim.ac.id/index.php/alulum/index","oai":"http://journal.uim.ac.id/index.php/alulum/oai"}
 {"name":"Jurnal Ekonomi Pembangunan: Kajian Masalah Ekonomi dan Pembangunan","homepage":"http://journals.ums.ac.id/index.php/jep","oai":"http://journals.ums.ac.id/index.php/jep/oai"}
 {"name":"Interdisciplinaria","homepage":"http://www.ciipme-conicet.gov.ar/ojs/index.php/interdisciplinaria/index","oai":"http://www.ciipme-conicet.gov.ar/ojs/index.php/interdisciplinaria/oai"}
@@ -5469,7 +5467,7 @@
 {"name":"Economics, Finance and Management Review (EFMR)","homepage":"https://public.scnchub.com/efmr/index.php/efmr","oai":"https://public.scnchub.com/efmr/index.php/efmr/oai"}
 {"name":"Public Administration and Law Review","homepage":"https://public.scnchub.com/palr/index.php/palr","oai":"https://public.scnchub.com/palr/index.php/palr/oai"}
 {"name":"Inteligencia Artificial","homepage":"https://journal.iberamia.org/index.php/intartif/","oai":"https://journal.iberamia.org/index.php/intartif/oai"}
-{"name":"CenRaPS Journal of Social Sciences","homepage":"http://journal.cenraps.org/index.php/c","oai":"http://journal.cenraps.org/index.php/c/oai"}
+{"name":"CenRaPS Journal of Social Sciences","homepage":"http://journal.cenraps.org/index.php/cenraps","oai":"http://journal.cenraps.org/index.php/cenraps/oai"}
 {"name":"International Journal of Social, Political and Economic Research (IJoSPER)","homepage":"http://ijosper.uk/index.php/i","oai":"http://ijosper.uk/index.php/i/oai"}
 {"name":"ISPEC Journal of Agricultural Sciences","homepage":"http://ispecjournal.com/index.php/ispecjas","oai":"http://ispecjournal.com/index.php/ispecjas/oai"}
 {"name":"ICONTECH INTERNATIONAL JOURNAL","homepage":"http://icontechjournal.com/index.php/iij","oai":"http://icontechjournal.com/index.php/iij/oai"}
@@ -5542,7 +5540,7 @@
 {"name":"Airlangga International Journal of Islamic Economics and Finance","homepage":"https://e-journal.unair.ac.id/index.php/AIJIEF/","oai":"https://e-journal.unair.ac.id/index.php/AIJIEF/oai"}
 {"name":"Journal Cerita","homepage":"http://ejournal.raharja.ac.id/index.php/cerita","oai":"http://ejournal.raharja.ac.id/index.php/cerita/oai"}
 {"name":"PROGRES PENDIDIKAN","homepage":"http://prospek.unram.ac.id/index.php/PROSPEK","oai":"http://prospek.unram.ac.id/index.php/PROSPEK/oai"}
-{"name":"EDUKASIA: Jurnal Pendidikan dan Pembelajaran","homepage":"http://jurnalmaarif.com/index.php/edukasia/","oai":"http://jurnalmaarif.com/index.php/edukasia/oai"}
+{"name":"EDUKASIA: Jurnal Pendidikan dan Pembelajaran","homepage":"http://jurnaledukasia.org/index.php/edukasia","oai":"http://jurnaledukasia.org/index.php/edukasia/oai"}
 {"name":"Service Management Triangle: Jurnal Manajemen Jasa","homepage":"http://ejurnal.ars.ac.id/index.php/jsj/","oai":"http://ejurnal.ars.ac.id/index.php/jsj/oai"}
 {"name":"Tekper : Jurnal Teknologi dan Manajemen Industri Pertanian","homepage":"http://ojs.uho.ac.id/index.php/JMIP","oai":"http://ojs.uho.ac.id/index.php/JMIP/oai"}
 {"name":"Religación. Revista de Ciencias Sociales y Humanidades","homepage":"http://revista.religacion.com/index.php/religacion/","oai":"http://revista.religacion.com/index.php/religacion/oai"}
@@ -5625,7 +5623,7 @@
 {"name":"Journal of Chemistry, Environmental Sciences and its Applications","homepage":"https://jce.chitkara.edu.in/index.php/jce","oai":"https://jce.chitkara.edu.in/index.php/jce/oai"}
 {"name":"Journal of Multidisciplinary Research in Healthcare","homepage":"https://jmrh.chitkara.edu.in/index.php/jmrh","oai":"https://jmrh.chitkara.edu.in/index.php/jmrh/oai"}
 {"name":"PELAGICUS","homepage":"http://ejournal-balitbang.kkp.go.id/index.php/pelagicus/","oai":"http://ejournal-balitbang.kkp.go.id/index.php/pelagicus/oai"}
-{"name":"Scripta Alumni","homepage":"https://uniandrade.br/revistauniandrade/index.php/ScriptaAlumni/index","oai":"https://uniandrade.br/revistauniandrade/index.php/ScriptaAlumni/oai"}
+{"name":"Scripta Alumni","homepage":"https://revista.uniandrade.br/index.php/revistauniandrade","oai":"https://revista.uniandrade.br/index.php/revistauniandrade/oai"}
 {"name":"Teosofia: Indonesian Journal of Islamic Mysticism","homepage":"http://journal.walisongo.ac.id/index.php/teosofia/index","oai":"http://journal.walisongo.ac.id/index.php/teosofia/oai"}
 {"name":"JPMB : Jurnal Pemberdayaan Masyarakat Berkarakter","homepage":"https://journal-litbang-rekarta.co.id/index.php/jpmb/","oai":"https://journal-litbang-rekarta.co.id/index.php/jpmb/oai"}
 {"name":"Jurist-Diction","homepage":"https://e-journal.unair.ac.id/index.php/JD","oai":"https://e-journal.unair.ac.id/index.php/JD/oai"}
@@ -5769,7 +5767,7 @@
 {"name":"Jurnal Sosiologi Dialektika","homepage":"https://e-journal.unair.ac.id/DIALEKTIKA","oai":"https://e-journal.unair.ac.id/DIALEKTIKA/oai"}
 {"name":"Jurnal Pengabdian Masyarakat Dalam Kesehatan","homepage":"https://e-journal.unair.ac.id/index.php/JPMK","oai":"https://e-journal.unair.ac.id/index.php/JPMK/oai"}
 {"name":"Pacha. Revista de Estudios Contemporáneos del Sur Global","homepage":"http://revistapacha.religacion.com/index.php/about/","oai":"http://revistapacha.religacion.com/index.php/about/oai"}
-{"name":"Marine and Fishery Sciences","homepage":"https://ojs.inidep.edu.ar/ojs/index.php/mafis/","oai":"https://ojs.inidep.edu.ar/ojs/index.php/mafis/oai"}
+{"name":"Marine and Fishery Sciences","homepage":"https://ojs.inidep.edu.ar/index.php/mafis","oai":"https://ojs.inidep.edu.ar/index.php/mafis/oai"}
 {"name":"Idarotuna","homepage":"http://ejournal.uin-suska.ac.id/index.php/idarotuna/index","oai":"http://ejournal.uin-suska.ac.id/index.php/idarotuna/oai"}
 {"name":"Journal of Research (Urdu)","homepage":"http://jorurdu.bzu.edu.pk/website/","oai":"http://jorurdu.bzu.edu.pk/website/oai"}
 {"name":"CCIT Journal","homepage":"https://ejournal.raharja.ac.id/index.php/ccit","oai":"https://ejournal.raharja.ac.id/index.php/ccit/oai"}
@@ -5926,7 +5924,6 @@
 {"name":"Investigaciones Sobre Lectura","homepage":"https://www.comprensionlectora.es/revistaisl/index.php/revistaISL","oai":"https://www.comprensionlectora.es/revistaisl/index.php/revistaISL/oai"}
 {"name":"Journal of the European Royal Society","homepage":"http://journal.theroyalsociety.eu/index.php/JERSY/","oai":"http://journal.theroyalsociety.eu/index.php/JERSY/oai"}
 {"name":"Revista Baiana de Educação Matemática","homepage":"https://www.revistas.uneb.br/index.php/baeducmatematica/index","oai":"https://www.revistas.uneb.br/index.php/baeducmatematica/oai"}
-{"name":"Jurnal Akuntansi STIE Muhammadiyah Palopo","homepage":"http://journal.stiem.ac.id/index.php/jurakun","oai":"http://journal.stiem.ac.id/index.php/jurakun/oai"}
 {"name":"Journal of Industrial and Engineering System","homepage":"http://ejurnal.ubharajaya.ac.id/index.php/JIES","oai":"http://ejurnal.ubharajaya.ac.id/index.php/JIES/oai"}
 {"name":"Journal RESPECS Research Physical Education and Sports","homepage":"https://www.jurnal.unma.ac.id/index.php/JR/index","oai":"https://www.jurnal.unma.ac.id/index.php/JR/oai"}
 {"name":"Jambura Journal of Electrical and Electronics Engineering","homepage":"http://ejurnal.ung.ac.id/index.php/jjeee","oai":"http://ejurnal.ung.ac.id/index.php/jjeee/oai"}
@@ -5990,7 +5987,6 @@
 {"name":"Avant Garde","homepage":"http://journal.budiluhur.ac.id/index.php/avantgarde/index","oai":"http://journal.budiluhur.ac.id/index.php/avantgarde/oai"}
 {"name":"Revista Panorama","homepage":"https://journal.poligran.edu.co/index.php/panorama/index","oai":"https://journal.poligran.edu.co/index.php/panorama/oai"}
 {"name":"Jurnal Prospek","homepage":"http://jurnal.unsil.ac.id/index.php/prospek/index","oai":"http://jurnal.unsil.ac.id/index.php/prospek/oai"}
-{"name":"Jurnal Informatic, Education and Management (JIEM)","homepage":"https://jurnal.stmikiba.ac.id/index.php/jiem/index","oai":"https://jurnal.stmikiba.ac.id/index.php/jiem/oai"}
 {"name":"Jurnal Agriuma","homepage":"http://ojs.uma.ac.id/index.php/agriuma","oai":"http://ojs.uma.ac.id/index.php/agriuma/oai"}
 {"name":"Pelita Masyarakat","homepage":"http://ojs.uma.ac.id/index.php/pelitamasyarakat","oai":"http://ojs.uma.ac.id/index.php/pelitamasyarakat/oai"}
 {"name":"Jurnal IT","homepage":"https://lppm-stmikhandayani.ac.id/index.php/jti","oai":"https://lppm-stmikhandayani.ac.id/index.php/jti/oai"}
@@ -6358,49 +6354,3 @@
 {"name":"Colombian Journal of Anesthesiology","homepage":"https://www.revcolanest.com.co/index.php/rca","oai":"https://www.revcolanest.com.co/index.php/rca/oai"}
 {"name":"Shibghah: Journal of Muslim Societies","homepage":"http://jurnal.kopertais5aceh.or.id/index.php/shibghah/","oai":"http://jurnal.kopertais5aceh.or.id/index.php/shibghah/oai"}
 {"name":"Journal of Stem Cell Research and Tissue Engineering","homepage":"https://e-journal.unair.ac.id/index.php/JSCRTE","oai":"https://e-journal.unair.ac.id/index.php/JSCRTE/oai"}
-{"name":"SCRIPTA: Jurnal Teologi dan Pelayanan Kontekstual","homepage":"https://ejournal.stte.ac.id/index.php/scripta/index","oai":"https://ejournal.stte.ac.id/index.php/scripta/oai"}
-{"name":"Visión Internacional (Cúcuta)","homepage":"https://revistas.ufps.edu.co/index.php/visioninternacional","oai":"https://revistas.ufps.edu.co/index.php/visioninternacional/oai"}
-{"name":"Llamkasun","homepage":"http://llamkasun.unat.edu.pe/index.php/revista/index","oai":"http://llamkasun.unat.edu.pe/index.php/revista/oai"}
-{"name":"Alpha Centauri","homepage":"http://journalalphacentauri.com/index.php/revista/index","oai":"http://journalalphacentauri.com/index.php/revista/oai"}
-{"name":"Estetika : Jurnal Pendidikan Bahasa dan Sastra Indonesia","homepage":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/ESTETIKA/index","oai":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/ESTETIKA/oai"}
-{"name":"Corner: Jurnal Pendidikan Jasmani dan Olahraga","homepage":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/Corner/index","oai":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/Corner/oai"}
-{"name":"Innovat International journal if Medical \u0026amp; Pharmaceutical Sciences","homepage":"http://innovatpublisher.com/index.php/iijmps/index","oai":"http://innovatpublisher.com/index.php/iijmps/oai"}
-{"name":"JOURNAL OF AL MAYADINE AL IKTISSADIA","homepage":"https://www.jmi.dz/jmi/index.php/jmi/","oai":"https://www.jmi.dz/jmi/index.php/jmi/oai"}
-{"name":"Bulletin of Computer Science and Electrical Engineering","homepage":"http://bcsee.org/index.php/bcsee","oai":"http://bcsee.org/index.php/bcsee/oai"}
-{"name":"Algerian Journal of Engineering and Technology","homepage":"https://www.jetjournal.org/index.php/ajet","oai":"https://www.jetjournal.org/index.php/ajet/oai"}
-{"name":"PEDAGOGIKA: Jurnal Pedagogik dan Dinamika Pendidikan","homepage":"https://ojs3.unpatti.ac.id/index.php/pedagogika","oai":"https://ojs3.unpatti.ac.id/index.php/pedagogika/oai"}
-{"name":"Iberoamerican Journal of Science Measurement and Communication","homepage":"https://pub.colnes.org/index.php/ijsmc/index","oai":"https://pub.colnes.org/index.php/ijsmc/oai"}
-{"name":"Jurnal Lensa Mutiara Komunikasi","homepage":"http://e-journal.sari-mutiara.ac.id/index.php/JLMI","oai":"http://e-journal.sari-mutiara.ac.id/index.php/JLMI/oai"}
-{"name":"Revista ABRA","homepage":"https://www.revistas.una.ac.cr/index.php/abra/index","oai":"https://www.revistas.una.ac.cr/index.php/abra/oai"}
-{"name":"IUS et Scientia","homepage":"https://revistascientificas.us.es/index.php/ies/index","oai":"https://revistascientificas.us.es/index.php/ies/oai"}
-{"name":"E-Revista Internacional de la Protección Social","homepage":"https://revistascientificas.us.es/index.php/erips/index","oai":"https://revistascientificas.us.es/index.php/erips/oai"}
-{"name":"Indian Journal of Tamil","homepage":"https://ijot.in/index.php/tamil","oai":"https://ijot.in/index.php/tamil/oai"}
-{"name":"Investigaciones Sociales","homepage":"https://revistasinvestigacion.unmsm.edu.pe/index.php/sociales/index","oai":"https://revistasinvestigacion.unmsm.edu.pe/index.php/sociales/oai"}
-{"name":"Jurnal AKMAMI (Akuntansi Manajemen Ekonomi)","homepage":"https://jurnal.ceredindonesia.or.id/index.php/akmami/index","oai":"https://jurnal.ceredindonesia.or.id/index.php/akmami/oai"}
-{"name":"Indonesian Journal of Sociology, Education and Development","homepage":"http://ijsed.ap3si.org/index.php/journal/","oai":"http://ijsed.ap3si.org/index.php/journal/oai"}
-{"name":"Revista Brasileira de Pesquisa (Auto)Biográfica (RBPAB)","homepage":"https://www.revistas.uneb.br/index.php/rbpab","oai":"https://www.revistas.uneb.br/index.php/rbpab/oai"}
-{"name":"Isidorianum","homepage":"https://www.publicaciones.sanisidoro.net/index.php/isidorianum/index","oai":"https://www.publicaciones.sanisidoro.net/index.php/isidorianum/oai"}
-{"name":"Revista en Gobierno y Gestión Pública","homepage":"https://revistagobiernoygestionpublica.usmp.edu.pe/index.php/RGGP/index","oai":"https://revistagobiernoygestionpublica.usmp.edu.pe/index.php/RGGP/oai"}
-{"name":"Jurnal Sekretari dan Administrasi (SERASI)","homepage":"https://journal.budiluhur.ac.id/index.php/serasi/index","oai":"https://journal.budiluhur.ac.id/index.php/serasi/oai"}
-{"name":"SHINE: Jurnal Bimbingan Dan Konseling","homepage":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/SHINE","oai":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/SHINE/oai"}
-{"name":"Jurnal Setia Pancasila","homepage":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/JSP","oai":"https://e-jurnal.stkippgrisumenep.ac.id/index.php/JSP/oai"}
-{"name":"Ekomaks","homepage":"http://ekomaks.unmermadiun.ac.id/index.php/ekomaks/index","oai":"http://ekomaks.unmermadiun.ac.id/index.php/ekomaks/oai"}
-{"name":"HAPSc Policy Briefs Series","homepage":"https://ejournals.epublishing.ekt.gr/index.php/hapscpbs","oai":"https://ejournals.epublishing.ekt.gr/index.php/hapscpbs/oai"}
-{"name":"Revista Brasileira de História da Matemática","homepage":"http://www.rbhm.org.br/index.php/RBHM","oai":"http://www.rbhm.org.br/index.php/RBHM/oai"}
-{"name":"Accurate: Journal Of Mechanical Engineering and Science","homepage":"https://ejournal.pnc.ac.id/index.php/accurate/index","oai":"https://ejournal.pnc.ac.id/index.php/accurate/oai"}
-{"name":"Cuadernos Universitarios","homepage":"http://revistas.ucasal.edu.ar/index.php/CU","oai":"http://revistas.ucasal.edu.ar/index.php/CU/oai"}
-{"name":"Cuadernos de Ingeniería","homepage":"http://revistas.ucasal.edu.ar/index.php/CI/index","oai":"http://revistas.ucasal.edu.ar/index.php/CI/oai"}
-{"name":"Omnia","homepage":"http://revistas.ucasal.edu.ar/index.php/RO/index","oai":"http://revistas.ucasal.edu.ar/index.php/RO/oai"}
-{"name":"Teks del Sud","homepage":"http://revistas.ucasal.edu.ar/index.php/TDS","oai":"http://revistas.ucasal.edu.ar/index.php/TDS/oai"}
-{"name":"Media Gizi Kesmas","homepage":"https://e-journal.unair.ac.id/index.php/mgk","oai":"https://e-journal.unair.ac.id/index.php/mgk/oai"}
-{"name":"Airlangga Journal of Innovation Management","homepage":"https://e-journal.unair.ac.id/index.php/ajim","oai":"https://e-journal.unair.ac.id/index.php/ajim/oai"}
-{"name":"Jurnal Ilmu Administrasi dan Studi Kebijakan (JIASK)","homepage":"http://ejournal.pps-unisti.ac.id/index.php/JIASK","oai":"http://ejournal.pps-unisti.ac.id/index.php/JIASK/oai"}
-{"name":"Extensão Tecnológica - Revista de Extensão do Instituto Federal Catarinense","homepage":"http://publicacoes.ifc.edu.br/index.php/RevExt/index","oai":"http://publicacoes.ifc.edu.br/index.php/RevExt/oai"}
-{"name":"Revista Ensayos Pedagógicos","homepage":"https://www.revistas.una.ac.cr/index.php/ensayospedagogicos/index","oai":"https://www.revistas.una.ac.cr/index.php/ensayospedagogicos/oai"}
-{"name":"Uniciencia","homepage":"https://www.revistas.una.ac.cr/index.php/uniciencia","oai":"https://www.revistas.una.ac.cr/index.php/uniciencia/oai"}
-{"name":"Jurnal Keperawatan","homepage":"http://jurnal.stikeswilliambooth.ac.id/index.php/Kep","oai":"http://jurnal.stikeswilliambooth.ac.id/index.php/Kep/oai"}
-{"name":"Jurnal Serambi Ilmu","homepage":"http://ojs.serambimekkah.ac.id/index.php/serambi-ilmu/","oai":"http://ojs.serambimekkah.ac.id/index.php/serambi-ilmu/oai"}
-{"name":"NORMA","homepage":"https://journal.uwks.ac.id/index.php/norma","oai":"https://journal.uwks.ac.id/index.php/norma/oai"}
-{"name":"\u0026#39;A Jamiy: Jurnal Bahasa dan Sastra Arab","homepage":"https://journal.umgo.ac.id/index.php/AJamiy","oai":"https://journal.umgo.ac.id/index.php/AJamiy/oai"}
-{"name":"Social Sciences Journal","homepage":"http://journals.lagh-univ.dz/index.php/ssj","oai":"http://journals.lagh-univ.dz/index.php/ssj/oai"}
-{"name":"Journal of innovations in digital marketing","homepage":"https://luminousinsights.net/journals/index.php/jidm/","oai":"https://luminousinsights.net/journals/index.php/jidm/oai"}
