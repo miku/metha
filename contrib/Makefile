@@ -5,3 +5,7 @@ sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 clean:
 	rm -f sites.tsv
 
+.PHONY: ping.ndj
+ping.ndj:
+	clinker -verbose -w 228 < sites.tsv > ping.ndj.tmp && mv ping.ndj.tmp ping.ndj
+
