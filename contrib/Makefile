@@ -4,6 +4,7 @@ sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 .PHONY: clean
 clean:
 	rm -f sites.tsv
+	rm -rf .ipynb_checkpoints/
 
 .PHONY: ping.ndj
 ping.ndj:
