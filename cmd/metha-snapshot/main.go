@@ -26,7 +26,7 @@ var (
 	bestEffort     = flag.Bool("B", false, "ignore harvest errors")
 	maxRequests    = flag.Int("max", 1048576, "maximum number of token loops")
 	quiet          = flag.Bool("q", false, "suppress all output")
-	numWorkers     = flag.Int("w", 64, "workers")
+	numWorkers     = flag.Int("w", runtime.NumCPU()*16, "workers")
 	shuffle        = flag.Bool("S", false, "shuffle hosts")
 	sample         = flag.Int("s", 0, "take a sample of endpoints (for debugging), 0 means no limit")
 	seed           = flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed")
@@ -91,6 +91,7 @@ func main() {
 		g    = new(errgroup.Group)
 		urlC = make(chan string)
 	)
+	// Enqueue tasks.
 	g.Go(func() error {
 		defer close(urlC)
 		for _, endpoint := range endpoints {
@@ -100,13 +101,14 @@ func main() {
 	})
 	for i := 0; i < *numWorkers; i++ {
 		g.Go(func() error {
-			var (
-				j       int
-				harvest *metha.Harvest
-				err     error
-			)
+			var j int
 			for u := range urlC {
+				var (
+					harvest *metha.Harvest
+					err     error
+				)
 				j++
+				log.Printf("w@%d", j)
 				harvest, err = metha.NewHarvest(u)
 				if err != nil {
 					log.Printf("failed (init): %s, %v", u, err)
@@ -131,7 +133,10 @@ func main() {
 			return nil
 		})
 	}
-	g.Wait()
+	err := g.Wait()
+	if err != nil {
+		log.Fatal(err)
+	}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	for _, u := range endpoints {
