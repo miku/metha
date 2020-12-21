@@ -47,7 +47,7 @@ $ metha-sync http://export.arxiv.org/oai2
 ```
 
 All downloaded files are written to a directory below a base directory. The base
-directory is `~/.metha` by default and can be adjusted with the `METHA_DIR`
+directory is `~/.cache/metha` by default and can be adjusted with the `METHA_DIR`
 environment variable.
 
 When the `-dir` flag is set, only the directory corresponding to a harvest is printed.
