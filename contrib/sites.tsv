@@ -183,6 +183,7 @@ http://acikerisim.deu.edu.tr:8080/oai/request
 http://acikerisim.duzce.edu.tr:8080/oai/request
 http://acikerisim.ege.edu.tr/oai/request
 http://acikerisim.erbakan.edu.tr/oai/request
+http://acikerisim.erdogan.edu.tr/oai/request
 http://acikerisim.fsm.edu.tr:8080/oai/request
 http://acikerisim.gantep.edu.tr:8080/oai/request
 http://acikerisim.gelisim.edu.tr/oai
@@ -2249,6 +2250,7 @@ http://eir.nuos.edu.ua/oai/request
 http://eir.pstu.edu/oai/request
 http://eir.zntu.edu.ua/oai/request
 http://eixostech.pas.ifsuldeminas.edu.br/ojs/index.php/eixostech/oai
+http://ejce.liuc.it/oai/default.asp
 http://ejcsit.uniten.edu.my/index.php/ejcsit/oai
 http://ej.lib.cbs.dk/index.php/jba/oai
 http://ej.lib.cbs.dk/index.php/nordicwl/oai
@@ -4748,9 +4750,14 @@ http://images-oai.swinburne.edu.au/request
 http://imagonautas.webs.uvigo.es/index.php/comaros/oai
 http://imagonautas.webs.uvigo.es/index.php/imagonautas/oai
 http://imedicalsociety.org/ojs/index.php/iam/oai
+http://imed.pub/ojs/index.php/AMM/oai
 http://imed.pub/ojs/index.php/ar/oai
 http://imed.pub/ojs/index.php/biomed/oai
+http://imed.pub/ojs/index.php/hprs/oai
 http://imed.pub/ojs/index.php/IAJAA/oai
+http://imed.pub/ojs/index.php/iam/oai
+http://imed.pub/ojs/index.php/neuro/oai
+http://imed.pub/ojs/index.php/ojmedicine/oai
 http://imemo.socionet.ru/oai/polorg_1/oai.cgi
 http://imhotep.ems-cdc.org/index.php/imhotep/oai
 http://imhotep-journal.org/index.php/imhotep/oai
@@ -11122,6 +11129,7 @@ http://psl.onu.edu.ua/oai
 http://psr.iscte-iul.pt/index.php/PSR/oai
 http://psv.udpu.edu.ua/oai
 http://pswjournal.org/index.php/ijpsw/oai
+http://pswjournal.org/index.php/njpsw/oai
 http://psychopharmacology.ru/index.php/PPBN/oai
 http://psydok.sulb.uni-saarland.de/phpoai/oai2.php
 http://psysocwork.onu.edu.ua/oai
@@ -14157,6 +14165,7 @@ https://commons.law.famu.edu/do/oai/
 https://commons.library.stonybrook.edu/do/oai/
 https://commons.und.edu/do/oai/
 https://commons.vccs.edu/do/oai/
+https://conceptechint.conceptechint.net/index.php/CFATI/oai
 https://confluenze.unibo.it/oai
 https://conpro.icepss.net/index.php/CPEPSS/oai
 https://conservation-science.unibo.it/oai
@@ -16105,6 +16114,7 @@ https://i-proclaim.my/journals/index.php/mjmbr/oai
 http://sipubs.dlib.vt.edu:9090/perl/oai2
 http://siras.socionet.ru/oai/socorg_1/oai.cgi
 http://sired.udenar.edu.co/cgi/oai2
+https://ir.iba.edu.pk/do/oai/
 https://irinsubria.uninsubria.it/oai/request?
 https://iris.inrim.it/oai/request?
 https://iris.luiss.it/oai/request
@@ -18113,6 +18123,7 @@ https://knepublishing.com/index.php/KnE-Medicine/oai
 https://knepublishing.com/index.php/Kne-Social/oai
 https://knepublishing.com/index.php/SJMS/issue/archive/oai
 https://knepublishing.com/index.php/SJMS/oai
+https://knowlesreview.lse.ac.uk/jms/index.php/up/oai/
 https://kontekstypedagogiczne.pl/kp/oai
 https://kramerius.mzk.cz/oai/
 https://krishi.icar.gov.in/oai/request
@@ -18145,6 +18156,7 @@ https://lataci.com.br/journal/index.php/tekton/oai
 https://latinjournal.org/index.php/ipsa/oai
 https://latinjournal.org/index.php/roh/oai
 https://lawjournal.ub.ac.id/index.php/law/oai
+https://lawreview.lse.ac.uk/jms/index.php/up/oai/
 https://lawscl.org/do/oai/
 https://ldh.brage.unit.no/ldh-oai/request
 http://sldr.org/oai-pmh.php
@@ -22037,6 +22049,7 @@ https://upjournals.co.za/index.php/Phronimon/oai
 http://suporte.alexandria.com.br:8084/pesLivre42/oai/pesquisa
 http://suporte.alexandria.com.br:8087/pesquisa/oai/pes
 http://suporte.alexandria.com.br:8087/pesquisa/oai/pesquisa
+https://upr.lse.ac.uk/jms/index.php/up/oai/
 http://sure.sunderland.ac.uk/cgi/oai2
 http://surface.syr.edu/cgi/oai2.cgi
 http://surface.syr.edu/do/oai/
@@ -22136,6 +22149,7 @@ https://web.archive.org/web/*/https:/www.comparaisons.uha.fr/index.php/CCM/oai
 https://web.archive.org/web/*/https:/www.ejbmr.com/index.php/EJBMR/oai
 https://web.archive.org/web/*/https:/www.jvolcanica.org/ojs/index.php/volcanica/oai
 https://web.archive.org/web/*/http:/teocripsi.com/ojs/index.php/TCP/oai
+https://websterreview.lse.ac.uk/jms/index.php/up/oai/
 https://wellness.journalpress.id/index.php/wellness/oai
 https://wellness.journalpress.id/wellness/oai
 https://wesscholar.wesleyan.edu/do/oai/
