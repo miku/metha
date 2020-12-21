@@ -1001,6 +1001,7 @@ http://digilib.bu.edu/journals/ojs/index.php/perspective/oai
 http://digilib.iain-jember.ac.id/cgi/oai2
 http://digilib.iain-palangkaraya.ac.id/cgi/oai2
 http://digilib.isi.ac.id/cgi/oai2
+http://digilib.k.utb.cz/oai/request
 http://digilib.stikesbcm.ac.id/index.php/jbc/oai
 http://digilib.uinsby.ac.id/cgi/oai2
 http://digilib.uin-suka.ac.id/cgi/oai2
@@ -3636,9 +3637,14 @@ http://images.indianahistory.org/cgi-bin/oai.exe
 http://imagonautas.webs.uvigo.es/index.php/comaros/oai
 http://imagonautas.webs.uvigo.es/index.php/imagonautas/oai
 http://imedicalsociety.org/ojs/index.php/iam/oai
+http://imed.pub/ojs/index.php/AMM/oai
 http://imed.pub/ojs/index.php/ar/oai
 http://imed.pub/ojs/index.php/biomed/oai
+http://imed.pub/ojs/index.php/hprs/oai
 http://imed.pub/ojs/index.php/IAJAA/oai
+http://imed.pub/ojs/index.php/iam/oai
+http://imed.pub/ojs/index.php/neuro/oai
+http://imed.pub/ojs/index.php/ojmedicine/oai
 http://impactum-journals.uc.pt/index.php/atlantis/oai
 http://inacl.id/journal/index.php/jlk/oai
 http://ina-jghe.com/index.php/jghe/oai
@@ -9809,6 +9815,7 @@ http://repositorio.unfs.edu.pe/oai/request?verb=ListRecords&amp;metadataPrefix=o
 http://repositorio.unfv.edu.pe/oai/request
 http://repositorio.unica.edu.pe/oai/request
 http://repositorio.unican.es/oai/request
+http://repositorio.unicentro.br:8080/oai/request
 http://repositorio.uniceub.br/oai/request
 http://repositorio.unid.edu.pe/oai/request
 http://repositorio.unife.edu.pe/oai/request
@@ -12142,9 +12149,11 @@ https://czasopisma.uni.opole.pl/index.php/sk/oai
 https://czasopisma.up.lublin.pl/index.php/ah/oai
 https://czasopisma.uwm.edu.pl/index.php/sw/oai
 https://d4k3.uniba-bpn.ac.id/jurnal/index.php/identifikasi/oai
+https://dadun.unav.edu/oai/request
 https://danzaericerca.unibo.it/oai
 https://dasarupa.nusaputra.ac.id/oai
 https://data.kent.ac.uk/cgi/oai2
+https://data.mendeley.com/oai
 https://datashare.is.ed.ac.uk/oai/request
 https://dataverse.harvard.edu/oai
 https://dataverse.nl/oai
@@ -17235,6 +17244,7 @@ https://pure.itu.dk/ws/oai
 https://pure.knaw.nl/ws/oai
 https://pure.manchester.ac.uk/ws/oai
 https://pure.mpg.de/oai/
+https://pure.mpg.de/oai/provider
 http://spu.repo.nii.ac.jp/oai
 https://pure.royalholloway.ac.uk/ws/oai
 https://pure.rug.nl/ws/oai
@@ -21261,6 +21271,10 @@ https://www.raco.cat/index.php/ViOli/oai
 https://www.raco.cat/index.php/Visions/oai
 https://www.raco.cat/index.php/Waterfront/oai
 https://www.raco.cat/index.php/Xabiga/oai
+https://www.rame.org.in/rameojs/index.php/ijaefea/oai
+https://www.rame.org.in/rameojs/index.php/ijceae/oai
+https://www.rame.org.in/rameojs/index.php/jpie/oai
+https://www.rame.org.in/rameojs/index.php/jtfs/oai
 https://www.rasbran.com.br/index.php/rasbran/oai
 https://www.rbgdr.net/revista/index.php/rbgdr/oai
 https://www.rbmfc.org.br/rbmfc/oai
@@ -24891,12 +24905,3 @@ http://zizekstudies.org/index.php/ijzs/oai
 http://zop.ff.uns.ac.rs/index.php/zop/oai
 http://zr.gradri.uniri.hr/index.php/zr/issue/archive/oai
 http://zuse.zib.de/fledgeddata/oai/
-https://data.mendeley.com/oai
-http://repositorio.unicentro.br:8080/oai/request
-http://digilib.k.utb.cz/oai/request
-https://www.rame.org.in/rameojs/index.php/ijaefea/oai
-https://www.rame.org.in/rameojs/index.php/ijceae/oai
-https://www.rame.org.in/rameojs/index.php/jpie/oai
-https://www.rame.org.in/rameojs/index.php/jtfs/oai
-https://dadun.unav.edu/oai/request
-https://pure.mpg.de/oai/provider
