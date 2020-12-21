@@ -103,13 +103,9 @@ func main() {
 		g.Go(func() error {
 			var j int
 			for u := range urlC {
-				var (
-					harvest *metha.Harvest
-					err     error
-				)
 				j++
 				log.Printf("w@%d", j)
-				harvest, err = metha.NewHarvest(u)
+				harvest, err := metha.NewHarvest(u)
 				if err != nil {
 					log.Printf("failed (init): %s, %v", u, err)
 					continue
