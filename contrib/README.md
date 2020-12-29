@@ -51,3 +51,17 @@ ID INDEX: [http://issn.lipi.go.id/issn.cgi?daftar&&76&654&2019&](http://issn.lip
 Filter against:
 
 * [https://predatoryjournals.com/publishers/](https://predatoryjournals.com/publishers/)
+
+```
+$ curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" | \
+    pup 'li > a[href] json{}' | jq -rc '.[].href' | \
+    grep -Ev "(scholarlyoa|google.com)" | cut -d / -f 3
+```
+
+To filter out predatory domains:
+
+```
+$ grep -v -f <(curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" | \
+     pup 'li > a[href] json{}' | jq -rc '.[].href'  | \
+     grep -Ev "(scholarlyoa|google.com)" | cut -d / -f 3) sites.tsv
+```
