@@ -20,3 +20,8 @@ clean:
 ping.ndj:
 	clinker -verbose -w 228 < sites.tsv > ping.ndj.tmp && mv ping.ndj.tmp ping.ndj
 
+predatory.tsv:
+	curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" | pup 'li > a[href] json{}' | jq -rc '.[].href' | grep -Ev "(aiac.org.au|sfu.ca|scholarlyoa|google.com)" | cut -d / -f 3 > predatory.tsv
+	curl -sL "https://predatoryjournals.com/publishers/" | pup 'li > a[href] json{}' | jq -rc '.[].href' | grep "^http" | grep -vE "(github|twitter)" | cut -d / -f 3 >> predatory.tsv
+	sort -u predatory.tsv | sponge predatory.tsv
+
