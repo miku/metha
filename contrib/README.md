@@ -65,3 +65,13 @@ $ grep -v -f <(curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" |
      pup 'li > a[href] json{}' | jq -rc '.[].href'  | \
      grep -Ev "(scholarlyoa|google.com)" | cut -d / -f 3) sites.tsv
 ```
+
+----
+
+check for ojs installations
+
+```
+$ for s in $(grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ |
+sort | uniq -d) sites.tsv | grep -o "^.*/index.php/" | sort -u); do
+./ojslist.sh $s; done
+```
