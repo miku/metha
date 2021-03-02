@@ -75,3 +75,11 @@ $ for s in $(grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ |
 sort | uniq -d) sites.tsv | grep -o "^.*/index.php/" | sort -u); do
 ./ojslist.sh $s; done
 ```
+
+With parallel:
+
+```
+$ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq
+-d) sites.tsv | grep -o "^.*/index.php/" | sort -u | parallel -j 80 -I {}
+./ojslist.sh {}
+```
