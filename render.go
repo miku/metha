@@ -72,6 +72,7 @@ func Render(opts *RenderOpts) error {
 			if opts.UseJson {
 				b, err = json.Marshal(rec)
 			} else {
+				rec.XMLName = xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"}
 				b, err = xml.Marshal(rec)
 			}
 			if err != nil {

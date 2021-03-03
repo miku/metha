@@ -3,6 +3,7 @@ package metha
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 
 	"github.com/nytlabs/mxj"
@@ -96,6 +97,7 @@ func (ab About) GoString() string { return fmt.Sprintf("%s", ab.Body) }
 
 // Record represents a single record.
 type Record struct {
+	XMLName  xml.Name
 	Header   Header   `xml:"header,omitempty" json:"header,omitempty"`
 	Metadata Metadata `xml:"metadata,omitempty" json:"metadata,omitempty"`
 	About    About    `xml:"about,omitempty" json:"about,omitempty"`
