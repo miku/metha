@@ -1,7 +1,7 @@
 # Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
 
 pkgname=metha
-pkgver=0.2.20
+pkgver=0.2.21
 pkgrel=0
 pkgdesc="No frills command line OAI-PMH protocol harvester and cache."
 arch=('i686' 'x86_64')
