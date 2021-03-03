@@ -207,6 +207,7 @@ interaction in resource conservation.
 * Gunnar Þór Magnússon, [https://github.com/gunnihinn](https://github.com/gunnihinn)
 * Thomas Gersch, [https://github.com/titabo2k](https://github.com/titabo2k)
 * [ACz-UniBi](https://github.com/ACz-UniBi)
+* [David Glück](https://github.com/dvglc)
 
 ## Misc
 
