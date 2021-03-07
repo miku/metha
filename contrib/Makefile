@@ -9,6 +9,7 @@ sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 	# try to filter out predatory journals
 	grep -v -f <(curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" | pup 'li > a[href] json{}' | jq -rc '.[].href' | grep -Ev "(aiac.org.au|sfu.ca|scholarlyoa|google.com)" | cut -d / -f 3) sites.tsv | sponge sites.tsv
 	grep -v -f <(curl -sL "https://predatoryjournals.com/publishers/" | pup 'li > a[href] json{}' | jq -rc '.[].href' | grep "^http" | grep -vE "(github|twitter)" | cut -d / -f 3) sites.tsv | sponge sites.tsv
+	sort -o sites.tsv -u sites.tsv
 
 
 .PHONY: clean
