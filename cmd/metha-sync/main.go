@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -35,6 +36,7 @@ var (
 	suppressFormatParameter    = flag.Bool("suppress-format-parameter", false, "do not send format parameter")
 	until                      = flag.String("until", "", "set the end date, format: 2006-01-02, use only if you do not want got records till today")
 	version                    = flag.Bool("v", false, "show version")
+	basicAuthCreds             = flag.String("u", "", "basic auth, like: user:password")
 	extraHeaders               xflag.Array // Extra HTTP header.
 )
 
@@ -42,26 +44,21 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Var(&extraHeaders, "H", `extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123" `)
 	flag.Parse()
-
 	if *version {
 		fmt.Println(metha.Version)
 		os.Exit(0)
 	}
-
 	if *endpointList {
 		for _, u := range metha.Endpoints {
 			fmt.Println(u)
 		}
 		os.Exit(0)
 	}
-
 	if flag.NArg() == 0 {
 		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
-
 	metha.BaseDir = *baseDir
 	baseURL := metha.PrependSchema(flag.Arg(0))
-
 	if *showDir {
 		harvest := metha.Harvest{
 			BaseURL: baseURL,
@@ -71,11 +68,9 @@ func main() {
 		fmt.Println(harvest.Dir())
 		os.Exit(0)
 	}
-
 	if *quiet {
 		log.SetOutput(ioutil.Discard)
 	}
-
 	if *logFile != "" {
 		file, err := os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
@@ -83,7 +78,6 @@ func main() {
 		}
 		log.SetOutput(file)
 	}
-
 	if *logStderr {
 		if !*quiet && *logFile == "" {
 			log.Warn(`The default logger writes to STDERR. Writing errors there was explicitly requested, but -q or -log were not specified. Writing entire log to STDOUT to avoid double-writing error messages.`)
@@ -92,7 +86,13 @@ func main() {
 
 		log.AddHook(metha.NewCopyHook(os.Stderr))
 	}
-
+	if *basicAuthCreds != "" {
+		parts := strings.Split(*basicAuthCreds, ":")
+		if len(parts) != 2 {
+			log.Fatal("invalid format, we require username:password")
+		}
+		extraHeaders.Set("Authorization: Basic " + basicAuth(parts[0], parts[1]))
+	}
 	var extra = make(http.Header)
 	for _, s := range extraHeaders {
 		parts := strings.SplitN(s, ":", 2)
@@ -101,17 +101,14 @@ func main() {
 		}
 		extra.Set(parts[0], parts[1])
 	}
-
 	harvest, err := metha.NewHarvest(baseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	if *removeCached {
 		log.Printf("removing already cached files from %s", harvest.Dir())
 		os.Remove(harvest.Dir())
 	}
-
 	harvest.From = *from
 	harvest.Until = *until
 	harvest.Format = *format
@@ -125,9 +122,7 @@ func main() {
 	harvest.HourlyInterval = *hourly
 	harvest.DailyInterval = *daily
 	harvest.ExtraHeaders = extra
-
 	log.Printf("harvest: %+v", harvest)
-
 	if err := harvest.Run(); err != nil {
 		switch err {
 		case metha.ErrAlreadySynced:
@@ -136,4 +131,9 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+}
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
