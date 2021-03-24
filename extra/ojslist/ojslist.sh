@@ -79,11 +79,21 @@ tmp=$(mktemp)
 curl -k -sL "$OJSHOME" >$tmp
 
 if [ "$index" == true ]; then
-	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' |
-		grep -v "?searchInitial" | awk '{print $0"/index/oai"}' |
-		sed -e 's@//index@/index@g' | sort -u | sed -e 's/^\s\+//g'
+	cat "$tmp" |
+		pup 'a attr{href}' |
+		grep -E '/index.php/[^/]*/?$' |
+		grep -v "?searchInitial" |
+		awk '{print $0"/index/oai"}' |
+		sed -e 's@//index@/index@g' |
+		sort -u |
+		sed -e 's/^\s\+//g'
 else
-	cat "$tmp" | pup 'a attr{href}' | egrep '/index.php/[^/]*/?$' |
-		grep -v "?searchInitial" | awk '{print $0"/oai"}' |
-		sed -e 's@//oai@/oai@g' | sort -u | sed -e 's/^\s\+//g'
+	cat "$tmp" |
+		pup 'a attr{href}' |
+		grep -E '/index.php/[^/]*/?$' |
+		grep -v "?searchInitial" |
+		awk '{print $0"/oai"}' |
+		sed -e 's@//oai@/oai@g' |
+		sort -u |
+		sed -e 's/^\s\+//g'
 fi
