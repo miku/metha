@@ -53,3 +53,11 @@ $ curl -s https://royalliteglobal.com/ | \
     grep -v index | \
     awk '{ print $0"/oai" }'
 ```
+
+More exceptions:
+
+* https://biblioteca.ucp.edu.co/ojs/index.php
+
+```
+$ OPENSSL_CONF=~/.openssl_allow_tls1.0.cnf curl -k -vL "https://biblioteca.ucp.edu.co/ojs/index.php" | grep "Ver Revista" | grep -o "https://[^']*
+```
