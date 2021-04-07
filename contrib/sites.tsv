@@ -226,6 +226,7 @@ http://acikerisim.nigde.edu.tr:8080/oai/request
 http://acikerisim.nigde.edu.tr/oai/request
 http://acikerisim.ohu.edu.tr/oai/request
 http://acikerisim.omu.edu.tr/oai/request
+http://acikerisim.ozal.edu.tr/oai/request
 http://acikerisim.pau.edu.tr:8080/oai/request
 http://acikerisim.selcuk.edu.tr:8080/oai/request
 http://acikerisim.selcuk.edu.tr/oai/request
@@ -2359,6 +2360,7 @@ http://edergi.ngbb.org.tr/index.php/BBB/oai
 http://edergi.odu.edu.tr/ojs/index.php/JMMS/oai
 http://edergi.sdu.edu.tr/index.php/index/oai
 http://ediblio.unsa.edu.ar/cgi/oai2
+http://ediciones.ubiobio.cl/oai_pmh/
 http://ediciones.ucsh.cl/ojs/index.php/Perspectivas/oai
 http://edissertations.nottingham.ac.uk/perl/oai2
 http://editora.ipef.br/ojs/index.php/scientia/oai
@@ -9365,6 +9367,7 @@ http://jrtppi.id/index.php/jrtppi/oai
 http://jrul.libraries.rutgers.edu/index.php/jrul/oai
 http://jsa.asu.edu/index.php/jsa/oai
 http://jsa.fisip.unand.ac.id/index.php/jsa/oai
+http://jscimath.win/index.php/sainsmat/oai
 http://jscs.ejournal.unsri.ac.id/index.php/jscs/oai
 http://jsdc.lokkatha.com/OJS/index.php/jsdc/oai
 http://jsdtl.sciview.net/index.php/jsdtl/oai
@@ -15935,6 +15938,7 @@ http://repository.up.ac.za/oai/request
 http://repository.upatras.gr/dspace-oai/request
 http://repository.upenn.edu/cgi/oai2.cgi
 http://repository.upenn.edu/do/oai/
+http://repository.uph.edu/cgi/oai2
 http://repository.upi.edu/cgi/oai2
 http://repository.upstegal.ac.id/cgi/oai2
 http://repository.upy.ac.id/cgi/oai2
@@ -18208,6 +18212,17 @@ https://bestjournal.untad.ac.id/index.php/kovalen/oai
 https://bia.unibz.it/oai/request
 https://bibliotecadigital.exactas.uba.ar/greenstone3/oaiserver
 https://bibliotecadigital.icesi.edu.co/biblioteca_digital-oai/request
+https://biblioteca.ucp.edu.co/ojs/index.php/arquetipo
+https://biblioteca.ucp.edu.co/ojs/index.php/coleccionmaestros
+https://biblioteca.ucp.edu.co/ojs/index.php/Encuentros/
+https://biblioteca.ucp.edu.co/ojs/index.php/entrecei
+https://biblioteca.ucp.edu.co/ojs/index.php/gestionyregion
+https://biblioteca.ucp.edu.co/ojs/index.php/grafias
+https://biblioteca.ucp.edu.co/ojs/index.php/lineas
+https://biblioteca.ucp.edu.co/ojs/index.php/observatorio
+https://biblioteca.ucp.edu.co/ojs/index.php/paginas
+https://biblioteca.ucp.edu.co/ojs/index.php/publicacionesinstitucionales
+https://biblioteca.ucp.edu.co/ojs/index.php/textosysentidos
 https://bibliotecavirtual.unl.edu.ar/publicaciones/index.php/argos/oai
 https://bibliotecavirtual.unl.edu.ar/publicaciones/index.php/ARQUISUR/oai
 https://bibliotecavirtual.unl.edu.ar/publicaciones/index.php/AulaUniversitaria/oai
