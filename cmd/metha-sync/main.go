@@ -105,10 +105,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if *removeCached {
-		log.Printf("removing already cached files from %s", harvest.Dir())
-		os.Remove(harvest.Dir())
-	}
 	harvest.From = *from
 	harvest.Until = *until
 	harvest.Format = *format
@@ -123,6 +119,12 @@ func main() {
 	harvest.DailyInterval = *daily
 	harvest.ExtraHeaders = extra
 	log.Printf("harvest: %+v", harvest)
+	if *removeCached {
+		log.Printf("removing already cached files from %s", harvest.Dir())
+		if err := os.RemoveAll(harvest.Dir()); err != nil {
+			log.Println(err)
+		}
+	}
 	if err := harvest.Run(); err != nil {
 		switch err {
 		case metha.ErrAlreadySynced:
