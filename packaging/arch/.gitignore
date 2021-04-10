@@ -1,4 +1,6 @@
 metha-*pkg.tar.xz
+metha-*pkg.tar.zst
 pkg/*
 src/*
 v*tar.gz
+v*tar.zst

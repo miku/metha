@@ -1,7 +1,7 @@
 # Maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
 
 pkgname=metha
-pkgver=0.2.22
+pkgver=0.2.23
 pkgrel=0
 pkgdesc="No frills command line OAI-PMH protocol harvester and cache."
 arch=('i686' 'x86_64')
@@ -10,7 +10,7 @@ license=('GPL')
 makedepends=('go' 'git')
 options=('!strip' '!emptydirs')
 source=("${url}/archive/v${pkgver}.tar.gz")
-sha256sums=('90d63ddee60059c0c8e1d9b70054d2deb13f3ac34d84fd1d5d41e45a18a69f1b')
+sha256sums=('00aa6b78ae988fdb8b7e71f3f79969f117bf5786e26b236c6b99469b50fb0441')
 _gourl='github.com/miku/metha/cmd/...'
 
 prepare() {
