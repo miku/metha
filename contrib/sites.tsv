@@ -497,8 +497,8 @@ http://architexturez.net/oai-pmh
 http://archive-edutice.ccsd.cnrs.fr/oai/oai.php
 http://archive.lstmed.ac.uk/cgi/oai2
 http://archive.lstmed.ac.uk/cgi/oai2/
-http://archive.nyu.edu/request
 http://archive.nyu.edu//request
+http://archive.nyu.edu/request
 http://archiveouverte.campus-insep.net:81/oaicat/OAIHandler
 http://archive-ouverte.unige.ch/oaiprovider/
 http://archive-ouverte.unige.ch/vital/oai/provider
@@ -1154,8 +1154,8 @@ http://ced.revistas.deusto.es/oai
 http://cegot.org/ojs/index.php/GOT/oai
 http://cellmicrocosmos.org/index.php/next-workshop-2014/oai
 http://cemadoc.cemagref.fr/exl-php/oai/serveur/oai2.php
-http://cemi.socionet.ru/oai/ecoorg_org1/oai.cgi
 http://cemi.socionet.ru/oai/ecoorg:org1/oai.cgi
+http://cemi.socionet.ru/oai/ecoorg_org1/oai.cgi
 http://cendikia.online/index.php/EATIJ/oai
 http://centaur.reading.ac.uk/cgi/oai2
 http://centmapress.ilb.uni-bonn.de/ojs/index.php/fsd/oai
@@ -29034,6 +29034,17 @@ https://ojs.library.ubc.ca/index.php/wreck/oai
 https://ojs.lib.unideb.hu/CEJER/oai
 https://ojs.lib.unideb.hu/IJHS/oai
 https://ojs.lib.unideb.hu/SJSC/oai
+https://ojs.lib.uom.gr/index.php/BalkanStudies/oai
+https://ojs.lib.uom.gr/index.php/deltiobkp/oai
+https://ojs.lib.uom.gr/index.php/EJLLLEdu/oai
+https://ojs.lib.uom.gr/index.php/epetavsth/oai
+https://ojs.lib.uom.gr/index.php/epimark/oai
+https://ojs.lib.uom.gr/index.php/NeaOik/oai
+https://ojs.lib.uom.gr/index.php/paidagogiki/oai
+https://ojs.lib.uom.gr/index.php/pamak/oai
+https://ojs.lib.uom.gr/index.php/seeje/oai
+https://ojs.lib.uom.gr/index.php/topos/oai
+https://ojs.lib.uom.gr/index.php/ValkanikaSymmeikta/oai
 https://ojs.lib.uwo.ca/index.php/chiasma/oai
 https://ojs.lib.uwo.ca/index.php/cie-eci/oai
 https://ojs.lib.uwo.ca/index.php/cjils/oai
@@ -33531,8 +33542,8 @@ https://revistas.juridicas.unam.mx/index.php/derecho-electoral/oai
 https://revistas.juridicas.unam.mx/index.php/derecho-informacion/oai
 https://revistas.juridicas.unam.mx/index.php/derecho-internacional/oai
 https://revistas.juridicas.unam.mx/index.php/derecho-privado/oai
-https://revistas.juridicas.unam.mx/index.php/derecho-social/oai
 https://revistas.juridicas.unam.mx/index.php/derecho-social#/oai
+https://revistas.juridicas.unam.mx/index.php/derecho-social/oai
 https://revistas.juridicas.unam.mx/index.php/dialogo-jurisprudencial/oai
 https://revistas.juridicas.unam.mx/index.php/filosofia-derecho/oai
 https://revistas.juridicas.unam.mx/index.php/hechos-y-derechos/oai
@@ -42289,8 +42300,8 @@ http://www.didaktorika.gr/eadd-oai/request
 http://www.didaschein.net/ojs/index.php/noctua/oai
 http://www.dieweltdertuerken.org/index.php/ZfWT/oai
 http://www.digitalisiertedrucke.de/oai2d.py
-http://www.digital.lib.esn.ac.lk/oai?request
 http://www.digital.lib.esn.ac.lk/oai/request
+http://www.digital.lib.esn.ac.lk/oai?request
 http://www.digital.unal.edu.co/dspace-oai/request
 http://www.digizeitschriften.de/oai2/
 http://www.dilemata.net/revista/index.php/dilemata/oai
@@ -43847,6 +43858,7 @@ http://www.naturalhealthinformer.com/harvester/oai
 http://www.nature.com/oai/request
 http://www.nb.no/clarino/oai
 http://www.ncl.ecu.edu/index.php/NCL/oai
+http://www.ndl.ethernet.edu.et/oai/request
 http://www.needs.org/servlet/oai2
 http://www.nerakin.net/oai/oai2.aspx
 http://www.nesglobal.org/eejrif4/index.php/oai?journal=admin&page=index
@@ -44236,8 +44248,8 @@ http://www.raco.cat/index.php/Resclosa?$currentJournal/oai
 http://www.raco.cat/index.php/RevistaCLR?$currentJournal/oai
 http://www.raco.cat/index.php/RevistaDretHistoric?$currentJournal/oai
 http://www.raco.cat/index.php/RevistaEtnologia?$currentJournal/oai
-http://www.raco.cat/index.php/RevistaPedagogia?$currentJournal=/oai
 http://www.raco.cat/index.php/RevistaPedagogia?$currentJournal/oai
+http://www.raco.cat/index.php/RevistaPedagogia?$currentJournal=/oai
 http://www.raco.cat/index.php/Ripacurtia?$currentJournal/oai
 http://www.raco.cat/index.php/Senienc?$currentJournal/oai
 http://www.raco.cat/index.php/Tamid?$currentJournal/oai
