@@ -1,6 +1,6 @@
 # pkp is wip
 
-pkpindex: main.go
+pkpindex: pkpindex.go
 	go build -o $@ $<
 
 .PHONY: clean
