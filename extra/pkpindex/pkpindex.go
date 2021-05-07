@@ -85,7 +85,7 @@ var (
 	baseURL                = flag.String("b", "https://index.pkp.sfu.ca/index.php/browse", "base url")
 	sleep                  = flag.Duration("s", 1*time.Second, "sleep between requests")
 	verbose                = flag.Bool("verbose", false, "verbose output")
-	maxID                  = flag.Int("x", 10000, "upper bound, exclusive; max id to fetch")
+	maxID                  = flag.Int("x", 20000, "upper bound, exclusive; max id to fetch")
 	userAgent              = flag.String("ua", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)", "user agent to use")
 	force                  = flag.Bool("f", false, "force redownload of zero length files")
 	maxSubsequentRefreshes = flag.Int("mssr", 100, "maximum number of subsequent refreshes")
