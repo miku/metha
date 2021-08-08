@@ -87,6 +87,7 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	endpoints = cleanupEndpointList(endpoints)
+	metha.BaseDir = *baseDir
 	// Run and wait until all harvests are done. XXX: add some timeout option.
 	if !*skipHarvest {
 		var (
@@ -139,7 +140,6 @@ func main() {
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	for _, u := range endpoints {
-		metha.BaseDir = *baseDir
 		harvest := metha.Harvest{
 			BaseURL: u,
 			Format:  *format,
