@@ -33,6 +33,7 @@ var (
 	cpuprofile     = flag.String("cpuprofile", "", "cpu pprof file")
 	memprofile     = flag.String("memprofile", "", "mem pprof file")
 	singleEndpoint = flag.String("u", "", "use a single endpoint")
+	skipHarvest    = flag.Bool("K", false, "skip harvest, just emit JSON")
 
 	endpoints = metha.Endpoints
 )
@@ -87,51 +88,53 @@ func main() {
 	}
 	endpoints = cleanupEndpointList(endpoints)
 	// Run and wait until all harvests are done. XXX: add some timeout option.
-	var (
-		g    = new(errgroup.Group)
-		urlC = make(chan string)
-	)
-	// Enqueue tasks.
-	g.Go(func() error {
-		defer close(urlC)
-		for _, endpoint := range endpoints {
-			urlC <- endpoint
-		}
-		return nil
-	})
-	for i := 0; i < *numWorkers; i++ {
+	if !*skipHarvest {
+		var (
+			g    = new(errgroup.Group)
+			urlC = make(chan string)
+		)
+		// Enqueue tasks.
 		g.Go(func() error {
-			var j int
-			for u := range urlC {
-				j++
-				log.Printf("w@%d", j)
-				harvest, err := metha.NewHarvest(u)
-				if err != nil {
-					log.Printf("failed (init): %s, %v", u, err)
-					continue
-				}
-				harvest.MaxRequests = *maxRequests
-				harvest.CleanBeforeDecode = true
-				harvest.Format = *format
-				if err = harvest.Run(); err != nil {
-					switch err {
-					case metha.ErrAlreadySynced:
-					default:
-						// fall back to non-selective mode
-						harvest.DisableSelectiveHarvesting = true
-						if err = harvest.Run(); err != nil {
-							log.Printf("failed (harvest): %s, %v", u, err)
-							continue
-						}
-					}
-				}
+			defer close(urlC)
+			for _, endpoint := range endpoints {
+				urlC <- endpoint
 			}
 			return nil
 		})
-	}
-	err := g.Wait()
-	if err != nil {
-		log.Fatal(err)
+		for i := 0; i < *numWorkers; i++ {
+			g.Go(func() error {
+				var j int
+				for u := range urlC {
+					j++
+					log.Printf("w@%d", j)
+					harvest, err := metha.NewHarvest(u)
+					if err != nil {
+						log.Printf("failed (init): %s, %v", u, err)
+						continue
+					}
+					harvest.MaxRequests = *maxRequests
+					harvest.CleanBeforeDecode = true
+					harvest.Format = *format
+					if err = harvest.Run(); err != nil {
+						switch err {
+						case metha.ErrAlreadySynced:
+						default:
+							// fall back to non-selective mode
+							harvest.DisableSelectiveHarvesting = true
+							if err = harvest.Run(); err != nil {
+								log.Printf("failed (harvest): %s, %v", u, err)
+								continue
+							}
+						}
+					}
+				}
+				return nil
+			})
+		}
+		err := g.Wait()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
