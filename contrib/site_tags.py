@@ -37,6 +37,8 @@ for line in fileinput.input():
         site.is_edu = True
     if "uni-" in line:
         site.is_edu = True
+    if ".uni." in line:
+        site.is_edu = True
     if "univ-" in line:
         site.is_edu = True
     if re.match(".*uni.*.it.*", line):
