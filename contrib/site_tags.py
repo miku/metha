@@ -16,14 +16,12 @@ from typing import Optional
 
 class Site(BaseModel):
     url: str
+    platform = ""
     is_edu = False
     is_edu_world = False
-    is_dspace = False
-    is_ojs = False
-    is_opus = True
     is_id = False
     is_museum = False
-    is_opus = False
+    is_gov = False
 
 
 for line in fileinput.input():
@@ -41,7 +39,7 @@ for line in fileinput.input():
         site.is_edu = True
     if "univ-" in line:
         site.is_edu = True
-    if re.match(".*[/.]u[a-z]{2,8}.br", line):
+    if re.match(".*[/.]u[a-z]{2,8}.(br|ca)", line):
         site.is_edu = True
     if re.match(".*uni.*.it.*", line):
         site.is_edu = True
@@ -57,15 +55,17 @@ for line in fileinput.input():
         site.is_edu = True
         site.is_edu_world = True
     if re.match(".*dspace.*", line):
-        site.is_dspace = True
+        site.platform = "dspace"
     if re.match(".*/index.php/[^/]*/oai", line):
-        site.is_ojs = True
+        site.platform = "ojs"
+    if ".gov/" in line or ".gov." in line:
+        site.is_gov = True
     if "/ojs/" in line:
-        site.is_ojs = True
+        site.platform = "ojs"
     if ".id/" in line:
         site.is_id = True
     if "opus." in line:
-        site.is_opus = True
+        site.platform = "opus"
     if "museum" in line:
         site.is_museum = True
 
