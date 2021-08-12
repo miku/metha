@@ -31,6 +31,7 @@ edu_domains = set([
 
 class Site(BaseModel):
     url: str
+    tld = ""
     platform = ""
     is_edu = False
     is_edu_world = False
@@ -44,12 +45,18 @@ def url_domain(url):
     domain = domain.split(':')[0]
     return domain
 
+def url_tld(url):
+    tld = url_domain(url).split(".")[-1]
+    if not re.match("[a-z]{2,20}", tld):
+        return ""
+    return tld
+
 if __name__ == '__main__':
     for line in fileinput.input():
         line = line.strip()
         if not line:
             continue
-        site = Site(url=line)
+        site = Site(url=line, tld=url_tld(line))
         site_domain = url_domain(site.url)
         if site_domain in edu_domains:
             site.is_edu = True
