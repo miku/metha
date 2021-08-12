@@ -86,27 +86,32 @@ $ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq
 
 ## Some stats
 
-```
-is_id  is_edu  is_edu_world  is_gov  platform
-False  False   False         False                3364
-                                     dspace        216
-                                     ojs         11960
-                                     opus           32
-                             True                   76
-                                     dspace          8
-                                     ojs           197
-       True    False         False                1806
-                                     dspace        160
-                                     ojs          5389
-                                     opus           14
-               True          False                1907
-                                     dspace        275
-                                     ojs          4532
-                                     opus            2
-True   False   False         False                 131
-                                     ojs          1148
-       True    False         False   ojs            19
-               True          False                1033
-                                     dspace          1
-                                     ojs         13822
-```
+| tld   |     0 |
+|:------|------:|
+| id    | 15935 |
+| br    |  4595 |
+| org   |  2779 |
+| com   |  2565 |
+| edu   |  1769 |
+| cat   |  1237 |
+| es    |  1218 |
+| info  |  1150 |
+| co    |  1112 |
+| ar    |   836 |
+| ca    |   810 |
+| it    |   714 |
+| de    |   705 |
+| pl    |   641 |
+| pe    |   531 |
+| ua    |   485 |
+| uk    |   465 |
+| mx    |   449 |
+| in    |   435 |
+| net   |   430 |
+| jp    |   376 |
+| ru    |   271 |
+| ec    |   270 |
+| dk    |   270 |
+| tr    |   256 |
+
+
