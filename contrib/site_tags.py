@@ -41,6 +41,8 @@ for line in fileinput.input():
         site.is_edu = True
     if "univ-" in line:
         site.is_edu = True
+    if re.match(".*[/.]u[a-z]{2,8}.br", line):
+        site.is_edu = True
     if re.match(".*uni.*.it.*", line):
         site.is_edu = True
     if re.match(".*uni.*.hr.*", line):
