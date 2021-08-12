@@ -20,6 +20,7 @@ edu_domains = set([
     "cuni.cz",
     "hua.gr",
     "lagh-univ.dz"
+    "mtak.hu",
     "sfu.ca",
     "uniag.sk",
     "uoc.gr",
