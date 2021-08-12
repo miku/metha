@@ -20,8 +20,10 @@ class Site(BaseModel):
     is_edu_world = False
     is_dspace = False
     is_ojs = False
+    is_opus = True
     is_id = False
     is_museum = False
+    is_opus = False
 
 
 for line in fileinput.input():
@@ -41,6 +43,12 @@ for line in fileinput.input():
         site.is_edu = True
     if re.match(".*uni.*.hr.*", line):
         site.is_edu = True
+    if re.match(".*uni.*no.*", line):
+        site.is_edu = True
+    if re.match(".*thesis.*", line):
+        site.is_edu = True
+    if re.match(".*theses.*", line):
+        site.is_edu = True
     if re.match(".*edu.([a-z]{2,3}).*", line):
         site.is_edu = True
         site.is_edu_world = True
@@ -52,6 +60,8 @@ for line in fileinput.input():
         site.is_ojs = True
     if ".id/" in line:
         site.is_id = True
+    if "opus." in line:
+        site.is_opus = True
     if "museum" in line:
         site.is_museum = True
 
