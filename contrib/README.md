@@ -83,3 +83,30 @@ $ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq
 -d) sites.tsv | grep -o "^.*/index.php/" | sort -u | parallel -j 80 -I {}
 ./ojslist.sh {}
 ```
+
+## Some stats
+
+```
+is_id  is_edu  is_edu_world  is_gov  platform
+False  False   False         False                3364
+                                     dspace        216
+                                     ojs         11960
+                                     opus           32
+                             True                   76
+                                     dspace          8
+                                     ojs           197
+       True    False         False                1806
+                                     dspace        160
+                                     ojs          5389
+                                     opus           14
+               True          False                1907
+                                     dspace        275
+                                     ojs          4532
+                                     opus            2
+True   False   False         False                 131
+                                     ojs          1148
+       True    False         False   ojs            19
+               True          False                1033
+                                     dspace          1
+                                     ojs         13822
+```
