@@ -39,6 +39,8 @@ for line in fileinput.input():
         site.is_edu = True
     if re.match(".*uni.*.it.*", line):
         site.is_edu = True
+    if re.match(".*uni.*.hr.*", line):
+        site.is_edu = True
     if re.match(".*edu.([a-z]{2,3}).*", line):
         site.is_edu = True
         site.is_edu_world = True
