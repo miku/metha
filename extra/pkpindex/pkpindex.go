@@ -111,7 +111,7 @@ func runPup(html string, selector string) string {
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	if err := cmd.Run(); err != nil {
-		log.Printf("runPup failed with %v: %v on %s", err, buf.String())
+		log.Printf("runPup failed with %v: %v", err, buf.String())
 		return ""
 	}
 	return strings.TrimSpace(buf.String())
@@ -200,7 +200,7 @@ func main() {
 				log.Fatal(err)
 			}
 			if resp.StatusCode >= 400 {
-				log.Fatal("failed with %s", resp.Status)
+				log.Fatalf("failed with %s", resp.Status)
 			}
 			defer resp.Body.Close()
 			// refresh: 0; url=https://index.pkp.sfu.ca/index.php/browse
