@@ -1,0 +1,10 @@
+image: archlinux
+packages:
+  - go
+sources:
+  - https://github.com/miku/metha.git
+tasks:
+  - test: |
+      cd metha
+      go get ./...
+      go test -v ./...
