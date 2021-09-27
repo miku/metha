@@ -208,6 +208,7 @@ interaction in resource conservation.
 * Thomas Gersch, [https://github.com/titabo2k](https://github.com/titabo2k)
 * [Andreas Czerniak](https://github.com/ACz-UniBi)
 * [David Glück](https://github.com/dvglc)
+* [Justin Kelly](https://github.com/justinkelly)
 
 ## Misc
 
