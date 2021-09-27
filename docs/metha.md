@@ -237,6 +237,7 @@ AUTHORS
 * Thomas Gersch, https://github.com/titabo2k
 * [ACz-UniBi](https://github.com/ACz-UniBi)
 * David Glück, https://github.com/dvglc
+* Justin Kelly, https://github.com/justinkelly
 
 
 SEE ALSO
