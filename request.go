@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strings"
+	"regexp"
 )
 
 var (
@@ -84,9 +84,11 @@ func (r *Request) URL() (*url.URL, error) {
 	if r.ResumptionToken != "" {
 		v.Add("resumptionToken", r.ResumptionToken)
 		var encodedValues string
-		if strings.Contains(r.ResumptionToken, " ") {
-			// http://opencontext.org/oai/request has spaces in tokens so encode in
-			// this case.
+		matched, _ := regexp.MatchString(` |\+`, r.ResumptionToken)
+		if matched {
+			// http://opencontext.org/oai/request has spaces in tokens
+			// ExLibris Rosetta has + characters in tokens
+			// Encoding in these cases
 			encodedValues = v.Encode()
 		} else {
 			// Some repos, e.g. http://dash.harvard.edu/oai/request seem to have
