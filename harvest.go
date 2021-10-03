@@ -67,6 +67,8 @@ type Harvest struct {
 	DailyInterval              bool
 	ExtraHeaders               http.Header
 
+	Delay int
+
 	// XXX: Lazy via sync.Once?
 	Identify *Identify
 	Started  time.Time
@@ -334,6 +336,10 @@ func (h *Harvest) runInterval(iv Interval) error {
 			filedate = iv.End.Format("2006-01-02")
 			req.From = iv.Begin.Format(h.DateLayout())
 			req.Until = iv.End.Format(h.DateLayout())
+		}
+
+		if h.Delay > 0 {
+			time.Sleep(time.Duration(h.Delay) * time.Second)
 		}
 		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
 		resp, err := Do(&req)
