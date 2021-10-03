@@ -20,6 +20,7 @@ var (
 	baseDir                    = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	hourly                     = flag.Bool("hourly", false, "use hourly intervals for harvesting")
 	daily                      = flag.Bool("daily", false, "use daily intervals for harvesting")
+	delay                      = flag.Int("delay", 0, "sleep between each OAI-PMH request")
 	disableSelectiveHarvesting = flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	endpointList               = flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
 	format                     = flag.String("format", "oai_dc", "metadata format")
@@ -118,6 +119,7 @@ func main() {
 	harvest.HourlyInterval = *hourly
 	harvest.DailyInterval = *daily
 	harvest.ExtraHeaders = extra
+	harvest.Delay = *delay
 	log.Printf("harvest: %+v", harvest)
 	if *removeCached {
 		log.Printf("removing already cached files from %s", harvest.Dir())
