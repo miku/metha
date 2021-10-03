@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-snapshot
 GO111MODULE = on
-VERSION = 0.2.26
+VERSION = 0.2.27
 
 PKGNAME = metha
 
