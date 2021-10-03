@@ -116,7 +116,7 @@ Use a deb, rpm [release](https://github.com/miku/metha/releases),
 or the go tool:
 
 ```sh
-$ go get github.com/miku/metha/cmd/...
+$ go install -v github.com/miku/metha/cmd/...@latest
 ```
 
 ## Limitations
