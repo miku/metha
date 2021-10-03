@@ -48,6 +48,9 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-daily`
         use daily intervals for harvesting
 
+`-delay`
+        sleep (seconds) between each OAI-PMH request
+
 `-dir`
         show target directory
 
