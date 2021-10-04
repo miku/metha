@@ -2525,7 +2525,6 @@ http://edoc.mpg.de/ac_ft_oai.pl
 http://edoc.mpg.de/ac_oai.pl
 http://edoc.rki.de/OAI
 http://edocs.fu-berlin.de/diss/servlets/MCROAIProvider
-http://e-docs.geo-leo.de/oai/request
 http://edoc.sub.uni-hamburg.de/klimawandel/oai
 http://edoc.tkk.fi/oai/oai2.php
 http://edoc.ub.uni-muenchen.de/cgi/oai2
@@ -12297,6 +12296,7 @@ http://libres.uncg.edu/ir/oai/oai.aspx
 http://librinfosciences.knukim.edu.ua/oai
 http://lib.seoul.go.kr/oak/oai/request
 http://libserv12.Princeton.EDU/oai/oai.pl
+http://lib.sugiyama-u.repo.nii.ac.jp/oai
 http://libtextcenter.unl.edu:2000/cgi-bin/oai.exe
 http://libucd5.ucd.ie/oaiprovider/
 http://libucd.ucd.ie/oaiprovider/
@@ -15963,6 +15963,7 @@ http://repository.abertay.ac.uk:8080/oai/request
 http://repository.abertay.ac.uk/oai/request
 http://repository.acropolis-education.gr/acr_edu_oai/request
 http://repository.acropolis-education.gr/acr_edu_oai/request?verb=ListRecords&amp;metadataPrefix=oai_dc
+http://repository.agrosavia.co/oai/request
 http://repository.ajou.ac.kr/dspace-oai/request
 http://repositoryaut.lconz.ac.nz/cgi/oai2.cgi
 http://repository.bangor.ac.uk/oai/request
@@ -16512,6 +16513,7 @@ http://revista.liberato.com.br/ojs_lib/index.php/revista/oai
 http://revista.lusiada.br/index.php/ruep/oai
 http://revistamedicinainterna.net/index.php/spmi/oai
 http://revista.medicinauni.edu.py/index.php/FM-uni/oai
+http://revistamexicanadesociologia.unam.mx/index.php/rms/oai
 http://revistamuseologiaepatrimonio.mast.br/index.php/ppgpmus/oai
 http://revistanuestramerica.cl/ojs/index.php/index/oai
 http://revistanuestramerica.cl/ojs/index.php/nuestramerica/oai
@@ -17965,7 +17967,6 @@ http://rucore.libraries.rutgers.edu/api/oai-pmh
 http://rudr.rice.edu/dspace-oai/request
 http://rue.fenf.edu.uy/index.php/rue/oai
 http://ru.ffyl.unam.mx:8080/oai/request
-http://ru.historicas.unam.mx/oai/request
 http://ruhm.es/index.php/RUHM/oai
 http://ru.iiec.unam.mx/cgi/oai2
 http://ruja.ujaen.es/oaiextended/request
@@ -19506,6 +19507,7 @@ https://editorial.unimilitar.edu.co/index.php/editorial/oai
 https://edoc.bbaw.de/oai
 https://edoc.bbaw.de/opus4-bbaw/oai
 https://edoc.rki.de/oai/request
+https://e-docs.geo-leo.de/oai/request
 https://edrev.asu.edu/index.php/ER/oai
 https://edshare.gcu.ac.uk/cgi/oai2
 https://educacioneningenieria.org/index.php/edi/oai
@@ -22285,7 +22287,6 @@ https://ekorozwoj.pollub.pl/index.php/our-mission/oai
 https://eksplora.stikom-bali.ac.id/index.php/eksplora/oai
 https://eksplora.stikom-bali.ac.id/index.php/index/oai
 https://eksplora.stikom-bali.ac.id/index.php/oai
-https://elbib.ru/oai
 https://eldorado.tu-dortmund.de/dspace-oai/request
 https://eldorado.tu-dortmund.de/oai/request
 https://electrician.unila.ac.id/index.php/ojs/oai
@@ -24028,6 +24029,7 @@ https://journal.kdpu.edu.ua/apd/oai
 https://journal.kdpu.edu.ua/world_lit/oai
 https://journal.keberlanjutan.co.id/index.php/ijesss/oai
 https://journalkeberlanjutan.com/index.php/ijesss/oai
+https://journalkeberlanjutan.com/index.php/jtep/oai
 https://journal.kozminski.edu.pl/index.php/decyzje/oai
 https://journal.ksiop.or.kr/index.php/KJIOP/oai
 https://journal.kualitama.com/index.php/jkp/oai
@@ -25409,6 +25411,7 @@ https://journal.trunojoyo.ac.id/agriekonomika/oai
 https://journal.trunojoyo.ac.id/agriscience/oai
 https://journal.trunojoyo.ac.id/agrointek/oai
 https://journal.trunojoyo.ac.id/agrovigor/oai
+https://journal.trunojoyo.ac.id/bpmd/oai
 https://journal.trunojoyo.ac.id/dinar/oai
 https://journal.trunojoyo.ac.id/edutic/oai
 https://journal.trunojoyo.ac.id/index.php/index/oai
@@ -27144,6 +27147,7 @@ https://jurnal.isi-ska.ac.id/index.php/TXT/oai
 https://jurnal.istts.ac.id/index.php/insight/oai
 https://jurnaljam.ub.ac.id/index.php/jam/oai
 https://jurnal.jkp-bali.com/perspektif/oai
+https://jurnal.jkp-bali.com/tspj/oai
 https://jurnal.kdi.or.id/index.php/bt/oai
 https://jurnal.kdi.or.id/index.php/eb/oai
 https://jurnal.kdi.or.id/index.php/ef/oai
@@ -33450,6 +33454,7 @@ https://revia.areandina.edu.co/index.php/RAL/oai
 https://revia.areandina.edu.co/index.php/RNM/oai
 https://revia.areandina.edu.co/index.php/RSA/oai
 https://revia.areandina.edu.co/index.php/vbn/oai
+https://revie.gob.do/index.php/revie/oai
 https://reviewhumanrights.com/index.php/RHR/oai
 https://revije.ff.uni-lj.si/as/oai
 https://revije.ff.uni-lj.si/index.php/ActaNeophilologica/oai
@@ -35981,6 +35986,7 @@ https://rubatosis.org/journals/index.php/ijrsrmhc/oai
 https://rubatosis.org/journals/index.php/index/oai
 https://rucore.libraries.rutgers.edu/api/oai-pmh/
 https://ruc.udc.es/oai/request
+https://ru.historicas.unam.mx/oai/request
 https://ruleoflaw.lse.ac.uk/jms/index.php/up/oai/
 https://rumpunjurnal.com/jurnal/index.php/rumpun/oai
 https://ruralis.brage.unit.no/ruralis-oai/request
@@ -38299,6 +38305,7 @@ https://www.camjol.info/index.php/WANI/oai
 https://www.canadianfieldnaturalist.ca/oai
 https://www.cancerdata.org/oai
 https://www.cartainternacional.abri.org.br/index.php/Carta/oai
+https://www.cas.or.id/index.php/JOAS/oai
 https://www.ccrjournal.com/index.php/ccrj/oai
 https://www.cea-unesp.org.br/holos/oai
 https://www.cellmolbiol.org/index.php/CMB/oai
