@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-snapshot
-GO111MODULE = on
 VERSION = 0.2.27
+CGO_ENABLED = 1
 
 PKGNAME = metha
 
@@ -9,12 +9,11 @@ PKGNAME = metha
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
-	GO111MODULE=$(GO111MODULE) go get ./...
-	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go build -o $@ $<
+	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ $<
 
 .PHONY: test
 test:
-	CGO_ENABLED=0 go test -v .
+	CGO_ENABLED=$(CGO_ENABLED) go test -v .
 
 .PHONY: clean
 clean:
