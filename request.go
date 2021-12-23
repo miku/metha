@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 	"regexp"
+	"sort"
 )
 
 var (
@@ -84,7 +84,7 @@ func (r *Request) URL() (*url.URL, error) {
 	if r.ResumptionToken != "" {
 		v.Add("resumptionToken", r.ResumptionToken)
 		var encodedValues string
-		matched, _ := regexp.MatchString(` |\+`, r.ResumptionToken)
+		matched, _ := regexp.MatchString(`(!| |\+)`, r.ResumptionToken)
 		if matched {
 			// http://opencontext.org/oai/request has spaces in tokens
 			// ExLibris Rosetta has + characters in tokens
