@@ -22,6 +22,8 @@ if __name__ == "__main__":
         if v in prefix["https"]:
             print("dropping: {}".format(v), file=sys.stderr)
             continue
-        print("http://{}".format(v))
+        if v:
+            print("http://{}".format(v))
     for v in prefix["https"]:
-        print("https://{}".format(v))
+        if v:
+            print("https://{}".format(v))
