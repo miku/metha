@@ -187,6 +187,7 @@ http://acikerisim.artuklu.edu.tr/oai/request
 http://acikerisim.atlas.edu.tr/oai/request
 http://acikerisim.bahcesehir.edu.tr:8080/oai/driver
 http://acikerisim.bahcesehir.edu.tr:8080/oai/request
+http://acikerisim.bakircay.edu.tr/oai/request
 http://acikerisim.bartin.edu.tr/oai/request
 http://acikerisim.baskent.edu.tr/oai/driver
 http://acikerisim.baskent.edu.tr/oai/request
@@ -5899,6 +5900,7 @@ http://gbspapers.library.emory.edu/perl/oai2
 http://gcris.eskisehir.edu.tr/oai/request
 http://gcris.etu.edu.tr/oai/request
 http://gcris.iyte.edu.tr/oai/request
+http://gcris.ktun.edu.tr/oai/request
 http://gdea.informatik.uni-koeln.de/cgi/oai2
 http://gdea.informatik.uni-koeln.de/perl/oai2
 http://geb.uni-giessen.de/geb/oai/oai2.php
@@ -7014,7 +7016,6 @@ http://joiv.org/index.php/joiv/oai
 http://joltida.org/index.php/joltida/oai
 http://jom.fk.unand.ac.id/index.php/jom/oai
 http://jom.ft.budiluhur.ac.id/index.php/maestro/oai
-http://jom.fti.budiluhur.ac.id/index.php/IDEALIS/oai
 http://jomit.org/index.php/js/oai
 http://jom.untidar.ac.id/index.php/dinamic/oai
 http://jom.untidar.ac.id/index.php/ijnse/oai
@@ -9870,10 +9871,7 @@ http://jurnalekonomi.unisla.ac.id/index.php/jpensi/oai
 http://jurnalekonomi.unisla.ac.id/index.php/jpim/oai
 http://jurnalekonomi.unisla.ac.id/index.php/oai
 http://jurnalelektro.petra.ac.id/index.php/elk/oai
-http://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/education/oai
-http://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/ensiklopedia/oai
 http://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/oai
-http://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/sosial/oai
 http://jurnal-eresha.ac.id/index.php/esit/oai
 http://jurnalergonomik3.ti.itb.ac.id/index.php/ergonomik3/oai
 http://jurnalfahum.uinsby.ac.id/index.php/almadaniyah/oai
@@ -15938,6 +15936,7 @@ http://repositorio.uarm.edu.pe/oai/request
 http://repositorio.uasb.edu.ec/oai/request
 http://repositorio.uasb.edu.ec/oai/request?
 http://repositorio.uca.edu.ni/cgi/oai2
+http://repositorio.uca.edu.sv/oai/request
 http://repositorio.ucal.edu.pe/oai/request
 http://repositorio.ucam.edu/oai/request
 http://repositorio.ucatse.edu.ni/cgi/oai2
@@ -23762,6 +23761,7 @@ https://joecher.org/index.php/joe/oai
 https://johpec.lse.ac.uk/jms/index.php/up/oai/
 https://jolts.world/index.php/jolts/oai
 https://jomaar.com/index.php/jomaar/oai
+https://jom.fti.budiluhur.ac.id/index.php/IDEALIS/oai
 https://jooah.org/index.php/jooah/oai
 https://jope.ejournal.unri.ac.id/index.php/jope/oai
 https://jor.ocean.ru/index.php/jor/oai
@@ -26999,9 +26999,11 @@ https://jpt.ub.ac.id/index.php/jpt/oai
 https://jrb.ejournal.unri.ac.id/index.php/JRB/oai
 https://jrcd.eu/index.php/crcd/oai
 https://jrenhep.com/index.php/jrenhep/oai
+https://jres1.ejournal.unsri.ac.id/index.php/jres/oai
 https://jripe.org/index.php/journal/oai
 https://jrmds.in/index.php/JRMDS/oai
 https://jrnls.ivet.edu.ua/index.php/1/oai
+https://jrpb.unram.ac.id/index.php/jrpb/oai
 https://jrph.org/index.php/JRPH/oai
 https://jrs.uoch.edu.pk/index.php/journal3/oai
 https://jrtppi.id/old/index.php/jrtppi/oai
@@ -27177,6 +27179,11 @@ https://jurnal.dpr.go.id/index.php/politica/oai
 https://jurnal.educ3.org/index.php/pendagogia/oai
 https://jurnaledukasindo.lkp3i.ac.id/index.php/edukasindo/oai
 https://jurnalekonomi.lipi.go.id/index.php/JEP/oai
+https://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/education/oai
+https://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/ensiklopedia/oai
+https://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/erw/oai
+https://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/oai/oai
+https://jurnal.ensiklopediaku.org/ojs-2.4.8-3/index.php/sosial/oai
 https://jurnal.faiunwir.ac.id/index.php/Jurnal_Risalah/oai
 https://jurnal.farmasi.umi.ac.id/index.php/as-syifaa/oai
 https://jurnal.farmasi.umi.ac.id/index.php/fitofarmakaindo/oai
@@ -29419,6 +29426,7 @@ https://ojs.cahayasurya.ac.id/index.php/IJAESS/oai
 https://ojs.cahayasurya.ac.id/index.php/IJECT/oai
 https://ojs.cahayasurya.ac.id/index.php/oai
 https://ojs.calaijol.org/index.php/ijol/oai
+https://ojs.catolicadefortaleza.edu.br/index.php/kairos/oai
 https://ojs.cgu.gov.br/index.php/Revista_da_CGU/oai
 https://ojs.cimedoc.uniba.it/index.php/eco/oai
 https://ojs.cimedoc.uniba.it/index.php/entomol/oai
@@ -33313,6 +33321,7 @@ https://rbmfc.org.br/index.php/rbmfc/oai
 https://r-bup.brage.unit.no/r-bup-oai/request
 https://rcci.uci.cu/oai?journal=rcci
 http://srcentral.com/index.php/EJPAR/oai
+https://rdai.com.br/index.php/rdai/oai
 https://rd.uffs.edu.br/oai/request
 https://rduss.com/index.php/rduss/oai
 https://rdu.unc.edu.ar/oai/request
@@ -34500,6 +34509,11 @@ https://revistas.uasb.edu.ec/index.php/kipus/oai
 https://revistas.uasb.edu.ec/index.php/procesos/oai
 https://revistas.uasb.edu.ec/index.php/ree/oai
 https://revistas.uasb.edu.ec/index.php/uru/oai
+https://revistas.uca.edu.sv/index.php/eca/oai
+https://revistas.uca.edu.sv/index.php/index/oai
+https://revistas.uca.edu.sv/index.php/realidad/oai
+https://revistas.uca.edu.sv/index.php/reuca/oai
+https://revistas.uca.edu.sv/index.php/rlt/oai
 https://revistas.uca.es/index.php/aam/oai
 https://revistas.uca.es/index.php/b-imeymat/oai
 https://revistas.uca.es/index.php/cayp/oai
@@ -36752,6 +36766,7 @@ https://so03.tci-thaijo.org/index.php/mekongjournal/oai
 https://soar.stonehill.edu/do/oai/
 https://soar.usa.edu/do/oai
 https://soar.usa.edu/do/oai/
+https://socialisjournal.org/index.php/socialis/oai
 https://socialistregister.com/index.php/srv/oai
 https://socialscienceresearch.org/index.php/GJHSS/oai
 https://socialtheoryapplied.com/journal/jast/oai
@@ -38753,6 +38768,7 @@ https://www.digitalstudies.org/jms/index.php/up/oai/
 https://www.dilemata.net/revista/index.php/Dilemata/oai
 https://www.dilibri.de/oai
 https://www.dimawe.de/index.php/dimawe/oai
+https://www.docensjournal.org/index.php/docens/oai
 https://www.dora.dmu.ac.uk/dspace-oai/request
 https://www.dspace.useful.academy/oai/request
 https://www.ecocycles.eu/ojs/index.php/ecocycles/oai
