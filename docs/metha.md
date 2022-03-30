@@ -32,7 +32,7 @@ https://www.openarchives.org/pmh/.
 This tool harvests and caches data, so incremental invocations on the same
 endpoint are fast.
 
-A list of over 5000 (more or less usable) endpoints can be found here: https://is.gd/UrST8m.
+A list of over 40000 (more or less usable) endpoints can be found here: https://is.gd/UrST8m.
 
 OPTIONS
 -------
