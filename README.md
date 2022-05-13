@@ -229,6 +229,7 @@ $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .fo
 * [acohan/arxiv-tools](https://github.com/acohan/arxiv-tools)
 * [Arxiv on Archive](https://archive.org/details/arxiv-bulk-metadata)
 * [Metadata analysis of 80,000 arxiv:physics/astro-ph articles](https://quantumdynamics.wordpress.com/2016/06/12/metadata-analysis-of-80000-arxivastro-ph-articles-reveals-biased-moderation/)
+* [Arxiv Harvesting](https://trislee.com/arxiv/)
 * [Orcid](https://trello.com/c/3OrWa2ZY/5771-load-issn-metadata-into-registry-db-8)
 * [Tutorial on Topological Data Analysis](https://github.com/shizuo-kaji/TutorialTopologicalDataAnalysis/blob/master/README.md)
 
