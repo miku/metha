@@ -10,7 +10,7 @@ PKGNAME = metha
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go
-	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ $<
+	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags="-w -s" -o $@ $<
 
 .PHONY: test
 test:
