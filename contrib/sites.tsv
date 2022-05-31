@@ -5082,6 +5082,7 @@ http://elibrary.asu.ru/oai/request
 http://elibrary.auca.kg:8080/dspace-oai/request
 http://elibrary.auca.kg/dspace-oai/request
 http://elibrary.gbrmpa.gov.au/oai/request
+http://elibrary.kdpu.edu.ua/oai/request
 http://elibrary.kmpu.edu.ua/cgi/oai2
 http://elibrary.krc.karelia.ru/cgi/oai2
 http://elibrary.kubg.edu.ua/cgi/oai2
@@ -18300,6 +18301,7 @@ https://acikerisim.isikun.edu.tr/oai/request
 https://acikerisim.sakarya.edu.tr/oai/request
 https://acikerisim.tbmm.gov.tr/oai/request
 https://acme-journal.org/index.php/acme/oai
+https://acnsci.org/journal/index.php/etq/oai
 https://acontracorriente.chass.ncsu.edu/index.php/acontracorriente/oai
 https://acta.sze.hu/index.php/acta/oai
 https://acvenisproh.com/revistas/index.php/masvita/oai
@@ -18938,6 +18940,7 @@ https://cellbiopharm.com/ojs/index.php/MCBS/oai
 https://celt.uwindsor.ca/index.php/CELT/oai
 https://cendekia.soloclcs.org/index.php/cendekia/oai
 https://cendekiawan.stkipmbb.ac.id/index.php/CENDEKIAWAN/oai
+https://centrosuragraria.com/index.php/revista/oai
 https://cerac.unlpam.edu.ar/index.php/aljaba/oai
 https://cerac.unlpam.edu.ar/index.php/anclajes/oai
 https://cerac.unlpam.edu.ar/index.php/anuario/oai
@@ -20540,6 +20543,7 @@ https://ejournal.pnc.ac.id/index.php/madani/oai
 https://ejournal.pnc.ac.id/index.php/oai
 https://ejournal.pnc.ac.id/index.php/surimi/oai
 https://ejournal.polihasnur.ac.id/index.php/pha/oai
+https://ejournal.politeknikkesehatankartinibali.ac.id/index.php/JGK/oai
 https://ejournal.poltekbangsby.ac.id/index.php/SNITP/oai
 https://ejournal.poltekkes-denpasar.ac.id/index.php/JGK/oai
 https://e-journal.poltekkesjogja.ac.id/index.php/ANJ/oai
@@ -23393,6 +23397,7 @@ https://iiste.org/Journals/index.php/JLLL/oai
 https://iiste.org/Journals/index.php/JTHS/oai
 https://iiste.org/Journals/index.php/oai
 https://ijaam-unud.org/ojs/index.php/ijaam/oai
+https://ijaast.com/index.php/home/oai
 https://ijae.journal-asia.education/index.php/data/oai
 https://ijagri.org/index.php/ijagri/oai
 https://ijascfrtjournal.isrra.org/index.php/Applied_Sciences_Journal/oai
@@ -24381,6 +24386,11 @@ https://journaljeai.com/index.php/JEAI/oai
 https://journal.jfpublisher.com/index.php/jlte/oai
 https://journal-jps.com/index.php/jps/oai
 https://journal.kdpu.edu.ua/apd/oai
+https://journal.kdpu.edu.ua/ecolog/oai
+https://journal.kdpu.edu.ua/filstd/oai
+https://journal.kdpu.edu.ua/ped/oai
+https://journal.kdpu.edu.ua/psychology/oai
+https://journal.kdpu.edu.ua/wll/oai
 https://journal.kdpu.edu.ua/world_lit/oai
 https://journal.keberlanjutan.co.id/index.php/ijesss/oai
 https://journalkeberlanjutan.com/index.php/ahjpm/oai
@@ -29281,6 +29291,7 @@ https://nv.nltu.edu.ua/index.php/journal/oai
 https://nwcommons.nwciowa.edu/do/oai/
 https://nzjforestryscience.nz/index.php/nzjfs/oai
 https://oaarchive.arctic-council.org
+https://oahsj.org/index.php/oahsj/oai
 https://oai.cedifor.de/
 https://oaikliping-dikdasmen.kemdikbud.go.id/index.php
 https://oai.pensoft.net/oai.php
@@ -32865,6 +32876,7 @@ https://publisher.uthm.edu.my/ojs/index.php/JTS/oai
 https://publisher.uthm.edu.my/ojs/index.php/oj-tp/oai
 https://publishing.cern.ch/index.php/CIJ/oai
 https://publishing.socionic.info/index.php/index/oai
+https://publishing.ub.uni-muenchen.de/index.php/oplmu/oai
 https://publishing-widyagama.ac.id/ejournal-v2/index.php/agrika/oai
 https://publishing-widyagama.ac.id/ejournal-v2/index.php/ciastech/oai
 https://publishing-widyagama.ac.id/ejournal-v2/index.php/jhls/oai
@@ -34309,6 +34321,7 @@ https://revistaseletronicas.pucrs.br/ojs/index.php/sistemapenaleviolencia/oai
 https://revistaseletronicas.pucrs.br/ojs/index.php/teo/oai
 https://revistaseletronicas.pucrs.br/ojs/index.php/veritas/oai
 https://revistas.elpoli.edu.co/index.php/teu/oai
+https://revistasenlinea.saber.ucab.edu.ve/index.php/logoi/oai
 https://revistaseug.ugr.es/index.php/acfs/oai
 https://revistaseug.ugr.es/index.php/amgp/oai
 https://revistaseug.ugr.es/index.php/arenal/oai
