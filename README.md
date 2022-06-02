@@ -232,6 +232,7 @@ $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .fo
 * [Arxiv Harvesting](https://trislee.com/arxiv/)
 * [Orcid](https://trello.com/c/3OrWa2ZY/5771-load-issn-metadata-into-registry-db-8)
 * [Tutorial on Topological Data Analysis](https://github.com/shizuo-kaji/TutorialTopologicalDataAnalysis/blob/master/README.md)
+* [Connectome](https://www.switch.ch/connectome/) (linked open research data, [#28](https://github.com/miku/metha/issues/28#issuecomment-1144526453))
 
 ## Asciicast
 
