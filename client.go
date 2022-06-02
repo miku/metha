@@ -160,13 +160,40 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		reader = ioutil.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
 	}
 
-	dec := xml.NewDecoder(reader)
-	dec.CharsetReader = charset.NewReaderLabel
-	dec.Strict = false
-
-	var response Response
-	if err := dec.Decode(&response); err != nil {
+	// Drain response XML, iterate over various XML encoding declarations.
+	// Limit the amount we can read.
+	respBody, err := ioutil.ReadAll(io.LimitReader(reader, 2<<24))
+	if err != nil {
 		return nil, err
 	}
-	return &response, nil
+	// refs #21812, hack around misleading XML declarations; we only cover
+	// declared "UTF-8", but actually ... A rare issue nonetheless; add more
+	// cases here if necessary; observed in the wild in 05/2022 at
+	// http://digi.ub.uni-heidelberg.de/cgi-bin/digioai.cgi?from=2021-07-01T00:00:00Z&metadataPrefix=oai_dc&until=2021-07-31T23:59:59Z&verb=ListRecords.
+	decls := [][]byte{
+		[]byte(`<?xml version="1.0" encoding="UTF-8"?>`),
+		[]byte(`<?xml version="1.0" encoding="ISO-8859-1"?>`),
+		[]byte(`<?xml version="1.0" encoding="WINDOWS-1252"?>`),
+		[]byte(`<?xml version="1.0" encoding="UTF-16"?>`),
+		[]byte(`<?xml version="1.0" encoding="US-ASCII"?>`),
+	}
+	for i, decl := range decls {
+		body := bytes.Replace(respBody, []byte(`<?xml version="1.0" encoding="UTF-8"?>`), decl, 1)
+		dec := xml.NewDecoder(bytes.NewReader(body))
+		dec.CharsetReader = charset.NewReaderLabel
+		dec.Strict = false
+		var response Response
+		if err := dec.Decode(&response); err != nil {
+			if !bytes.HasPrefix(body, []byte(`<?xml version="1.0"`)) {
+				return nil, err
+			}
+			log.Printf("decode failed with: %v", string(decl))
+			continue
+		}
+		if i > 0 {
+			log.Printf("decode worked with adjusted declaration: %v", string(decl))
+		}
+		return &response, nil
+	}
+	return nil, fmt.Errorf("failed to parse response")
 }
