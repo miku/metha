@@ -39,6 +39,8 @@ var (
 	version                    = flag.Bool("v", false, "show version")
 	basicAuthCreds             = flag.String("u", "", "basic auth, like: user:password")
 	extraHeaders               xflag.Array // Extra HTTP header.
+	timeout                    = flag.Duration("T", 30*time.Second, "http client timeout")
+	maxRetries                 = flag.Int("r", 10, "max number of retries")
 )
 
 func main() {
@@ -106,6 +108,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	harvest.Client = metha.CreateClient(*timeout, *maxRetries)
 	harvest.From = *from
 	harvest.Until = *until
 	harvest.Format = *format
