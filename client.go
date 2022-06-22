@@ -27,9 +27,9 @@ const (
 
 var (
 	// StdClient is the standard lib http client.
-	StdClient = Client{Doer: http.DefaultClient}
+	StdClient = &Client{Doer: http.DefaultClient}
 	// DefaultClient is the more resilient client, that will retry and timeout.
-	DefaultClient = Client{Doer: CreateDoer(DefaultTimeout, DefaultMaxRetries)}
+	DefaultClient = &Client{Doer: CreateDoer(DefaultTimeout, DefaultMaxRetries)}
 	// DefaultUserAgent to identify crawler, some endpoints do not like the Go
 	// default (https://golang.org/src/net/http/request.go#L462), e.g.
 	// https://calhoun.nps.edu/oai/request.
@@ -81,8 +81,8 @@ func CreateDoer(timeout time.Duration, retries int) Doer {
 }
 
 // CreateClient creates a client with timeout and retry properties.
-func CreateClient(timeout time.Duration, retries int) Client {
-	return Client{Doer: CreateDoer(timeout, retries)}
+func CreateClient(timeout time.Duration, retries int) *Client {
+	return &Client{Doer: CreateDoer(timeout, retries)}
 }
 
 // Doer is a minimal HTTP interface.

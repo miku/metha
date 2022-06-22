@@ -55,6 +55,7 @@ type Harvest struct {
 	Set     string
 	From    string
 	Until   string
+	Client  *Client
 
 	// XXX: Factor these out into options.
 	MaxRequests                int
@@ -342,7 +343,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 			time.Sleep(time.Duration(h.Delay) * time.Second)
 		}
 		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
-		resp, err := Do(&req)
+		resp, err := h.Client.Do(&req)
 		if err != nil {
 			if h.IgnoreHTTPErrors {
 				log.Printf("stopping early due to failed request (IgnoreHTTPErrors=true): %s", err)
@@ -441,10 +442,10 @@ func (h *Harvest) identify() error {
 		BaseURL:      h.BaseURL,
 		ExtraHeaders: h.ExtraHeaders,
 	}
-
-	c := CreateClient(30*time.Second, 2)
-
-	resp, err := c.Do(&req)
+	if h.Client == nil {
+		h.Client = DefaultClient
+	}
+	resp, err := h.Client.Do(&req)
 	if err != nil {
 		return err
 	}
