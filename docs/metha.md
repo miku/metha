@@ -42,6 +42,9 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-H` *value*
         extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123"
 
+`-T` *duration*
+        client timeout (default 30s)
+
 `-base-dir` *string*
         base dir for harvested files (default "~/.cache/metha")
 
@@ -85,6 +88,9 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
         harvest in one go, for funny endpoints
 
 `-q`    suppress all output
+
+`-r` *int*
+        max number of retries for client (default: 10)
 
 `-rm`
         remove all cached files before starting anew
