@@ -33,6 +33,9 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
 \fB\fC\-H\fR \fIvalue\fP
         extra HTTP header to pass to requests (repeatable); e.g. \-H "token: 123"
 .PP
+\fB\fC\-T\fR \fIduration\fP
+        client timeout (default 30s)
+.PP
 \fB\fC\-base\-dir\fR \fIstring\fP
         base dir for harvested files (default "~/.cache/metha")
 .PP
@@ -76,6 +79,9 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
         harvest in one go, for funny endpoints
 .PP
 \fB\fC\-q\fR    suppress all output
+.PP
+\fB\fC\-r\fR \fIint\fP
+        max number of retries for client (default: 10)
 .PP
 \fB\fC\-rm\fR
         remove all cached files before starting anew
