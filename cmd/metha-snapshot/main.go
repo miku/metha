@@ -34,6 +34,8 @@ var (
 	memprofile     = flag.String("memprofile", "", "mem pprof file")
 	singleEndpoint = flag.String("u", "", "use a single endpoint")
 	skipHarvest    = flag.Bool("K", false, "skip harvest, just emit JSON")
+	from           = flag.String("from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
+	until          = flag.String("until", "", "set the end date, format: 2006-01-02, use only if you do not want got records till today")
 
 	endpoints = metha.Endpoints
 )
@@ -107,7 +109,7 @@ func main() {
 				var j int
 				for u := range urlC {
 					j++
-					log.Printf("w@%d", j)
+					log.Printf("worker-%d@%d", i, j)
 					harvest, err := metha.NewHarvest(u)
 					if err != nil {
 						log.Printf("failed (init): %s, %v", u, err)
@@ -116,6 +118,8 @@ func main() {
 					harvest.MaxRequests = *maxRequests
 					harvest.CleanBeforeDecode = true
 					harvest.Format = *format
+					harvest.From = *from
+					harvest.Until = *until
 					if err = harvest.Run(); err != nil {
 						switch err {
 						case metha.ErrAlreadySynced:
