@@ -2,19 +2,22 @@ module github.com/miku/metha
 
 require (
 	github.com/adrg/xdg v0.4.0
-	github.com/briandowns/spinner v1.18.1
+	github.com/briandowns/spinner v1.19.0
 	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/jinzhu/now v1.1.5
-	github.com/klauspost/compress v1.15.5 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/klauspost/pgzip v1.2.5
-	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/neurosnap/sentences v1.0.9
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/neurosnap/sentences v1.0.12
 	github.com/nytlabs/mxj v0.0.0-20140325221504-70c0faeef2e6
 	github.com/sethgrid/pester v1.2.0
-	github.com/sirupsen/logrus v1.8.1
-	golang.org/x/net v0.0.0-20220526153639-5463443f8c37
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
+	github.com/sirupsen/logrus v1.9.0
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591
+	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
+	golang.org/x/sys v0.0.0-20220913175220-63ea55921009 // indirect
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
