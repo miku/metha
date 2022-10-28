@@ -65,14 +65,15 @@ func (e HTTPError) Error() string {
 // CreateDoer will return http request clients with specific timeout and retry
 // properties.
 func CreateDoer(timeout time.Duration, retries int) Doer {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+	tr := http.DefaultTransport
+	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	client := http.DefaultClient
+	client.Transport = tr
 	if timeout == 0 && retries == 0 {
-		client := &http.Client{Transport: tr}
 		return client
 	}
 	c := pester.New()
+	c.EmbedHTTPClient(client)
 	c.Timeout = timeout
 	c.MaxRetries = retries
 	c.Backoff = pester.ExponentialBackoff
