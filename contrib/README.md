@@ -1,9 +1,13 @@
 # Curated list of OAI endpoints
 
-```
+Update OA sites and create a new `sites.tsv` file:
+
+```shell
 $ ./update-sites-oa.sh
-$ cat sites-* | sort -u > sites.tsv
+$ make
 ```
+
+----
 
 Used for manual testing of metha. Might serve as a seed list for larger
 harvests. The endpoints have been found or put together by URL rewriting of
@@ -68,7 +72,7 @@ $ grep -v -f <(curl -sL "https://scholarlyoa.com/list-of-standalone-journals/" |
 
 ----
 
-check for ojs installations
+Check for ojs installations
 
 ```
 $ for s in $(grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ |
@@ -79,9 +83,9 @@ sort | uniq -d) sites.tsv | grep -o "^.*/index.php/" | sort -u); do
 With parallel:
 
 ```
-$ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq
--d) sites.tsv | grep -o "^.*/index.php/" | sort -u | parallel -j 80 -I {}
-./ojslist.sh {}
+$ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq -d) sites.tsv | \
+    grep -o "^.*/index.php/" | sort -u | \
+    parallel -j 80 -I {} ./ojslist.sh {}
 ```
 
 ## Some stats
