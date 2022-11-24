@@ -11,6 +11,9 @@ sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 	grep -v "web.archive.org/web" sites.tsv | sponge sites.tsv
 	sort -o sites.tsv -u sites.tsv
 
+sites.json: sites.tsv
+	python site_tags.py < sites.tsv > sites.json
+
 
 .PHONY: clean
 clean:
