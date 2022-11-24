@@ -14,6 +14,10 @@ sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 sites.json: sites.tsv
 	python site_tags.py < sites.tsv > sites.json
 
+.PHONY: stats
+stats: sites.json
+	@python site_stats.py
+
 
 .PHONY: clean
 clean:
