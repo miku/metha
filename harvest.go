@@ -418,13 +418,14 @@ func (h *Harvest) runInterval(iv Interval) error {
 // earliestDate returns the earliest date as a time.Time value.
 func (h *Harvest) earliestDate() (time.Time, error) {
 	// Different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
-	switch h.Identify.Granularity {
-	case "YYYY-MM-DD":
+	// First occurence of a non-standard granularity: https://t3.digizeitschriften.de/oai2/
+	switch strings.ToLower(h.Identify.Granularity) {
+	case "yyyy-mm-dd":
 		if len(h.Identify.EarliestDatestamp) <= 10 {
 			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp)
 		}
 		return time.Parse("2006-01-02", h.Identify.EarliestDatestamp[:10])
-	case "YYYY-MM-DDThh:mm:ssZ":
+	case "yyyy-mm-ddthh:mm:ssz":
 		// refs. #8825
 		if len(h.Identify.EarliestDatestamp) >= 10 && len(h.Identify.EarliestDatestamp) < 20 {
 			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp[:10])
