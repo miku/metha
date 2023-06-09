@@ -1,2 +1,7 @@
 metha.cache
 metha-*zst
+urls-parse-trim.txt
+urls-parse-trim-unescape-replace.txt
+urls-parse-trim-unescape.txt
+urls-parse.txt
+urlscrub
