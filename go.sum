@@ -41,6 +41,8 @@ github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/
 github.com/mattn/go-isatty v0.0.17/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/mattn/go-isatty v0.0.18 h1:DOKFKCQ7FNG2L1rbrmstDN4QVRdS89Nkh85u68Uwp98=
 github.com/mattn/go-isatty v0.0.18/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
+github.com/miku/parallel v0.0.0-20221125231438-6020962e560a h1:WgWqm8yxIjRR/r8qwWD0MV498jlG8O1IIEb4NlqPZ3A=
+github.com/miku/parallel v0.0.0-20221125231438-6020962e560a/go.mod h1:xw37BJ8SoJr6SGn1Y2AJBsc3EsOU+EuXAuRj5VB1+RI=
 github.com/neurosnap/sentences v1.0.12 h1:iVlxfmg8+fNfa0cqFmCq0AhKw60Ikv7u5G5d/ZvQOYg=
 github.com/neurosnap/sentences v1.0.12/go.mod h1:/pwU4E9XNL21ygMIkOIllv/SMy2ujHwpf8GQPu1YPbQ=
 github.com/neurosnap/sentences v1.1.2 h1:iphYOzx/XckXeBiLIUBkPu2EKMJ+6jDbz/sLJZ7ZoUw=
