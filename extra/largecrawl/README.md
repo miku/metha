@@ -11,9 +11,9 @@ URLs have been passed to some QA, but seedlist still may contain broken data.
 ## Uploaded seed lists
 
 * 2023-06-15-metha-url-reduced-no-id-domains.txt
-* 2023-06-15-metha-url-reduced-no-id.txt
+* 2023-06-15-metha-url-reduced-no-id.txt.zst
 * 2023-06-15-metha-url-reduced-pdf-only-domains.txt
-* 2023-06-15-metha-url-reduced-pdf-only.txt
+* 2023-06-15-metha-url-reduced-pdf-only.txt.zst
 
 ```
 $ ia upload oai_harvest_20230615 -m collection:ia_biblio_metadata -m mediatype:data -m date:2023-06-15 -m title:"OAI-PMH harvest (2023-06-15)" 2023-06-15-metha-url-reduced-no-id-domains.txt 2023-06-15-metha-url-reduced-no-id.txt 2023-06-15-metha-url-reduced-pdf-only-domains.txt 2023-06-15-metha-url-reduced-pdf-only.txt
@@ -24,4 +24,8 @@ $ ia upload oai_harvest_20230615 -m collection:ia_biblio_metadata -m mediatype:d
 1. PDF list for a direct crawl; about 4M urls, about 50K domains
 2. full list; 83M urls; 370K domains
 
+## Previous Crawl Notes
+
+* OAI-PMH-CRAWL-2020-06: "Seedlist size: 31,773,874 Petabox Collection Size: 31.4 TByte PDF Hits: TODO New Unique PDFs: 8,007,344"
+* OAI-PMH-CRAWL-2022-10: "Seedlist size: 3,662,864 Petabox Collection Size: 5.49 TByte PDF Hits: 2.58 million New Unique PDFs: 1.61 million"
 
