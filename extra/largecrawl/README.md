@@ -24,8 +24,21 @@ $ ia upload oai_harvest_20230615 -m collection:ia_biblio_metadata -m mediatype:d
 1. PDF list for a direct crawl; about 4M urls, about 50K domains
 2. full list; 83M urls; 370K domains
 
+Suggesting (1) , with @martin trimming down (2) and run it himself.
+
 ## Previous Crawl Notes
 
 * OAI-PMH-CRAWL-2020-06: "Seedlist size: 31,773,874 Petabox Collection Size: 31.4 TByte PDF Hits: TODO New Unique PDFs: 8,007,344"
 * OAI-PMH-CRAWL-2022-10: "Seedlist size: 3,662,864 Petabox Collection Size: 5.49 TByte PDF Hits: 2.58 million New Unique PDFs: 1.61 million"
 
+## Reporting
+
+No extra reporting; just as
+[mediatype=data](https://archive.org/details/OA-DOI-CRAWL-2020-02?and[]=mediatype%3A%22data%22):
+CRL and compressed logs.
+
+Example: [OAI-PMH-CRAWL-2020-06](https://archive.org/details/OAI-PMH-CRAWL-2020-06);
+
+## Collections
+
+Each crawl in a separate collection, under [ia_pub_crawls](https://archive.org/details/ia_pub_crawls).
