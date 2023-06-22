@@ -157,7 +157,7 @@ func (h *Harvest) cleanupTemporaryFiles() error {
 // setupInterruptHandler will cleanup, so we can CTRL-C or kill savely.
 func (h *Harvest) setupInterruptHandler() {
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGINT)
+	signal.Notify(sigc, os.Interrupt, os.Kill)
 
 	go func() {
 		<-sigc
