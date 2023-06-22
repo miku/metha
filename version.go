@@ -1,4 +1,4 @@
 package metha
 
 // Version of tools.
-const Version = "0.2.40"
+const Version = "0.2.41"
