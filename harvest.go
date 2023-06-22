@@ -67,6 +67,7 @@ type Harvest struct {
 	HourlyInterval             bool
 	DailyInterval              bool
 	ExtraHeaders               http.Header
+	KeepTemporaryFiles         bool
 
 	Delay int
 
@@ -143,6 +144,11 @@ func (h *Harvest) temporaryFilesSuffix(suffix string) []string {
 
 // cleanupTemporaryFiles will remove all temporary files in the harvesting dir.
 func (h *Harvest) cleanupTemporaryFiles() error {
+	if h.KeepTemporaryFiles {
+		log.Printf("keeping %d temporary file(s) under %s",
+			len(h.temporaryFiles()), h.Dir())
+		return nil
+	}
 	for _, filename := range h.temporaryFiles() {
 		if err := os.Remove(filename); err != nil {
 			if e, ok := err.(*os.PathError); ok && e.Err == syscall.ENOENT {
