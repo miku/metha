@@ -32,7 +32,7 @@ https://www.openarchives.org/pmh/.
 This tool harvests and caches data, so incremental invocations on the same
 endpoint are fast.
 
-A list of over 40000 (more or less usable) endpoints can be found here: https://is.gd/UrST8m.
+A list of over 80000 (more or less usable) endpoints can be found here: https://is.gd/UrST8m.
 
 OPTIONS
 -------
@@ -223,7 +223,7 @@ http://porto.polito.it/cgi/oai2
 
 Curious about the contents of a random endpoint? Run a harvesting roulette with:
 
-  `URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL`
+  `URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL; metha-cat $URL`
 
 Select a random record from a random endpoint and display its description:
 
@@ -235,7 +235,7 @@ UPGRADE TO 0.2.0
 To continue using data harvested with previous metha versions, just rename the
 cache directory. For example, if you used the default, this would be:
 
-  `mkdir -p $HOME/.cache && mv $HOME/.metha $HOME/.cache/metha`
+  `mkdir -p $HOME/.cache; mv $HOME/.metha $HOME/.cache/metha`
 
 AUTHORS
 -------
