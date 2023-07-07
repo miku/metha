@@ -11,4 +11,6 @@ urlscrub
 2023-06-15-metha-url-reduced.txt
 2023-06-15-metha-url-reduced-no-id.txt.zst
 2023-06-15-metha-url-reduced-pdf-only.txt.zst
-
+raw.data.zst
+oaistruct
+genjson
