@@ -1,5 +1,8 @@
 # PKP Journal info
 
+NOTE: As of 2022-01-01 PKP is not maintained any more.
+
+> https://pkp.sfu.ca/2021/10/05/pkp-index-retiring-as-of-january-1-2022/
 
 * extract basic journal info from PKP index
 * TODO: check, if there is a database dump or real API
