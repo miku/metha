@@ -3,11 +3,26 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"encoding/xml"
+	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"reflect"
+	"regexp"
+	"strings"
+	"time"
+)
+
+var (
+	debug       = flag.Bool("d", false, "debug output")
+	skipDeleted = flag.Bool("D", false, "skip delete records")
+
+	doiRe  = regexp.MustCompile(`10[.][0-9]{1,8}/[^ ]*`)
+	issnRe = regexp.MustCompile(`[0-9]{4,4}-?[0-9]{3,3}[0-9xX]`)
 )
 
 // Scanner provides a way to read a stream of XML data. It uses an xml.Decoder internally to step
@@ -106,11 +121,10 @@ func (s *Scanner) Err() error {
 	return nil
 }
 
-// Record was generated 2023-07-07 16:31:12 by tir on reka.
+// Record was generated 2020-03-17 16:11:30 by tir on trieste.
 type Record struct {
 	XMLName xml.Name `xml:"record"`
 	Text    string   `xml:",chardata"`
-	Xmlns   string   `xml:"xmlns,attr"`
 	Header  struct {
 		Text       string   `xml:",chardata"`
 		Status     string   `xml:"status,attr"`
@@ -127,64 +141,328 @@ type Record struct {
 			Xsi            string `xml:"xsi,attr"`
 			SchemaLocation string `xml:"schemaLocation,attr"`
 			Doc            string `xml:"doc,attr"`
+			Xmlns          string `xml:"xmlns,attr"`
+			Cm             string `xml:"cm,attr"`
+			Cs             string `xml:"cs,attr"`
+			Spectrum       string `xml:"spectrum,attr"`
+			Ns2            string `xml:"ns2,attr"`
 			Title          []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
+				Sub  string `xml:"sub"`
 			} `xml:"title"`
-			Creator []string `xml:"creator"`
-			Subject []struct {
+			Creator []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
-			} `xml:"subject"`
+				Dc   string `xml:"dc,attr"`
+				ID   string `xml:"id,attr"`
+			} `xml:"creator"`
 			Description []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
 			} `xml:"description"`
 			Publisher []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
 			} `xml:"publisher"`
-			Contributor []struct {
+			Date []struct {
 				Text string `xml:",chardata"`
+				Dc   string `xml:"dc,attr"`
 				Lang string `xml:"lang,attr"`
-			} `xml:"contributor"`
-			Date []string `xml:"date"`
+			} `xml:"date"`
 			Type []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
 			} `xml:"type"`
-			Format     []string `xml:"format"`
-			Identifier []string `xml:"identifier"`
-			Source     []struct {
+			Format []struct {
+				Text string `xml:",chardata"`
+				Dc   string `xml:"dc,attr"`
+				Lang string `xml:"lang,attr"`
+			} `xml:"format"`
+			Identifier []struct {
+				Text   string `xml:",chardata"`
+				Dc     string `xml:"dc,attr"`
+				Jtitle string `xml:"jtitle"`
+			} `xml:"identifier"`
+			Source []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
 			} `xml:"source"`
-			Language string   `xml:"language"`
-			Relation []string `xml:"relation"`
-			Rights   []struct {
+			Language []struct {
+				Text string `xml:",chardata"`
+				Dc   string `xml:"dc,attr"`
+				Lang string `xml:"lang,attr"`
+			} `xml:"language"`
+			Relation []struct {
+				Text string `xml:",chardata"`
+				Dc   string `xml:"dc,attr"`
+				Lang string `xml:"lang,attr"`
+			} `xml:"relation"`
+			Rights []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
 			} `xml:"rights"`
-			Coverage []struct {
+			Contributor []struct {
 				Text string `xml:",chardata"`
 				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
+			} `xml:"contributor"`
+			Subject []struct {
+				Text string `xml:",chardata"`
+				Lang string `xml:"lang,attr"`
+				Dc   string `xml:"dc,attr"`
+			} `xml:"subject"`
+			Coverage []struct {
+				Text     string `xml:",chardata"`
+				Lang     string `xml:"lang,attr"`
+				Resource string `xml:"resource,attr"`
 			} `xml:"coverage"`
+			IdentifierURIFulltext []string `xml:"identifier.uri.fulltext"`
+			Audience              struct {
+				Text string `xml:",chardata"`
+				Dc   string `xml:"dc,attr"`
+			} `xml:"audience"`
+			Doi    string `xml:"doi"`
+			Extent string `xml:"extent"`
 		} `xml:"dc"`
 	} `xml:"metadata"`
 	About string `xml:"about"`
 }
 
+// Info is some information out of OAI raw XML.
+type Info struct {
+	OAI       string   `json:"oai,omitempty"`
+	Status    string   `json:"status,omitempty"`
+	Datestamp string   `json:"datestamp,omitempty"`
+	Sets      []string `json:"sets,omitempty"`
+
+	Contributors          []string `json:"contributors,omitempty"`
+	Coverage              []string `json:"coverage,omitempty"`
+	Creators              []string `json:"creators,omitempty"`
+	Descriptions          []string `json:"descriptions,omitempty"`
+	DOI                   []string `json:"doi,omitempty"`
+	Dates                 []string `json:"dates,omitempty"`
+	Formats               []string `json:"formats,omitempty"`
+	ISSN                  []string `json:"issn,omitempty"`
+	IdentifierURIFulltext []string `json:"fulltext_uri,omitempty"`
+	Identifiers           []string `json:"ids,omitempty"`
+	Languages             []string `json:"languages,omitempty"`
+	Links                 []string `json:"urls,omitempty"`
+	Publishers            []string `json:"publishers,omitempty"`
+	Relations             []string `json:"relations,omitempty"`
+	Rights                []string `json:"rights,omitempty"`
+	Sources               []string `json:"sources,omitempty"`
+	Subjects              []string `json:"subjects,omitempty"`
+	Titles                []string `json:"titles,omitempty"`
+	Types                 []string `json:"types,omitempty"`
+}
+
+func (record *Record) extractInfo() (*Info, error) {
+	dc := record.Metadata.Dc
+	// Some things we would get out.
+	var contributors, coverage, creators, descriptions, formats, dois, ids, issns,
+		languages, publishers, rels, rights, sources, subjects, titles, types, urls []string
+
+	for _, v := range dc.Contributor {
+		if v.Text == "" {
+			continue
+		}
+		contributors = appendUnique(contributors, v.Text)
+	}
+	for _, v := range dc.Coverage {
+		if v.Text == "" {
+			continue
+		}
+		coverage = appendUnique(coverage, v.Text)
+	}
+	for _, v := range dc.Creator {
+		if v.Text == "" {
+			continue
+		}
+		creators = appendUnique(creators, v.Text)
+	}
+	for _, v := range dc.Description {
+		if v.Text == "" {
+			continue
+		}
+		descriptions = appendUnique(descriptions, v.Text)
+	}
+	for _, v := range dc.Format {
+		if v.Text == "" {
+			continue
+		}
+		formats = appendUnique(formats, v.Text)
+	}
+	for _, v := range dc.Identifier {
+		if v.Text == "" {
+			continue
+		}
+		ids = appendUnique(ids, v.Text)
+	}
+	for _, v := range dc.Language {
+		if v.Text == "" {
+			continue
+		}
+		languages = appendUnique(languages, v.Text)
+	}
+	for _, v := range dc.Publisher {
+		if v.Text == "" {
+			continue
+		}
+		publishers = appendUnique(publishers, v.Text)
+	}
+	for _, v := range dc.Rights {
+		if v.Text == "" {
+			continue
+		}
+		rights = appendUnique(rights, v.Text)
+	}
+	for _, v := range dc.Source {
+		if v.Text == "" {
+			continue
+		}
+		sources = appendUnique(sources, v.Text)
+	}
+	for _, v := range dc.Subject {
+		if v.Text == "" {
+			continue
+		}
+		subjects = appendUnique(subjects, v.Text)
+	}
+	for _, v := range dc.Type {
+		if v.Text == "" {
+			continue
+		}
+		types = appendUnique(types, v.Text)
+	}
+	for _, v := range dc.Relation {
+		if v.Text == "" {
+			continue
+		}
+		rels = appendUnique(rels, v.Text)
+	}
+	for _, v := range dc.Title {
+		if v.Text == "" {
+			continue
+		}
+		titles = appendUnique(titles, v.Text)
+	}
+	if dc.Doi != "" {
+		dois = appendUnique(dois, dc.Doi)
+	}
+	// Find URL, DOI, ISSN, and other structured data.
+	for _, v := range ids {
+		switch {
+		case strings.HasPrefix(v, "http"):
+			urls = appendUnique(urls, v)
+		case doiRe.MatchString(v):
+			dois = appendUnique(dois, doiRe.FindString(v))
+		case issnRe.MatchString(v):
+			issns = appendUnique(issns, issnRe.FindString(v))
+		}
+	}
+	for _, v := range sources {
+		switch {
+		case strings.HasPrefix(v, "http"):
+			urls = appendUnique(urls, v)
+		case doiRe.MatchString(v):
+			dois = appendUnique(dois, doiRe.FindString(v))
+		case issnRe.MatchString(v):
+			issns = appendUnique(issns, issnRe.FindString(v))
+		}
+	}
+	info := Info{
+		OAI:                   record.Header.Identifier,
+		Datestamp:             record.Header.Datestamp,
+		Sets:                  record.Header.SetSpec,
+		Status:                record.Header.Status,
+		Contributors:          contributors,
+		Coverage:              coverage,
+		Creators:              creators,
+		DOI:                   dois,
+		Formats:               formats,
+		ISSN:                  issns,
+		IdentifierURIFulltext: dc.IdentifierURIFulltext,
+		Identifiers:           ids,
+		Languages:             languages,
+		Links:                 urls,
+		Publishers:            publishers,
+		Relations:             rels,
+		Rights:                rights,
+		Subjects:              subjects,
+		Titles:                titles,
+		Types:                 types,
+	}
+	return &info, nil
+}
+
+func appendUnique(ss []string, v string) []string {
+	for _, s := range ss {
+		if s == v {
+			return ss
+		}
+	}
+	ss = append(ss, v)
+	return ss
+}
+
 func main() {
+	flag.Parse()
 	scanner := NewScanner(os.Stdin, new(Record))
+	bw := bufio.NewWriter(os.Stdout)
+	defer bw.Flush()
+	enc := json.NewEncoder(bw)
+	stats := map[string]int{
+		"total":     0,
+		"skipped":   0,
+		"deleted":   0,
+		"encoded":   0,
+		"elapsed_s": 0,
+		"rps":       0,
+	}
+	started := time.Now()
 	for scanner.Scan() {
 		tag := scanner.Element()
-		switch el := tag.(type) {
+		switch e := tag.(type) {
 		case *Record:
-			fmt.Printf("found record: %v\n", el.Header.Identifier)
-		default:
+			stats["total"]++
+			if *debug {
+				fmt.Printf("found record: %v\n", e.Header.Identifier)
+			} else {
+				if *skipDeleted && e.Header.Status == "deleted" {
+					stats["deleted"]++
+					continue
+				}
+				info, err := e.extractInfo()
+				if len(info.Titles) == 0 && len(e.Header.Identifier) == 0 {
+					stats["skipped"]++
+					continue
+				}
+				if err != nil {
+					log.Fatal(err)
+				}
+				if err := enc.Encode(info); err != nil {
+					log.Fatal(err)
+				}
+				stats["encoded"]++
+			}
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Errorf("Error while scanning XML: %v\n", err)
 	}
+	stats["elapsed_s"] = int(time.Since(started).Seconds())
+	if stats["elapsed_s"] > 0 {
+		stats["rps"] = int(stats["total"] / stats["elapsed_s"])
+	}
+	b, err := json.Marshal(stats)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(b))
 }
