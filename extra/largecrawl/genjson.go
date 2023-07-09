@@ -1,20 +1,20 @@
 // genjson extracts info from a stream of OAI DC XML records, e.g.
 //
-//     <record><header>...
+//	<record><header>...
 //
-//     <dc:language>eng</dc:language>
-//     <dc:relation>https://ejournal.uksw.edu/ijpna/article/view/1351/731</dc:relation>
-//     <dc:rights xml:lang="en-US">Copyright (c) 2017 Indonesian Journal of Physics and Nuclear Applications</dc:rights>
-//     <dc:rights xml:lang="en-US">http://creativecommons.org/licenses/by-nc-nd/4.0</dc:rights>
-//     </oai_dc:dc>
-//     </metadata><about></about></record>
+//	<dc:language>eng</dc:language>
+//	<dc:relation>https://ejournal.uksw.edu/ijpna/article/view/1351/731</dc:relation>
+//	<dc:rights xml:lang="en-US">Copyright (c) 2017 Indonesian Journal of Physics and Nuclear Applications</dc:rights>
+//	<dc:rights xml:lang="en-US">http://creativecommons.org/licenses/by-nc-nd/4.0</dc:rights>
+//	</oai_dc:dc>
+//	</metadata><about></about></record>
 //
 //
-//     <record> ...
+//	<record> ...
 //
 // Run like:
 //
-//     $ sed -e 's@<record>@\n\n\n<record>@' oai.data | python genrecords.py | go run genjson.go
+//	$ sed -e 's@<record>@\n\n\n<record>@' oai.data | python genrecords.py | go run genjson.go
 //
 // Note that the input does not need to be valid XML, but rather each record
 // element needs to be followed by two lines with only newlines (as separator).
@@ -22,57 +22,57 @@
 // Outputs a converted JSON lines stream to stdout. The JSON will contain
 // parsed issn, url and DOI. Example output:
 //
-// {
-//   "oai": "oai:ejournal.uksw.edu:article/1673",
-//   "datestamp": "2018-05-16T01:48:17Z",
-//   "sets": [
-//     "ijpna:ART",
-//     "driver"
-//   ],
-//   "creators": [
-//     "Sardjono, Yohannes",
-//     "Kusminarto, Kusminarto",
-//     "Wusko, Ikna Urwatul"
-//   ],
-//   "doi": [
-//     "10.24246/ijpna.v3i1.29-35"
-//   ],
-//   "formats": [
-//     "application/pdf"
-//   ],
-//   "issn": [
-//     "2550-0570",
-//     "2549-046X"
-//   ],
-//   "ids": [
-//     "https://ejournal.uksw.edu/ijpna/article/view/1673",
-//     "10.24246/ijpna.v3i1.29-35"
-//   ],
-//   "languages": [
-//     "eng"
-//   ],
-//   "urls": [
-//     "https://ejournal.uksw.edu/ijpna/article/view/1673"
-//   ],
-//   "publishers": [
-//     "Fakultas Sains dan Matematika Universitas Kristen Satya Wacana"
-//   ],
-//   "relations": [
-//     "https://ejournal.uksw.edu/ijpna/article/view/1673/894"
-//   ],
-//   "rights": [
-//     "Copyright (c) 2018 Indonesian Journal of Physics and Nuclear Applications",
-//     "http://creativecommons.org/licenses/by/4.0"
-//   ],
-//   "titles": [
-//     "The Optimization of Collimator Material and In Vivo Testing Dosimetry of Boron Neutron Capture Therapy (BNCT) on Radial Piercing Beam Port Kartini Nuclear Reactor by Monte Carlo N-Particle Extended (MCNPX) Simulation Method"
-//   ],
-//   "types": [
-//     "info:eu-repo/semantics/article",
-//     "info:eu-repo/semantics/publishedVersion",
-//     "Peer-reviewed Article"
-//   ]
-// }
+//	{
+//	  "oai": "oai:ejournal.uksw.edu:article/1673",
+//	  "datestamp": "2018-05-16T01:48:17Z",
+//	  "sets": [
+//	    "ijpna:ART",
+//	    "driver"
+//	  ],
+//	  "creators": [
+//	    "Sardjono, Yohannes",
+//	    "Kusminarto, Kusminarto",
+//	    "Wusko, Ikna Urwatul"
+//	  ],
+//	  "doi": [
+//	    "10.24246/ijpna.v3i1.29-35"
+//	  ],
+//	  "formats": [
+//	    "application/pdf"
+//	  ],
+//	  "issn": [
+//	    "2550-0570",
+//	    "2549-046X"
+//	  ],
+//	  "ids": [
+//	    "https://ejournal.uksw.edu/ijpna/article/view/1673",
+//	    "10.24246/ijpna.v3i1.29-35"
+//	  ],
+//	  "languages": [
+//	    "eng"
+//	  ],
+//	  "urls": [
+//	    "https://ejournal.uksw.edu/ijpna/article/view/1673"
+//	  ],
+//	  "publishers": [
+//	    "Fakultas Sains dan Matematika Universitas Kristen Satya Wacana"
+//	  ],
+//	  "relations": [
+//	    "https://ejournal.uksw.edu/ijpna/article/view/1673/894"
+//	  ],
+//	  "rights": [
+//	    "Copyright (c) 2018 Indonesian Journal of Physics and Nuclear Applications",
+//	    "http://creativecommons.org/licenses/by/4.0"
+//	  ],
+//	  "titles": [
+//	    "The Optimization of Collimator Material and In Vivo Testing Dosimetry of Boron Neutron Capture Therapy (BNCT) on Radial Piercing Beam Port Kartini Nuclear Reactor by Monte Carlo N-Particle Extended (MCNPX) Simulation Method"
+//	  ],
+//	  "types": [
+//	    "info:eu-repo/semantics/article",
+//	    "info:eu-repo/semantics/publishedVersion",
+//	    "Peer-reviewed Article"
+//	  ]
+//	}
 //
 // Note: it takes about 5 hours to generate a list of
 package main
