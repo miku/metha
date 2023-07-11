@@ -454,7 +454,18 @@ func (h *Harvest) identify() error {
 	}
 	resp, err := h.Client.Do(&req)
 	if err != nil {
-		return err
+		log.Printf("trying workaround: %v", err)
+		// try to workaround for the whole harvest
+		if h.ExtraHeaders == nil {
+			h.ExtraHeaders = make(http.Header)
+		}
+		h.ExtraHeaders.Set("Accept-Encoding", "identity")
+		// also apply to this request
+		req.ExtraHeaders = h.ExtraHeaders
+		resp, err = h.Client.Do(&req)
+		if err != nil {
+			return err
+		}
 	}
 	h.Identify = &resp.Identify
 	return nil
