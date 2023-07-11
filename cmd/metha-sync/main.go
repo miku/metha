@@ -109,6 +109,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// if the harvest resulted in any extra header set, add them here
+	if harvest.ExtraHeaders != nil {
+		for k, vs := range harvest.ExtraHeaders {
+			for _, v := range vs {
+				extra.Add(k, v)
+			}
+		}
+	}
 	harvest.Client = metha.CreateClient(*timeout, *maxRetries)
 	harvest.From = *from
 	harvest.Until = *until
