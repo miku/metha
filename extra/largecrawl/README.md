@@ -42,3 +42,9 @@ Example: [OAI-PMH-CRAWL-2020-06](https://archive.org/details/OAI-PMH-CRAWL-2020-
 ## Collections
 
 Each crawl in a separate collection, under [ia_pub_crawls](https://archive.org/details/ia_pub_crawls).
+
+## Generate a JSON version
+
+```
+$ fd -t file . '/data/.cache/metha/' | parallel unpigz -c | xmlstream | zstd -c -T0 > metha.json
+```
