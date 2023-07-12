@@ -69,12 +69,13 @@ func CreateDoer(timeout time.Duration, retries int) Doer {
 	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := http.DefaultClient
 	client.Transport = tr
+	client.Timeout = timeout
 	if timeout == 0 && retries == 0 {
 		return client
 	}
 	c := pester.New()
 	c.EmbedHTTPClient(client)
-	c.Timeout = timeout
+	c.Timeout = timeout // does this propagate to client
 	c.MaxRetries = retries
 	c.Backoff = pester.ExponentialBackoff
 	c.Transport = tr
