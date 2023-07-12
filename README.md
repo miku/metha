@@ -218,6 +218,13 @@ Show formats of random repository:
 $ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .formats
 ```
 
+A snippet from a 2010 publication:
+
+> The Open Archives Protocol for Metadata Harvesting
+(OAI-PMH) (Lagoze and van de Sompel, 2002) is currently implemented by more
+than 1,700 digital library reposi- tories world-wide and enables the exchange
+of metadata via HTTP. -- [Interweaving OAI-PMH Data Sources with the Linked Data Cloud](http://eprints.cs.univie.ac.at/73/1/ijmso2010_haslhofer_schandl.pdf)
+
 ## Metha elsewhere
 
 * [The finc project](https://finc.info/de/datenquellen)
