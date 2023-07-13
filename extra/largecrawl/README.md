@@ -48,3 +48,6 @@ Each crawl in a separate collection, under [ia_pub_crawls](https://archive.org/d
 ```
 $ fd -t file . '/data/.cache/metha/' | parallel unpigz -c | xmlstream | zstd -c -T0 > metha.json
 ```
+
+Previous, small dataset was due to XML errors; currently seeing 150M+ and more
+records. Need to analyse this and shrink to a sensible subset.
