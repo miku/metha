@@ -42,7 +42,7 @@ func NewScanner(r io.Reader, tags ...interface{}) *Scanner {
 		Decoder:    xml.NewDecoder(r),
 		nameToType: make(map[string]reflect.Type, len(tags)),
 	}
-
+	s.Decoder.Strict = false
 	// Map the xml local name of an element to its underlying type.
 	for _, tag := range tags {
 		v := reflect.ValueOf(tag)
@@ -454,7 +454,7 @@ func main() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		fmt.Errorf("Error while scanning XML: %v\n", err)
+		log.Fatal("error while scanning XML: %v\n", err)
 	}
 	stats["elapsed_s"] = int(time.Since(started).Seconds())
 	if stats["elapsed_s"] > 0 {
