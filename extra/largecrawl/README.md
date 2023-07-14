@@ -51,3 +51,64 @@ $ fd -t file . '/data/.cache/metha/' | parallel unpigz -c | xmlstream | zstd -c 
 
 Previous, small dataset was due to XML errors; currently seeing 150M+ and more
 records. Need to analyse this and shrink to a sensible subset.
+
+## OAI stats
+
+* records: 452,611,134
+* uncompressed: 387,158,202,709
+* urls (with duplicates): 1.36B
+* urls unique: 279,129,505
+* urls ending in ".pdf": 16,278,973
+* domains unique: 753,228
+
+Top 20 TLDs:
+
+```
+ 118504 com
+  85193 org
+  30446 de
+  19302
+  17767 ru
+  16430 co
+  16136 uk
+  15298 edu
+  13902 net
+  13359 br
+  13180 es
+  10370 it
+   9499 fr
+   8040 eu
+   7177 mx
+   7104 au
+   6851 cz
+   6762 id
+   6549 ar
+   6053 nl
+```
+
+* domain for PDF only links: 127770
+
+```
+$ head -20 /data/tmp/metharaw.pdfurls.domains.uniq.txt
+ 418835 hal.science
+ 264926 repository.unair.ac.id
+ 205860 lirias.kuleuven.be
+ 197977 repository.uph.edu
+ 175846 repository.unj.ac.id
+ 174721 pure.rug.nl
+ 168762 scholar.unand.ac.id
+ 167628 discovery.ucl.ac.uk
+ 163484 repo.uinsatu.ac.id
+ 162799 pure.uva.nl
+ 154960 real.mtak.hu
+ 147821 repository.unsoed.ac.id
+ 145239 eprints.undip.ac.id
+ 135775 kc.umn.ac.id
+ 128409 www.zora.uzh.ch
+ 126026 dspace.library.uu.nl
+ 108512 theses.hal.science
+ 108056 eprints.umm.ac.id
+ 105470 repository.ubn.ru.nl
+ 104507 eprints.whiterose.ac.uk
+```
+
