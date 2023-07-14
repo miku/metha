@@ -59,6 +59,7 @@ records. Need to analyse this and shrink to a sensible subset.
 * urls (with duplicates): 1.36B
 * urls unique: 279,129,505
 * urls ending in ".pdf": 16,278,973
+* urls containing "/index.php/" (ojs): 23,653,149
 * domains unique: 753,228
 
 Top 20 TLDs:
@@ -111,4 +112,12 @@ $ head -20 /data/tmp/metharaw.pdfurls.domains.uniq.txt
  105470 repository.ubn.ru.nl
  104507 eprints.whiterose.ac.uk
 ```
+
+### Looking at '/index.php/' urls
+
+* urls containing "/index.php/" (ojs): 23,653,149
+
+Running CDX requests to check archival status. Seems about 30% not in IA yet? Sample of 10K links.
+
+* would expect 8.5M new docs; preserved links from suspected OJS instances alone
 
