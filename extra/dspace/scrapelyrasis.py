@@ -7,10 +7,11 @@
 import pandas as pd
 import requests
 import os
+import sys
 
 # $ curl -sL "https://registry.lyrasis.org/?pagenum=1&mode=all" | \
 #       pup 'a.page-numbers json{}' | jq -rc '.[2].text'
-LAST_PAGE = 3
+LAST_PAGE = 150
 CACHE_DIR = ".scrapecache"
 
 
@@ -18,6 +19,7 @@ def main(cache_dir):
     frames = []
     for i in range(1, LAST_PAGE + 1):
         u = f"https://registry.lyrasis.org/?pagenum={i}&mode=all"
+        print(u, file=sys.stdout)
         dst = os.path.join(cache_dir, "page-{:04d}.html".format(i))
         if not os.path.exists(dst):
             r = requests.get(u)
