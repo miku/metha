@@ -11,6 +11,10 @@ b.txt:
 comm: a.txt b.txt
 	comm -12 a.txt b.txt | wc -l
 
+.PHONY: new
+new: a.txt b.txt
+	@comm -13 a.txt b.txt
+
 .PHONY: clean
 clean:
 	rm -f a.txt b.txt
