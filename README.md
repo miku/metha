@@ -240,6 +240,7 @@ of metadata via HTTP. -- [Interweaving OAI-PMH Data Sources with the Linked Data
 * [Orcid](https://trello.com/c/3OrWa2ZY/5771-load-issn-metadata-into-registry-db-8)
 * [Tutorial on Topological Data Analysis](https://github.com/shizuo-kaji/TutorialTopologicalDataAnalysis/blob/master/README.md)
 * [Connectome](https://www.switch.ch/connectome/) (linked open research data, [#28](https://github.com/miku/metha/issues/28#issuecomment-1144526453)), [From MARCXML to Records in Contexts](https://zenodo.org/record/7400442/files/SWITCH%20Patrinum%20RiC_20221205_Wildi.pdf)
+* [Comparison w/ other OAI tools](https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-ometha#geschwindigkeit) (de)
 
 ## Asciicast
 
