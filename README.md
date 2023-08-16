@@ -201,6 +201,8 @@ $ while true; do \
 done
 ```
 
+![](docs/metha-net-zenith.png)
+
 ## Errors this harvester can somewhat handle
 
 * responses with resumption tokens that lead to empty responses
