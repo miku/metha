@@ -189,6 +189,18 @@ interaction in resource conservation.
     -- http://journal.reforestationchallenges.org/index.php/REFOR/oai
 ```
 
+## Scrape all metadata in a best-effort way
+
+Use an endless loop with a timeout to get out of any hanging connection (which
+happen). Example scrape, converted to JSON (40+ GB:
+[2023-06-15-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_20230615/2023-06-15-metha-oai.ndjson.zst)).
+
+```
+$ while true; do \
+    timeout 180 bash -c "metha-sync -list | shuf | parallel -j 96 -I {} 'metha-sync -T 10s {}'"; \
+done
+```
+
 ## Errors this harvester can somewhat handle
 
 * responses with resumption tokens that lead to empty responses
