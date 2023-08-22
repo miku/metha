@@ -10,7 +10,7 @@ import backoff
 import six
 import re
 from urllib3.exceptions import MaxRetryError
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, TooManyRedirects, ReadTimeout
 
 class URLCache(object):
     """
@@ -102,7 +102,7 @@ class URLCache(object):
             """
             Nested function, so we can configure number of retries.
             """
-            r = self.sess.get(url, timeout=600)
+            r = self.sess.get(url, timeout=10)
             if r.status_code >= 400:
                 raise RuntimeError("%s on %s" % (r.status_code, url))
             with tempfile.NamedTemporaryFile(delete=False) as output:
@@ -137,10 +137,10 @@ def main():
             try:
                 blob = cache.get(guessed)
                 oai_urls.append(guessed)
-            except (RuntimeError, MaxRetryError, ConnectionError)  as exc:
+            except (RuntimeError, MaxRetryError, ConnectionError, TooManyRedirects, ReadTimeout)  as exc:
                 try:
                     blob = cache.get(url)
-                except (RuntimeError, MaxRetryError, ConnectionError) as exc:
+                except (RuntimeError, MaxRetryError, ConnectionError, TooManyRedirects, ReadTimeout) as exc:
                     pass
                 else:
                     for m in re.findall("http.*issue/current", blob):
