@@ -1,5 +1,3 @@
-
-
 import os
 import json
 import fileinput
@@ -9,8 +7,11 @@ import tempfile
 import backoff
 import six
 import re
+import sys
 from urllib3.exceptions import MaxRetryError
 from requests.exceptions import ConnectionError, TooManyRedirects, ReadTimeout
+from json.decoder import JSONDecodeError
+
 
 class URLCache(object):
     """
@@ -91,10 +92,16 @@ class URLCache(object):
             """
             if ttl_seconds is None:
                 return False
-            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(self.get_cache_file(url)))
+            mtime = datetime.datetime.fromtimestamp(
+                os.path.getmtime(self.get_cache_file(url))
+            )
             xtime = datetime.datetime.now() - datetime.timedelta(seconds=ttl_seconds)
             is_expired = mtime < xtime
-            logger.debug("[cache] mtime={}, xtime={}, expired={}, file={}".format(mtime, xtime, is_expired, self.get_cache_file(url)))
+            logger.debug(
+                "[cache] mtime={}, xtime={}, expired={}, file={}".format(
+                    mtime, xtime, is_expired, self.get_cache_file(url)
+                )
+            )
             return is_expired
 
         @backoff.on_exception(backoff.expo, RuntimeError, max_tries=self.max_tries)
@@ -116,12 +123,14 @@ class URLCache(object):
             return handle.read()
 
 
-
-
 def main():
     cache = URLCache(max_tries=1)
     for line in fileinput.input():
-        doc = json.loads(line)
+        try:
+            doc = json.loads(line)
+        except JSONDecodeError as exc:
+            print(f"json decode: {exc}", file=sys.stderr)
+            continue
         oai_urls = []
         if doc["system"] == "ojs":
             # OJS is either a single installation, in which case we expect a
@@ -137,10 +146,22 @@ def main():
             try:
                 blob = cache.get(guessed)
                 oai_urls.append(guessed)
-            except (RuntimeError, MaxRetryError, ConnectionError, TooManyRedirects, ReadTimeout)  as exc:
+            except (
+                RuntimeError,
+                MaxRetryError,
+                ConnectionError,
+                TooManyRedirects,
+                ReadTimeout,
+            ) as exc:
                 try:
                     blob = cache.get(url)
-                except (RuntimeError, MaxRetryError, ConnectionError, TooManyRedirects, ReadTimeout) as exc:
+                except (
+                    RuntimeError,
+                    MaxRetryError,
+                    ConnectionError,
+                    TooManyRedirects,
+                    ReadTimeout,
+                ) as exc:
                     pass
                 else:
                     for m in re.findall("http.*issue/current", blob):
@@ -153,5 +174,5 @@ def main():
             print(json.dumps(doc))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
