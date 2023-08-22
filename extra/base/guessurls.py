@@ -131,25 +131,25 @@ def main():
             # "http.*issue/current" | sed -e 's@issue/current@oai@'
             #
             # should work
-            url = doc["url"]
-            if url.endswith("/"):
-                guessed = url + "oai"
-            else:
-                guessed = url + "/oai"
-                # https://czasopisma.uksw.edu.pl/index.php/im -- no "issue/current"
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai"
+            # also: https://czasopisma.uksw.edu.pl/index.php/im -- no "issue/current"
             try:
                 blob = cache.get(guessed)
-                oai_urls.append(url)
+                oai_urls.append(guessed)
             except (RuntimeError, MaxRetryError, ConnectionError)  as exc:
                 try:
                     blob = cache.get(url)
                 except (RuntimeError, MaxRetryError, ConnectionError) as exc:
                     pass
                 else:
-                    for mch in re.findall("http.*issue/current", blob):
-                        u = mch.replace("issue/current", "oai")
+                    for m in re.findall("http.*issue/current", blob):
+                        u = m.replace("issue/current", "oai")
                         oai_urls.append(u)
-            doc["oai_urls"] = oai_urls
+                    for m in re.findall(url + "/index.php/[a-zA-Z0-9_-]{1,}", blob):
+                        candidate = m.rstrip("/") + "/oai"
+                        oai_urls.append(candidate)
+            doc["oai_urls"] = list(set(oai_urls))
             print(json.dumps(doc))
 
 
