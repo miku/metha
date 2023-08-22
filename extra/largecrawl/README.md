@@ -121,3 +121,14 @@ Running CDX requests to check archival status. Seems about 30% not in IA yet? Sa
 
 * would expect 8.5M new docs; preserved links from suspected OJS instances alone
 
+## 2023 Q4 Updates
+
+After an update of the URL list, we get 441,164,056 w/o deletions. The conversion from XML to JSON took 26h.
+
+```
+2023/08/22 23:13:30 {"deleted":18835773,"elapsed_s":95338,"encoded":441164056,"rps":4957,"skipped":12669626,"total":472669455}                                                                                                                ]
+```
+
+Will run `metha-sync` again with 100k endpoints.
+
+Found 284,446,100 unique records, before adding about 7K endpoints.
