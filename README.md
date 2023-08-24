@@ -19,7 +19,7 @@ The metha tool has been developed for [Project finc](https://finc.info) at
 * I wanted to crawl [Arxiv](http://export.arxiv.org/oai2) but found that existing tools would timeout.
 * Some harvesters would start to download all records anew, if I interrupted a running harvest.
 * There are many OAI
-  [endpoints](https://github.com/miku/metha/blob/master/contrib/sites.tsv) out
+  [endpoints](https://raw.githubusercontent.com/miku/metha/master/contrib/sites.tsv) out
   there. It is a widely used
   [protocol](http://www.openarchives.org/OAI/openarchivesprotocol.html) and
   somewhat worth knowing.
