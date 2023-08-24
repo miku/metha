@@ -132,3 +132,14 @@ After an update of the URL list, we get 441,164,056 w/o deletions. The conversio
 Will run `metha-sync` again with 100k endpoints.
 
 Found 284,446,100 unique records, before adding about 7K endpoints.
+
+On 2023-08-24, we run a snapshot over 210G cached, compressed XML.
+
+```
+$ fd -t file . '/data/.cache/metha' | parallel unpigz -c | zstd -c -T0 > metha-1.xml.zst
+```
+
+Use `xmlstream -D` to turn XML to jsonlines; expecting to hit 300M unique json docs.
+
+
+
