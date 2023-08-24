@@ -75,10 +75,8 @@ func (r *Request) URL() (*url.URL, error) {
 	if r.BaseURL == "" {
 		return nil, ErrMissingURL
 	}
-
 	v := NewValues()
 	v.Add("verb", r.Verb)
-
 	// An exclusive argument with a value that is the flow control token
 	// returned by a previous a request that issued an incomplete list.
 	if r.ResumptionToken != "" {
@@ -97,14 +95,12 @@ func (r *Request) URL() (*url.URL, error) {
 		}
 		return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, encodedValues))
 	}
-
 	// Only add parameter, if it is not the zero value.
 	addOptional := func(key, value string) {
 		if value != "" {
 			v.Add(key, value)
 		}
 	}
-
 	// If required parameter is missing, complain.
 	addRequired := func(key, value string) error {
 		if value == "" {
@@ -113,7 +109,6 @@ func (r *Request) URL() (*url.URL, error) {
 		v.Add(key, value)
 		return nil
 	}
-
 	switch r.Verb {
 	case "ListMetadataFormats", "ListSets":
 	case "ListIdentifiers", "ListRecords":
