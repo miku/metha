@@ -1,0 +1,700 @@
+{
+  "info" : {
+    "totalResultsLocal" : 166211,
+    "totalResultsPC" : -1,
+    "total" : 166211,
+    "first" : 1,
+    "last" : 10
+  },
+  "highlights" : { },
+  "docs" : [ {
+    "id" : 991031447810602976
+  }, {
+    "id" : 991031447812702976
+  }, {
+    "id" : 991031447814802976
+  }, {
+    "id" : 991031447811902976
+  }, {
+    "id" : 991031447814002976
+  }, {
+    "id" : 991031447347802976
+  }, {
+    "id" : 991031447349902976
+  }, {
+    "id" : 991031447811102976
+  }, {
+    "id" : 991031447813202976
+  }, {
+    "id" : 991031447815302976
+  } ],
+  "timelog" : {
+    "CALL_SOLR_GET_IDS_LIST" : "183",
+    "ESPLORO_LOCAL_SEARCH_TOTAL" : "188",
+    "BUILD_BLEND_AND_CACHE_RESULTS" : 0,
+    "BUILD_COMBINED_RESULTS_MAP" : 0,
+    "BUILD_MMS_IDS_LIST" : 0,
+    "LOAD_ENTITIES_FROM_DB" : 15,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447810602976" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447810602976" : 3,
+    "LOAD_CREATORS_FOR_MMS_991031447810602976" : 1,
+    "PROCESS_CREATORS_FOR_MMS_991031447810602976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447812702976" : 1,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447812702976" : 3,
+    "LOAD_CREATORS_FOR_MMS_991031447812702976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447812702976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447814802976" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447814802976" : 2,
+    "LOAD_CREATORS_FOR_MMS_991031447814802976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447814802976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447811902976" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447811902976" : 3,
+    "LOAD_CREATORS_FOR_MMS_991031447811902976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447811902976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447814002976" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447814002976" : 4,
+    "LOAD_CREATORS_FOR_MMS_991031447814002976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447814002976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447347802976" : 1,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447347802976" : 3,
+    "LOAD_CREATORS_FOR_MMS_991031447347802976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447347802976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447349902976" : 1,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447349902976" : 3,
+    "LOAD_CREATORS_FOR_MMS_991031447349902976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447349902976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447811102976" : 9,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447811102976" : 10,
+    "LOAD_CREATORS_FOR_MMS_991031447811102976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447811102976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447813202976" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447813202976" : 2,
+    "LOAD_CREATORS_FOR_MMS_991031447813202976" : 1,
+    "PROCESS_CREATORS_FOR_MMS_991031447813202976" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_991031447815302976" : 1,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_991031447815302976" : 2,
+    "LOAD_CREATORS_FOR_MMS_991031447815302976" : 0,
+    "PROCESS_CREATORS_FOR_MMS_991031447815302976" : 0,
+    "TOTAL_BUILD_ASSETS_SECTION" : 76,
+    "TOTAL_SEARCH_TIME" : 1,
+    "TOTAL_PROCESS_RESULTS" : 92
+  },
+  "facets" : [ {
+    "name" : "lang",
+    "values" : [ {
+      "value" : "eng",
+      "count" : "150996"
+    }, {
+      "value" : "por",
+      "count" : "241"
+    }, {
+      "value" : "ger",
+      "count" : "233"
+    }, {
+      "value" : "spa",
+      "count" : "220"
+    }, {
+      "value" : "fre",
+      "count" : "74"
+    }, {
+      "value" : "ita",
+      "count" : "43"
+    }, {
+      "value" : "chi",
+      "count" : "36"
+    }, {
+      "value" : "jpn",
+      "count" : "24"
+    }, {
+      "value" : "rus",
+      "count" : "22"
+    }, {
+      "value" : "heb",
+      "count" : "14"
+    }, {
+      "value" : "tur",
+      "count" : "13"
+    }, {
+      "value" : "pol",
+      "count" : "9"
+    }, {
+      "value" : "dut",
+      "count" : "8"
+    }, {
+      "value" : "kor",
+      "count" : "4"
+    }, {
+      "value" : "greek",
+      "count" : "3"
+    }, {
+      "value" : "nor",
+      "count" : "3"
+    }, {
+      "value" : "cat",
+      "count" : "2"
+    }, {
+      "value" : "english spanish",
+      "count" : "2"
+    }, {
+      "value" : "hrv",
+      "count" : "2"
+    }, {
+      "value" : "swe",
+      "count" : "2"
+    } ]
+  }, {
+    "name" : "creationdate",
+    "values" : [ {
+      "value" : "1934",
+      "count" : "1"
+    }, {
+      "value" : "2023",
+      "count" : "2086"
+    } ]
+  }, {
+    "name" : "rtype",
+    "values" : [ {
+      "value" : "articles",
+      "count" : "142430"
+    }, {
+      "value" : "dissertations",
+      "count" : "7150"
+    }, {
+      "value" : "book_chapters",
+      "count" : "6233"
+    }, {
+      "value" : "conference_proceedings",
+      "count" : "3045"
+    }, {
+      "value" : "books",
+      "count" : "1592"
+    }, {
+      "value" : "other",
+      "count" : "1462"
+    }, {
+      "value" : "thesis",
+      "count" : "1170"
+    }, {
+      "value" : "reviews",
+      "count" : "961"
+    }, {
+      "value" : "reports",
+      "count" : "743"
+    }, {
+      "value" : "script",
+      "count" : "259"
+    }, {
+      "value" : "patents",
+      "count" : "244"
+    }, {
+      "value" : "encyclopediaentry",
+      "count" : "193"
+    }, {
+      "value" : "eventposter",
+      "count" : "103"
+    }, {
+      "value" : "datasets",
+      "count" : "101"
+    }, {
+      "value" : "conferencepaper",
+      "count" : "65"
+    }, {
+      "value" : "preprint",
+      "count" : "58"
+    }, {
+      "value" : "abstracts",
+      "count" : "56"
+    }, {
+      "value" : "websites",
+      "count" : "56"
+    }, {
+      "value" : "magazinearticle",
+      "count" : "46"
+    }, {
+      "value" : "exhibitioncatalog",
+      "count" : "29"
+    } ]
+  }, {
+    "name" : "topic",
+    "values" : [ {
+      "value" : "Humans",
+      "count" : "23313"
+    }, {
+      "value" : "Female",
+      "count" : "11922"
+    }, {
+      "value" : "Male",
+      "count" : "11652"
+    }, {
+      "value" : "Biological And Medical Sciences",
+      "count" : "7774"
+    }, {
+      "value" : "Science Technology",
+      "count" : "7772"
+    }, {
+      "value" : "Animals",
+      "count" : "6909"
+    }, {
+      "value" : "Middle Aged",
+      "count" : "6806"
+    }, {
+      "value" : "Adult",
+      "count" : "6645"
+    }, {
+      "value" : "Medical Sciences",
+      "count" : "6427"
+    }, {
+      "value" : "Life Sciences Biomedicine",
+      "count" : "6401"
+    }, {
+      "value" : "Aged",
+      "count" : "5152"
+    }, {
+      "value" : "Adolescent",
+      "count" : "2869"
+    }, {
+      "value" : "Treatment Outcome",
+      "count" : "2540"
+    }, {
+      "value" : "Mice",
+      "count" : "2418"
+    }, {
+      "value" : "Retrospective Studies",
+      "count" : "2096"
+    }, {
+      "value" : "Risk Factors",
+      "count" : "2081"
+    }, {
+      "value" : "Child",
+      "count" : "2031"
+    }, {
+      "value" : "Aged 80 And Over",
+      "count" : "2009"
+    }, {
+      "value" : "Young Adult",
+      "count" : "1983"
+    }, {
+      "value" : "Fundamental And Applied Biological Sciences Psychology",
+      "count" : "1785"
+    } ]
+  }, {
+    "name" : "creator",
+    "values" : [ {
+      "value" : "Andrew Victor Schally",
+      "count" : "1782"
+    }, {
+      "value" : "Camillo Ricordi",
+      "count" : "1217"
+    }, {
+      "value" : "Ralph L Sacco",
+      "count" : "1093"
+    }, {
+      "value" : "Michael Y Wang",
+      "count" : "1092"
+    }, {
+      "value" : "Mikkael Sekeres",
+      "count" : "1091"
+    }, {
+      "value" : "Margaret A Pericak Vance",
+      "count" : "1084"
+    }, {
+      "value" : "Philip D Harvey",
+      "count" : "979"
+    }, {
+      "value" : "Antonella Tosti",
+      "count" : "932"
+    }, {
+      "value" : "Charles Nemeroff",
+      "count" : "918"
+    }, {
+      "value" : "Ralf Paus",
+      "count" : "849"
+    }, {
+      "value" : "Harry W Flynn Jr",
+      "count" : "830"
+    }, {
+      "value" : "Robert S Kirsner",
+      "count" : "771"
+    }, {
+      "value" : "Ricardo Jorge Komotar",
+      "count" : "757"
+    }, {
+      "value" : "Ranjith Ramasamy",
+      "count" : "749"
+    }, {
+      "value" : "Tatjana Rundek",
+      "count" : "714"
+    }, {
+      "value" : "Robert M Starke",
+      "count" : "713"
+    }, {
+      "value" : "Alan Pollack",
+      "count" : "695"
+    }, {
+      "value" : "Robert J Myerburg",
+      "count" : "678"
+    }, {
+      "value" : "Xi Steven Chen",
+      "count" : "674"
+    }, {
+      "value" : "Joshua M Hare",
+      "count" : "670"
+    } ]
+  }, {
+    "name" : "tlevel",
+    "values" : [ {
+      "value" : "open_access",
+      "count" : "45817"
+    }, {
+      "value" : "peer_reviewed",
+      "count" : "120291"
+    }, {
+      "value" : "online_resources",
+      "count" : "166211"
+    } ]
+  }, {
+    "name" : "academic_unit",
+    "values" : [ {
+      "value" : "01UOML_INST___d7f4107376541070fd0e87c50ad066ed",
+      "count" : "100060"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541070fd0ecbf5005e6729",
+      "count" : "16744"
+    }, {
+      "value" : "01UOML_INST___LeadershipDepartment",
+      "count" : "13484"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fb919299a6e17",
+      "count" : "10255"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541070fd0f12dfe0736765",
+      "count" : "8441"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015f9ab8ea216dff",
+      "count" : "8211"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015f963c50f46dfb",
+      "count" : "6985"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fb0136f606e0f",
+      "count" : "6749"
+    }, {
+      "value" : "01UOML_INST___d7f41073765410710160f005c1f16f1b",
+      "count" : "6401"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541070fd0ed0740704672d",
+      "count" : "6399"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fd9b4a8206e33",
+      "count" : "6317"
+    }, {
+      "value" : "01UOML_INST___d7f410737654107101601b50f8696e6b",
+      "count" : "6276"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fa4763b606e07",
+      "count" : "5952"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fc24ae3eb6e1f",
+      "count" : "5369"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fa8dacf546e0b",
+      "count" : "5093"
+    }, {
+      "value" : "01UOML_INST___d7f41073765410710162dfa495b770a7",
+      "count" : "4882"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541071015fd0b021666e2b",
+      "count" : "3340"
+    }, {
+      "value" : "01UOML_INST___d7f4107376541070fd0f1cef999a676d",
+      "count" : "3045"
+    }, {
+      "value" : "01UOML_INST___d7f410737654107101614e2e69496f53",
+      "count" : "3016"
+    }, {
+      "value" : "01UOML_INST___d7f41073765410710160f484ff4a6f1f",
+      "count" : "2955"
+    } ]
+  } ],
+  "assets" : [ {
+    "id" : "991031447810602976",
+    "title" : "Scleractinian coral diseases in south Florida and Dominica (West Indies): Epizootiology and effects on host tissue structure and reproduction",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "2003",
+    "description" : "<p>Coral diseases are contributing to the decline of coral reefs worldwide and have been demonstrated to effect changes in community structure and diversity. This study focused on the spatial and temporal dynamics of coral diseases (black band disease (BBD), white plague (WP), dark spots syndrome (DSS) and white band disease (WBD)) in south Florida and Dominica (West Indies), as well as the examination of the effects of diseases on coral reproductive activity, total lipid content, and tissue and cellular structure. Transmission electron microscopy was utilized to examine the ultrastructural anomalies associated with BBD and WP type II, which included the degeneration of endosymbiotic algae, membrane disruption, karyolysis, an increase in the density of mucus secretory cells, the loss of flagellar structures, and liquefactive necrosis. Ultrastructural changes unique to BBD infections (swollen mitochondria, swollen microvilli and cilia, and the degeneration of the mesoglea) were indicative of hypoxia and toxin (sulfide) related tissue death. A histological examination of DSS demonstrated that this condition may be caused by the invasion of the coral calicoblastic epithelium by endolithic fungi when the coral is stressed. WP had significant negative impacts on the reproductive activity of Montastraea faveolata. However, these effects were localized to the region of tissue directly impacted by the WP disease band/lesion. In both south Florida and Dominica, DSS was the most common syndrome, but BBD and WP caused the largest amount of coral tissue death. The only disease that exhibited a linear increase in incidence with elevated temperature was BBD. However, WP and WBD were most active during the warmest survey months. In most cases, disease progression rates were noted to increase with warmer water temperatures. DSS and BBD were the most persistent conditions, while WP infections were comparatively short-lived (approx. 1--3 months). Disease density (WP and DSS) at each site was significantly, positively correlated with the relative frequency of target species. The species noted to be most susceptible to WP and BBD varied in each survey year. Coral diseases predominantly affected the larger colonies of most susceptible species, and the re-infection rates of colonies between survey years was approximately 25%. Scleractinian recruitment rates (onto areas of the skeleton exposed via disease-related mortality) were low, and the comparatively high occurrence of algae may result in a shift towards algal-dominated reefs.</p>",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447810602976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Scleractinian-coral-diseases-in-south-Florida/991031447810602976",
+    "creators" : [ {
+      "displayName" : "Jill L. Borger",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447812702976",
+    "title" : "The distribution and molecular characterization of a novel infectious agent in bicolor damselfish, Pomacentrus partitus on South Florida reefs and in the Caribbean",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "1999",
+    "description" : "<p>Damselfish neurofibromatosis (DNF) is a transmissible cancer that affects bicolor damselfish (Pomacentrus partitus) on South Florida reefs, and is characterized by the formation of malignant neurofibromas, neurofibrosarcomas, and chromatophoromas. We have identified a potentially infectious agent in P. partitus which appears to be associated with the presence of DNF. This agent has been termed DNFX. The prevalence and copy number per cell of DNFX DNA were determined in healthy fish (HFs), tumored fish (TFs), and fish with experimentally induced tumors (EFs). Damselfish were collected on reefs having a high (>14% of adults affected) or low (<0.3% of adults affected) prevalence of DNF. HFs were significantly less likely to test positive for DNFX than TFs or EFs. HFs were also found to have a lower copy number (always <1 copy of DNFX per 25 cells) than TF tumors (average of 3 copies per cell) or organs (average of 1 copy per cell). EFs were more similar to TFs than to HFs, with a mean of 1 copy of DNFX per cell in tumors, and 1 copy of DNFX per 10 cells in grossly healthy organs. From high prevalence reefs, 100% of HFs tested positive for DNFX, which was significantly higher than the 60% of HFs that tested positive on low prevalence reefs. On the reefs, copy numbers in HFs were similar regardless of DNF prevalence rate. No juvenile fish tested were found to be positive for DNFX from either high or low prevalence sites. When the distribution of DNFX in individual grossly healthy organs was examined, a greater number of healthy TF organs were DNFX positive as the fish developed more tumors. In addition, there appeared to be little variation in DNFX sequence among cell lines, HFs, EFs, or TFs from South Florida. Formalin fixed museum specimens were also analyzed for the presence of DNFX, and DNFX was observed in South Florida from fish collected in 1959. DNFX DNA was found in HFs at several locations in the Caribbean at a prevalence rate similar to that seen on low prevalence reefs in South Florida, although DNF is localized to Florida and the Bahamas. The sequences of DNFX throughout the Caribbean were found to be similar to those seen in South Florida, with the exception of DNFX from the Bahamas, which differed from the South Florida sequences by 2%. (10 base substitutions over 400 bases). In conclusion, DNFX was found to be significantly correlated with the presence of DNF tumors, and was found at significantly higher copy numbers in TFs and EFs than in HFs. DNFX was found in significantly more HFs on high prevalence reefs than on low prevalence reefs. DNFX was seen to be widespread in the Caribbean, and to have been present in South Florida since at least 1959, although at very low copy numbers. Finally, in the region sequenced in this study, DNFX was found to have almost no sequence variation among cell lines, TFs, HFs, EFs, or fish from elsewhere in the Caribbean. The copy number of DNFX (above 1 copy of DNFX per 25 cells), and not sequence variation, is likely to lead to the development of tumors in bicolor damselfish.</p>",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447812702976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/The-distribution-and-molecular-characterization-of/991031447812702976",
+    "creators" : [ {
+      "displayName" : "Catherine Elizabeth Campbell",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447814802976",
+    "title" : "Compatibility Of Teaching And Learning Styles As A Determinant Of Academic Success",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "1976",
+    "description" : "",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447814802976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Compatibility-Of-Teaching-And-Learning-Styles/991031447814802976",
+    "creators" : [ {
+      "displayName" : "John Robert Scerba",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447811902976",
+    "title" : "Perspectives on Choral and Solo Singing: EnhancingCommunication Between Choral Conductors and Voice Teachers",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Musical Arts (DMA), University of Miami",
+    "date" : "2010-12-15",
+    "description" : "<p>Concepts of choral and solo singing diverge among the masses of pedagogues, teachers, and conductors who have differing opinions about healthy vocal technique and training. These differences have generated tension within some university music programs, with choral faculty and voice faculty sometimes on opposing sides. This document presents answers from professional singers who engage in choral and solo singing while maintaining a healthy vocal technique. All subjects interviewed for this document were asked to speak in detail to vocal adjustments made to sing in different styles. In addition, they were asked to identify any vocal faults that may arise from improper vocal production. The goal of this document is to lay grounds for valuable discussion regarding the opposing perspectives found in some academic circles with regard to proper vocal technique and training for choral and solo singing.</p>",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447811902976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Perspectives-on-Choral-and-Solo-Singing/991031447811902976",
+    "creators" : [ {
+      "displayName" : "Matthew August Ferrell",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447814002976",
+    "title" : "Head Start Teachers’ Vocabulary Instruction and Language Complexity During Storybook Reading: Predicting Vocabulary Outcomes of Students in Linguistically Diverse Classrooms",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "2011-04-27",
+    "description" : "<p>Previous research indicates that joint storybook reading between caregivers (parents or teachers) and children can have positive effects on the oral language development of young children (Whitehurst et al., 1988; Dickinson & Smith, 1994). This study aimed to add to this body of research by providing information on the relationship between teachers’ language complexity and vocabulary strategies used during storybook reading and vocabulary outcomes for monolingual and dual language learners in linguistically diverse Head Start classrooms. Videotapes of 23 Head Start teachers were coded and analyzed for vocabulary instruction strategies and language complexity during storybook reading using hierarchical regression techniques to determine how these factors related to gains in student vocabulary over the course of a year. Students’ oral language was assessed using the Peabody Picture Vocabulary Test (PPVT) and the Learning Express vocabulary sub-test (LE).  Teacher’s language complexity was calculated with respect to both quantity (mean length of utterance) and quality (type/token ratio and use of uncommon words).  Teacher’s use of vocabulary strategies was examined with respect to the words chosen for instruction and the strategies used to instruct those words. Overall, teachers in this study tended to choose high utility words to instruct, but the strategies used to teach those words, and the number of words chosen for instruction, were often not optimally aligned with best practices in vocabulary instruction (Beck et al., 2002). For the PPVT outcome measure, teachers’ use of higher numbers of vocabulary instruction strategies per word was differentially related to students’ vocabulary outcomes based on the student’s prior vocabulary knowledge, such that the use of more vocabulary instruction strategies per word was negatively related to vocabulary outcomes for students who began the year with the smallest vocabularies.  There was also a significant interaction between teachers’ use of uncommon words and students’ prior vocabulary knowledge, though this relationship was only statistically significant for the PPVT outcome.  Teachers’ use of more complex language was differentially related to students’ outcomes. Students who began the year with the lowest vocabulary levels exhibited a positive relationship between the teacher’s use of uncommon words and vocabulary outcomes, while average or higher vocabulary students showed a negative relationship between increased exposure to these uncommon words and their vocabulary outcomes. The implications for teachers’ professional development are discussed.</p>",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447814002976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Head-Start-Teachers-Vocabulary-Instruction-and/991031447814002976",
+    "creators" : [ {
+      "displayName" : "Miriam G Lipsky",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447347802976",
+    "title" : "J S Bach's Cantata No 5: A Conductor's Analysis",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Musical Arts (DMA), University of Miami",
+    "date" : "1978",
+    "description" : "",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447347802976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/J-S-Bachs-Cantata-No-5/991031447347802976",
+    "creators" : [ {
+      "displayName" : "John Walter Augenblick",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447349902976",
+    "title" : "Recommendations Relative To The Student Personnel Program Of Dade County Junior College",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Education (EDD), University of Miami",
+    "date" : "1963",
+    "description" : "",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447349902976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Recommendations-Relative-To-The-Student-Personnel/991031447349902976",
+    "creators" : [ {
+      "displayName" : "Blanche Cox",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447811102976",
+    "title" : "Neural Basis of Repetitive Negative Thinking in Autism Spectrum Disorder",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "2018-07-04",
+    "description" : "<p>Many individuals with autism spectrum disorder (ASD) experience co-occurring internalizing problems, yet little is known about cognitive and neural mechanisms underlying this comorbidity. Repetitive negative thinking (RNT) about self-referential information is a cognitive vulnerability factor across multiple diagnostic groups with well-characterized neurobiological underpinnings. Youth with ASD may be at heightened risk for RNT due to their perseverative cognitive style, which could account for the relationship between ASD and internalizing problems. This study investigates the interaction of brain networks involved in self-referential processing (i.e., the default mode network, DMN) and cognitive inflexibility (i.e., the salience network, SN) to confer increased risk for RNT, leading to internalizing problems in ASD. The sample included youth with ASD (N=15) and typically developing (TD) youth (N=23) aged 8-13. Participants and informants completed questionnaires assessing cognitive flexibility, RNT and internalizing problems, as well as a resting-state brain scan to assess brain network integrity. Groups did not differ in levels of RNT, though youth with ASD exhibited higher rates of internalizing problems and decreased cognitive flexibility. Across both groups, cognitive flexibility was related to RNT, which in turn predicted internalizing problems. The neural mechanism underlying RNT differed for youth with ASD compared with TD youth. The TD group demonstrated the expected effect, where RNT was positively associated with functional connectivity (FC) within the DMN, while the ASD group exhibited a negative association between RNT and DMN FC. Functional connectivity of the SN did not relate to RNT in either group. Implications for understanding heterogeneity in clinical presentation, as well as promise for identifying and treating cognitive flexibility and RNT to reduce comorbid internalizing problems in ASD, are discussed.</p>",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447811102976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Neural-Basis-of-Repetitive-Negative-Thinking/991031447811102976",
+    "creators" : [ {
+      "displayName" : "Catherine Ann Burrows",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447813202976",
+    "title" : "MHC polymorphism in African cichlids: Characterization of Class II B loci and evolutionary studies in natural populations",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "1998",
+    "description" : "<p>The cichlid fishes of the Great East African Lakes are, along with Darwin finches, a classical example of adaptive radiation. They underwent an extremely rapid speciation process that resulted in the generation of hundreds of new species. The genes of the Major Histocompatibility Complex (Mhc) constitute a suitable molecular marker for the elucidation of the phylogenetic relationships among these closely related, but yet different species, due to their extensive polymorphism and transpecific mode of evolution. Even though Mhc class II B DNA sequences had previously been described and shown to be highly polymorphic in cichlids from Lakes Malawi, Victoria and Tanganyika, no information was available about the locus/allele relationships between these genes. Here, we used a combination of two different approaches: (a) sorting of single sperm cells, and (b) generation of andro/gynogenetic offspring, to produce hemizygous and homozygous genomes, respectively. Mhc typing of the samples produced in this way, shows that in cichlids, class II B genes are linked and arranged in haplotypes that may vary in their number of loci. The 12 loci here identified constitute a linkage group, not linked to class I genes. Characterization of cDNA sequences in several individuals reveals that all genomic sequences identified are transcribed, and their products probably functional.In addition, we studied DNA sequence polymorphism at eight Mhc class II B loci and mitochondrial (mt) DNA variation in Oreochromis alcalicus, a cichlid that lives at temperatures of up to 40$\\sp\\circ$C and pH 10.5 in the small alkaline lakes Natron and Magadi, on the Great Rift Valley of East Africa. Adaptation to these conditions occurred rapidly 9-12,000 yr BP. Our data show that the Mhc genes of O. alcalicus are as highly polymorphic as those of a freshwater cichlict from Lake Victoria, implying that the size of its founding population remained large during and after this rapid adaptation process. In addition, the sharing of Mhc and mt DNA polymorphisms between the reproductively isolated populations of the two lakes confirms their recent common origin. Dating of the O. alcalicus (mt) DNA haplotypes indicates that Lakes Natron and Magadi were continuously populated for the last 800,000 years.</p>",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447813202976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/MHC-polymorphism-in-African-cichlids-Characterization/991031447813202976",
+    "creators" : [ {
+      "displayName" : "George Edward Malaga-Trillo",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "991031447815302976",
+    "title" : "Psychophysiological Responses to Disgust: Cardiovascular and Facial Muscle Patterns Associated with Different Functional Domains",
+    "resourceType" : "etd.doctoral",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "Doctor of Philosophy (PhD), University of Miami",
+    "date" : "2010-12-16",
+    "description" : "<p>This study examined the distinguishing physiological characteristics of the disgust reaction across different domains. According to an evolutionary analysis, disgust is a heterogeneous emotion with features that are specific to three distinct domains: pathogens, sex, and morality. Each domain is predicted to take as input information specific to the adaptive problem it evolved to solve and regulate behavior accordingly. The goal of the present study was to investigate whether there are any adaptive physiological differences associated with the disgust response across domains. Participants were asked to imagine acts that elicit pathogen, sexual, and moral disgust. It was hypothesized that there would be both quantitative and qualitative differences in the physiological reactions based on the appropriate functional outputs for the social (moral and sexual) and nonsocial (pathogen) domains. Individual differences in self-report ratings of disgust as well as the role of religiosity in regulating social disgust were also explored. Results showed significant differences in parasympathetic influences on the heart in response to the sexual stimuli but not to the other domains. Also, the self-report ratings showed that females were more sensitive than males to the sexual stimuli but not to pathogens or moral acts. These results lend further support to the dissociation between the functional domains of disgust. Correlations between levels of religiosity and both subjective ratings of fear towards pathogens and levator labii activation when viewing pathogen stimuli were found. This study provides preliminary evidence of dissociations between different domains of disgust and provides a methodological guideline which can help inform future studies of disgust. Implications of the current findings are discussed, as well as limitations of the current methodology and avenues for further exploration.</p>",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/991031447815302976?calculateAccessRights=true",
+    "permalink" : "/outputs/doctoral/Psychophysiological-Responses-to-Disgust-Cardiovascular-and/991031447815302976",
+    "creators" : [ {
+      "displayName" : "Robert Oum",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  } ]
+}
