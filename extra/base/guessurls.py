@@ -132,6 +132,10 @@ def main():
             print(f"json decode: {exc}", file=sys.stderr)
             continue
         oai_urls = []
+        if doc["system"] in ('dspace', 'dspace xoai'):
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai/request"
+            oai_urls.append(guessed)
         if doc["system"] == "ojs":
             # OJS is either a single installation, in which case we expect a
             # url + "/oai" endpoint, or a set of journals, in which case
@@ -170,8 +174,8 @@ def main():
                     for m in re.findall(url + "/index.php/[a-zA-Z0-9_-]{1,}", blob):
                         candidate = m.rstrip("/") + "/oai"
                         oai_urls.append(candidate)
-            doc["oai_urls"] = list(set(oai_urls))
-            print(json.dumps(doc))
+        doc["oai_urls"] = list(set(oai_urls))
+        print(json.dumps(doc))
 
 
 if __name__ == "__main__":
