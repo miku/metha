@@ -5,6 +5,9 @@
 01UOML_INST
 01MIT_INST
 01BC_INST # https://www.google.com/search?channel=fs&client=ubuntu-sn&q=%22il-urmsand01%22#vhid=Ib7unXK4QqH-OM&vssid=l
+01UCHASTINGS_INST
+01NWU_INST
+61USC_INST
 """
 
 import argparse
