@@ -19,3 +19,4 @@
 
 
 * https://knowledge.exlibrisgroup.com/Esploro/Product_Documentation/Esploro_Online_Help_(English)/Esploro_Integration/Setting_Up_OAI_Integration
+* https://exlibrisgroup.com/products/esploro-research-services-platform/
