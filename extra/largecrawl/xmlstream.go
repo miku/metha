@@ -379,6 +379,7 @@ func (record *Record) extractInfo() (*Info, error) {
 	info := Info{
 		OAI:                   record.Header.Identifier,
 		Datestamp:             record.Header.Datestamp,
+		Descriptions:          descriptions,
 		Sets:                  record.Header.SetSpec,
 		Status:                record.Header.Status,
 		Contributors:          contributors,
