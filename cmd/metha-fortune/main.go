@@ -132,7 +132,6 @@ func createSearcher(endpoint string) Search {
 			log.Printf("estimated probability of record: 1/%d", events)
 		}
 		rid := ids[rand.Intn(len(ids))]
-
 		req = metha.Request{
 			BaseURL:        endpoint,
 			Verb:           "GetRecord",
@@ -181,32 +180,24 @@ func createSearcher(endpoint string) Search {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
-
 	if !*debug {
 		log.SetOutput(ioutil.Discard)
 	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
-
 	var searchers []Search
 	for i := 0; i < *k; i++ {
 		searchers = append(searchers, createSearcher(metha.RandomEndpoint()))
 	}
-
 	s := spinner.New(spinner.CharSets[25], 100*time.Millisecond)
 	s.Writer = os.Stderr
-
 	if !*debug {
 		s.Start()
 	}
-
 	result := First(ctx, searchers...)
-
 	if !*debug {
 		s.Stop()
 	}
-
 	if result.Err != nil || result.Fortune == "" {
 		fmt.Printf("No fortune available at this time.\n")
 		if *debug {

@@ -25,12 +25,10 @@ func ellipsis(s string, length int) string {
 
 func main() {
 	flag.Parse()
-
 	files, err := ioutil.ReadDir(metha.GetBaseDir())
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	for _, file := range files {
 		b, err := base64.RawURLEncoding.DecodeString(file.Name())
 		if err != nil {

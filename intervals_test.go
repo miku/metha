@@ -39,7 +39,6 @@ func TestDailyIntervals(t *testing.T) {
 			},
 		},
 	}
-
 	for _, c := range cases {
 		r := c.Interval.DailyIntervals()
 		if len(r) != len(c.Result) {
@@ -51,7 +50,6 @@ func TestDailyIntervals(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestHourlyIntervals(t *testing.T) {
@@ -80,7 +78,6 @@ func TestHourlyIntervals(t *testing.T) {
 			},
 		},
 	}
-
 	for _, c := range cases {
 		r := c.Interval.HourlyIntervals()
 		if len(r) != len(c.Result) {
@@ -92,5 +89,4 @@ func TestHourlyIntervals(t *testing.T) {
 			}
 		}
 	}
-
 }

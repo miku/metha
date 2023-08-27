@@ -19,7 +19,6 @@ func NewCopyHook(w io.Writer, levels ...log.Level) CopyHook {
 	ch := CopyHook{
 		Writer: w,
 	}
-
 	if len(levels) > 0 {
 		ch.levels = levels
 	} else {
@@ -30,7 +29,6 @@ func NewCopyHook(w io.Writer, levels ...log.Level) CopyHook {
 			log.PanicLevel,
 		}
 	}
-
 	return ch
 }
 
@@ -45,13 +43,11 @@ func (hook CopyHook) Fire(entry *log.Entry) error {
 	if err != nil {
 		return err
 	}
-
 	for _, l := range hook.levels {
 		if l == entry.Level {
 			_, err := hook.Write([]byte(line))
 			return err
 		}
 	}
-
 	return nil
 }

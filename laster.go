@@ -27,10 +27,12 @@ func (l DirLaster) Last() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var values []string
+	var (
+		values []string
+		v      string
+	)
 	for _, fi := range files {
-		v := l.ExtractorFunc(fi)
-		if v != "" {
+		if v = l.ExtractorFunc(fi); v != "" {
 			values = append(values, v)
 		}
 	}

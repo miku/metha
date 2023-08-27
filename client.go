@@ -134,7 +134,6 @@ func (c *Client) Do(r *Request) (*Response, error) {
 			req.Header.Add(name, value)
 		}
 	}
-
 	resp, err := c.Doer.Do(req)
 	if err != nil {
 		return nil, err
@@ -143,16 +142,13 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		return nil, HTTPError{URL: link, RequestError: err, StatusCode: resp.StatusCode}
 	}
 	defer resp.Body.Close()
-
 	var reader = resp.Body
-
 	// Detect compressed response.
 	reader, err = maybeCompressed(reader)
 	if err != nil {
 		return nil, err
 	}
 	defer reader.Close()
-
 	if r.CleanBeforeDecode {
 		// Remove some chars, that the XML decoder will complain about.
 		b, err := ioutil.ReadAll(reader)
@@ -161,7 +157,6 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		}
 		reader = ioutil.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
 	}
-
 	// Drain response XML, iterate over various XML encoding declarations.
 	// Limit the amount we can read.
 	respBody, err := ioutil.ReadAll(io.LimitReader(reader, 2<<24))

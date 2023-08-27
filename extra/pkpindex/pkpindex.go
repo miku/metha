@@ -10,16 +10,16 @@
 //
 // Output will json lines (oai endpoint is guessed):
 //
-//     {
-//       "name": "Scholarly and Research Communication",
-//       "homepage": "http://src-online.ca/index.php/src",
-//       "oai": "http://src-online.ca/index.php/src/oai"
-//     }
-//     {
-//       "name": "Stream: Culture/Politics/Technology",
-//       "homepage": "http://journals.sfu.ca/stream/index.php/stream",
-//       "oai": "http://journals.sfu.ca/stream/index.php/stream/oai"
-//     }
+//	{
+//	  "name": "Scholarly and Research Communication",
+//	  "homepage": "http://src-online.ca/index.php/src",
+//	  "oai": "http://src-online.ca/index.php/src/oai"
+//	}
+//	{
+//	  "name": "Stream: Culture/Politics/Technology",
+//	  "homepage": "http://journals.sfu.ca/stream/index.php/stream",
+//	  "oai": "http://journals.sfu.ca/stream/index.php/stream/oai"
+//	}
 //
 // Additional ideas:
 //
