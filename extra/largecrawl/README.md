@@ -141,5 +141,35 @@ $ fd -t file . '/data/.cache/metha' | parallel unpigz -c | zstd -c -T0 > metha-1
 
 Use `xmlstream -D` to turn XML to jsonlines; expecting to hit 300M unique json docs.
 
+```
+$ zstdcat -T0 metha-1.xml.zst | xmlstream -D | pv -l | zstd -c -T0 > metha-1.json.zst
+2023/08/26 15:23:36 {"deleted":18961352,"elapsed_s":51831,"encoded":442855742,"rps":9162,"skipped":13069983,"total":474887077}                                                                                                                ]
+```
+
+Took 14:23:51. May contain dups, so let's sort.
+
+```
+$ zstdcat -T0 metha-1.json.zst | pv -l | LC_ALL=C sort -u -S80% | zstd -c -T0 > metha-1-sorted.json.zst
+```
+
+XML processing with Go is slow, about 9k docs/s; a bit involved to parallelize
+(with the current concatenated XML).  Sorting 131G zstd compressed data takes
+34 min (w/ lots of RAM). Sorted data seems to compress better (131G, 61G --
+just from the number of docs, it should be 78G).  Got: `285337003
+395569855616`, that's only 6M more than the in the previous run, that's only 6M
+more than the in the previous run.
+
+285M docs, about 400G of raw JSON. Baseline iteration <6 min (fast storage).
+277814855 urls (50s to sort). 219,281,389 unique URLs. 13812548 links ending
+with `.pdf`.
+
+Still a bit off from the "Search 340,493,561 documents from 11,173 content
+providers" on Base Search.
+
+Data source list: [https://www.base-search.net/about/en/about_sources_date.php](https://www.base-search.net/about/en/about_sources_date.php)
+
+Base names: 48M (datacite), 20M (science direct), 14M (springer), 9M (doaj) -
+that's 91M extra; assuming none of those appear in the ojs set, we could be at
+285M + 91M = 376M docs, w/o crossref and pubmed.
 
 
