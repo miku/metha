@@ -13,30 +13,25 @@ import (
 var version = flag.Bool("v", false, "show version")
 
 func main() {
-
 	flag.Parse()
-
 	if *version {
 		fmt.Println(metha.Version)
 		os.Exit(0)
 	}
-
 	if flag.NArg() == 0 {
 		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
-
-	baseURL := metha.PrependSchema(flag.Arg(0))
-	repo := metha.Repository{BaseURL: baseURL}
-
-	m := make(map[string]interface{})
-
-	req := metha.Request{Verb: "Identify", BaseURL: baseURL}
+	var (
+		baseURL = metha.PrependSchema(flag.Arg(0))
+		repo    = metha.Repository{BaseURL: baseURL}
+		m       = make(map[string]interface{})
+		req     = metha.Request{Verb: "Identify", BaseURL: baseURL}
+	)
 	resp, err := metha.StdClient.Do(&req)
 	if err != nil {
 		log.Fatal(err)
 	}
 	m["identify"] = resp.Identify
-
 	if formats, err := repo.Formats(); err == nil {
 		m["formats"] = formats
 	} else {
@@ -47,7 +42,6 @@ func main() {
 	} else {
 		log.Println(err)
 	}
-
 	if err := json.NewEncoder(os.Stdout).Encode(m); err != nil {
 		log.Fatal(err)
 	}

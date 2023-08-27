@@ -24,29 +24,24 @@ func MustGlob(pattern string) []string {
 // destination file.
 func MoveCompressFile(src, dst string) (err error) {
 	tmp := fmt.Sprintf("%s-tmp-%d", dst, rand.Intn(999999999))
-
 	f, err := os.Create(tmp)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-
 	gw := gzip.NewWriter(f)
 	defer gw.Close()
-
 	ff, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer ff.Close()
-
 	if _, err := io.Copy(gw, ff); err != nil {
 		return err
 	}
 	if err := os.Rename(tmp, dst); err != nil {
 		return err
 	}
-
 	return os.Remove(src)
 }
 
