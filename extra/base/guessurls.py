@@ -134,6 +134,10 @@ def main():
         oai_urls = []
         if not "system" in doc:
             continue
+        if doc["system"] == "islandora" and ".hr/" in doc["url"]:
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai"
+            oai_urls.append(guessed)
         if doc["system"] == "contentdm":
             url = doc["url"].rstrip("/")
             guessed = url + "/oai/oai.php"
@@ -146,7 +150,7 @@ def main():
             url = doc["url"].rstrip("/")
             guessed = url + "/do/oai"
             oai_urls.append(guessed)
-        if doc["system"] in ('dspace', 'dspace xoai'):
+        if doc["system"] in ('dspace', 'dspace xoai', 'dspace iris'):
             url = doc["url"].rstrip("/")
             guessed = url + "/oai/request"
             oai_urls.append(guessed)
