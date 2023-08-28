@@ -132,6 +132,12 @@ def main():
             print(f"json decode: {exc}", file=sys.stderr)
             continue
         oai_urls = []
+        if not "system" in doc:
+            continue
+        if doc["system"] == "digitalcommons / bepress":
+            url = doc["url"].rstrip("/")
+            guessed = url + "/do/oai"
+            oai_urls.append(guessed)
         if doc["system"] in ('dspace', 'dspace xoai'):
             url = doc["url"].rstrip("/")
             guessed = url + "/oai/request"
