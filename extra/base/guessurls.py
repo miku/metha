@@ -134,6 +134,10 @@ def main():
         oai_urls = []
         if not "system" in doc:
             continue
+        if doc["system"] == "contentdm":
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai/oai.php"
+            oai_urls.append(guessed)
         if doc["system"] == "eprints 3":
             url = doc["url"].rstrip("/")
             guessed = url + "/cgi/oai2"
