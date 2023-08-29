@@ -197,7 +197,8 @@ happen). Example scrape, converted to JSON (40+ GB:
 
 ```
 $ while true; do \
-    timeout 180 bash -c "metha-sync -list | shuf | parallel -j 96 -I {} 'metha-sync -T 10s {}'"; \
+    timeout 180 bash -c "metha-sync -list | \
+    shuf | parallel -j 96 -I {} 'metha-sync -T 10s {}'"; \
 done
 ```
 

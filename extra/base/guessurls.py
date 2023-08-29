@@ -132,7 +132,25 @@ def main():
             print(f"json decode: {exc}", file=sys.stderr)
             continue
         oai_urls = []
-        if doc["system"] in ('dspace', 'dspace xoai'):
+        if not "system" in doc:
+            continue
+        if doc["system"] == "islandora" and ".hr/" in doc["url"]:
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai"
+            oai_urls.append(guessed)
+        if doc["system"] == "contentdm":
+            url = doc["url"].rstrip("/")
+            guessed = url + "/oai/oai.php"
+            oai_urls.append(guessed)
+        if doc["system"] == "eprints 3":
+            url = doc["url"].rstrip("/")
+            guessed = url + "/cgi/oai2"
+            oai_urls.append(guessed)
+        if doc["system"] == "digitalcommons / bepress":
+            url = doc["url"].rstrip("/")
+            guessed = url + "/do/oai"
+            oai_urls.append(guessed)
+        if doc["system"] in ('dspace', 'dspace xoai', 'dspace iris'):
             url = doc["url"].rstrip("/")
             guessed = url + "/oai/request"
             oai_urls.append(guessed)
