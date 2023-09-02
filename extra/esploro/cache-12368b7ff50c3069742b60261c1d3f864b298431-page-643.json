@@ -1,0 +1,850 @@
+{
+  "info" : {
+    "totalResultsLocal" : 31617,
+    "totalResultsPC" : -1,
+    "total" : 31617,
+    "first" : 1,
+    "last" : 10
+  },
+  "highlights" : { },
+  "docs" : [ {
+    "id" : 9923879958501921
+  }, {
+    "id" : 9923879961101921
+  }, {
+    "id" : 9923879960601921
+  }, {
+    "id" : 9923879962701921
+  }, {
+    "id" : 9923879957701921
+  }, {
+    "id" : 9923879961901921
+  }, {
+    "id" : 9923879964001921
+  }, {
+    "id" : 9923880014301921
+  }, {
+    "id" : 9923880014001921
+  }, {
+    "id" : 9923880013701921
+  } ],
+  "timelog" : {
+    "CALL_SOLR_GET_IDS_LIST" : "23",
+    "ESPLORO_LOCAL_SEARCH_TOTAL" : "29",
+    "BUILD_BLEND_AND_CACHE_RESULTS" : 0,
+    "BUILD_COMBINED_RESULTS_MAP" : 0,
+    "BUILD_MMS_IDS_LIST" : 0,
+    "LOAD_ENTITIES_FROM_DB" : 18,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879958501921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879958501921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923879958501921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923879958501921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879961101921" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879961101921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923879961101921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923879961101921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879960601921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879960601921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923879960601921" : 3,
+    "PROCESS_CREATORS_FOR_MMS_9923879960601921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879962701921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879962701921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923879962701921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923879962701921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879957701921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879957701921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923879957701921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923879957701921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879961901921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879961901921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923879961901921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923879961901921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923879964001921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923879964001921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923879964001921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923879964001921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923880014301921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923880014301921" : 6,
+    "LOAD_CREATORS_FOR_MMS_9923880014301921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923880014301921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923880014001921" : 4,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923880014001921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923880014001921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923880014001921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923880013701921" : 4,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923880013701921" : 2,
+    "LOAD_CREATORS_FOR_MMS_9923880013701921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923880013701921" : 0,
+    "TOTAL_BUILD_ASSETS_SECTION" : 87,
+    "TOTAL_SEARCH_TIME" : 2,
+    "TOTAL_PROCESS_RESULTS" : 106
+  },
+  "facets" : [ {
+    "name" : "lang",
+    "values" : [ {
+      "value" : "eng",
+      "count" : "26647"
+    }, {
+      "value" : "chi",
+      "count" : "187"
+    }, {
+      "value" : "ger",
+      "count" : "178"
+    }, {
+      "value" : "spa",
+      "count" : "174"
+    }, {
+      "value" : "fre",
+      "count" : "170"
+    }, {
+      "value" : "heb",
+      "count" : "130"
+    }, {
+      "value" : "rus",
+      "count" : "81"
+    }, {
+      "value" : "lat",
+      "count" : "77"
+    }, {
+      "value" : "ita",
+      "count" : "72"
+    }, {
+      "value" : "jpn",
+      "count" : "41"
+    }, {
+      "value" : "pro",
+      "count" : "25"
+    }, {
+      "value" : "enm",
+      "count" : "19"
+    }, {
+      "value" : "gmh",
+      "count" : "19"
+    }, {
+      "value" : "kor",
+      "count" : "14"
+    }, {
+      "value" : "por",
+      "count" : "14"
+    }, {
+      "value" : "ara",
+      "count" : "10"
+    }, {
+      "value" : "tur",
+      "count" : "9"
+    }, {
+      "value" : "pol",
+      "count" : "7"
+    }, {
+      "value" : "cat",
+      "count" : "6"
+    }, {
+      "value" : "oci",
+      "count" : "6"
+    } ]
+  }, {
+    "name" : "creationdate",
+    "values" : [ {
+      "value" : "1919",
+      "count" : "3"
+    }, {
+      "value" : "2023",
+      "count" : "928"
+    } ]
+  }, {
+    "name" : "rtype",
+    "values" : [ {
+      "value" : "articles",
+      "count" : "16302"
+    }, {
+      "value" : "book_chapters",
+      "count" : "2742"
+    }, {
+      "value" : "books",
+      "count" : "1936"
+    }, {
+      "value" : "thesis",
+      "count" : "1494"
+    }, {
+      "value" : "reviews",
+      "count" : "1198"
+    }, {
+      "value" : "reports",
+      "count" : "848"
+    }, {
+      "value" : "musicalperformance",
+      "count" : "837"
+    }, {
+      "value" : "conferencepresentation",
+      "count" : "798"
+    }, {
+      "value" : "other",
+      "count" : "670"
+    }, {
+      "value" : "conferencepaper",
+      "count" : "447"
+    }, {
+      "value" : "magazinearticle",
+      "count" : "437"
+    }, {
+      "value" : "event",
+      "count" : "422"
+    }, {
+      "value" : "theater",
+      "count" : "394"
+    }, {
+      "value" : "scores",
+      "count" : "348"
+    }, {
+      "value" : "conference_proceedings",
+      "count" : "297"
+    }, {
+      "value" : "encyclopediaentry",
+      "count" : "294"
+    }, {
+      "value" : "preprint",
+      "count" : "246"
+    }, {
+      "value" : "newspaper_articles",
+      "count" : "222"
+    }, {
+      "value" : "dissertations",
+      "count" : "211"
+    }, {
+      "value" : "blog",
+      "count" : "170"
+    } ]
+  }, {
+    "name" : "topic",
+    "values" : [ {
+      "value" : "Humans",
+      "count" : "1281"
+    }, {
+      "value" : "Animals",
+      "count" : "827"
+    }, {
+      "value" : "Chamber Music",
+      "count" : "723"
+    }, {
+      "value" : "United States",
+      "count" : "695"
+    }, {
+      "value" : "Female",
+      "count" : "661"
+    }, {
+      "value" : "Jewish Studies",
+      "count" : "631"
+    }, {
+      "value" : "Male",
+      "count" : "623"
+    }, {
+      "value" : "History",
+      "count" : "572"
+    }, {
+      "value" : "Fine Arts",
+      "count" : "570"
+    }, {
+      "value" : "Instrumental Music",
+      "count" : "561"
+    }, {
+      "value" : "Jewish History",
+      "count" : "498"
+    }, {
+      "value" : "Dramatic Or Theatre Arts",
+      "count" : "497"
+    }, {
+      "value" : "Adult",
+      "count" : "442"
+    }, {
+      "value" : "Article",
+      "count" : "426"
+    }, {
+      "value" : "Vocal Music",
+      "count" : "406"
+    }, {
+      "value" : "Biological And Medical Sciences",
+      "count" : "382"
+    }, {
+      "value" : "Human",
+      "count" : "379"
+    }, {
+      "value" : "Science Technology",
+      "count" : "351"
+    }, {
+      "value" : "Book Reviews",
+      "count" : "320"
+    }, {
+      "value" : "Education",
+      "count" : "320"
+    } ]
+  }, {
+    "name" : "creator",
+    "values" : [ {
+      "value" : "Li Deng",
+      "count" : "637"
+    }, {
+      "value" : "Jonathan Sarna",
+      "count" : "551"
+    }, {
+      "value" : "Irving R Epstein",
+      "count" : "502"
+    }, {
+      "value" : "James E Haber",
+      "count" : "382"
+    }, {
+      "value" : "Michael Rosbash",
+      "count" : "375"
+    }, {
+      "value" : "Erin Gee",
+      "count" : "371"
+    }, {
+      "value" : "Craig Blocker",
+      "count" : "370"
+    }, {
+      "value" : "Bruce Foxman",
+      "count" : "367"
+    }, {
+      "value" : "Eve E Marder",
+      "count" : "365"
+    }, {
+      "value" : "Alberto Annovi",
+      "count" : "350"
+    }, {
+      "value" : "J Adelman",
+      "count" : "347"
+    }, {
+      "value" : "Barry B Snider",
+      "count" : "316"
+    }, {
+      "value" : "C Amelung",
+      "count" : "316"
+    }, {
+      "value" : "Donald Shepard",
+      "count" : "293"
+    }, {
+      "value" : "Jeffrey Hall",
+      "count" : "293"
+    }, {
+      "value" : "Dagmar Ringe",
+      "count" : "289"
+    }, {
+      "value" : "Stephen Cecchetti",
+      "count" : "285"
+    }, {
+      "value" : "D Amidei",
+      "count" : "284"
+    }, {
+      "value" : "Leonard Saxe",
+      "count" : "267"
+    }, {
+      "value" : "Henso Abreu",
+      "count" : "261"
+    } ]
+  }, {
+    "name" : "tlevel",
+    "values" : [ {
+      "value" : "open_access",
+      "count" : "7593"
+    }, {
+      "value" : "peer_reviewed",
+      "count" : "13106"
+    }, {
+      "value" : "online_resources",
+      "count" : "31617"
+    } ]
+  }, {
+    "name" : "academic_unit",
+    "values" : [ {
+      "value" : "01BRAND_INST___CC40100",
+      "count" : "4340"
+    }, {
+      "value" : "01BRAND_INST___CC16200",
+      "count" : "3880"
+    }, {
+      "value" : "01BRAND_INST___CC25200",
+      "count" : "3629"
+    }, {
+      "value" : "01BRAND_INST___CC16500",
+      "count" : "3310"
+    }, {
+      "value" : "01BRAND_INST___CC27200",
+      "count" : "3122"
+    }, {
+      "value" : "01BRAND_INST___CC13200",
+      "count" : "2800"
+    }, {
+      "value" : "01BRAND_INST___CC43100",
+      "count" : "2155"
+    }, {
+      "value" : "01BRAND_INST___CC18400",
+      "count" : "1957"
+    }, {
+      "value" : "01BRAND_INST___CC18700",
+      "count" : "1743"
+    }, {
+      "value" : "01BRAND_INST___CC18500",
+      "count" : "1681"
+    }, {
+      "value" : "01BRAND_INST___CC11200",
+      "count" : "1493"
+    }, {
+      "value" : "01BRAND_INST___CC16800",
+      "count" : "1396"
+    }, {
+      "value" : "01BRAND_INST___CC28100",
+      "count" : "1319"
+    }, {
+      "value" : "01BRAND_INST___CC12102",
+      "count" : "1308"
+    }, {
+      "value" : "01BRAND_INST___CC12400",
+      "count" : "1210"
+    }, {
+      "value" : "01BRAND_INST___CC16100",
+      "count" : "1091"
+    }, {
+      "value" : "01BRAND_INST___CC24700",
+      "count" : "1056"
+    }, {
+      "value" : "01BRAND_INST___CC18300",
+      "count" : "1008"
+    }, {
+      "value" : "01BRAND_INST___CC12600",
+      "count" : "945"
+    }, {
+      "value" : "01BRAND_INST___CC16600",
+      "count" : "916"
+    } ]
+  } ],
+  "assets" : [ {
+    "id" : "9923879958501921",
+    "title" : "Blood pressure elevation in the Nile rat (Arvicanthis niloticus): a new model for diet-induced type 2 diabetes and the metabolic syndrome",
+    "resourceType" : "etd.undergraduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Bachelor of Science (BS), Brandeis University, College of Arts and Sciences",
+    "date" : "2010",
+    "description" : "Background: Major health issues stem from obesity, which has spurred the biological research t1cld to find solutions to these life-threatening diseases as diet-induced type II diabetes and hypertension. In order to understand health related issues, research models must be well understood. The Nile rat is a novel model for type 2 diet induced diabetes and the metabolic syndrome. One major aspect of metabolic syndrome is hypertension; therefore, to develop a more complete understanding of this new rat model and eventually the disease, blood pressure must be evaluated and categorized to determine a possible similarity to human pathophysiology. Purpose: The purpose is to develop the blood pressure perspective in the Nile rat model by evaluating the relationship between blood pressure and factors that evolve in the development of the metabolic syndrome. Methods: Three studies were conducted. In the first study, 23 wk old male Nile rats fed a high. carbohydrate diet were followed for 20 wks to determine blood pressure trends in the development of the metabolic syndrome in the male model. In the second sn1dy, young female Nile rats, fed the same high-carbohydrate diet, were followed to determine the pattern of blood pressure with the development of the metabolic syndrome in the female model. Tn the third study, female Nile rats fed a high fat diet were followed for 6 wks to determine dietary influences on blood pressure. Results: In all three studies the animals separated into early and late-onset diabetic groups based on when their fasting blood glucose surpassed 110 mg/dL. In male rats fed a high-carbohydrate diet a significant separation in blood pressure was observed between the early-onset and late onset rats, whereas female blood pressures did not differ in early-onset and late-onset groups, but female rats had u lower blood pressure and fasting blood glucose on average than the male rats. In both genders, blood pressure positively correlated with age and in the females the blood pressure in early-onset animals positively correlated with kidney function (BUN). High-carbohydrate and high-fat diets fed to the females affected blood pressure equally. Conclusion: The hypothesis that blood pressure in male and female Nile rats correlate with the progression of the diabetes (metabolic syndrome) in the Nile rat was confirmed. In the female model, where more parameters were measured, blood pressure correlated best with renal failure, also a common aspect of type 2 diabetes in humans. The female Nile rats were somehow protected from the same hypertension that occurred in the male rats.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879958501921?calculateAccessRights=true",
+    "permalink" : "/outputs/undergraduate/Blood-pressure-elevation-in-the-Nile/9923879958501921",
+    "creators" : [ {
+      "displayName" : "Spencer Rittner",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879961101921",
+    "title" : "Relationship between Gender Traits and Loneliness: The Role of Self-Esteem",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Arts (MA), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2009",
+    "description" : "Research has shown that gender and gender-linked traits may contribute to individuals’ loneliness. This study examined the relations between gender, gender traits and various types of loneliness. It also addressed whether self-esteem might mediate such relations. Measures included a Demographic Questionnaire, the Bem Sex Role Inventory, Rosenberg’s Self-Esteem Scale, the Revised UCLA Loneliness Scale, and the Social and Emotional Loneliness Scale for Adults – SF. The final sample consisted of 76 females and 44 males. Men had higher global loneliness scores than women. For females, higher levels of masculinity were associated with reduced loneliness feelings, but the effect of masculinity was mediated by self-esteem. For males, neither gender roles nor self-esteem explained the degree of loneliness. Relative to undifferentiated-types, androgynous individuals tended to show the lowest levels of global loneliness. Masculinity and self-esteem was important in reducing loneliness for females, but future studies should continue to explore other factors that might contribute to males’ loneliness.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "10.48617/etd.903",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879961101921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/Relationship-between-Gender-Traits-and-Loneliness/9923879961101921",
+    "creators" : [ {
+      "displayName" : "Jiong Yang",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879960601921",
+    "title" : "Measurement of jet charge in dijet events from √s=8 TeV pp collisions with the ATLAS detector",
+    "resourceType" : "publication.journalArticle",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "03/02/2016",
+    "description" : "The momentum-weighted sum of the charges of tracks associated to a jet is sensitive to the charge of the initiating quark or gluon. This paper presents a measurement of the distribution of momentum-weighted sums, called jet charge, in dijet events using 20.3  fb−1 of data recorded with the ATLAS detector at √s=8  TeV in pp collisions at the LHC. The jet charge distribution is unfolded to remove distortions from detector effects and the resulting particle-level distribution is compared with several models. The pT dependence of the jet charge distribution average and standard deviation are compared to predictions obtained with several leading-order and next-to-leading-order parton distribution functions. The data are also compared to different Monte Carlo simulations of QCD dijet production using various settings of the free parameters within these models. The chosen value of the strong coupling constant used to calculate gluon radiation is found to have a significant impact on the predicted jet charge. There is evidence for a pT dependence of the jet charge distribution for a given jet flavor. In agreement with perturbative QCD predictions, the data show that the average jet charge of quark-initiated jets decreases in magnitude as the energy of the jet increases.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "10.1103/PhysRevD.93.052003",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879960601921?calculateAccessRights=true",
+    "permalink" : "/outputs/journalArticle/Measurement-of-jet-charge-in-dijet/9923879960601921",
+    "creators" : [ {
+      "displayName" : "Christoph Amelung (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Glenn Amundsen (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Giacomo Artoni (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Gaetano Barone (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "James R. Bensinger (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Louis Bianchini (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Craig Blocker (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Laurel Coffey (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Saminder Dhaliwal (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Kevin Loew (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Gabriella Sciolla (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Alessio Venturini (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Keith Zengel (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879962701921",
+    "title" : "An equity analysis of utilization of health services in Afghanistan using a national household survey",
+    "resourceType" : "publication.journalArticle",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "2016",
+    "description" : "Afghanistan has made great strides in the coverage of health services across the country but coverage of key indicators remains low nationally and whether the poorest households are accessing these services is not well understood. We analyzed the Afghanistan Mortality Survey 2010 on utilization of inpatient and outpatient care, institutional delivery and antenatal care by wealth quintiles. Concentration indexes (CIs) were generated to measure the inequality of using the four services. Additional analyses were conducted to examine factors that explain the\\r health inequalities (e.g. age, gender, education and residence).",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "https://doi.org/10.1186/s12889-016-3894-z",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879962701921?calculateAccessRights=true",
+    "permalink" : "/outputs/journalArticle/An-equity-analysis-of-utilization-of/9923879962701921",
+    "creators" : [ {
+      "displayName" : "Wu Zeng (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Christine Kim (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Khwaja Mir Ahad Saeed (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Ahmad Shah Salehi (Author)",
+      "nameForSearch" : null,
+      "role" : "Author",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879957701921",
+    "title" : "Genetic Counseling Training Program Admissions Teams and Racial and Ethnic Diversity: Surveying the Gatekeepers",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Science (MS), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2019",
+    "description" : "A racial and ethnic diversity gap has been observed between the healthcare workforce and the populations it serves. This gap is especially striking within the genetic counseling workforce, with the most recent Professional Status Survey (PSS) demonstrating 95% White membership. Despite years of documented efforts on behalf of the genetic counseling profession to diversify its workforce, the diversity gap has seen very minimal improvement since the inception of the field in 1969. Notably missing from this research are the voices of genetic counseling training programs. The aim of the study was to survey genetic counseling program directors and program admissions teams to gain insight into their views and perceptions of, and efforts to increase diversity in the profession. Eighty-two program admissions team members participated in our survey. We found that most respondents did not think the genetic counseling profession had advanced enough with respect to diversity (97.5%), and that racial and ethnic minorities were not well represented in the profession (95.1%) or the healthcare field at large (64.2%). Financial considerations emerged as the top-rated barrier to diversity as well as one of the most important factors in increasing diversity. An overwhelming majority (84%) agreed that in order to meet parity in genetic counseling, admissions standards need to be lowered. The majority of respondents (92%) agree that they engage in diversification endeavors and over half (55%) report they perform well in this respect. Respondents rated training programs, NSGC, and genetic counselors as a whole, as bearers of the greatest responsibility for diversifying the workforce. Our findings show considerable support for diversification, though substantial variability in strategies to achieve this. A collaborative approach between stakeholders to implement low cost but high-impact strategies, such as mentorship and educational outreach is recommended.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "10.48617/etd.888",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879957701921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/Genetic-Counseling-Training-Program-Admissions-Teams/9923879957701921",
+    "creators" : [ {
+      "displayName" : "Ana Sarmiento",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879961901921",
+    "title" : "The Rise of the State, The Demise of The Nation",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Arts (MA), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2010",
+    "description" : "Although proven, socio-demographic shifts do occur as a result of globalization and its economic, political and social externalities, nationalism in Ireland continues to honor its roots in sovereignty and independence and is ingrained in the fabric of society almost two generations into its post-colonial identity. Eurobarometer indicators, Irish survey data personally collected, and an analysis of the recent Irish rejection of the Lisbon Treaty demonstrate that the Irish people remain true to the mission of their forefathers, placing nationalist pride in their sovereignty, culture and religion, combating globalization’s push for further economic integration and the call for a more regionalized Irish identity. Despite absorbing the world’s most rapid, dramatic globalization process, the Irish people have spoken and show a continuation of traditional nationalism based on principles developed over a century ago. The question here addresses whether globalization transcends nationalistic roots or exacerbates them in the case of Ireland.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "10.48617/etd.909",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879961901921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/The-Rise-of-the-State-The/9923879961901921",
+    "creators" : [ {
+      "displayName" : "John Clark",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923879964001921",
+    "title" : "The CRISPR-Mediated Gene Disruption of the Metal-Responsive Transcription Factor-1 (MTF-1) For the Purpose of Creating a Human Knockout Cell Line",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Science (MS), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2016",
+    "description" : "The metal-responsive transcription factor-1 (MTF-1) is responsible for regulating the transcription of a cohort of genes, most prominently those involved in the regulation of heavy metal and oxidative stresses. Normally found in both the nucleus and cytoplasm, when MTF-1 encounters excess zinc, either directly through free zinc ions, or indirectly, through its cadmium- or peroxide-triggered release from metallothioneins, it rapidly localizes to the nucleus, where it binds to the promoters of its target genes at conserved “metal-responsive elements.” From there, it can recruit coactivators and general transcriptional machinery to positively regulate gene expression. MTF-1 and several of its target genes have been shown in previous literature to be irregularly expressed in cancer. Our objective in this experiment was to utilize the CRISPR method of gene editing to create a human MTF-1 knockout cell line, so that cancer-associated mutations of MTF-1 can be studied further. The goal of targeting the MTF-1 has been realized. HEK293 was transfected with four guide RNA plasmids for targets located on the first exon of MTF-1, with the goal of generating a premature stop codon that would eliminate translation of the essential nuclear import, DNA-binding, and transactivation domains of MTF-1. T7 Endonuclease assay data demonstrates that transfection and targeting were both highly efficient, with nearly fifty percent of the cell culture possessing a lesion at the CRISPR targets.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "10.48617/etd.916",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923879964001921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/The-CRISPR-Mediated-Gene-Disruption-of-the/9923879964001921",
+    "creators" : [ {
+      "displayName" : "Koushik Barman",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923880014301921",
+    "title" : "Development and Damage Responses of Sympathetic Neurons: Early Signaling Pathways and Target Denervation",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Bachelor of Science/Master of Science (BS/MS), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2009",
+    "description" : "In this study, I have looked at the effects of BMP2 on P-Smad cytoplasmic and cellular\\r localization to determine how Smads may regulate GFAP expression to promote an immature\\r glial cell fate.\\r I also have looked at the effects of denervation on cardiac myocytes and the effects of\\r reinnervation by denervated sympathetic neurons onto immature cardiac myocytes. We are\\r therefore looking at the developmental mechanisms promoting the neuronal development while\\r also looking at the effects of sympathetic innervations onto myocytes later in development.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923880014301921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/Development-and-Damage-Responses-of-Sympathetic/9923880014301921",
+    "creators" : [ {
+      "displayName" : "Nithya Setty",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923880014001921",
+    "title" : "The Intellectual Origins of al-Qaeda's Ideology: The Abolishment of the Caliphate through the Afghan Jihad, 1924-1989",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Arts (MA), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2010",
+    "description" : "Intellectual debates spanning sixty-five years among Islamists, Salafists, and Jihadists on the most effective way to reestablish an Islamic state provided the foundation for the strategies, methods, and theoretical framework for al-Qaeda's ideology. This master’s thesis focuses on the evolution in this thought by examining the ideas of Hassan al- Banna, Sayyid Qutb, Muhammad ‘Abd al-Salam Farrag and ‘Abdullah ‘Azzam. An examination of al-Qaeda's ideological origins sheds light on the inner debates over doctrine and strategy in the Jihadist movement. This thesis demonstrates that Jihadist thought is not monolithic or rigid as often assumed, but rather complex, nuanced, and diverse. It also highlights the necessity in studying Jihadism in a comprehensive and systematic manner while applying different tools from a variety of disciplines to gain a rich understanding of an intricate area of study, which is too often misunderstood or inadequately researched.",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923880014001921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/The-Intellectual-Origins-of-al-Qaedas-Ideology/9923880014001921",
+    "creators" : [ {
+      "displayName" : "Aaron Zelin",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923880013701921",
+    "title" : "The Psychosocial Implications of Hereditary Diffuse Gastric Cancer",
+    "resourceType" : "etd.graduate",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Brandeis University",
+    "etdDetails" : "Master of Science (MS), Brandeis University, Graduate School of Arts and Sciences",
+    "date" : "2014",
+    "description" : "The unique journey families face with hereditary cancers warrants investigation as it impacts quality of life and survival in ways that are different from experiences in families with sporadic cancer.  With hereditary diffuse gastric cancer (HDGC), this stems from the discovery of a mutation known to predispose to gastric cancer as well as the prophylactic total gastrectomy (TG) necessary to reduce risk.  Few studies have looked at the psychosocial ramifications of the identification of a hereditary predisposition for gastric cancer in a family and the necessary prophylactic surgery that follows.\\r The purpose of this qualitative study was to explore the psychosocial journey facing families with members found to carry the mutation known to cause a predisposition for HDGC.    Eighty-four individuals completed a survey, offering advice for those stepping into the experience and for the professionals guiding them.  We used qualitative content analysis to interpret responses to five open ended questions.\\r From the 84 survey respondents, the following should be considered in the guidance of individuals and families facing the experience of HDGC:  (1) Physicians need to be better educated about the physical and emotional aspects of dealing with HDGC.  (2) Dieticians need information about the unique dietary requirements associated with TG.  (3) Genetic counselors should be prepared to educate and provide resources for entire families, including those individuals who are not at risk.\\r This study shows those dealing with HDGC are in need of help from the medical community, including genetic counselors.  This highly motivated group is eager to educate and share their experiences with others. The implications for genetic counseling services and also for pre and post surgical services for those facing a TG will be discussed.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923880013701921?calculateAccessRights=true",
+    "permalink" : "/outputs/graduate/The-Psychosocial-Implications-of-Hereditary-Diffuse/9923880013701921",
+    "creators" : [ {
+      "displayName" : "Marcina Beaston-Casey",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  } ]
+}
