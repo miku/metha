@@ -156,8 +156,7 @@ XML processing with Go is slow, about 9k docs/s; a bit involved to parallelize
 (with the current concatenated XML).  Sorting 131G zstd compressed data takes
 34 min (w/ lots of RAM). Sorted data seems to compress better (131G, 61G --
 just from the number of docs, it should be 78G).  Got: `285337003
-395569855616`, that's only 6M more than the in the previous run, that's only 6M
-more than the in the previous run.
+395569855616`, that's only 6M more than the in the previous run.
 
 285M docs, about 400G of raw JSON. Baseline iteration <6 min (fast storage).
 277814855 urls (50s to sort). 219,281,389 unique URLs. 13812548 links ending
@@ -172,4 +171,13 @@ Base names: 48M (datacite), 20M (science direct), 14M (springer), 9M (doaj) -
 that's 91M extra; assuming none of those appear in the ojs set, we could be at
 285M + 91M = 376M docs, w/o crossref and pubmed.
 
+2023-09-04 update: about 473M lines w/o deletions, before deduplication. XML to
+JSON took almost 14h (822 min).
+
+```
+2023/09/04 03:05:00 {"deleted":21959972,"elapsed_s":49356,"encoded":473391896,"rps":10317,"skipped":13855861,"total":509207729}
+```
+
+Unique docs: `302735629 424150789311` - 302M unique docs (added about 15M),
+395GB uncompressed.
 
