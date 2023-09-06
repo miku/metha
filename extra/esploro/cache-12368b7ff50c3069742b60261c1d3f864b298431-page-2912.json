@@ -1,0 +1,790 @@
+{
+  "info" : {
+    "totalResultsLocal" : 31633,
+    "totalResultsPC" : -1,
+    "total" : 31633,
+    "first" : 1,
+    "last" : 10
+  },
+  "highlights" : { },
+  "docs" : [ {
+    "id" : 9924027382901921
+  }, {
+    "id" : 9923989581201921
+  }, {
+    "id" : 9923989580201921
+  }, {
+    "id" : 9923989581601921
+  }, {
+    "id" : 9923989580501921
+  }, {
+    "id" : 9924099504401921
+  }, {
+    "id" : 9924099504501921
+  }, {
+    "id" : 9924099504001921
+  }, {
+    "id" : 9924070324901921
+  }, {
+    "id" : 9924027357801921
+  } ],
+  "timelog" : {
+    "CALL_SOLR_GET_IDS_LIST" : "22",
+    "ESPLORO_LOCAL_SEARCH_TOTAL" : "46",
+    "BUILD_BLEND_AND_CACHE_RESULTS" : 0,
+    "BUILD_COMBINED_RESULTS_MAP" : 0,
+    "BUILD_MMS_IDS_LIST" : 0,
+    "LOAD_ENTITIES_FROM_DB" : 10,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924027382901921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924027382901921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9924027382901921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9924027382901921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923989581201921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923989581201921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923989581201921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923989581201921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923989580201921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923989580201921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923989580201921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9923989580201921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923989581601921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923989581601921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9923989581601921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923989581601921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9923989580501921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9923989580501921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9923989580501921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9923989580501921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924099504401921" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924099504401921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9924099504401921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9924099504401921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924099504501921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924099504501921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9924099504501921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9924099504501921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924099504001921" : 2,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924099504001921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9924099504001921" : 1,
+    "PROCESS_CREATORS_FOR_MMS_9924099504001921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924070324901921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924070324901921" : 4,
+    "LOAD_CREATORS_FOR_MMS_9924070324901921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9924070324901921" : 0,
+    "GET_ESPLORO_ENTITY_MODEL_FOR_MMS_9924027357801921" : 3,
+    "LOAD_ASSET_EXTENTION_FOR_MMS_9924027357801921" : 3,
+    "LOAD_CREATORS_FOR_MMS_9924027357801921" : 0,
+    "PROCESS_CREATORS_FOR_MMS_9924027357801921" : 0,
+    "TOTAL_BUILD_ASSETS_SECTION" : 88,
+    "TOTAL_SEARCH_TIME" : 3,
+    "TOTAL_PROCESS_RESULTS" : 100
+  },
+  "facets" : [ {
+    "name" : "lang",
+    "values" : [ {
+      "value" : "eng",
+      "count" : "26657"
+    }, {
+      "value" : "chi",
+      "count" : "187"
+    }, {
+      "value" : "ger",
+      "count" : "178"
+    }, {
+      "value" : "spa",
+      "count" : "176"
+    }, {
+      "value" : "fre",
+      "count" : "170"
+    }, {
+      "value" : "heb",
+      "count" : "130"
+    }, {
+      "value" : "rus",
+      "count" : "81"
+    }, {
+      "value" : "lat",
+      "count" : "77"
+    }, {
+      "value" : "ita",
+      "count" : "72"
+    }, {
+      "value" : "jpn",
+      "count" : "41"
+    }, {
+      "value" : "pro",
+      "count" : "25"
+    }, {
+      "value" : "enm",
+      "count" : "19"
+    }, {
+      "value" : "gmh",
+      "count" : "19"
+    }, {
+      "value" : "kor",
+      "count" : "14"
+    }, {
+      "value" : "por",
+      "count" : "14"
+    }, {
+      "value" : "ara",
+      "count" : "10"
+    }, {
+      "value" : "tur",
+      "count" : "9"
+    }, {
+      "value" : "pol",
+      "count" : "7"
+    }, {
+      "value" : "cat",
+      "count" : "6"
+    }, {
+      "value" : "oci",
+      "count" : "6"
+    } ]
+  }, {
+    "name" : "creationdate",
+    "values" : [ {
+      "value" : "1919",
+      "count" : "3"
+    }, {
+      "value" : "2023",
+      "count" : "951"
+    } ]
+  }, {
+    "name" : "rtype",
+    "values" : [ {
+      "value" : "articles",
+      "count" : "16211"
+    }, {
+      "value" : "book_chapters",
+      "count" : "2743"
+    }, {
+      "value" : "books",
+      "count" : "1936"
+    }, {
+      "value" : "thesis",
+      "count" : "1496"
+    }, {
+      "value" : "reviews",
+      "count" : "1286"
+    }, {
+      "value" : "reports",
+      "count" : "848"
+    }, {
+      "value" : "musicalperformance",
+      "count" : "837"
+    }, {
+      "value" : "conferencepresentation",
+      "count" : "799"
+    }, {
+      "value" : "other",
+      "count" : "671"
+    }, {
+      "value" : "conferencepaper",
+      "count" : "447"
+    }, {
+      "value" : "magazinearticle",
+      "count" : "439"
+    }, {
+      "value" : "event",
+      "count" : "422"
+    }, {
+      "value" : "theater",
+      "count" : "395"
+    }, {
+      "value" : "scores",
+      "count" : "348"
+    }, {
+      "value" : "conference_proceedings",
+      "count" : "297"
+    }, {
+      "value" : "encyclopediaentry",
+      "count" : "294"
+    }, {
+      "value" : "preprint",
+      "count" : "247"
+    }, {
+      "value" : "newspaper_articles",
+      "count" : "223"
+    }, {
+      "value" : "dissertations",
+      "count" : "211"
+    }, {
+      "value" : "blog",
+      "count" : "170"
+    } ]
+  }, {
+    "name" : "topic",
+    "values" : [ {
+      "value" : "Humans",
+      "count" : "1280"
+    }, {
+      "value" : "Animals",
+      "count" : "827"
+    }, {
+      "value" : "Chamber Music",
+      "count" : "723"
+    }, {
+      "value" : "United States",
+      "count" : "694"
+    }, {
+      "value" : "Female",
+      "count" : "661"
+    }, {
+      "value" : "Jewish Studies",
+      "count" : "632"
+    }, {
+      "value" : "Male",
+      "count" : "623"
+    }, {
+      "value" : "History",
+      "count" : "572"
+    }, {
+      "value" : "Fine Arts",
+      "count" : "571"
+    }, {
+      "value" : "Instrumental Music",
+      "count" : "561"
+    }, {
+      "value" : "Dramatic Or Theatre Arts",
+      "count" : "499"
+    }, {
+      "value" : "Jewish History",
+      "count" : "498"
+    }, {
+      "value" : "Adult",
+      "count" : "442"
+    }, {
+      "value" : "Article",
+      "count" : "426"
+    }, {
+      "value" : "Vocal Music",
+      "count" : "406"
+    }, {
+      "value" : "Biological And Medical Sciences",
+      "count" : "382"
+    }, {
+      "value" : "Human",
+      "count" : "379"
+    }, {
+      "value" : "Science Technology",
+      "count" : "355"
+    }, {
+      "value" : "Education",
+      "count" : "320"
+    }, {
+      "value" : "Book Reviews",
+      "count" : "319"
+    } ]
+  }, {
+    "name" : "creator",
+    "values" : [ {
+      "value" : "Li Deng",
+      "count" : "637"
+    }, {
+      "value" : "Jonathan Sarna",
+      "count" : "551"
+    }, {
+      "value" : "Irving R Epstein",
+      "count" : "502"
+    }, {
+      "value" : "James E Haber",
+      "count" : "382"
+    }, {
+      "value" : "Michael Rosbash",
+      "count" : "375"
+    }, {
+      "value" : "Erin Gee",
+      "count" : "371"
+    }, {
+      "value" : "Craig Blocker",
+      "count" : "369"
+    }, {
+      "value" : "Bruce Foxman",
+      "count" : "367"
+    }, {
+      "value" : "Eve E Marder",
+      "count" : "366"
+    }, {
+      "value" : "Alberto Annovi",
+      "count" : "349"
+    }, {
+      "value" : "J Adelman",
+      "count" : "346"
+    }, {
+      "value" : "Barry B Snider",
+      "count" : "316"
+    }, {
+      "value" : "C Amelung",
+      "count" : "315"
+    }, {
+      "value" : "Donald Shepard",
+      "count" : "293"
+    }, {
+      "value" : "Jeffrey Hall",
+      "count" : "293"
+    }, {
+      "value" : "Dagmar Ringe",
+      "count" : "289"
+    }, {
+      "value" : "Stephen Cecchetti",
+      "count" : "285"
+    }, {
+      "value" : "D Amidei",
+      "count" : "283"
+    }, {
+      "value" : "Leonard Saxe",
+      "count" : "266"
+    }, {
+      "value" : "Henso Abreu",
+      "count" : "260"
+    } ]
+  }, {
+    "name" : "tlevel",
+    "values" : [ {
+      "value" : "open_access",
+      "count" : "7599"
+    }, {
+      "value" : "peer_reviewed",
+      "count" : "13123"
+    }, {
+      "value" : "online_resources",
+      "count" : "31633"
+    } ]
+  }, {
+    "name" : "academic_unit",
+    "values" : [ {
+      "value" : "01BRAND_INST___CC40100",
+      "count" : "4340"
+    }, {
+      "value" : "01BRAND_INST___CC16200",
+      "count" : "3881"
+    }, {
+      "value" : "01BRAND_INST___CC25200",
+      "count" : "3631"
+    }, {
+      "value" : "01BRAND_INST___CC16500",
+      "count" : "3312"
+    }, {
+      "value" : "01BRAND_INST___CC27200",
+      "count" : "3124"
+    }, {
+      "value" : "01BRAND_INST___CC13200",
+      "count" : "2798"
+    }, {
+      "value" : "01BRAND_INST___CC43100",
+      "count" : "2156"
+    }, {
+      "value" : "01BRAND_INST___CC18400",
+      "count" : "1958"
+    }, {
+      "value" : "01BRAND_INST___CC18700",
+      "count" : "1746"
+    }, {
+      "value" : "01BRAND_INST___CC18500",
+      "count" : "1680"
+    }, {
+      "value" : "01BRAND_INST___CC11200",
+      "count" : "1494"
+    }, {
+      "value" : "01BRAND_INST___CC16800",
+      "count" : "1399"
+    }, {
+      "value" : "01BRAND_INST___CC28100",
+      "count" : "1319"
+    }, {
+      "value" : "01BRAND_INST___CC12102",
+      "count" : "1308"
+    }, {
+      "value" : "01BRAND_INST___CC12400",
+      "count" : "1209"
+    }, {
+      "value" : "01BRAND_INST___CC16100",
+      "count" : "1091"
+    }, {
+      "value" : "01BRAND_INST___CC24700",
+      "count" : "1057"
+    }, {
+      "value" : "01BRAND_INST___CC18300",
+      "count" : "1007"
+    }, {
+      "value" : "01BRAND_INST___CC12600",
+      "count" : "946"
+    }, {
+      "value" : "01BRAND_INST___CC16600",
+      "count" : "916"
+    } ]
+  } ],
+  "assets" : [ {
+    "id" : "9924027382901921",
+    "title" : "Teacher Curriculum Work Center: a descriptive study",
+    "resourceType" : "publication.book",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "University of North Dakota",
+    "etdDetails" : "",
+    "date" : "1975",
+    "description" : "",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924027382901921?calculateAccessRights=true",
+    "permalink" : "/outputs/book/Teacher-Curriculum-Work-Center-a-descriptive/9924027382901921",
+    "creators" : [ {
+      "displayName" : "North Dakota Study Group on Evaluation",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Sharon Feiman-Nemser",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923989581201921",
+    "title" : "Structure and γ-ray-induced solid-state polymerization of sodium propynoate : Influence of bilayer formation on solid-state reactivity: Design of solids from molecular building blocks: golden opportunities for solid state chemistry",
+    "resourceType" : "publication.journalArticle",
+    "publicationDetails" : "Journal of solid state chemistry, Vol.152(1), pp.99-104",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "06/2000",
+    "description" : "Sodium propynoate, Na(O2CC≡CH) 1, was synthesized from propynoic acid and sodium hydroxide in methanol solution. Irradiation of solid 1 with 60Co γ-rays (654 kGy dose) leads to an amorphous dark-colored acetylenic polymer in high yield. An X-ray structure determination of compound 1 shows that the sodium ion is five-coordinate, with a square-pyramidal geometry. The five-coordinate local moiety is part of an unusual two-dimensional polymer in the crystal bc plane. Crystal packing of the two-dimensional, solid-state polymers leads to a bilayer motif, and the relatively short metal–metal distance of 3.575 Å promotes close packing of the organic tails with parallel acetylene moieties and a very short –C≡C–···–C≡C– contact of 3.29 Å along the crystallographic b direction. Crystal data for 1: orthorhombic, space group Pna21, a=19.837(6), b=3.575(1), and c=5.232(1) Å; V=371.0 Å3; Z=4; R=0.0262; Rw=0.0327 for 427 data for which I>1.96σ(I).",
+    "peerreview" : true,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923989581201921?calculateAccessRights=true",
+    "permalink" : "/outputs/journalArticle/Structure-and-γ-ray-induced-solid-state-polymerization-of/9923989581201921",
+    "creators" : [ {
+      "displayName" : "J. D JAUFMANN",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "C. B CASE",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "R. B SANDOR",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "B. M FOXMAN",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923989580201921",
+    "title" : "Validation and Commercialization of Dense Phase Carbon Dioxide Processing for Orange Juice",
+    "resourceType" : "publication.bookChapter",
+    "publicationDetails" : "Case Studies in Novel Food Processing Technologies - Innovations in Processing, Packaging and Predictive Modelling, pp.209-225",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "Woodhead Publishing",
+    "etdDetails" : "",
+    "date" : "2010",
+    "description" : "Dense phase carbon dioxide is a non-thermal processing alternative with many advantages for the pasteurization of juice. This chapter discusses the validation, scale-up, and commercialization of the first dense phase carbon dioxide processing system in the United States. Process validation and shelf life studies showed that dense phase carbon dioxide processing is capable of maintaining the freshly squeezed quality of orange juice while meeting the 5-log reduction on pertinent pathogens as mandated by the Food and Drug Administration Juice Hazard Analysis Critical Control Point Regulation. Results of the pilot model, the prototypes, and the commercial system demonstrated that the dense phase carbon dioxide system is scalable in terms of size and performance.",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923989580201921?calculateAccessRights=true",
+    "permalink" : "/outputs/bookChapter/Validation-and-Commercialization-of-Dense-Phase/9923989580201921",
+    "creators" : [ {
+      "displayName" : "Kustin Kenneth",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Feeherry Florence E",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Doona Christopher J",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923989581601921",
+    "title" : "Crystal and molecular structure of (Ni((CH3)2C(OH)CH2COCH3)2) (Ni(nos)4(p(CH2CH2CN)3)2): A beta hydroxyketone chelate complex [Interim Report]",
+    "resourceType" : "publication.journalArticle",
+    "publicationDetails" : "Crystal and molecular structure of (Ni((CH3)2C(OH)CH2COCH3)2) (Ni(nos)4(p(CH2CH2CN)3)2): A beta hydroxyketone chelate complex [Interim Report], pp.27P-27P",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "08/01/1978",
+    "description" : "The title compound was synthesized and its crystal structure determined by single crystal X-ray diffraction methods. The complex crystallizes in space group P1, with a = 12.773(4), b = 11.421(3), c = 8.864(3) A; alpha = 106.37(5), beta = 78.56(5), gamma = 104.37(5) degrees. Full matrix least squares refinement of positional and thermal parameters for all atoms (3 methyl H atoms fixed), with 3610 reflections led to R = 0.044 and P sub (w) = 0.064. Both cation and anion occupy crystallographic centers of symmetry. In the cation, the beta-hydroxketone ligand is not planar; the hydroxyl oxygen atom and beta-carbon atom lie +0.40 and -0.38 A out of the plane containing Ni and the other ligans atoms. The Ni-O distances to the carbonyl and hydroxyl oxygen atoms are 1.895(3) and 1.927(3) A, respectively. The anion is trans-octahedral; Ni-N-C angles show large distortions from linearity: 160.7(3) and 163.9(3) degrees.",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923989581601921?calculateAccessRights=true",
+    "permalink" : "/outputs/journalArticle/Crystal-and-molecular-structure-of-NiCH32COHCH2COCH32/9923989581601921",
+    "creators" : [ {
+      "displayName" : "B M FOXMAN",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "H MAZUREK",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9923989580501921",
+    "title" : "Use of a bidentate ligand featuring an N-Heterocyclic phosphenium cation to systematically explore the bonding of NH[P.sup.+] ligands with nickel",
+    "resourceType" : "publication.journalArticle",
+    "publicationDetails" : "Inorganic chemistry, Vol.54(17), pp.8717-8726",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "09/08/2015",
+    "description" : "A novel bidentate ligand featuring an N-heterocyclic phosphenium cation (NHP+) linked to a phosphine side arm is used to explore the coordination chemistry of NHP+ ligands with nickel. Direct P–Cl bond cleavage from a chlorophosphine precursor [PP]-Cl (1) by Ni(COD)2 affords the asymmetric bimetallic complex [Cl2Ni(μ-PP)2Ni] (2) via a nonoxidative process. Abstraction of the halide with either NaBPh4 or K[B(C6F5)4] prior to metal coordination to form the free phosphenium ligand [PP]+in situ, followed by coordination to Ni(COD)2, afforded the halide-free Ni0 complexes [(PP)Ni(COD)] [B(C6F5)4] (4) and [(PP)Ni(COD)][BPh4] (5). Chloride abstraction from 1 is problematic in the presence of a PF6– counterion, however, as evident by the formation of [(PP)Ni(PP-F)][PF6] (3). The COD ligand in 5 can be readily displaced with PMe3 or PPh3 to afford [(PP)NiL2][BPh4] (L = PMe3 (6), PPh3 (7)). Complexes 2–7 feature planar geometries about the NHP+ phosphorus atom and unusually short Ni–P distances, indicative of multiple bonding resulting from both P → Ni σ donation and Ni → P π backbonding. This bonding description is supported by theoretical studies using natural bond orbital analysis.",
+    "peerreview" : true,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9923989580501921?calculateAccessRights=true",
+    "permalink" : "/outputs/journalArticle/Use-of-a-bidentate-ligand-featuring/9923989580501921",
+    "creators" : [ {
+      "displayName" : "Mark W Bezpalko",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Bruce M Foxman",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    }, {
+      "displayName" : "Christine M Thomas",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9924099504401921",
+    "title" : "Revisiting Lindbergh and Winchell ahead of \"The plot against America\"",
+    "resourceType" : "publication.magazineArticle",
+    "publicationDetails" : "The Hollywood Reporter",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "02/25/2020",
+    "description" : "Brandeis University professor Thomas Doherty, author of an upcoming book about the Charles Lindbergh kidnapping, weighs in ahead of the premiere of HBO's limited series 'The Plot Against America,' an adaptation of Philip Roth's novel.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924099504401921?calculateAccessRights=true",
+    "permalink" : "/outputs/magazineArticle/Revisiting-Lindbergh-and-Winchell-ahead-of/9924099504401921",
+    "creators" : [ {
+      "displayName" : "Thomas Doherty",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9924099504501921",
+    "title" : "The kindest of strangers",
+    "resourceType" : "publication.magazineArticle",
+    "publicationDetails" : "Tablet",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "02/07/2020",
+    "description" : "A new biography revives the generous life of Salka Viertel, L.A. ‘salonnière,’ memoirist, ‘Garbo specialist,’ and Jewish mother to Hollywood stars",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924099504501921?calculateAccessRights=true",
+    "permalink" : "/outputs/magazineArticle/The-kindest-of-strangers/9924099504501921",
+    "creators" : [ {
+      "displayName" : "Thomas Doherty",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9924099504001921",
+    "title" : "The art of the rebuke",
+    "resourceType" : "publication.magazineArticle",
+    "publicationDetails" : "Inside Higher Ed",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "07/18/2017",
+    "description" : "Thomas Doherty wonders if today’s atmosphere on college campuses encourages, or even tolerates, the kind of unsparing reprimand from a professor that might be needed for a student’s growth.",
+    "peerreview" : false,
+    "openaccess" : true,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924099504001921?calculateAccessRights=true",
+    "permalink" : "/outputs/magazineArticle/The-art-of-the-rebuke/9924099504001921",
+    "creators" : [ {
+      "displayName" : "Thomas Doherty",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9924070324901921",
+    "title" : "Mouthpiece I",
+    "resourceType" : "creativeWork.musicalPerformance",
+    "publicationDetails" : "",
+    "conferenceDetails" : "",
+    "eventDetails" : "Concert (University of Western Ontario, 10/03/2010)",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "10/03/2010",
+    "description" : "Mouthpiece I, Yamaguchi Mouthpiece 3",
+    "peerreview" : false,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924070324901921?calculateAccessRights=true",
+    "permalink" : "/outputs/musicalPerformance/Mouthpiece-I/9924070324901921",
+    "creators" : [ {
+      "displayName" : "Erin Gee (Composer)",
+      "nameForSearch" : null,
+      "role" : "Composer",
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  }, {
+    "id" : "9924027357801921",
+    "title" : "THE NATHAN NARRATIVES. JSOTSup 80",
+    "resourceType" : "publication.bookReview",
+    "publicationDetails" : "Hebrew Studies, Vol.34, pp.148-151",
+    "conferenceDetails" : "",
+    "eventDetails" : "",
+    "seriesDetails" : "",
+    "etdDetails" : "",
+    "date" : "01/01/1993",
+    "description" : "",
+    "peerreview" : true,
+    "openaccess" : false,
+    "doi" : "",
+    "thumbnail" : "/view/delivery/thumbnail/<inst_code>/9924027357801921?calculateAccessRights=true",
+    "permalink" : "/outputs/bookReview/THE-NATHAN-NARRATIVES-JSOTSup-80/9924027357801921",
+    "creators" : [ {
+      "displayName" : "Marc Brettler",
+      "nameForSearch" : null,
+      "role" : null,
+      "source" : null,
+      "affiliationName" : null,
+      "affiliationCode" : null,
+      "orcid" : null,
+      "urlIdentifier" : null,
+      "affiliated" : false
+    } ],
+    "identifiers" : ""
+  } ]
+}
