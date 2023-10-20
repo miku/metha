@@ -193,10 +193,11 @@ Use an endless loop with a timeout to get out of any hanging connection (which
 happen). Example scrape, converted to JSON (40+ GB:
 [2023-06-15-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_20230615/2023-06-15-metha-oai.ndjson.zst)).
 
-```
+```shell
 $ while true; do \
-    timeout 180 bash -c "metha-sync -list | \
-    shuf | parallel -j 96 -I {} 'metha-sync -T 10s {}'"; \
+    timeout 120 metha-sync -list | \
+    shuf | \
+    parallel -j 64 -I {} "metha-sync -base-dir ~/.cache/metha {}"; \
 done
 ```
 
