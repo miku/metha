@@ -201,6 +201,14 @@ $ while true; do \
 done
 ```
 
+metha stores harvested data in one file per interval; to combine all XML files
+into a single JSON file you can utilize the
+[xmlstream.go](https://github.com/miku/metha/blob/master/extra/largecrawl/xmlstream.go) (adjust the harvest directory):
+
+```shell
+$ fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D
+```
+
 ![](docs/metha-net-zenith.png)
 
 ## Errors this harvester can somewhat handle
