@@ -181,3 +181,39 @@ JSON took almost 14h (822 min).
 Unique docs: `302735629 424150789311` - 302M unique docs (added about 15M),
 395GB uncompressed.
 
+## Iterations
+
+We let `metha-sync` run in an endless loop, then at time do a cut of the metadata.
+
+### Iteration 3 (2023-10-31)
+
+This was done after extending the list of endpoints to 154742. Concatenating
+data from 15M gzipped files took over 30h, result: 155G compressed.
+
+```
+$ time fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D | pv -l | zstd -c -T0 > metha-3.json.zst
+
+...
+
+2023/10/31 21:01:00 {"deleted":23463086,"elapsed_s":110671,"encoded":505854488,"rps":4923,"skipped":15625780,"total":544943354}                                                                                                   <=>         ]
+
+
+real    1844m31.991s
+user    2121m14.089s
+sys     2222m31.007s
+```
+
+Need to deduplicate on the whole record level first; based on previous
+uniq/total ratios: expecting 64 GB, got 66 GB.
+
+Got: 326,163,077 records (465,924,072,501; 433 GB)
+
+Cf. base search as of 2023-11-01 has 346,020,057 docs and includes 50M from datacite, 44M+ from crossref and DOAJ.
+
+The 326M records contain about 331M urls, and 240,824,363 unique. There may be documents that have no URL at all, at least in the metadata.
+
+```
+$ zstdcat -T0 metha-3-uniq.json.zst | pv -l | parallel --pipe --block 10M -j 36 "jq -rc 'select(.urls == null)'" | wc -l
+...
+```
+
