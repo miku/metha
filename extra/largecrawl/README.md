@@ -185,7 +185,7 @@ Unique docs: `302735629 424150789311` - 302M unique docs (added about 15M),
 
 We let `metha-sync` run in an endless loop, then at time do a cut of the metadata.
 
-### Iteration 3 (2023-10-31)
+### Iteration #3 (2023-10-31)
 
 This was done after extending the list of endpoints to 154742. Concatenating
 data from 15M gzipped files took over 30h, result: 155G compressed.
@@ -214,6 +214,6 @@ The 326M records contain about 331M urls, and 240,824,363 unique. There may be d
 
 ```
 $ zstdcat -T0 metha-3-uniq.json.zst | pv -l | parallel --pipe --block 10M -j 36 "jq -rc 'select(.urls == null)'" | wc -l
-...
+76319859
 ```
 
