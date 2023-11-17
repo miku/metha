@@ -15,10 +15,12 @@ func RandomEndpoint() string {
 var EndpointList string
 
 // Endpoints from https://git.io/fxvs0.
-var Endpoints = strings.Split(EndpointList, "\n")
+var Endpoints = splitNonEmpty(EndpointList, "\n")
 
-func splitNonEmpty(s string) (result []string) {
-	for _, v := range strings.Split(EndpointList) {
+// splitNonEmpty is like strings.Split, except it will skip empty string
+// results.
+func splitNonEmpty(s string, sep string) (result []string) {
+	for _, v := range strings.Split(s, sep) {
 		v = strings.TrimSpace(v)
 		if len(v) == 0 {
 			continue
