@@ -1,6 +1,7 @@
 package metha
 
 import (
+	_ "embed"
 	"math/rand"
 	"strings"
 )
