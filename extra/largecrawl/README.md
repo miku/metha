@@ -219,5 +219,5 @@ $ zstdcat -T0 metha-3-uniq.json.zst | pv -l | parallel --pipe --block 10M -j 36 
 
 Upload:
 
-* [https://archive.org/details/oai_harvest_20231101](https://archive.org/details/oai_harvest_20231101) (66 GB)
+* [https://archive.org/details/oai_harvest_2023-11-01](https://archive.org/details/oai_harvest_2023-11-01) (66 GB)
 
