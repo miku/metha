@@ -16,3 +16,14 @@ var EndpointList string
 
 // Endpoints from https://git.io/fxvs0.
 var Endpoints = strings.Split(EndpointList, "\n")
+
+func splitNonEmpty(s string) (result []string) {
+	for _, v := range strings.Split(EndpointList) {
+		v = strings.TrimSpace(v)
+		if len(v) == 0 {
+			continue
+		}
+		result = append(result, v)
+	}
+	return
+}
