@@ -7,8 +7,9 @@ SHELL := /bin/bash
 sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
 	cat $^ | python unique_by_schema.py | sort -u > $@
 	# try to filter out predatory journals
-	grep -v -f predatory.tsv sites.tsv | sponge sites.tsv
-	grep -v "web.archive.org/web" sites.tsv | sponge sites.tsv
+	grep -v -f predatory.tsv < sites.tsv | sponge sites.tsv
+	grep -v "web.archive.org/web" < sites.tsv | sponge sites.tsv
+	sed -e 's@?verb=.*@@' < sites.tsv | sponge sites.tsv
 	sort -o sites.tsv -u sites.tsv
 
 sites.json: sites.tsv
