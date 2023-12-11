@@ -167,6 +167,8 @@ func (c *Client) Do(r *Request) (*Response, error) {
 	// declared "UTF-8", but actually ... A rare issue nonetheless; add more
 	// cases here if necessary; observed in the wild in 05/2022 at
 	// http://digi.ub.uni-heidelberg.de/cgi-bin/digioai.cgi?from=2021-07-01T00:00:00Z&metadataPrefix=oai_dc&until=2021-07-31T23:59:59Z&verb=ListRecords.
+	//
+	// TODO: https://github.com/miku/metha/issues/35
 	decls := [][]byte{
 		[]byte(`<?xml version="1.0" encoding="UTF-8"?>`),
 		[]byte(`<?xml version="1.0" encoding="ISO-8859-1"?>`),
