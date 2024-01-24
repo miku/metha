@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-snapshot
-VERSION = 0.2.56
+VERSION = 0.2.57
 CGO_ENABLED = 0 # https://github.com/miku/metha/issues/31
 MAKEFLAGS := --jobs=$(shell nproc)
 
