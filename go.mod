@@ -6,7 +6,7 @@ require (
 	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/jinzhu/now v1.1.5
-	github.com/klauspost/compress v1.17.4 // indirect
+	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/klauspost/pgzip v1.2.6
 	github.com/miku/parallel v0.0.0-20221125231438-6020962e560a
 	github.com/neurosnap/sentences v1.1.2
