@@ -9,7 +9,7 @@ The metha command line tools can gather information on OAI-PMH endpoints and
 harvest data incrementally. The goal of metha is to make it simple to get
 access to data, its focus is not to manage it.
 
-[![builds.sr.ht status](https://builds.sr.ht/~miku/metha.svg)](https://builds.sr.ht/~miku/metha?) [![DOI](https://zenodo.org/badge/56384577.svg)](https://zenodo.org/badge/latestdoi/56384577) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![DOI](https://zenodo.org/badge/56384577.svg)](https://zenodo.org/badge/latestdoi/56384577) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
 The metha tool has been developed for [Project finc](https://finc.info) at
 [Leipzig University Library](https://ub.uni-Leipzig.de).
