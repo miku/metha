@@ -7,6 +7,8 @@ $ ./update-sites-oa.sh
 $ make
 ```
 
+About 80% of the URLs in `sites.tsv` may be usable (about 1250000 as of 01/2024).
+
 ----
 
 Used for manual testing of metha. Might serve as a seed list for larger
