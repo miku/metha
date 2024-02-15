@@ -2,347 +2,213 @@
 .SH NAME
 .PP
 metha \- harvest OAI\-PMH conform endpoints
-
 .SH SYNOPSIS
 .PP
 \fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
-
 .PP
 \fB\fCmetha\-sync\fR [\fB\fC\-dir\fR] \fIendpoint\fP
-
 .PP
 \fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
-
 .PP
 \fB\fCmetha\-id\fR \fIendpoint\fP
-
 .PP
 \fB\fCmetha\-ls\fR [\fB\fC\-a\fR] \fIendpoint\fP
-
 .PP
 \fB\fCmetha\-files\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
-
 .SH DESCRIPTION
 .PP
 The Open Archives Initiative Protocol for Metadata Harvesting (OAI\-PMH) is a
 protocol developed for harvesting metadata descriptions of records in an
 archive. The specification can be found under
-
 \[la]https://www.openarchives.org/pmh/\[ra]\&.
-
 .PP
 This tool harvests and caches data, so incremental invocations on the same
 endpoint are fast.
-
 .PP
-A list of over 80000 (more or less usable) endpoints can be found here: 
-\[la]https://is.gd/UrST8m\[ra]\&.
-
+A list of over 80000 (more or less usable) endpoints can be found here: \[la]https://is.gd/UrST8m\[ra]\&.
 .SH OPTIONS
 .PP
 Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to see flags for other commands.
-
 .PP
 \fB\fC\-H\fR \fIvalue\fP
         extra HTTP header to pass to requests (repeatable); e.g. \-H "token: 123"
-
 .PP
 \fB\fC\-T\fR \fIduration\fP
         client timeout (default 30s)
-
 .PP
 \fB\fC\-base\-dir\fR \fIstring\fP
-        base dir for harvested files (default "\~/.cache/metha")
-
+        base dir for harvested files (default "$HOME/.cache/metha")
 .PP
 \fB\fC\-daily\fR
         use daily intervals for harvesting
-
 .PP
 \fB\fC\-delay\fR
         sleep (seconds) between each OAI\-PMH request
-
 .PP
 \fB\fC\-dir\fR
         show target directory
-
 .PP
 \fB\fC\-format\fR \fIstring\fP
-        metadata format (default "oai\_dc")
-
+        metadata format (default "oai_dc")
 .PP
 \fB\fC\-from\fR \fIstring\fP
         set the start date, format: 2006\-01\-02, use only if you do not want the endpoints earliest date
-
 .PP
 \fB\fC\-hourly\fR
         use hourly intervals for harvesting
-
 .PP
 \fB\fC\-ignore\-http\-errors\fR
         do not stop on HTTP errors, just skip to the next interval
-
 .PP
 \fB\fC\-list\fR
         list a selection of OAI endpoints (might be outdated)
-
 .PP
 \fB\fC\-log\fR \fIstring\fP
         filename to log to
-
 .PP
 \fB\fC\-log\-errors\-to\-stderr\fR
         Log errors and warnings to STDERR. If \-log or \-q are not given, write full log to STDOUT
-
 .PP
 \fB\fC\-max\fR \fIint\fP
         maximum number of token loops (default 1048576)
-
 .PP
 \fB\fC\-max\-empty\-responses\fR \fIint\fP
        allow a number of empty responses before failing (default 10)
-
 .PP
 \fB\fC\-no\-intervals\fR
         harvest in one go, for funny endpoints
-
 .PP
 \fB\fC\-q\fR    suppress all output
-
 .PP
 \fB\fC\-r\fR \fIint\fP
         max number of retries for client (default: 10)
-
 .PP
 \fB\fC\-rm\fR
         remove all cached files before starting anew
-
 .PP
 \fB\fC\-set\fR \fIstring\fP
         set name
-
 .PP
 \fB\fC\-suppress\-format\-parameter\fR
         do not send format parameter
-
 .PP
 \fB\fC\-until\fR \fIstring\fP
         set the end date, format: 2006\-01\-02, use only if you do not want got records till today
-
 .PP
 \fB\fC\-v\fR    show version
-
 .SH EXAMPLES
 .PP
 Show metadata about endpoint in JSON format:
-
-.PP
+.IP
 \fB\fCmetha\-id http://export.arxiv.org/oai2\fR
-
 .PP
-Harvest data in the default \fB\fCoai\_dc\fR format:
-
-.PP
+Harvest data in the default \fB\fCoai_dc\fR format:
+.IP
 \fB\fCmetha\-sync http://export.arxiv.org/oai2\fR
-
 .PP
 Harvest data in a specific format:
-
-.PP
+.IP
 \fB\fCmetha\-sync \-format arXivRaw http://export.arxiv.org/oai2\fR
-
 .PP
 Harvest a set in a specific format:
-
-.PP
+.IP
 \fB\fCmetha\-sync \-set cs \-format arXivRaw http://export.arxiv.org/oai2\fR
-
 .PP
 Show harvested data:
-
-.PP
+.IP
 \fB\fCmetha\-cat http://export.arxiv.org/oai2\fR
-
 .PP
 Show harvested data for a given set and format:
-
-.PP
+.IP
 \fB\fCmetha\-cat \-set cs \-format arXivRaw http://export.arxiv.org/oai2\fR
-
 .PP
 The options \fB\fC\-daily\fR, \fB\fC\-ignore\-http\-errors\fR, \fB\fC\-suppress\-format\-parameter\fR,
 \fB\fC\-no\-intervals\fR and \fB\fC\-max\fR are used to work around non\-standard server
 implementations.
-
 .SH INTEGRATION
 .PP
 The \fB\fCmetha\-cat\fR tool emits valid XML to stdout, which can be fed into XML
-processing tools like xmllint(1).
-
-.PP
+processing tools like 
+.BR xmllint (1).
+.IP
 \fB\fCmetha\-cat \-from 2018\-01\-01 http://export.arxiv.org/oai2 | xmllint \-\-format \-\fR
-
 .PP
 To get a list of supported formats from an endpoint:
-
-.PP
+.IP
 \fB\fCmetha\-id http://export.arxiv.org/oai2 | jq \-r '.formats[].metadataPrefix'\fR
-
 .PP
 To get a list of available sets from an endpoint:
-
-.PP
+.IP
 \fB\fCmetha\-id http://export.arxiv.org/oai2 | jq \-r '.sets[].setSpec'\fR
-
 .PP
 To remove a harvest completely, remove the harvest directory:
-
-.PP
+.IP
 \fB\fCrm \-rf $(metha\-sync \-dir\fR \fIendpoint\fP\fB\fC)\fR
-
 .PP
 To list cached endpoints you can combine \fB\fCmetha\-ls\fR and \fB\fCcolumn\fR formatter:
-
-.PP
+.IP
 \fB\fCmetha\-ls \-a | column \-t\fR
-
 .SH ENVIRONMENT
 .PP
-Deprecated: The harvesting directory can be controlled by the \fB\fCMETHA\_DIR\fR environment
+Deprecated: The harvesting directory can be controlled by the \fB\fCMETHA_DIR\fR environment
 variable. Use the \fB\fC\-base\-dir\fR flag instead.
-
 .PP
 Since metha 0.2.0 the XDG Base Directory
-Specification
-\[la]https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html\[ra]
+Specification \[la]https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html\[ra]
 is followed.
-
 .SH LIMITATIONS
 .PP
 Endpoints URLs longer than about 200 characters are not supported.
-
 .PP
 Currently the harvest will be up to the last full day, so there will be latency
 in the data of at most 24 hours.
-
 .SH BUGS
 .PP
-Please report bugs to 
-\[la]https://github.com/miku/metha/issues\[ra]\&.
-
+Please report bugs to \[la]https://github.com/miku/metha/issues\[ra]\&.
 .SH ENDPOINTS
 .PP
-A random sample from 
-\[la]https://is.gd/UrST8m\[ra]
-
+A random sample from \[la]https://is.gd/UrST8m\[ra]
 .PP
-
-\[la]http://ojs.academypublisher.com/index.php/jcp/oai\[ra]
-
-\[la]http://sc.lib.muohio.edu/oai/request\[ra]
-
-\[la]http://tees.openrepository.com/tees/oai/request\[ra]
-
-\[la]http://citeseerx.ist.psu.edu/oai2\[ra]
-
-\[la]http://www.bibliotecaescolardigital.es/oaiBidig2/oai2.php\[ra]
-
-\[la]http://www.revistahipogrifo.com/index.php/hipogrifo/oai\[ra]
-
-\[la]http://jurnal.ugm.ac.id/ifnp/oai\[ra]
-
-\[la]https://journals.aijr.in/index.php/ias/oai\[ra]
-
-\[la]http://etheses.nottingham.ac.uk/cgi/oai2\[ra]
-
-\[la]http://touroscholar.touro.edu/do/oai/\[ra]
-
-\[la]http://mahider.cgiar.org/cgi/oai\[ra]
-
-\[la]http://aasrc.org/aasrj/index.php/aasrj/oai\[ra]
-
-\[la]http://www.repositorio.ufma.br\[ra]
-
-\[la]http://insight.cumbria.ac.uk/perl/oai2\[ra]
-
-\[la]http://repository.javeriana.edu.co/oai/request\[ra]
-
-\[la]http://www.irosss.org/ojs/index.php/IJAEES/oai\[ra]
-
-\[la]http://fofj.org/index.php/journal/oai\[ra]
-
-\[la]http://archiveouverte.campus-insep.net:81/oaicat/OAIHandler\[ra]
-
-\[la]http://masters.kubg.edu.ua/index.php/pi/oai\[ra]
-
-\[la]http://journal.ui.ac.id/v2/index.php/index/oai\[ra]
-
-\[la]http://journal2.um.ac.id/index.php/jct/oai\[ra]
-
-\[la]http://spectrum.library.concordia.ca/cgi/oai2\[ra]
-
-\[la]http://journal.sadra.ac.id/index.php/tanzil/oai\[ra]
-
-\[la]http://www.hstl.crhst.cnrs.fr/tools/oai/oai2.php\[ra]
-
-\[la]http://mdc.cbuc.cat/cgi-bin/oai.exe\[ra]
-
-\[la]http://bfheepsucv.oai.alejandria.biz/cgi-win/be_oai.exe\[ra]
-
-\[la]http://sowiport.gesis.org/OAI/Server\[ra]
-
-\[la]http://www.inter-disciplines.de/index.php/index/oai\[ra]
-
-\[la]http://www.actamonographica.org/ojs-2.2.4/index.php/actamonographica/oai\[ra]
-
-\[la]http://porto.polito.it/cgi/oai2\[ra]
-
+\[la]https://www.vjol.info.vn/index.php/tcdhHungVuong/oai\[ra]
+\[la]http://www.iaa.fadu.uba.ar/ojs/index.php/index/oai\[ra]
+\[la]https://hkjsw.hkswa.org.hk/index.php/index/oai\[ra]
+\[la]https://eurjchem.com/index.php/eurjchem\[ra]
+\[la]https://journal.poligran.edu.co/index.php/gsst\[ra]
+\[la]http://repository.vtc.edu.hk/do/oai/\[ra]
 .PP
 Curious about the contents of a random endpoint? Run a harvesting roulette with:
-
-.PP
-\fB\fCURL=$(shuf \-n 1 <(curl \-Lsf https://git.io/vKXFv)); metha\-sync $URL \&\& metha\-cat $URL\fR
-
+.IP
+\fB\fCURL=$(shuf \-n 1 <(curl \-Lsf https://git.io/vKXFv)); metha\-sync $URL; metha\-cat $URL\fR
 .PP
 Select a random record from a random endpoint and display its description:
-
-.PP
+.IP
 \fB\fCmetha\-fortune\fR
-
 .SH UPGRADE TO 0.2.0
 .PP
 To continue using data harvested with previous metha versions, just rename the
 cache directory. For example, if you used the default, this would be:
-
-.PP
-\fB\fCmkdir \-p $HOME/.cache \&\& mv $HOME/.metha $HOME/.cache/metha\fR
-
+.IP
+\fB\fCmkdir \-p $HOME/.cache; mv $HOME/.metha $HOME/.cache/metha\fR
 .SH AUTHORS
 .RS
 .IP \(bu 2
-Martin Czygan 
-\[la]martin.czygan@uni-leipzig.de\[ra]
+Martin Czygan \[la]martin.czygan@uni-leipzig.de\[ra]
 .IP \(bu 2
-Natanael Arndt, 
-\[la]https://github.com/white-gecko\[ra]
+Natanael Arndt \[la]https://github.com/white-gecko\[ra]
 .IP \(bu 2
-Gunnar Þór Magnússon, 
-\[la]https://github.com/gunnihinn\[ra]
+Gunnar Þór Magnússon \[la]https://github.com/gunnihinn\[ra]
 .IP \(bu 2
-Thomas Gersch, 
-\[la]https://github.com/titabo2k\[ra]
+Thomas Gersch \[la]https://github.com/titabo2k\[ra]
 .IP \(bu 2
-ACz\-UniBi
-\[la]https://github.com/ACz-UniBi\[ra]
+ACz\-UniBi \[la]https://github.com/ACz-UniBi\[ra]
 .IP \(bu 2
-David Glück, 
-\[la]https://github.com/dvglc\[ra]
+David Glück \[la]https://github.com/dvglc\[ra]
 .IP \(bu 2
-Justin Kelly, 
-\[la]https://github.com/justinkelly\[ra]
-
+Justin Kelly \[la]https://github.com/justinkelly\[ra]
 .RE
-
 .SH SEE ALSO
 .PP
-yaz\-marcdump(1), xmllint(1), jq(1), fortune(1)
+.BR yaz-marcdump (1), 
+.BR xmllint (1), 
+.BR jq (1), 
+.BR fortune (1)
