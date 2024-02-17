@@ -1,5 +1,7 @@
 // Package xmlstream implements a lightweight XML scanner on top of encoding/xml.
 // It keeps the flexibility of xml.Unmarshal while allowing the parsing of huge XML files.
+//
+// TODO: extract more explicit info from the XML, like DOI, other identifiers, etc.
 package main
 
 import (
@@ -250,7 +252,7 @@ type Info struct {
 	Formats               []string `json:"formats,omitempty"`
 	ISSN                  []string `json:"issn,omitempty"`
 	IdentifierURIFulltext []string `json:"fulltext_uri,omitempty"`
-	Identifiers           []string `json:"ids,omitempty"`
+	Identifiers           []string `json:"ids,omitempty"` // TODO: make this more granular
 	Languages             []string `json:"languages,omitempty"`
 	Links                 []string `json:"urls,omitempty"`
 	Publishers            []string `json:"publishers,omitempty"`
