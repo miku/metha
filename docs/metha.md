@@ -46,7 +46,7 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
         client timeout (default 30s)
 
 `-base-dir` *string*
-        base dir for harvested files (default "~/.cache/metha")
+        base dir for harvested files (default "$HOME/.cache/metha")
 
 `-daily`
         use daily intervals for harvesting
@@ -190,36 +190,12 @@ ENDPOINTS
 
 A random sample from https://is.gd/UrST8m
 
-http://ojs.academypublisher.com/index.php/jcp/oai
-http://sc.lib.muohio.edu/oai/request
-http://tees.openrepository.com/tees/oai/request
-http://citeseerx.ist.psu.edu/oai2
-http://www.bibliotecaescolardigital.es/oaiBidig2/oai2.php
-http://www.revistahipogrifo.com/index.php/hipogrifo/oai
-http://jurnal.ugm.ac.id/ifnp/oai
-https://journals.aijr.in/index.php/ias/oai
-http://etheses.nottingham.ac.uk/cgi/oai2
-http://touroscholar.touro.edu/do/oai/
-http://mahider.cgiar.org/cgi/oai
-http://aasrc.org/aasrj/index.php/aasrj/oai
-http://www.repositorio.ufma.br
-http://insight.cumbria.ac.uk/perl/oai2
-http://repository.javeriana.edu.co/oai/request
-http://www.irosss.org/ojs/index.php/IJAEES/oai
-http://fofj.org/index.php/journal/oai
-http://archiveouverte.campus-insep.net:81/oaicat/OAIHandler
-http://masters.kubg.edu.ua/index.php/pi/oai
-http://journal.ui.ac.id/v2/index.php/index/oai
-http://journal2.um.ac.id/index.php/jct/oai
-http://spectrum.library.concordia.ca/cgi/oai2
-http://journal.sadra.ac.id/index.php/tanzil/oai
-http://www.hstl.crhst.cnrs.fr/tools/oai/oai2.php
-http://mdc.cbuc.cat/cgi-bin/oai.exe
-http://bfheepsucv.oai.alejandria.biz/cgi-win/be_oai.exe
-http://sowiport.gesis.org/OAI/Server
-http://www.inter-disciplines.de/index.php/index/oai
-http://www.actamonographica.org/ojs-2.2.4/index.php/actamonographica/oai
-http://porto.polito.it/cgi/oai2
+https://www.vjol.info.vn/index.php/tcdhHungVuong/oai
+http://www.iaa.fadu.uba.ar/ojs/index.php/index/oai
+https://hkjsw.hkswa.org.hk/index.php/index/oai
+https://eurjchem.com/index.php/eurjchem
+https://journal.poligran.edu.co/index.php/gsst
+http://repository.vtc.edu.hk/do/oai/
 
 Curious about the contents of a random endpoint? Run a harvesting roulette with:
 
@@ -241,12 +217,12 @@ AUTHORS
 -------
 
 * Martin Czygan <martin.czygan@uni-leipzig.de>
-* Natanael Arndt, https://github.com/white-gecko
-* Gunnar Þór Magnússon, https://github.com/gunnihinn
-* Thomas Gersch, https://github.com/titabo2k
+* [Natanael Arndt](https://github.com/white-gecko)
+* [Gunnar Þór Magnússon](https://github.com/gunnihinn)
+* [Thomas Gersch](https://github.com/titabo2k)
 * [ACz-UniBi](https://github.com/ACz-UniBi)
-* David Glück, https://github.com/dvglc
-* Justin Kelly, https://github.com/justinkelly
+* [David Glück](https://github.com/dvglc)
+* [Justin Kelly](https://github.com/justinkelly)
 
 
 SEE ALSO
