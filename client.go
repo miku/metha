@@ -158,8 +158,8 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		reader = ioutil.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
 	}
 	// Drain response XML, iterate over various XML encoding declarations.
-	// Limit the amount we can read.
-	respBody, err := ioutil.ReadAll(io.LimitReader(reader, 2<<24))
+	// Limit the amount we can read, to 1GB, cf. https://github.com/miku/metha/issues/35
+	respBody, err := ioutil.ReadAll(io.LimitReader(reader, 1<<30))
 	if err != nil {
 		return nil, err
 	}
