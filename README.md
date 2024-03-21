@@ -201,6 +201,10 @@ $ while true; do \
 done
 ```
 
+Alternatively, use a
+[metha.service](https://raw.githubusercontent.com/miku/metha/master/extra/linux/metha.service)
+file to run harvests continuously.
+
 metha stores harvested data in one file per interval; to combine all XML files
 into a single JSON file you can utilize the
 [xmlstream.go](https://github.com/miku/metha/blob/master/extra/largecrawl/xmlstream.go) (adjust the harvest directory):
