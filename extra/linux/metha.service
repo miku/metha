@@ -2,7 +2,7 @@
 Description=Harvest all OAI endpoints continuously
 
 [Service]
-ExecStart=/bin/bash -c 'metha-sync -list | shuf | parallel -j 128 -I {} "metha-sync -base-dir /home/tir/.cache/metha {}"'
+ExecStart=/bin/bash -c 'metha-sync -list | shuf | parallel -j 64 -I {} "metha-sync -base-dir $HOME/.cache/metha {}"'
 User=tir
 Group=tir
 RuntimeMaxSec=300s
