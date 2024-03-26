@@ -351,6 +351,13 @@ func (h *Harvest) runInterval(iv Interval) error {
 		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
 		resp, err := h.Client.Do(&req)
 		if err != nil {
+			if e, ok := err.(HTTPError); ok {
+				if e.StatusCode == 422 {
+					// https://github.com/miku/metha/issues/39
+					// https://zenodo.org/oai2d?from=2014-02-03T00:00:00Z&metadataPrefix=marcxml&set=user-lory_phlu&until=2014-02-28T23:59:59Z&verb=ListRecords
+					break
+				}
+			}
 			if h.IgnoreHTTPErrors {
 				log.Printf("stopping early due to failed request (IgnoreHTTPErrors=true): %s", err)
 				break
