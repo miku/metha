@@ -7,7 +7,83 @@ $ ./update-sites-oa.sh
 $ make
 ```
 
-About 80% of the URLs in `sites.tsv` may be usable (about 1250000 as of 01/2024).
+About755% of the URLs in `sites.tsv` may be usable (about 125000 as of 01/2024).
+
+----
+
+* sites: 171815
+
+```
+wc -l sites.tsv
+```
+
+* domains: 45927
+
+```
+awk -F / '{print $3}' < sites.tsv | sort | uniq -c | wc -l
+```
+
+Top 20 domains:
+
+```
+$ awk -F / '{print $3}' < sites.tsv | sort | uniq -c | sort -nr | head -20
+    594 www.raco.cat
+    592 www.ajol.info
+    547 raco.cat
+    532 vjol.info.vn
+    527 www.vjol.info.vn
+    485 www.nepjol.info
+    409 nepjol.info
+    308 tidsskrift.dk
+    299 ejournal.unsrat.ac.id
+    287 periodicos.ufpb.br
+    284 ojs3.relawanjurnal.id
+    251 aplicaciones.bibliolatino.com:81
+    244 www.revistas.usp.br
+    233 conference.tdmu.edu.ua
+    223 ejournal.upi.edu
+    222 revistas.unc.edu.ar
+    220 journal.unnes.ac.id
+    219 sol.sbc.org.br
+    218 www.banglajol.info
+    205 ojs.uho.ac.id
+```
+
+Top 30 TLDs:
+
+```
+$ awk -F / '{print $3}' < sites.tsv | rev | cut -d . -f 1 | rev | sort | uniq -c | sort -nr | head -30
+  54317 id
+  21618 com
+  16874 org
+  13909 br
+   3489 edu
+   3368 my
+   2862 co
+   2737 ua
+   2708 info
+   2674 es
+   2321 mx
+   2259 in
+   2147 ar
+   1888 net
+   1674 cl
+   1613 pl
+   1571 pe
+   1505 it
+   1457 ca
+   1448 vn
+   1421 ru
+   1404 de
+   1294 cat
+   1153 pk
+    895 uk
+    797 ec
+    781 pt
+    751 eu
+    671 ng
+    662 hu
+```
 
 ----
 
