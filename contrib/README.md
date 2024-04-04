@@ -7,7 +7,7 @@ $ ./update-sites-oa.sh
 $ make
 ```
 
-About755% of the URLs in `sites.tsv` may be usable (about 125000 as of 01/2024).
+About 75% of the URLs in `sites.tsv` may be usable (about 125000 as of 01/2024).
 
 ----
 
@@ -83,6 +83,36 @@ $ awk -F / '{print $3}' < sites.tsv | rev | cut -d . -f 1 | rev | sort | uniq -c
     751 eu
     671 ng
     662 hu
+```
+
+## Filtering edu domains
+
+```
+$ jq -rc 'select(.is_edu == true)' sites.json | \
+    jq -rc .url | \
+    awk -F / '{print $3}' | \
+    sort -u | \
+    grep -v '[.]id' | \
+    wc -l
+
+9348
+```
+
+9348 likely edu domains (outside .id TLD).
+
+Random sample:
+
+```
+caltechgalcitfm.library.caltech.edu
+www.pitt.edu
+journal.ldubgd.edu.ua
+linguagempauta.uvanet.br
+openaccess.acibadem.edu.tr:8080
+www.unibalsas.edu.br
+journals.uni-kassel.de
+revistas.uladech.edu.pe
+ndjlis.fuotuoke.edu.ng
+jcicm.unilag.edu.ng
 ```
 
 ----
