@@ -168,757 +168,816 @@ $ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq -d)
 
 ## Some stats
 
-* 08/2023
-
+* 04/2024
 
 | tld   |     0 |
 |:------|------:|
-| id    | 30526 |
-| com   | 10428 |
-| org   |  8487 |
-| br    |  7961 |
-| edu   |  2343 |
-| es    |  1739 |
-| info  |  1547 |
-| co    |  1540 |
-| ar    |  1423 |
-| ua    |  1332 |
-| cat   |  1283 |
-| mx    |  1267 |
-| in    |  1206 |
-| net   |  1186 |
-| ca    |  1105 |
-| it    |  1073 |
-| pl    |  1029 |
-| de    |   991 |
-| pe    |   940 |
-| ru    |   699 |
-| pk    |   695 |
-| uk    |   669 |
-| my    |   662 |
-| ec    |   485 |
-| pt    |   459 |
+| id    | 54448 |
+| com   | 21879 |
+| org   | 16900 |
+| br    | 14031 |
+| edu   |  3529 |
+| my    |  3368 |
+| co    |  2893 |
+| ua    |  2760 |
+| info  |  2709 |
+| es    |  2691 |
+| mx    |  2346 |
+| in    |  2280 |
+| ar    |  2166 |
+| net   |  1916 |
+| cl    |  1678 |
+| pl    |  1617 |
+| pe    |  1590 |
+| it    |  1511 |
+| ca    |  1468 |
+| vn    |  1448 |
+| ru    |  1424 |
+| de    |  1416 |
+| cat   |  1325 |
+| pk    |  1183 |
+|       |  1168 |
 
 |     | tld           | is_edu   | platform   |   size |
 |----:|:--------------|:---------|:-----------|-------:|
-|   0 | id            | True     | ojs        |  25746 |
-|   1 | com           | False    | ojs        |   9799 |
-|   2 | org           | False    | ojs        |   7601 |
-|   3 | br            | True     | ojs        |   5056 |
-|   4 | id            | False    | ojs        |   3204 |
-|   5 | br            | False    | ojs        |   2186 |
-|   6 | info          | False    | ojs        |   1500 |
-|   7 | edu           | True     | ojs        |   1381 |
-|   8 | id            | True     |            |   1354 |
-|   9 | co            | True     | ojs        |   1286 |
-|  10 | cat           | False    | ojs        |   1159 |
-|  11 | net           | False    | ojs        |   1080 |
-|  12 | mx            | False    | ojs        |   1062 |
-|  13 | in            | False    | ojs        |   1023 |
-|  14 | es            | True     | ojs        |    932 |
-|  15 | ar            | True     | ojs        |    883 |
-|  16 | edu           | True     |            |    868 |
-|  17 | org           | False    |            |    827 |
-|  18 | pe            | True     | ojs        |    662 |
-|  19 | ca            | True     | ojs        |    659 |
-|  20 | ua            | False    | ojs        |    609 |
-|  21 | com           | False    |            |    522 |
-|  22 | es            | False    | ojs        |    517 |
-|  23 | it            | True     | ojs        |    505 |
-|  24 | ua            | True     | ojs        |    488 |
-|  25 | ru            | False    | ojs        |    461 |
-|  26 | pl            | True     | ojs        |    428 |
-|  27 | cl            | False    | ojs        |    414 |
-|  28 | ar            | False    | ojs        |    409 |
-|  29 | pk            | True     | ojs        |    402 |
-|  30 | ec            | True     | ojs        |    388 |
-|  31 | br            | True     |            |    388 |
-|  32 | pl            | False    | ojs        |    387 |
-|  33 | my            | True     | ojs        |    377 |
-|  34 | pt            | False    | ojs        |    368 |
-|  35 | eu            | False    | ojs        |    334 |
-|  36 | br            | False    |            |    318 |
-|  37 | uk            | True     |            |    315 |
-|  38 | de            | False    | ojs        |    310 |
-|  39 | ca            | False    | ojs        |    284 |
-|  40 | iq            | True     | ojs        |    282 |
-|  41 | it            | False    | ojs        |    281 |
-|  42 | jp            | True     |            |    264 |
-|  43 | pk            | False    | ojs        |    254 |
-|  44 | vn            | False    | ojs        |    246 |
-|  45 | de            | False    |            |    243 |
-|  46 | dk            | False    | ojs        |    240 |
-|  47 | ro            | False    | ojs        |    236 |
-|  48 | my            | False    | ojs        |    233 |
-|  49 | id            | False    |            |    221 |
-|  50 | ru            | False    |            |    221 |
-|  51 | cr            | True     | ojs        |    214 |
-|  52 | de            | True     | ojs        |    210 |
-|  53 | ve            | False    | ojs        |    204 |
-|  54 | ge            | False    | ojs        |    202 |
-|  55 | tr            | True     |            |    201 |
-|  56 | ng            | False    | ojs        |    194 |
-|  57 | de            | True     |            |    178 |
-|  58 | it            | True     |            |    175 |
-|  59 | uk            | True     | ojs        |    173 |
-|  60 | cu            | False    | ojs        |    172 |
-|  61 | gr            | False    | ojs        |    171 |
-|  62 | online        | False    | ojs        |    171 |
-|  63 | uz            | False    | ojs        |    163 |
-|  64 | za            | False    | ojs        |    162 |
-|  65 | no            | False    | ojs        |    157 |
-|  66 | es            | False    |            |    154 |
-|  67 | pl            | False    |            |    138 |
-|  68 | pe            | True     |            |    137 |
-|  69 | uk            | False    | ojs        |    127 |
-|  70 | hu            | False    | ojs        |    126 |
-|  71 | ng            | True     | ojs        |    126 |
-|  72 | rs            | False    | ojs        |    125 |
-|  73 | fr            | False    |            |    124 |
-|  74 | th            | True     | ojs        |    123 |
-|  75 | ua            | True     |            |    123 |
-|  76 | za            | True     | ojs        |    122 |
-|  77 | mx            | True     | ojs        |    122 |
-|  78 | lt            | False    | ojs        |    122 |
-|  79 | hr            | False    | ojs        |    121 |
-|  80 | co            | True     |            |    120 |
-|  81 | tr            | True     | ojs        |    120 |
-|  82 | co            | False    | ojs        |    118 |
-|  83 | pe            | False    | ojs        |    116 |
-|  84 | dz            | True     | ojs        |    112 |
-|  85 | ph            | True     | ojs        |    110 |
-|  86 | es            | True     |            |    109 |
-|  87 | au            | True     | ojs        |    107 |
-|  88 | vn            | True     | ojs        |    106 |
-|  89 | net           | False    |            |    103 |
-|  90 | com           | True     | ojs        |    101 |
-|  91 | rs            | True     | ojs        |    100 |
-|  92 | jp            | True     | dspace     |     97 |
-|  93 | nl            | False    |            |     96 |
-|  94 | ir            | True     | ojs        |     95 |
-|  95 | ar            | True     |            |     95 |
-|  96 | kz            | False    | ojs        |     92 |
-|  97 | au            | True     |            |     92 |
-|  98 | edu           | True     | dspace     |     91 |
-|  99 | se            | False    | ojs        |     86 |
-| 100 | it            | False    |            |     85 |
-| 101 | ke            | True     | ojs        |     85 |
-| 102 | cu            | True     | ojs        |     84 |
-| 103 | ua            | False    |            |     82 |
-| 104 | cz            | False    | ojs        |     80 |
-| 105 | pt            | False    |            |     79 |
-| 106 | no            | False    |            |     78 |
-| 107 | in            | True     | ojs        |     76 |
-| 108 | uy            | True     | ojs        |     75 |
-| 109 | ca            | False    |            |     73 |
-| 110 | pl            | True     |            |     72 |
-| 111 | mx            | False    |            |     71 |
-| 112 | eu            | False    |            |     69 |
-| 113 | cat           | True     |            |     69 |
-| 114 | tr            | False    | ojs        |     68 |
-| 115 | lt            | False    |            |     67 |
-| 116 | ca            | True     |            |     67 |
-| 117 | biz           | False    |            |     66 |
-| 118 | bg            | False    | ojs        |     65 |
-| 119 | at            | True     | ojs        |     65 |
-| 120 | ir            | False    | ojs        |     64 |
-| 121 | ba            | False    | ojs        |     64 |
-| 122 | fr            | False    | ojs        |     63 |
-| 123 | ve            | True     | ojs        |     63 |
-| 124 | tz            | True     | ojs        |     62 |
-| 125 | nl            | False    | ojs        |     60 |
-| 126 | site          | False    | ojs        |     59 |
-| 127 | pa            | True     | ojs        |     59 |
-| 128 | hr            | True     |            |     58 |
-| 129 |               | False    |            |     58 |
-| 130 | au            | False    | ojs        |     56 |
-| 131 | fi            | False    |            |     56 |
-| 132 | py            | True     | ojs        |     55 |
-| 133 | hu            | True     | ojs        |     55 |
-| 134 | in            | False    |            |     54 |
-| 135 | ni            | True     | ojs        |     53 |
-| 136 | xyz           | False    | ojs        |     53 |
-| 137 | fr            | True     |            |     52 |
-| 138 | ec            | False    | ojs        |     51 |
-| 139 | eus           | False    | ojs        |     50 |
-| 140 | be            | False    | ojs        |     50 |
-| 141 | hr            | False    |            |     48 |
-| 142 | us            | False    | ojs        |     48 |
-| 143 | za            | True     |            |     47 |
-| 144 | info          | False    |            |     47 |
-| 145 | py            | False    | ojs        |     46 |
-| 146 | gt            | True     | ojs        |     46 |
-| 147 | si            | False    | ojs        |     46 |
-| 148 | tw            | True     |            |     45 |
-| 149 | se            | False    |            |     45 |
-| 150 | ee            | False    | ojs        |     45 |
-| 151 | gr            | False    |            |     44 |
-| 152 | hr            | True     | ojs        |     43 |
-| 153 | by            | False    |            |     43 |
-| 154 | et            | True     | ojs        |     42 |
-| 155 | hu            | False    |            |     42 |
-| 156 | ch            | False    | ojs        |     42 |
-| 157 | np            | False    | ojs        |     42 |
-| 158 | lv            | False    | ojs        |     42 |
-| 159 | cz            | False    |            |     41 |
-| 160 | ly            | True     | ojs        |     41 |
-| 161 | sv            | True     | ojs        |     40 |
-| 162 | nz            | True     |            |     39 |
-| 163 |               | False    | ojs        |     38 |
-| 164 | no            | True     |            |     38 |
-| 165 | tech          | False    | ojs        |     37 |
-| 166 | dk            | False    |            |     37 |
-| 167 | ie            | False    |            |     37 |
-| 168 | be            | False    |            |     36 |
-| 169 | cat           | False    |            |     36 |
-| 170 | mk            | True     | ojs        |     36 |
-| 171 | at            | False    | ojs        |     34 |
-| 172 | ar            | False    |            |     34 |
-| 173 | am            | False    | ojs        |     34 |
-| 174 |               | True     |            |     34 |
-| 175 | gal           | False    | ojs        |     34 |
-| 176 | uk            | True     | dspace     |     34 |
-| 177 | my            | True     |            |     34 |
-| 178 | fi            | False    | ojs        |     34 |
-| 179 | ec            | True     |            |     33 |
-| 180 | de            | False    | opus       |     32 |
-| 181 | ni            | False    | ojs        |     32 |
-| 182 | dz            | False    | ojs        |     31 |
-| 183 | lk            | True     | ojs        |     31 |
-| 184 | ge            | True     | ojs        |     31 |
-| 185 | education     | False    | ojs        |     30 |
-| 186 | org           | False    | dspace     |     30 |
-| 187 | gd            | False    | ojs        |     29 |
-| 188 | digital       | False    | ojs        |     29 |
-| 189 | io            | False    | ojs        |     29 |
-| 190 | cl            | False    |            |     29 |
-| 191 | tw            | True     | dspace     |     28 |
-| 192 | ch            | False    |            |     28 |
-| 193 | by            | False    | ojs        |     28 |
-| 194 | cn            | True     |            |     28 |
-| 195 | sk            | False    | ojs        |     28 |
-| 196 | jo            | True     | ojs        |     28 |
-| 197 | bo            | True     | ojs        |     28 |
-| 198 | website       | False    | ojs        |     27 |
-| 199 | ke            | False    | ojs        |     27 |
-| 200 | uy            | False    | ojs        |     26 |
-| 201 | sg            | False    | ojs        |     26 |
-| 202 | nz            | True     | ojs        |     26 |
-| 203 | org           | True     | ojs        |     26 |
-| 204 | rs            | True     |            |     26 |
-| 205 | np            | True     | ojs        |     26 |
-| 206 | gh            | True     | ojs        |     26 |
-| 207 | mk            | False    | ojs        |     25 |
-| 208 | ph            | False    | ojs        |     25 |
-| 209 | sd            | True     | ojs        |     25 |
-| 210 | in            | True     |            |     24 |
-| 211 | pk            | True     |            |     23 |
-| 212 | pe            | False    |            |     23 |
-| 213 | at            | True     |            |     23 |
-| 214 | krd           | True     | ojs        |     22 |
-| 215 | ly            | False    | ojs        |     22 |
-| 216 | ro            | False    |            |     22 |
-| 217 | gov           | False    |            |     22 |
-| 218 | pub           | False    | ojs        |     21 |
-| 219 | asia          | False    | ojs        |     21 |
-| 220 | ir            | True     |            |     20 |
-| 221 | ch            | True     |            |     20 |
-| 222 | bo            | False    | ojs        |     20 |
-| 223 | ao            | False    | ojs        |     20 |
-| 224 | hu            | True     |            |     20 |
-| 225 | dz            | True     |            |     20 |
-| 226 | uk            | False    |            |     19 |
-| 227 | eg            | True     | ojs        |     19 |
-| 228 | au            | False    |            |     19 |
-| 229 | tk            | False    | ojs        |     19 |
-| 230 | do            | True     | ojs        |     19 |
-| 231 | ml            | False    | ojs        |     19 |
-| 232 | science       | False    | ojs        |     19 |
-| 233 | cat           | True     | ojs        |     19 |
-| 234 | ua            | True     | dspace     |     18 |
-| 235 | in            | True     | dspace     |     18 |
-| 236 | zw            | True     | ojs        |     18 |
-| 237 | ac            | False    | ojs        |     18 |
-| 238 | kr            | False    |            |     17 |
-| 239 | nz            | False    | ojs        |     17 |
-| 240 | it            | True     | dspace     |     17 |
-| 241 | ws            | False    | ojs        |     17 |
-| 242 | si            | True     | ojs        |     17 |
-| 243 | ke            | True     |            |     17 |
-| 244 | me            | False    | ojs        |     16 |
-| 245 | ve            | False    |            |     16 |
-| 246 | my            | False    |            |     16 |
-| 247 | pk            | False    |            |     16 |
-| 248 |               | False    | dspace     |     15 |
-| 249 | bd            | True     | ojs        |     15 |
-| 250 | ro            | True     | ojs        |     15 |
-| 251 | kr            | True     |            |     15 |
-| 252 | ps            | True     | ojs        |     15 |
-| 253 | es            | True     | dspace     |     15 |
-| 254 | lv            | True     | ojs        |     15 |
-| 255 | cu            | False    |            |     15 |
-| 256 | tr            | False    |            |     14 |
-| 257 | sy            | True     | ojs        |     14 |
-| 258 | press         | False    | ojs        |     14 |
-| 259 | kz            | True     | ojs        |     14 |
-| 260 | ca            | True     | dspace     |     14 |
-| 261 | ve            | True     |            |     14 |
-| 262 | cloud         | False    | ojs        |     14 |
-| 263 | pro           | False    | ojs        |     14 |
-| 264 | ma            | False    | ojs        |     13 |
-| 265 | lv            | False    |            |     13 |
-| 266 | sa            | True     | ojs        |     13 |
-| 267 | academy       | False    | ojs        |     13 |
-| 268 | si            | True     |            |     13 |
-| 269 | jp            | False    |            |     13 |
-| 270 | ie            | False    | ojs        |     13 |
-| 271 | ng            | True     |            |     12 |
-| 272 | ua            | False    | dspace     |     12 |
-| 273 | md            | False    | ojs        |     12 |
-| 274 | at            | False    |            |     12 |
-| 275 | es            | False    | dspace     |     12 |
-| 276 | cc            | False    | ojs        |     11 |
-| 277 | mx            | True     |            |     11 |
-| 278 | sa            | False    | ojs        |     11 |
-| 279 | in            | False    | dspace     |     11 |
-| 280 | ec            | True     | dspace     |     11 |
-| 281 | si            | False    |            |     11 |
-| 282 | ni            | True     |            |     11 |
-| 283 | cn            | False    | ojs        |     10 |
-| 284 | de            | True     | opus       |     10 |
-| 285 | ee            | False    |            |     10 |
-| 286 | it            | False    | dspace     |     10 |
-| 287 | co            | False    |            |     10 |
-| 288 | hk            | True     |            |     10 |
-| 289 | tw            | True     | ojs        |     10 |
-| 290 | tr            | True     | dspace     |     10 |
-| 291 | th            | True     |            |     10 |
-| 292 | su            | False    | ojs        |     10 |
-| 293 | space         | False    | ojs        |     10 |
-| 294 | iq            | True     |            |      9 |
-| 295 | bd            | False    | ojs        |      9 |
-| 296 | ae            | True     | ojs        |      9 |
-| 297 | kw            | True     | ojs        |      9 |
-| 298 | gr            | False    | dspace     |      9 |
-| 299 | pt            | False    | dspace     |      9 |
-| 300 | int           | False    |            |      9 |
-| 301 | iq            | False    | ojs        |      9 |
-| 302 | bt            | True     | ojs        |      9 |
-| 303 | om            | True     | ojs        |      9 |
-| 304 | ug            | True     | ojs        |      9 |
-| 305 | zw            | True     |            |      8 |
-| 306 | app           | False    | ojs        |      8 |
-| 307 | is            | False    | ojs        |      8 |
-| 308 | is            | False    |            |      8 |
-| 309 | ye            | True     | ojs        |      8 |
-| 310 | cz            | True     |            |      8 |
-| 311 | nl            | False    | dspace     |      8 |
-| 312 | jp            | False    | ojs        |      8 |
-| 313 | cr            | True     |            |      8 |
-| 314 | nz            | True     | dspace     |      8 |
-| 315 | bg            | False    |            |      8 |
-| 316 | rs            | False    |            |      8 |
-| 317 | review        | False    | ojs        |      8 |
-| 318 | br            | False    | dspace     |      8 |
-| 319 | ph            | True     |            |      8 |
-| 320 | th            | False    | ojs        |      8 |
-| 321 | fi            | False    | dspace     |      8 |
-| 322 | az            | False    | ojs        |      7 |
-| 323 | lk            | True     |            |      7 |
-| 324 | jo            | True     |            |      7 |
-| 325 | gr            | True     |            |      7 |
-| 326 | bo            | False    |            |      7 |
-| 327 | al            | False    | ojs        |      7 |
-| 328 | hk            | False    | ojs        |      7 |
-| 329 | au            | True     | dspace     |      7 |
-| 330 | ga            | False    | ojs        |      7 |
-| 331 | ca            | False    | dspace     |      7 |
-| 332 | kr            | False    | ojs        |      7 |
-| 333 | vn            | True     |            |      7 |
-| 334 | live          | False    | ojs        |      7 |
-| 335 | mz            | True     | ojs        |      7 |
-| 336 | cz            | False    | dspace     |      7 |
-| 337 | ch            | True     | ojs        |      7 |
-| 338 | sa            | True     |            |      7 |
-| 339 | uy            | True     |            |      7 |
-| 340 | do            | False    | ojs        |      7 |
-| 341 | gal           | False    |            |      7 |
-| 342 | cr            | False    | ojs        |      6 |
-| 343 | et            | True     |            |      6 |
-| 344 | tz            | False    | ojs        |      6 |
-| 345 | tz            | True     |            |      6 |
-| 346 | af            | False    | ojs        |      6 |
-| 347 | fr            | False    | dspace     |      6 |
-| 348 | fr            | True     | ojs        |      6 |
-| 349 | cf            | False    | ojs        |      6 |
-| 350 | py            | True     |            |      6 |
-| 351 | tn            | False    | ojs        |      6 |
-| 352 | be            | True     |            |      6 |
-| 353 | zm            | False    | ojs        |      6 |
-| 354 |               | True     | ojs        |      6 |
-| 355 | sn            | False    | ojs        |      6 |
-| 356 | cl            | True     | ojs        |      6 |
-| 357 | za            | False    |            |      6 |
-| 358 | co            | True     | dspace     |      6 |
-| 359 | media         | False    | ojs        |      6 |
-| 360 | club          | False    | ojs        |      6 |
-| 361 | gt            | False    | ojs        |      5 |
-| 362 | ru            | False    | dspace     |      5 |
-| 363 | sv            | True     |            |      5 |
-| 364 | ru            | True     |            |      5 |
-| 365 | nl            | True     |            |      5 |
-| 366 | ru            | True     | ojs        |      5 |
-| 367 | cn            | False    |            |      5 |
-| 368 | be            | False    | dspace     |      5 |
-| 369 | cg            | False    | ojs        |      5 |
-| 370 | se            | False    | dspace     |      5 |
-| 371 | host          | False    | ojs        |      5 |
-| 372 | vn            | False    |            |      5 |
-| 373 | us            | False    |            |      5 |
-| 374 | zw            | False    | ojs        |      5 |
-| 375 | hk            | False    |            |      5 |
-| 376 | de            | True     | dspace     |      5 |
-| 377 | page          | False    | ojs        |      5 |
-| 378 | br            | True     | dspace     |      5 |
-| 379 | cu            | True     |            |      5 |
-| 380 | gr            | True     | ojs        |      4 |
-| 381 | jp            | False    | dspace     |      4 |
-| 382 | ba            | False    |            |      4 |
-| 383 | bg            | True     | ojs        |      4 |
-| 384 | md            | False    |            |      4 |
-| 385 | dz            | True     | dspace     |      4 |
-| 386 | pa            | True     |            |      4 |
-| 387 | kz            | False    |            |      4 |
-| 388 | np            | False    |            |      4 |
-| 389 | za            | True     | dspace     |      4 |
-| 390 | cy            | True     |            |      4 |
-| 391 | cy            | True     | ojs        |      4 |
-| 392 | ir            | False    |            |      4 |
-| 393 | sk            | True     |            |      4 |
-| 394 | int           | False    | ojs        |      4 |
-| 395 | sg            | True     | dspace     |      4 |
-| 396 | na            | False    | ojs        |      4 |
-| 397 | eg            | True     |            |      4 |
-| 398 | lk            | False    | ojs        |      4 |
-| 399 | africa        | False    | ojs        |      4 |
-| 400 | bj            | False    | ojs        |      4 |
-| 401 | today         | False    | ojs        |      4 |
-| 402 | top           | False    | ojs        |      4 |
-| 403 | win           | False    | ojs        |      4 |
-| 404 | agency        | False    | ojs        |      4 |
-| 405 | kr            | False    | dspace     |      4 |
-| 406 | eg            | False    |            |      4 |
-| 407 | biz           | False    | ojs        |      4 |
-| 408 | ie            | False    | dspace     |      4 |
-| 409 | life          | False    | ojs        |      4 |
-| 410 | eus           | False    |            |      4 |
-| 411 | kg            | False    | ojs        |      4 |
-| 412 | no            | False    | dspace     |      4 |
-| 413 | pw            | False    | ojs        |      3 |
-| 414 | org           | True     |            |      3 |
-| 415 | gov           | False    | dspace     |      3 |
-| 416 | cn            | True     | dspace     |      3 |
-| 417 | bd            | True     |            |      3 |
-| 418 | bt            | False    | ojs        |      3 |
-| 419 | gt            | True     |            |      3 |
-| 420 | center        | False    | ojs        |      3 |
-| 421 | expert        | False    | ojs        |      3 |
-| 422 | bo            | True     |            |      3 |
-| 423 | press         | False    |            |      3 |
-| 424 | bg            | True     |            |      3 |
-| 425 | bid           | False    | ojs        |      3 |
-| 426 | nz            | False    |            |      3 |
-| 427 | ee            | False    | dspace     |      3 |
-| 428 | nu            | False    | ojs        |      3 |
-| 429 | kr            | True     | dspace     |      3 |
-| 430 | th            | False    |            |      3 |
-| 431 | ma            | True     | ojs        |      3 |
-| 432 | expert        | False    |            |      3 |
-| 433 | link          | False    | ojs        |      3 |
-| 434 | su            | False    |            |      3 |
-| 435 | digital       | False    |            |      3 |
-| 436 | de            | False    | dspace     |      3 |
-| 437 | edu           | True     | opus       |      3 |
-| 438 | cn            | True     | ojs        |      3 |
-| 439 | ly            | True     |            |      3 |
-| 440 | university    | False    | ojs        |      3 |
-| 441 | sk            | True     | ojs        |      3 |
-| 442 | jp            | True     | ojs        |      3 |
-| 443 | tw            | False    | ojs        |      3 |
-| 444 | ba            | True     | ojs        |      3 |
-| 445 | gh            | True     |            |      3 |
-| 446 | mo            | True     | ojs        |      3 |
-| 447 | ug            | True     |            |      3 |
-| 448 | il            | True     | ojs        |      3 |
-| 449 | cz            | True     | ojs        |      3 |
-| 450 | fun           | False    | ojs        |      3 |
-| 451 | zm            | True     | ojs        |      3 |
-| 452 | dz            | False    |            |      3 |
-| 453 | se            | True     |            |      2 |
-| 454 | ve            | False    | dspace     |      2 |
-| 455 | al            | True     | ojs        |      2 |
-| 456 | ao            | False    |            |      2 |
-| 457 | af            | True     | ojs        |      2 |
-| 458 | xn--p1ai      | False    | ojs        |      2 |
-| 459 | website       | False    |            |      2 |
-| 460 | pl            | False    | dspace     |      2 |
-| 461 | academy       | False    | dspace     |      2 |
-| 462 | fo            | False    | ojs        |      2 |
-| 463 | yu            | True     |            |      2 |
-| 464 | hk            | True     | dspace     |      2 |
-| 465 | hk            | True     | ojs        |      2 |
-| 466 | ph            | False    |            |      2 |
-| 467 | flup008       | False    | ojs        |      2 |
-| 468 | ps            | False    | ojs        |      2 |
-| 469 | pt            | True     |            |      2 |
-| 470 | ps            | True     |            |      2 |
-| 471 | gr            | True     | dspace     |      2 |
-| 472 | shop          | False    | ojs        |      2 |
-| 473 | bd            | True     | dspace     |      2 |
-| 474 | sd            | True     |            |      2 |
-| 475 | sd            | False    | ojs        |      2 |
-| 476 | et            | False    | ojs        |      2 |
-| 477 | rw            | True     | ojs        |      2 |
-| 478 | rw            | True     |            |      2 |
-| 479 | ru            | True     | dspace     |      2 |
-| 480 | sn            | False    |            |      2 |
-| 481 | so            | False    | ojs        |      2 |
-| 482 | studio        | False    |            |      2 |
-| 483 | sv            | False    |            |      2 |
-| 484 | ps            | True     | dspace     |      2 |
-| 485 | qa            | True     | ojs        |      2 |
-| 486 | bh            | True     | ojs        |      2 |
-| 487 | ge            | False    | dspace     |      2 |
-| 488 | py            | False    |            |      2 |
-| 489 | ge            | False    |            |      2 |
-| 490 | tl            | False    | ojs        |      2 |
-| 491 | tw            | False    |            |      2 |
-| 492 | tw            | False    | dspace     |      2 |
-| 493 | sg            | True     |            |      2 |
-| 494 | asia          | False    |            |      2 |
-| 495 | ar            | True     | dspace     |      2 |
-| 496 | bz            | True     | ojs        |      2 |
-| 497 | io            | False    |            |      2 |
-| 498 | ec            | False    |            |      2 |
-| 499 | mm            | True     | ojs        |      2 |
-| 500 | com           | False    | dspace     |      2 |
-| 501 | ma            | False    |            |      2 |
-| 502 | pa            | False    |            |      2 |
-| 503 | me            | True     | ojs        |      2 |
-| 504 | mk            | True     |            |      2 |
-| 505 | mm            | True     |            |      2 |
-| 506 | mn            | False    | ojs        |      2 |
-| 507 | lu            | True     | ojs        |      2 |
-| 508 | mv            | True     | ojs        |      2 |
-| 509 | my            | True     | dspace     |      2 |
-| 510 | cm            | False    | ojs        |      2 |
-| 511 | mz            | False    | ojs        |      2 |
-| 512 | na            | False    |            |      2 |
-| 513 | net           | True     | ojs        |      2 |
-| 514 | lv            | False    | dspace     |      2 |
-| 515 | lu            | False    | ojs        |      2 |
-| 516 | cl            | True     | dspace     |      2 |
-| 517 | krd           | True     |            |      2 |
-| 518 | international | False    | ojs        |      2 |
-| 519 | international | False    |            |      2 |
-| 520 | cy            | False    | ojs        |      2 |
-| 521 | cv            | False    | ojs        |      2 |
-| 522 | design        | False    | ojs        |      2 |
-| 523 | kg            | False    | dspace     |      2 |
-| 524 | coop          | False    | ojs        |      2 |
-| 525 | com           | False    | opus       |      2 |
-| 526 | dk            | False    | dspace     |      2 |
-| 527 | la            | True     | ojs        |      2 |
-| 528 | localhost     | False    | ojs        |      2 |
-| 529 | ls            | False    |            |      2 |
-| 530 | com           | True     |            |      2 |
-| 531 | lt            | False    | dspace     |      2 |
-| 532 | click         | False    | ojs        |      2 |
-| 533 | pl            | True     | dspace     |      2 |
-| 534 | eg            | False    | ojs        |      2 |
-| 535 | hn            | True     |            |      2 |
-| 536 | om            | False    | ojs        |      2 |
-| 537 | onl           | False    | ojs        |      2 |
-| 538 | hn            | True     | ojs        |      2 |
-| 539 | nyc           | False    | ojs        |      2 |
-| 540 | cl            | False    | dspace     |      1 |
-| 541 | buzz          | False    | ojs        |      1 |
-| 542 | lgbt          | False    | ojs        |      1 |
-| 543 | lb            | True     |            |      1 |
-| 544 | am            | False    |            |      1 |
-| 545 | ug            | False    | ojs        |      1 |
-| 546 | lat           | False    | ojs        |      1 |
-| 547 | kz            | True     |            |      1 |
-| 548 | ooo           | False    | ojs        |      1 |
-| 549 | al            | True     | dspace     |      1 |
-| 550 | al            | True     |            |      1 |
-| 551 | consulting    | False    | ojs        |      1 |
-| 552 | al            | False    |            |      1 |
-| 553 | uk            | True     | opus       |      1 |
-| 554 | ca            | True     | opus       |      1 |
-| 555 | uno           | False    | ojs        |      1 |
-| 556 | bw            | False    |            |      1 |
-| 557 | ai            | False    | ojs        |      1 |
-| 558 | company       | False    | ojs        |      1 |
-| 559 | tz            | True     | dspace     |      1 |
-| 560 | art           | False    | ojs        |      1 |
-| 561 | eu            | False    | dspace     |      1 |
-| 562 | tm            | False    | ojs        |      1 |
-| 563 | tn            | False    |            |      1 |
-| 564 | lv            | True     |            |      1 |
-| 565 | to            | False    | ojs        |      1 |
-| 566 | om            | True     |            |      1 |
-| 567 | gd            | True     | ojs        |      1 |
-| 568 | id            | True     | dspace     |      1 |
-| 569 | au            | True     | opus       |      1 |
-| 570 | hk            | False    | dspace     |      1 |
-| 571 | ph            | True     | dspace     |      1 |
-| 572 | tt            | True     | ojs        |      1 |
-| 573 | tv            | False    |            |      1 |
-| 574 | lu            | True     |            |      1 |
-| 575 | au            | False    | dspace     |      1 |
-| 576 | eu            | True     | ojs        |      1 |
-| 577 | online        | False    |            |      1 |
-| 578 | ls            | False    | ojs        |      1 |
-| 579 | pe            | True     | dspace     |      1 |
-| 580 | uy            | False    |            |      1 |
-| 581 | krd           | False    | ojs        |      1 |
-| 582 | do            | True     |            |      1 |
-| 583 | za            | False    | dspace     |      1 |
-| 584 | xn--6frz82g   | False    | ojs        |      1 |
-| 585 | xn--80adxhks  | False    | ojs        |      1 |
-| 586 | xn--p1ai      | False    |            |      1 |
-| 587 | pe            | False    | opus       |      1 |
-| 588 | dagmath       | False    |            |      1 |
-| 589 | xyz           | True     | ojs        |      1 |
-| 590 | cv            | False    |            |      1 |
-| 591 | bw            | True     |            |      1 |
-| 592 | bz            | False    | ojs        |      1 |
-| 593 | academy       | False    |            |      1 |
-| 594 | uy            | True     | dspace     |      1 |
-| 595 | ist           | False    | ojs        |      1 |
-| 596 | ink           | False    |            |      1 |
-| 597 | institute     | False    | ojs        |      1 |
-| 598 | zm            | False    |            |      1 |
-| 599 | hn            | False    | ojs        |      1 |
-| 600 | bzh           | False    |            |      1 |
-| 601 | zone          | False    | ojs        |      1 |
-| 602 | io            | True     |            |      1 |
-| 603 | fj            | True     |            |      1 |
-| 604 | cr            | True     | dspace     |      1 |
-| 605 | ws            | False    | dspace     |      1 |
-| 606 | ws            | False    |            |      1 |
-| 607 | world         | False    | ojs        |      1 |
-| 608 | africa        | True     | ojs        |      1 |
-| 609 | uz            | False    |            |      1 |
-| 610 | kr            | True     | ojs        |      1 |
-| 611 | uz            | False    | opus       |      1 |
-| 612 | il            | True     |            |      1 |
-| 613 | kh            | True     | ojs        |      1 |
-| 614 | kh            | False    | ojs        |      1 |
-| 615 | fr            | False    | opus       |      1 |
-| 616 | kg            | True     | ojs        |      1 |
-| 617 | vip           | False    | ojs        |      1 |
-| 618 | bw            | False    | ojs        |      1 |
-| 619 | events        | False    | ojs        |      1 |
-| 620 | kg            | False    |            |      1 |
-| 621 | ae            | False    | ojs        |      1 |
-| 622 | cr            | False    |            |      1 |
-| 623 | ke            | False    |            |      1 |
-| 624 | jspui         | True     |            |      1 |
-| 625 | work          | False    |            |      1 |
-| 626 | work          | False    | ojs        |      1 |
-| 627 | tl            | True     | ojs        |      1 |
-| 628 | az            | True     |            |      1 |
-| 629 | ni            | True     | dspace     |      1 |
-| 630 | bf            | False    | ojs        |      1 |
-| 631 | be            | True     | ojs        |      1 |
-| 632 | na            | True     |            |      1 |
-| 633 | na            | False    | dspace     |      1 |
-| 634 | mz            | True     |            |      1 |
-| 635 | ci            | False    |            |      1 |
-| 636 | nl            | True     | dspace     |      1 |
-| 637 | cg            | True     | ojs        |      1 |
-| 638 | sa            | False    |            |      1 |
-| 639 | gq            | False    | ojs        |      1 |
-| 640 | cm            | True     | ojs        |      1 |
-| 641 | http          | False    |            |      1 |
-| 642 | saarland      | False    |            |      1 |
-| 643 | science       | False    |            |      1 |
-| 644 | cn            | False    | dspace     |      1 |
-| 645 | sd            | False    |            |      1 |
-| 646 | https         | True     | ojs        |      1 |
-| 647 | education     | False    |            |      1 |
-| 648 | sd            | True     | dspace     |      1 |
-| 649 | gm            | True     | ojs        |      1 |
-| 650 | berlin        | False    | ojs        |      1 |
-| 651 | epu           | False    |            |      1 |
-| 652 | mw            | True     | ojs        |      1 |
-| 653 | na            | True     | dspace     |      1 |
-| 654 | pt            | True     | ojs        |      1 |
-| 655 | ninja         | False    | ojs        |      1 |
-| 656 | ng            | True     | dspace     |      1 |
-| 657 | biz           | True     |            |      1 |
-| 658 | bi            | True     |            |      1 |
-| 659 | network       | False    | ojs        |      1 |
-| 660 | ci            | False    | ojs        |      1 |
-| 661 | qa            | False    | ojs        |      1 |
-| 662 | qa            | True     |            |      1 |
-| 663 | ht            | True     | ojs        |      1 |
-| 664 | re            | False    | ojs        |      1 |
-| 665 | report        | False    | ojs        |      1 |
-| 666 | net           | False    | dspace     |      1 |
-| 667 | reviews       | False    | ojs        |      1 |
-| 668 | nc            | True     |            |      1 |
-| 669 | ro            | False    | dspace     |      1 |
-| 670 | name          | False    | ojs        |      1 |
-| 671 | ro            | True     |            |      1 |
-| 672 | na            | True     | ojs        |      1 |
-| 673 | mx            | False    | dspace     |      1 |
-| 674 | mw            | False    | ojs        |      1 |
-| 675 | tk            | False    |            |      1 |
-| 676 | mk            | False    |            |      1 |
-| 677 | mil           | False    |            |      1 |
-| 678 | cz            | True     | dspace     |      1 |
-| 679 | bn            | True     | ojs        |      1 |
-| 680 | sv            | False    | ojs        |      1 |
-| 681 | me            | False    |            |      1 |
-| 682 | ma            | True     |            |      1 |
-| 683 | sy            | False    | ojs        |      1 |
-| 684 | sy            | True     |            |      1 |
-| 685 | et            | True     | dspace     |      1 |
-| 686 | systems       | False    | ojs        |      1 |
-| 687 | sz            | True     | ojs        |      1 |
-| 688 | az            | True     | ojs        |      1 |
-| 689 | technology    | False    | ojs        |      1 |
-| 690 | cd            | False    | ojs        |      1 |
-| 691 | th            | False    | dspace     |      1 |
-| 692 | codes         | False    | ojs        |      1 |
-| 693 | college       | False    | ojs        |      1 |
-| 694 | th            | True     | dspace     |      1 |
-| 695 | az            | True     | dspace     |      1 |
-| 696 | studio        | False    | ojs        |      1 |
-| 697 | store         | False    | ojs        |      1 |
-| 698 | pro           | False    |            |      1 |
-| 699 | srl           | False    | ojs        |      1 |
-| 700 | sg            | False    |            |      1 |
-| 701 | global        | False    | ojs        |      1 |
-| 702 | mt            | True     | ojs        |      1 |
-| 703 | mt            | True     |            |      1 |
-| 704 | shop          | False    |            |      1 |
-| 705 | money         | False    |            |      1 |
-| 706 | mobi          | False    | ojs        |      1 |
-| 707 | bayern        | False    | ojs        |      1 |
-| 708 | gh            | True     | dspace     |      1 |
-| 709 | mn            | True     | ojs        |      1 |
-| 710 | site          | False    |            |      1 |
-| 711 | cfd           | False    | ojs        |      1 |
-| 712 | ba            | True     |            |      1 |
-| 713 | plus          | False    |            |      1 |
-| 714 | ml            | True     | ojs        |      1 |
-| 715 | ml            | False    |            |      1 |
-| 716 | so            | False    |            |      1 |
-| 717 | hosting       | False    | ojs        |      1 |
-| 718 | gh            | False    | ojs        |      1 |
-| 719 | pa            | False    | ojs        |      1 |
+|   0 | id            | True     | ojs        |  37794 |
+|   1 | com           | False    | ojs        |  18137 |
+|   2 | org           | False    | ojs        |  13350 |
+|   3 | id            | True     |            |   9206 |
+|   4 | br            | True     | ojs        |   7472 |
+|   5 | id            | False    | ojs        |   6131 |
+|   6 | br            | False    | ojs        |   3775 |
+|   7 | com           | False    |            |   3618 |
+|   8 | org           | False    |            |   3469 |
+|   9 | my            | True     | ojs        |   2749 |
+|  10 | info          | False    | ojs        |   2444 |
+|  11 | co            | True     | ojs        |   2046 |
+|  12 | edu           | True     | ojs        |   1917 |
+|  13 | br            | True     |            |   1871 |
+|  14 | in            | False    | ojs        |   1812 |
+|  15 | mx            | False    | ojs        |   1666 |
+|  16 | net           | False    | ojs        |   1559 |
+|  17 | edu           | True     |            |   1512 |
+|  18 | cl            | False    | ojs        |   1428 |
+|  19 | id            | False    |            |   1315 |
+|  20 | es            | True     | ojs        |   1278 |
+|  21 | ar            | True     | ojs        |   1203 |
+|  22 | cat           | False    | ojs        |   1165 |
+|  23 | vn            | False    | ojs        |   1154 |
+|  24 | ua            | True     | ojs        |   1014 |
+|  25 | pe            | True     | ojs        |    986 |
+|  26 | ua            | False    | ojs        |    964 |
+|  27 |               | False    | ojs        |    919 |
+|  28 | br            | False    |            |    898 |
+|  29 | ru            | False    | ojs        |    892 |
+|  30 | ca            | True     | ojs        |    727 |
+|  31 | es            | False    | ojs        |    712 |
+|  32 | it            | True     | ojs        |    671 |
+|  33 | eu            | False    | ojs        |    608 |
+|  34 | pk            | True     | ojs        |    606 |
+|  35 | pl            | False    | ojs        |    601 |
+|  36 | ar            | False    | ojs        |    601 |
+|  37 | pt            | False    | ojs        |    557 |
+|  38 | ec            | True     | ojs        |    552 |
+|  39 | co            | True     |            |    546 |
+|  40 | pl            | True     | ojs        |    543 |
+|  41 | de            | False    | ojs        |    536 |
+|  42 | ge            | False    | ojs        |    531 |
+|  43 | ru            | False    |            |    506 |
+|  44 | uz            | False    | ojs        |    498 |
+|  45 | it            | False    | ojs        |    471 |
+|  46 | iq            | True     | ojs        |    455 |
+|  47 | ca            | False    | ojs        |    427 |
+|  48 | mx            | False    |            |    403 |
+|  49 | ua            | False    |            |    396 |
+|  50 | uk            | True     |            |    374 |
+|  51 | pk            | False    | ojs        |    369 |
+|  52 | my            | False    | ojs        |    367 |
+|  53 | es            | True     |            |    353 |
+|  54 | ua            | True     |            |    352 |
+|  55 | pe            | True     |            |    350 |
+|  56 | net           | False    |            |    349 |
+|  57 | hu            | False    | ojs        |    344 |
+|  58 | ro            | False    | ojs        |    330 |
+|  59 | es            | False    |            |    319 |
+|  60 | jp            | True     |            |    316 |
+|  61 | online        | False    | ojs        |    315 |
+|  62 | de            | False    |            |    305 |
+|  63 | ng            | True     | ojs        |    299 |
+|  64 | de            | True     | ojs        |    296 |
+|  65 | gr            | False    | ojs        |    290 |
+|  66 | pl            | False    |            |    288 |
+|  67 | in            | False    |            |    278 |
+|  68 | dk            | False    | ojs        |    277 |
+|  69 | cr            | True     | ojs        |    270 |
+|  70 | ar            | True     |            |    268 |
+|  71 | ng            | False    | ojs        |    266 |
+|  72 | info          | False    |            |    264 |
+|  73 | za            | False    | ojs        |    259 |
+|  74 | uk            | True     | ojs        |    246 |
+|  75 | co            | False    | ojs        |    243 |
+|  76 | it            | True     |            |    232 |
+|  77 | de            | True     |            |    230 |
+|  78 | za            | True     | ojs        |    229 |
+|  79 | ve            | False    | ojs        |    227 |
+|  80 | tr            | True     |            |    227 |
+|  81 | dk            | False    |            |    216 |
+|  82 | pt            | False    |            |    214 |
+|  83 | dz            | True     | ojs        |    213 |
+|  84 | ph            | True     | ojs        |    211 |
+|  85 | cu            | False    | ojs        |    211 |
+|  86 | mx            | True     | ojs        |    211 |
+|  87 | th            | True     | ojs        |    208 |
+|  88 | cl            | False    |            |    207 |
+|  89 | tr            | True     | ojs        |    203 |
+|  90 | uk            | False    | ojs        |    202 |
+|  91 | ve            | True     | ojs        |    201 |
+|  92 |               | False    |            |    196 |
+|  93 | pe            | False    | ojs        |    193 |
+|  94 | hr            | False    | ojs        |    190 |
+|  95 | lt            | False    | ojs        |    182 |
+|  96 | pl            | True     |            |    181 |
+|  97 | no            | False    | ojs        |    179 |
+|  98 | ke            | True     | ojs        |    170 |
+|  99 | vn            | True     | ojs        |    167 |
+| 100 | rs            | False    | ojs        |    162 |
+| 101 | ca            | False    |            |    162 |
+| 102 | kz            | False    | ojs        |    149 |
+| 103 | my            | True     |            |    145 |
+| 104 | hu            | False    |            |    143 |
+| 105 | eu            | False    |            |    141 |
+| 106 | fr            | False    |            |    135 |
+| 107 | se            | False    | ojs        |    135 |
+| 108 | ec            | True     |            |    132 |
+| 109 | au            | True     | ojs        |    130 |
+| 110 | pk            | True     |            |    129 |
+| 111 | ca            | True     |            |    129 |
+| 112 | iq            | True     |            |    128 |
+| 113 | pa            | True     | ojs        |    128 |
+| 114 | rs            | True     | ojs        |    128 |
+| 115 | za            | True     |            |    121 |
+| 116 | nl            | False    |            |    120 |
+| 117 | hu            | True     | ojs        |    120 |
+| 118 | cz            | False    | ojs        |    119 |
+| 119 | in            | True     | ojs        |    118 |
+| 120 | uy            | True     | ojs        |    112 |
+| 121 | com           | True     | ojs        |    112 |
+| 122 | np            | False    | ojs        |    112 |
+| 123 | no            | False    |            |    110 |
+| 124 | ir            | True     | ojs        |    108 |
+| 125 | py            | True     | ojs        |    108 |
+| 126 | et            | True     | ojs        |    108 |
+| 127 | it            | False    |            |    107 |
+| 128 | au            | True     |            |    107 |
+| 129 | cu            | True     | ojs        |    106 |
+| 130 | my            | False    |            |    105 |
+| 131 | bg            | False    | ojs        |    103 |
+| 132 | jp            | True     | dspace     |    102 |
+| 133 | ro            | False    |            |    101 |
+| 134 | ba            | False    | ojs        |     99 |
+| 135 | gr            | False    |            |     97 |
+| 136 | fr            | False    | ojs        |     97 |
+| 137 | edu           | True     | dspace     |     96 |
+| 138 | tz            | True     | ojs        |     95 |
+| 139 | si            | False    | ojs        |     94 |
+| 140 | ec            | False    | ojs        |     94 |
+| 141 | be            | False    | ojs        |     93 |
+| 142 | ar            | False    |            |     91 |
+| 143 | lt            | False    |            |     90 |
+| 144 | tr            | False    | ojs        |     89 |
+| 145 | bg            | True     | ojs        |     88 |
+| 146 | bo            | False    | ojs        |     88 |
+| 147 | ni            | True     | ojs        |     88 |
+| 148 | am            | False    | ojs        |     87 |
+| 149 | ir            | False    | ojs        |     85 |
+| 150 | bo            | True     | ojs        |     82 |
+| 151 | ge            | True     | ojs        |     80 |
+| 152 | pk            | False    |            |     79 |
+| 153 | vn            | True     |            |     78 |
+| 154 | se            | False    |            |     76 |
+| 155 | gh            | True     | ojs        |     76 |
+| 156 | au            | False    | ojs        |     76 |
+| 157 | us            | False    | ojs        |     75 |
+| 158 | at            | True     | ojs        |     75 |
+| 159 | nl            | False    | ojs        |     75 |
+| 160 | ly            | True     | ojs        |     74 |
+| 161 | ng            | True     |            |     74 |
+| 162 | tw            | True     |            |     73 |
+| 163 | hr            | True     |            |     73 |
+| 164 | sd            | True     | ojs        |     72 |
+| 165 | cat           | False    |            |     71 |
+| 166 | site          | False    | ojs        |     70 |
+| 167 | ir            | True     |            |     70 |
+| 168 | cat           | True     |            |     69 |
+| 169 | sg            | False    | ojs        |     68 |
+| 170 | fi            | False    |            |     67 |
+| 171 | biz           | False    |            |     67 |
+| 172 | press         | False    | ojs        |     66 |
+| 173 | mx            | True     |            |     65 |
+| 174 | cz            | False    |            |     64 |
+| 175 | by            | False    | ojs        |     63 |
+| 176 | gt            | True     | ojs        |     62 |
+| 177 | jo            | True     | ojs        |     61 |
+| 178 | lv            | False    | ojs        |     60 |
+| 179 | eus           | False    | ojs        |     59 |
+| 180 | pe            | False    |            |     59 |
+| 181 | by            | False    |            |     59 |
+| 182 | uz            | False    |            |     58 |
+| 183 | hu            | True     |            |     57 |
+| 184 | hr            | False    |            |     57 |
+| 185 | pub           | False    | ojs        |     57 |
+| 186 | xyz           | False    | ojs        |     56 |
+| 187 | hr            | True     | ojs        |     55 |
+| 188 | sk            | False    | ojs        |     55 |
+| 189 | fr            | True     |            |     55 |
+| 190 | ee            | False    | ojs        |     54 |
+| 191 | ch            | False    | ojs        |     54 |
+| 192 | ch            | True     |            |     53 |
+| 193 | education     | False    | ojs        |     52 |
+| 194 | co            | False    |            |     51 |
+| 195 | py            | False    | ojs        |     51 |
+| 196 | sv            | True     | ojs        |     51 |
+| 197 | kz            | False    |            |     50 |
+| 198 | zm            | False    | ojs        |     50 |
+| 199 | tech          | False    | ojs        |     50 |
+| 200 | vn            | False    |            |     49 |
+| 201 | rs            | True     |            |     49 |
+| 202 | uk            | False    |            |     48 |
+| 203 | cn            | True     |            |     47 |
+| 204 | be            | False    |            |     47 |
+| 205 | uy            | False    | ojs        |     47 |
+| 206 | za            | False    |            |     47 |
+| 207 | nz            | True     |            |     47 |
+| 208 | ie            | False    |            |     45 |
+| 209 | mk            | True     | ojs        |     45 |
+| 210 | at            | False    | ojs        |     45 |
+| 211 | dz            | False    | ojs        |     44 |
+| 212 | si            | True     |            |     43 |
+| 213 | fi            | False    | ojs        |     43 |
+| 214 | in            | True     |            |     43 |
+| 215 | do            | True     | ojs        |     43 |
+| 216 | pro           | False    | ojs        |     42 |
+| 217 | no            | True     |            |     41 |
+| 218 | gal           | False    | ojs        |     41 |
+| 219 | org           | True     | ojs        |     41 |
+| 220 | ph            | False    | ojs        |     41 |
+| 221 | kz            | True     | ojs        |     39 |
+| 222 | ye            | True     | ojs        |     39 |
+| 223 | ie            | False    | ojs        |     39 |
+| 224 | krd           | True     | ojs        |     38 |
+| 225 | cu            | False    |            |     38 |
+| 226 | mk            | False    | ojs        |     38 |
+| 227 | ke            | False    | ojs        |     37 |
+| 228 | cl            | True     | ojs        |     36 |
+| 229 | ch            | False    |            |     36 |
+| 230 | ve            | True     |            |     34 |
+| 231 | uk            | True     | dspace     |     34 |
+| 232 | cr            | True     |            |     34 |
+| 233 | website       | False    | ojs        |     33 |
+| 234 | sg            | False    |            |     33 |
+| 235 | nz            | True     | ojs        |     33 |
+| 236 | dz            | True     |            |     33 |
+| 237 |               | True     |            |     33 |
+| 238 | si            | False    |            |     33 |
+| 239 | lk            | True     | ojs        |     33 |
+| 240 | ng            | False    |            |     32 |
+| 241 | ni            | False    | ojs        |     32 |
+| 242 | ws            | False    | ojs        |     31 |
+| 243 | pa            | True     |            |     31 |
+| 244 | ve            | False    |            |     31 |
+| 245 | de            | False    | opus       |     31 |
+| 246 | org           | False    | dspace     |     31 |
+| 247 | ml            | False    | ojs        |     30 |
+| 248 | gd            | False    | ojs        |     30 |
+| 249 | uy            | True     |            |     30 |
+| 250 | asia          | False    | ojs        |     30 |
+| 251 | tw            | True     | dspace     |     30 |
+| 252 | sy            | True     | ojs        |     29 |
+| 253 | au            | False    |            |     29 |
+| 254 | ro            | True     | ojs        |     29 |
+| 255 | np            | True     | ojs        |     29 |
+| 256 | digital       | False    | ojs        |     29 |
+| 257 | science       | False    | ojs        |     29 |
+| 258 | io            | False    | ojs        |     29 |
+| 259 | at            | True     |            |     28 |
+| 260 | md            | False    | ojs        |     28 |
+| 261 | ly            | False    | ojs        |     28 |
+| 262 | ug            | True     | ojs        |     28 |
+| 263 | gal           | False    |            |     28 |
+| 264 | lv            | False    |            |     27 |
+| 265 | ly            | True     |            |     27 |
+| 266 | tr            | False    |            |     27 |
+| 267 | gov           | False    |            |     26 |
+| 268 | jo            | True     |            |     26 |
+| 269 | rs            | False    |            |     26 |
+| 270 | ch            | True     | ojs        |     25 |
+| 271 | nz            | False    | ojs        |     25 |
+| 272 | ge            | False    |            |     25 |
+| 273 | zw            | True     | ojs        |     24 |
+| 274 | ae            | True     | ojs        |     24 |
+| 275 | press         | False    |            |     23 |
+| 276 | ac            | False    | ojs        |     23 |
+| 277 | ph            | True     |            |     23 |
+| 278 | cc            | False    | ojs        |     23 |
+| 279 | tw            | True     | ojs        |     23 |
+| 280 | tz            | True     |            |     22 |
+| 281 | jp            | False    | ojs        |     22 |
+| 282 | th            | True     |            |     22 |
+| 283 | ua            | True     | dspace     |     22 |
+| 284 | is            | False    | ojs        |     21 |
+| 285 | ps            | True     | ojs        |     20 |
+| 286 | tk            | False    | ojs        |     20 |
+| 287 | ke            | True     |            |     20 |
+| 288 | ma            | False    | ojs        |     20 |
+| 289 | ao            | False    | ojs        |     20 |
+| 290 | cat           | True     | ojs        |     20 |
+| 291 | al            | False    |            |     19 |
+| 292 | agency        | False    | ojs        |     19 |
+| 293 | it            | True     | dspace     |     19 |
+| 294 | at            | False    |            |     19 |
+| 295 | me            | False    | ojs        |     19 |
+| 296 | kg            | False    | ojs        |     19 |
+| 297 | jp            | False    |            |     19 |
+| 298 | eg            | True     | ojs        |     19 |
+| 299 | az            | False    | ojs        |     19 |
+| 300 | si            | True     | ojs        |     19 |
+| 301 | kr            | False    |            |     19 |
+| 302 | ec            | False    |            |     19 |
+| 303 | iq            | False    | ojs        |     19 |
+| 304 | py            | True     |            |     19 |
+| 305 | in            | True     | dspace     |     18 |
+| 306 | cn            | False    | ojs        |     18 |
+| 307 | bd            | True     | ojs        |     18 |
+| 308 | bg            | False    |            |     18 |
+| 309 | gr            | True     |            |     18 |
+| 310 | ee            | False    |            |     17 |
+| 311 | ba            | False    |            |     17 |
+| 312 | es            | True     | dspace     |     17 |
+| 313 | sk            | True     | ojs        |     17 |
+| 314 | lv            | True     | ojs        |     17 |
+| 315 | us            | False    |            |     17 |
+| 316 | cloud         | False    | ojs        |     17 |
+| 317 | cz            | True     |            |     17 |
+| 318 | bt            | True     | ojs        |     16 |
+| 319 | su            | False    | ojs        |     16 |
+| 320 | app           | False    | ojs        |     16 |
+| 321 | ph            | False    |            |     16 |
+| 322 | np            | False    |            |     16 |
+| 323 | gh            | True     |            |     16 |
+| 324 | lk            | True     |            |     16 |
+| 325 | bd            | False    | ojs        |     15 |
+| 326 | sa            | False    | ojs        |     15 |
+| 327 | mk            | True     |            |     15 |
+| 328 | kr            | True     |            |     15 |
+| 329 | academy       | False    | ojs        |     15 |
+| 330 | hk            | True     |            |     15 |
+| 331 | ca            | True     | dspace     |     15 |
+| 332 | sa            | True     | ojs        |     14 |
+| 333 | bw            | False    | ojs        |     14 |
+| 334 |               | False    | dspace     |     14 |
+| 335 | cy            | True     | ojs        |     14 |
+| 336 | gr            | True     | ojs        |     13 |
+| 337 | online        | False    |            |     13 |
+| 338 | ye            | True     |            |     13 |
+| 339 | ni            | True     |            |     13 |
+| 340 | bo            | True     |            |     13 |
+| 341 | is            | False    |            |     12 |
+| 342 | int           | False    |            |     12 |
+| 343 | site          | False    |            |     12 |
+| 344 | md            | False    |            |     12 |
+| 345 | do            | False    | ojs        |     12 |
+| 346 | ua            | False    | dspace     |     12 |
+| 347 | es            | False    | dspace     |     12 |
+| 348 | nz            | False    |            |     12 |
+| 349 | sv            | True     |            |     12 |
+| 350 | ir            | False    |            |     12 |
+| 351 | ps            | True     |            |     12 |
+| 352 | bo            | False    |            |     12 |
+| 353 | live          | False    | ojs        |     12 |
+| 354 | kz            | True     |            |     12 |
+| 355 | ge            | True     |            |     12 |
+| 356 | fr            | True     | ojs        |     12 |
+| 357 | ec            | True     | dspace     |     12 |
+| 358 | it            | False    | dspace     |     11 |
+| 359 | mk            | False    |            |     11 |
+| 360 | in            | False    | dspace     |     11 |
+| 361 | th            | False    | ojs        |     11 |
+| 362 | am            | False    |            |     11 |
+| 363 | ru            | True     |            |     11 |
+| 364 | py            | False    |            |     11 |
+| 365 | kw            | True     | ojs        |     11 |
+| 366 | sv            | False    | ojs        |     11 |
+| 367 | eus           | False    |            |     10 |
+| 368 | krd           | True     |            |     10 |
+| 369 | sa            | True     |            |     10 |
+| 370 | gr            | False    | dspace     |     10 |
+| 371 | pt            | False    | dspace     |     10 |
+| 372 | kg            | False    |            |     10 |
+| 373 | hk            | False    | ojs        |     10 |
+| 374 | space         | False    | ojs        |     10 |
+| 375 | de            | True     | opus       |     10 |
+| 376 | tr            | True     | dspace     |     10 |
+| 377 | al            | False    | ojs        |     10 |
+| 378 | do            | True     |            |     10 |
+| 379 | ae            | True     |            |     10 |
+| 380 | sd            | True     |            |      9 |
+| 381 | af            | False    | ojs        |      9 |
+| 382 | org           | True     |            |      9 |
+| 383 | cn            | True     | ojs        |      9 |
+| 384 | dz            | False    |            |      9 |
+| 385 | education     | False    |            |      9 |
+| 386 | et            | True     |            |      9 |
+| 387 | top           | False    | ojs        |      9 |
+| 388 | br            | False    | dspace     |      9 |
+| 389 | sn            | False    | ojs        |      9 |
+| 390 | om            | True     | ojs        |      9 |
+| 391 | cz            | False    | dspace     |      8 |
+| 392 | bj            | False    | ojs        |      8 |
+| 393 | nl            | False    | dspace     |      8 |
+| 394 | review        | False    | ojs        |      8 |
+| 395 | bn            | True     | ojs        |      8 |
+| 396 | af            | True     | ojs        |      8 |
+| 397 | bd            | True     |            |      8 |
+| 398 | nz            | True     | dspace     |      8 |
+| 399 | cr            | False    | ojs        |      8 |
+| 400 | uy            | False    |            |      8 |
+| 401 | com           | True     |            |      8 |
+| 402 | gt            | False    | ojs        |      8 |
+| 403 | fi            | False    | dspace     |      8 |
+| 404 | il            | True     | ojs        |      7 |
+| 405 | ae            | False    | ojs        |      7 |
+| 406 | az            | False    |            |      7 |
+| 407 | bz            | True     | ojs        |      7 |
+| 408 | page          | False    | ojs        |      7 |
+| 409 | au            | True     | dspace     |      7 |
+| 410 | africa        | False    | ojs        |      7 |
+| 411 | cf            | False    | ojs        |      7 |
+| 412 | hk            | False    |            |      7 |
+| 413 | ga            | False    | ojs        |      7 |
+| 414 | cg            | False    | ojs        |      7 |
+| 415 | club          | False    | ojs        |      7 |
+| 416 | cn            | False    |            |      7 |
+| 417 | mz            | True     | ojs        |      7 |
+| 418 | media         | False    | ojs        |      7 |
+| 419 | co            | True     | dspace     |      7 |
+| 420 | ba            | True     | ojs        |      7 |
+| 421 | ca            | False    | dspace     |      7 |
+| 422 | qa            | True     |            |      7 |
+| 423 | be            | True     |            |      7 |
+| 424 | ru            | True     | ojs        |      7 |
+| 425 | qa            | True     | ojs        |      7 |
+| 426 | sz            | True     | ojs        |      7 |
+| 427 | kr            | False    | ojs        |      7 |
+| 428 | gt            | True     |            |      7 |
+| 429 | zw            | True     |            |      7 |
+| 430 | mz            | False    | ojs        |      6 |
+| 431 | na            | False    | ojs        |      6 |
+| 432 | nl            | True     |            |      6 |
+| 433 | na            | True     | ojs        |      6 |
+| 434 | int           | False    | ojs        |      6 |
+| 435 | net           | True     | ojs        |      6 |
+| 436 | fr            | False    | dspace     |      6 |
+| 437 | asia          | False    |            |      6 |
+| 438 | br            | True     | dspace     |      6 |
+| 439 | ru            | False    | dspace     |      6 |
+| 440 | bt            | False    | ojs        |      6 |
+| 441 |               | True     | ojs        |      6 |
+| 442 | tn            | False    | ojs        |      6 |
+| 443 | zm            | False    |            |      6 |
+| 444 | tz            | False    | ojs        |      6 |
+| 445 | pa            | False    | ojs        |      6 |
+| 446 | bn            | True     |            |      6 |
+| 447 | tw            | False    |            |      6 |
+| 448 | sk            | True     |            |      6 |
+| 449 | fo            | False    | ojs        |      6 |
+| 450 | hk            | True     | ojs        |      6 |
+| 451 | iq            | False    |            |      6 |
+| 452 | cz            | True     | ojs        |      6 |
+| 453 | su            | False    |            |      6 |
+| 454 | eg            | True     |            |      5 |
+| 455 | jp            | False    | dspace     |      5 |
+| 456 | de            | True     | dspace     |      5 |
+| 457 | ug            | True     |            |      5 |
+| 458 | se            | False    | dspace     |      5 |
+| 459 | biz           | False    | ojs        |      5 |
+| 460 | be            | False    | dspace     |      5 |
+| 461 | np            | True     |            |      5 |
+| 462 | nyc           | False    | ojs        |      5 |
+| 463 | ke            | False    |            |      5 |
+| 464 | om            | True     |            |      5 |
+| 465 | cu            | True     |            |      5 |
+| 466 | center        | False    | ojs        |      5 |
+| 467 | tw            | False    | ojs        |      5 |
+| 468 | host          | False    | ojs        |      5 |
+| 469 | lt            | False    | dspace     |      5 |
+| 470 | cn            | True     | dspace     |      5 |
+| 471 | bt            | True     |            |      5 |
+| 472 | zw            | False    | ojs        |      5 |
+| 473 | cy            | True     |            |      4 |
+| 474 | eg            | False    |            |      4 |
+| 475 | science       | False    |            |      4 |
+| 476 | edu           | True     | opus       |      4 |
+| 477 | jp            | True     | ojs        |      4 |
+| 478 | dz            | True     | dspace     |      4 |
+| 479 | win           | False    | ojs        |      4 |
+| 480 | lk            | False    | ojs        |      4 |
+| 481 | th            | False    |            |      4 |
+| 482 | me            | False    |            |      4 |
+| 483 | life          | False    | ojs        |      4 |
+| 484 | do            | False    |            |      4 |
+| 485 | kr            | False    | dspace     |      4 |
+| 486 | krd           | False    | ojs        |      4 |
+| 487 | no            | False    | dspace     |      4 |
+| 488 | ac            | False    |            |      4 |
+| 489 | ie            | False    | dspace     |      4 |
+| 490 | institute     | False    | ojs        |      4 |
+| 491 | za            | True     | dspace     |      4 |
+| 492 | today         | False    | ojs        |      4 |
+| 493 | university    | False    | ojs        |      4 |
+| 494 | website       | False    |            |      4 |
+| 495 | sk            | False    |            |      4 |
+| 496 | srl           | False    | ojs        |      4 |
+| 497 | cc            | False    |            |      4 |
+| 498 | company       | False    | ojs        |      4 |
+| 499 | ba            | True     |            |      4 |
+| 500 | pa            | False    |            |      3 |
+| 501 | kr            | True     | dspace     |      3 |
+| 502 | pw            | False    | ojs        |      3 |
+| 503 | nu            | False    | ojs        |      3 |
+| 504 | mo            | True     | ojs        |      3 |
+| 505 | et            | False    | ojs        |      3 |
+| 506 | africa        | False    |            |      3 |
+| 507 | tech          | False    |            |      3 |
+| 508 | xyz           | True     | ojs        |      3 |
+| 509 | expert        | False    | ojs        |      3 |
+| 510 | expert        | False    |            |      3 |
+| 511 | de            | False    | dspace     |      3 |
+| 512 | krd           | False    |            |      3 |
+| 513 | ml            | False    |            |      3 |
+| 514 | mn            | False    | ojs        |      3 |
+| 515 | fun           | False    | ojs        |      3 |
+| 516 | gov           | False    | dspace     |      3 |
+| 517 | rw            | True     | ojs        |      3 |
+| 518 | lv            | True     |            |      3 |
+| 519 | xn--p1ai      | False    | ojs        |      3 |
+| 520 | zm            | True     | ojs        |      3 |
+| 521 | digital       | False    |            |      3 |
+| 522 | bid           | False    | ojs        |      3 |
+| 523 | na            | False    |            |      3 |
+| 524 | sg            | True     | dspace     |      3 |
+| 525 | pro           | False    |            |      3 |
+| 526 | io            | False    |            |      3 |
+| 527 | ao            | False    |            |      3 |
+| 528 | bg            | True     |            |      3 |
+| 529 | cr            | False    |            |      3 |
+| 530 | mv            | True     | ojs        |      3 |
+| 531 | ro            | True     |            |      3 |
+| 532 | ls            | False    | ojs        |      3 |
+| 533 | ee            | False    | dspace     |      3 |
+| 534 | ma            | True     | ojs        |      3 |
+| 535 | rw            | True     |            |      3 |
+| 536 | link          | False    | ojs        |      3 |
+| 537 | pt            | True     |            |      3 |
+| 538 | bayern        | False    | ojs        |      3 |
+| 539 | cl            | True     |            |      3 |
+| 540 | me            | True     | ojs        |      3 |
+| 541 | bt            | False    |            |      2 |
+| 542 | ls            | False    |            |      2 |
+| 543 | gt            | False    |            |      2 |
+| 544 | localhost     | False    | ojs        |      2 |
+| 545 | kg            | False    | dspace     |      2 |
+| 546 | ps            | False    | ojs        |      2 |
+| 547 | academy       | False    |            |      2 |
+| 548 | ps            | True     | dspace     |      2 |
+| 549 | studio        | False    |            |      2 |
+| 550 | gr            | True     | dspace     |      2 |
+| 551 | live          | False    |            |      2 |
+| 552 | pt            | True     | ojs        |      2 |
+| 553 | bh            | True     | ojs        |      2 |
+| 554 | af            | False    |            |      2 |
+| 555 | ru            | True     | dspace     |      2 |
+| 556 | la            | True     | ojs        |      2 |
+| 557 | tl            | False    | ojs        |      2 |
+| 558 | lb            | True     |            |      2 |
+| 559 | af            | True     |            |      2 |
+| 560 | se            | True     |            |      2 |
+| 561 | pub           | False    |            |      2 |
+| 562 | global        | False    | ojs        |      2 |
+| 563 | review        | False    |            |      2 |
+| 564 | ge            | False    | dspace     |      2 |
+| 565 | report        | False    | ojs        |      2 |
+| 566 | bd            | True     | dspace     |      2 |
+| 567 | flup008       | False    | ojs        |      2 |
+| 568 | au            | True     | opus       |      2 |
+| 569 | sd            | False    | ojs        |      2 |
+| 570 | pl            | True     | dspace     |      2 |
+| 571 | ve            | False    | dspace     |      2 |
+| 572 | eg            | False    | ojs        |      2 |
+| 573 | cm            | False    | ojs        |      2 |
+| 574 | ar            | True     | dspace     |      2 |
+| 575 | news          | False    | ojs        |      2 |
+| 576 | news          | False    |            |      2 |
+| 577 | network       | False    | ojs        |      2 |
+| 578 | ink           | False    |            |      2 |
+| 579 | international | False    |            |      2 |
+| 580 | international | False    | ojs        |      2 |
+| 581 | na            | True     |            |      2 |
+| 582 | africa        | True     | ojs        |      2 |
+| 583 | al            | True     | ojs        |      2 |
+| 584 | bd            | False    |            |      2 |
+| 585 | so            | False    | ojs        |      2 |
+| 586 | my            | True     | dspace     |      2 |
+| 587 | ws            | False    |            |      2 |
+| 588 | com           | False    | dspace     |      2 |
+| 589 | com           | False    | opus       |      2 |
+| 590 | coop          | False    | ojs        |      2 |
+| 591 | design        | False    | ojs        |      2 |
+| 592 | world         | False    | ojs        |      2 |
+| 593 | sn            | False    |            |      2 |
+| 594 | dk            | False    | dspace     |      2 |
+| 595 | mm            | True     | ojs        |      2 |
+| 596 | mm            | True     |            |      2 |
+| 597 | click         | False    | ojs        |      2 |
+| 598 | cl            | True     | dspace     |      2 |
+| 599 | hk            | True     | dspace     |      2 |
+| 600 | cl            | False    | dspace     |      2 |
+| 601 | pl            | False    | dspace     |      2 |
+| 602 | sg            | True     |            |      2 |
+| 603 | academy       | False    | dspace     |      2 |
+| 604 | bw            | True     | ojs        |      2 |
+| 605 | hn            | True     |            |      2 |
+| 606 | cy            | False    | ojs        |      2 |
+| 607 | hn            | True     | ojs        |      2 |
+| 608 | lu            | False    | ojs        |      2 |
+| 609 | shop          | False    | ojs        |      2 |
+| 610 | lu            | True     | ojs        |      2 |
+| 611 | yu            | True     |            |      2 |
+| 612 | tw            | False    | dspace     |      2 |
+| 613 | cv            | False    | ojs        |      2 |
+| 614 | page          | False    |            |      2 |
+| 615 | lv            | False    | dspace     |      2 |
+| 616 | onl           | False    | ojs        |      2 |
+| 617 | https         | True     | ojs        |      2 |
+| 618 | om            | False    | ojs        |      2 |
+| 619 | eu            | True     | ojs        |      2 |
+| 620 | nyc           | False    |            |      2 |
+| 621 | ma            | False    |            |      2 |
+| 622 | xn--p1ai      | False    |            |      2 |
+| 623 | id            | True     | dspace     |      2 |
+| 624 | sv            | False    |            |      2 |
+| 625 | th            | False    | dspace     |      1 |
+| 626 | technology    | False    | ojs        |      1 |
+| 627 | gd            | False    |            |      1 |
+| 628 | th            | True     | dspace     |      1 |
+| 629 | work          | False    |            |      1 |
+| 630 | uy            | True     | dspace     |      1 |
+| 631 | ai            | False    | ojs        |      1 |
+| 632 | uz            | False    | opus       |      1 |
+| 633 | uz            | True     |            |      1 |
+| 634 | africa        | True     |            |      1 |
+| 635 | vip           | False    | ojs        |      1 |
+| 636 | win           | False    |            |      1 |
+| 637 | work          | False    | ojs        |      1 |
+| 638 | al            | True     | dspace     |      1 |
+| 639 | world         | False    |            |      1 |
+| 640 | ws            | False    | dspace     |      1 |
+| 641 | xn--6frz82g   | False    | ojs        |      1 |
+| 642 | xn--80adxhks  | False    | ojs        |      1 |
+| 643 | xyz           | False    |            |      1 |
+| 644 | za            | False    | dspace     |      1 |
+| 645 | zone          | False    | ojs        |      1 |
+| 646 | al            | True     |            |      1 |
+| 647 | uno           | False    | ojs        |      1 |
+| 648 | az            | True     | ojs        |      1 |
+| 649 | az            | True     |            |      1 |
+| 650 | tk            | False    |            |      1 |
+| 651 | tl            | True     | ojs        |      1 |
+| 652 | tm            | False    | ojs        |      1 |
+| 653 | tn            | False    |            |      1 |
+| 654 | to            | False    | ojs        |      1 |
+| 655 | top           | False    |            |      1 |
+| 656 | az            | True     | dspace     |      1 |
+| 657 | tt            | True     | ojs        |      1 |
+| 658 | university    | False    |            |      1 |
+| 659 | tv            | False    |            |      1 |
+| 660 | tz            | True     | dspace     |      1 |
+| 661 | au            | False    | dspace     |      1 |
+| 662 | art           | False    | ojs        |      1 |
+| 663 | ug            | False    | ojs        |      1 |
+| 664 | ar            | False    | dspace     |      1 |
+| 665 | uk            | True     | opus       |      1 |
+| 666 | systems       | False    | ojs        |      1 |
+| 667 | cg            | False    |            |      1 |
+| 668 | sy            | True     |            |      1 |
+| 669 | sy            | False    | ojs        |      1 |
+| 670 | kg            | True     | ojs        |      1 |
+| 671 | kh            | False    | ojs        |      1 |
+| 672 | kr            | True     | ojs        |      1 |
+| 673 | cz            | True     | dspace     |      1 |
+| 674 | la            | False    |            |      1 |
+| 675 | la            | False    | ojs        |      1 |
+| 676 | lat           | False    | ojs        |      1 |
+| 677 | lgbt          | False    | ojs        |      1 |
+| 678 | localhost     | False    |            |      1 |
+| 679 | lu            | True     |            |      1 |
+| 680 | cv            | False    |            |      1 |
+| 681 | ly            | False    |            |      1 |
+| 682 | cr            | True     | dspace     |      1 |
+| 683 | ma            | True     |            |      1 |
+| 684 | me            | True     |            |      1 |
+| 685 | mil           | False    |            |      1 |
+| 686 | consulting    | False    | ojs        |      1 |
+| 687 | ml            | True     | ojs        |      1 |
+| 688 | mn            | False    |            |      1 |
+| 689 | mn            | True     | ojs        |      1 |
+| 690 | mobi          | False    | ojs        |      1 |
+| 691 | money         | False    |            |      1 |
+| 692 | mt            | True     |            |      1 |
+| 693 | mt            | True     | ojs        |      1 |
+| 694 | mw            | False    | ojs        |      1 |
+| 695 | dagmath       | False    |            |      1 |
+| 696 | jspui         | True     |            |      1 |
+| 697 | ist           | False    | ojs        |      1 |
+| 698 | hn            | False    | ojs        |      1 |
+| 699 | gd            | True     | ojs        |      1 |
+| 700 | fr            | False    | opus       |      1 |
+| 701 | gh            | False    | ojs        |      1 |
+| 702 | gh            | True     | dspace     |      1 |
+| 703 | global        | False    |            |      1 |
+| 704 | gm            | True     | ojs        |      1 |
+| 705 | goog          | False    | ojs        |      1 |
+| 706 | gq            | False    | ojs        |      1 |
+| 707 | fo            | False    |            |      1 |
+| 708 | fj            | True     |            |      1 |
+| 709 | hk            | False    | dspace     |      1 |
+| 710 | hosting       | False    | ojs        |      1 |
+| 711 | io            | True     |            |      1 |
+| 712 | events        | False    | ojs        |      1 |
+| 713 | ht            | True     | ojs        |      1 |
+| 714 | http          | False    |            |      1 |
+| 715 | https         | False    | ojs        |      1 |
+| 716 | eu            | False    | dspace     |      1 |
+| 717 | et            | True     | dspace     |      1 |
+| 718 | et            | False    |            |      1 |
+| 719 | epu           | False    |            |      1 |
+| 720 | il            | True     |            |      1 |
+| 721 | info          | False    | dspace     |      1 |
+| 722 | ink           | False    | ojs        |      1 |
+| 723 | mw            | True     | ojs        |      1 |
+| 724 | mx            | False    | dspace     |      1 |
+| 725 | college       | False    | ojs        |      1 |
+| 726 | bi            | True     |            |      1 |
+| 727 | bz            | False    | ojs        |      1 |
+| 728 | bw            | True     |            |      1 |
+| 729 | bw            | False    |            |      1 |
+| 730 | buzz          | False    | ojs        |      1 |
+| 731 | plus          | False    |            |      1 |
+| 732 | qa            | False    | ojs        |      1 |
+| 733 | re            | False    | ojs        |      1 |
+| 734 | report        | False    |            |      1 |
+| 735 | reviews       | False    | ojs        |      1 |
+| 736 | ro            | False    | dspace     |      1 |
+| 737 | biz           | True     |            |      1 |
+| 738 | bf            | False    | ojs        |      1 |
+| 739 | bzh           | False    |            |      1 |
+| 740 | sa            | False    |            |      1 |
+| 741 | saarland      | False    |            |      1 |
+| 742 | berlin        | False    | ojs        |      1 |
+| 743 | sd            | False    |            |      1 |
+| 744 | sd            | True     | dspace     |      1 |
+| 745 | be            | True     | ojs        |      1 |
+| 746 | shop          | False    |            |      1 |
+| 747 | bd            | False    | dspace     |      1 |
+| 748 | so            | False    |            |      1 |
+| 749 | store         | False    | ojs        |      1 |
+| 750 | studio        | False    | ojs        |      1 |
+| 751 | ph            | True     | dspace     |      1 |
+| 752 | pe            | True     | dspace     |      1 |
+| 753 | codes         | False    | ojs        |      1 |
+| 754 | ni            | True     | dspace     |      1 |
+| 755 | mz            | True     |            |      1 |
+| 756 | na            | False    | dspace     |      1 |
+| 757 | na            | True     | dspace     |      1 |
+| 758 | name          | False    | ojs        |      1 |
+| 759 | nc            | True     |            |      1 |
+| 760 | net           | False    | dspace     |      1 |
+| 761 | cn            | False    | dspace     |      1 |
+| 762 | net           | True     |            |      1 |
+| 763 | network       | False    |            |      1 |
+| 764 | cm            | True     | ojs        |      1 |
+| 765 | ng            | True     | dspace     |      1 |
+| 766 | ninja         | False    | ojs        |      1 |
+| 767 | pe            | False    | opus       |      1 |
+| 768 | nl            | True     | dspace     |      1 |
+| 769 | ci            | False    | ojs        |      1 |
+| 770 | ci            | False    |            |      1 |
+| 771 | cg            | True     | ojs        |      1 |
+| 772 | cfd           | False    | ojs        |      1 |
+| 773 | cf            | False    |            |      1 |
+| 774 | ooo           | False    | ojs        |      1 |
+| 775 | or,id         | False    | ojs        |      1 |
+| 776 | center        | False    |            |      1 |
+| 777 | cd            | False    | ojs        |      1 |
+| 778 | ca            | True     | opus       |      1 |
+| 779 | kh            | True     | ojs        |      1 |
 
