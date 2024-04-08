@@ -11,8 +11,8 @@ access to data, its focus is not to manage it.
 
 [![DOI](https://zenodo.org/badge/56384577.svg)](https://zenodo.org/badge/latestdoi/56384577) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
-The metha tool has been developed for [Project finc](https://finc.info) at
-[Leipzig University Library](https://ub.uni-Leipzig.de).
+The metha tool has been developed for [project finc](https://finc.info) at
+[Leipzig University Library](https://ub.uni-Leipzig.de) ([lab](https://lab.ub.uni-leipzig.de/metha/)).
 
 ## Why yet another OAI harvester?
 
