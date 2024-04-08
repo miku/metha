@@ -213,6 +213,8 @@ into a single JSON file you can utilize the
 $ fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D
 ```
 
+For notes on parallel processing of XML see: [Faster XML processing in Go](https://golangleipzig.space/posts/faster-go-xml-processing/).
+
 ![](docs/metha-net-zenith.png)
 
 ## Errors this harvester can somewhat handle
