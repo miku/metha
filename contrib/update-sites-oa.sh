@@ -16,6 +16,6 @@ for prog in xmlstarlet curl; do
 	}
 done
 
-curl -s "http://www.openarchives.org/pmh/registry/ListFriends" | xmlstarlet sel -t -m "/BaseURLs/baseURL/text()" -c . -n - | grep -v '^$$' >sites-oa.tsv
+curl -s "https://www.openarchives.org/pmh/registry/ListFriends" | xmlstarlet sel -t -m "/BaseURLs/baseURL/text()" -c . -n - | grep -v '^$$' >sites-oa.tsv
 curl -s http://re.cs.uct.ac.za/cgi-bin/Explorer/2.0-1.47/testoai | grep ^urllist | cut -d ' ' -f 3 | tr -d '";' | grep -v ^$ | sort -u >>sites-oa.tsv
 sort -u sites-oa.tsv -o sites-oa.tsv
