@@ -258,7 +258,7 @@ of metadata via HTTP. -- [Interweaving OAI-PMH Data Sources with the Linked Data
 * [The finc project](https://finc.info/de/datenquellen)
 * [UB LEIPZIG LAB](https://lab.ub.uni-leipzig.de/metha/)
 * [Getting a dump of arXiv metadata](https://academia.stackexchange.com/questions/38969/getting-a-dump-of-arxiv-metadata) at [academia.stackexchange.com](https://academia.stackexchange.com/)
-* [Keyword Extraction from arXiv - Part 1](http://akumano.site/posts/arxiv-keyword-extraction-part1/)
+* [Keyword Extraction from arXiv - Part 1](http://web.archive.org/web/20191111162743/http://akumano.site/posts/arxiv-keyword-extraction-part1/)
 * [Openrefine use case: Automated workflow for harvesting, transforming and indexing of bibliographic metadata](https://groups.google.com/forum/#!topic/openrefine/RqQwlF-ll1c)
 * [Sammeln und Finden. Über das Sichtbarmachen von Open Science in Hamburg](https://opus4.kobv.de/opus4-bib-info/files/3645/HOS+Bibliothekartag.pdf) (PDF)
 * [acohan/arxiv-tools](https://github.com/acohan/arxiv-tools)
