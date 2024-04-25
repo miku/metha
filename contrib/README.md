@@ -1011,3 +1011,17 @@ $ grep -f <(cat sites.tsv | awk -F / '{print $3}' | grep -v ^$ | sort | uniq -d)
 | 778 | ca            | True     | opus       |      1 |
 | 779 | kh            | True     | ojs        |      1 |
 
+## Crossref link scouting
+
+Crossref contains about 195M links (beside the URL).
+
+```
+$ zstdcat -T0 begin-2022-01-01-date-2024-04-01.ndj.zst | \
+    jq -rc .link[]?.URL? > links.txt
+
+$ cat links.txt | LC_ALL=C grep '.*/index.php/[^/]*/article' | \
+    grep -o '.*/index.php/[^/]*' | \
+    awk '{print $0"/oai"}' | \
+    LC_ALL=C sort -S30% -u > crossref-possibly-oai-2024-04-25.txt
+```
+
