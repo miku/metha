@@ -16,7 +16,13 @@ for i in range(1, MAX_ID + 1):
     filename = f"core-data-provider-{i}.json"
     if os.path.exists(filename):
         continue
-    r = httpx.get(url)
+    while True:
+        try:
+            r = httpx.get(url)
+            break
+        except httpx.ReadTimeout as exc:
+            print(f"retrying: {exc}", file=sys.stderr)
+            time.sleep(5)
     if r.status_code != 200:
         if r.status_code == 404:
             open(filename, "w").close()
