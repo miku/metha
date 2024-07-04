@@ -29,4 +29,4 @@ for i in range(1, MAX_ID + 1):
 
     os.rename(filename + ".tmp", filename)
     print(f"done: {url}", file=sys.stderr)
-    time.sleep(0.3)
+    time.sleep(0.1)
