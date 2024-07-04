@@ -14,3 +14,7 @@ Pity, I cannot find a simple list (like [this](https://git.io/vKXFv)) of these
 10222 providers.
 
 * [https://core.ac.uk/data/providers/](https://core.ac.uk/data/providers/) -- [...](https://pbs.twimg.com/media/DqQi5YDWoAARqCA.jpg:large)
+
+```
+https://api.core.ac.uk/v3/data-providers/1201
+```
