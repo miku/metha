@@ -1,6 +1,6 @@
 Summary:    No frills OAI mirror.
 Name:       metha
-Version:    0.3.10
+Version:    0.3.11
 Release:    0
 License:    GPL
 BuildArch:  x86_64
