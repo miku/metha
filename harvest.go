@@ -163,7 +163,7 @@ func (h *Harvest) cleanupTemporaryFiles() error {
 // setupInterruptHandler will cleanup, so we can CTRL-C or kill savely.
 func (h *Harvest) setupInterruptHandler() {
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt, os.Kill)
+	signal.Notify(sigc, os.Interrupt)
 
 	go func() {
 		<-sigc
@@ -378,7 +378,6 @@ func (h *Harvest) runInterval(iv Interval) error {
 				log.Println("resumptionToken set and noRecordsMatch, continuing")
 			case "badResumptionToken":
 				log.Println("badResumptionToken, might signal end-of-harvest")
-				break
 			case "InternalException":
 				// #9717, InternalException Could not send Message.
 				log.Println("InternalException: retrying request in a few instants...")

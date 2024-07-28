@@ -85,7 +85,7 @@ func (md Metadata) MarshalJSON() ([]byte, error) {
 }
 
 // GoString is a formatter for Metadata content.
-func (md Metadata) GoString() string { return fmt.Sprintf("%s", md.Body) }
+func (md Metadata) GoString() string { return string(md.Body) }
 
 // About has addition record information.
 type About struct {
@@ -93,7 +93,7 @@ type About struct {
 }
 
 // GoString is a formatter for About content.
-func (ab About) GoString() string { return fmt.Sprintf("%s", ab.Body) }
+func (ab About) GoString() string { return string(ab.Body) }
 
 // Record represents a single record.
 type Record struct {
@@ -156,7 +156,7 @@ type Description struct {
 }
 
 // GoString is a formatter for Description content.
-func (desc Description) GoString() string { return fmt.Sprintf("%s", desc.Body) }
+func (desc Description) GoString() string { return string(desc.Body) }
 
 // HasResumptionToken determines if the request has a ResumptionToken.
 func (response *Response) HasResumptionToken() bool {
