@@ -12,8 +12,9 @@ require (
 	github.com/nytlabs/mxj v0.0.0-20140325221504-70c0faeef2e6
 	github.com/sethgrid/pester v1.2.0
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/net v0.27.0
-	golang.org/x/sync v0.7.0
+	golang.org/x/net v0.28.0
+	golang.org/x/sync v0.8.0
+	golang.org/x/sys v0.24.0 // indirect
 )
 
 go 1.16

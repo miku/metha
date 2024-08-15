@@ -1,5 +1,5 @@
 Package: metha
-Version: 0.3.11
+Version: 0.3.12
 Section: utils
 Priority: optional
 Architecture: amd64
