@@ -269,6 +269,7 @@ of metadata via HTTP. -- [Interweaving OAI-PMH Data Sources with the Linked Data
 * [Tutorial on Topological Data Analysis](https://github.com/shizuo-kaji/TutorialTopologicalDataAnalysis/blob/master/NLP_example.md)
 * [Connectome](https://cms.www.switch.ch/fr/connectome/) (linked open research data, [#28](https://github.com/miku/metha/issues/28#issuecomment-1144526453)), [From MARCXML to Records in Contexts](https://zenodo.org/record/7400442/files/SWITCH%20Patrinum%20RiC_20221205_Wildi.pdf)
 * [Comparison w/ other OAI tools](https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-ometha#geschwindigkeit) (de)
+* [biblio.ai](https://github.com/biblio-ai/extract)
 
 ## Asciicast
 
