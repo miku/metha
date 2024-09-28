@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/miku/metha"
@@ -25,6 +26,10 @@ func ellipsis(s string, length int) string {
 
 func main() {
 	flag.Parse()
+	basedir := metha.GetBaseDir()
+	if _, err := os.Stat(basedir); os.IsNotExist(err) {
+		return
+	}
 	files, err := ioutil.ReadDir(metha.GetBaseDir())
 	if err != nil {
 		log.Fatal(err)
