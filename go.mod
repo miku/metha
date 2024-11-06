@@ -1,7 +1,7 @@
 module github.com/miku/metha
 
 require (
-	github.com/adrg/xdg v0.5.0
+	github.com/adrg/xdg v0.5.3
 	github.com/briandowns/spinner v1.23.1
 	github.com/jinzhu/now v1.1.5
 	github.com/klauspost/pgzip v1.2.6
@@ -15,8 +15,8 @@ require (
 
 require (
 	github.com/clbanning/mxj v1.8.4 // indirect
-	github.com/fatih/color v1.17.0 // indirect
-	github.com/klauspost/compress v1.17.10 // indirect
+	github.com/fatih/color v1.18.0 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	golang.org/x/sys v0.26.0 // indirect
