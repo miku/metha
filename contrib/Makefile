@@ -5,10 +5,11 @@
 SHELL := /bin/bash
 
 sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
-	cat $^ | python unique_by_schema.py | sed -e 's@/$$@@g' | sort -u > $@
+	cat $^ | python unique_by_schema.py | sed -e 's@/$$@@g' | sed -e 's@https://api.whatsapp.com/send?text=@@g' | sort -u > $@
 	# try to filter out predatory journals
 	grep -v -f predatory.tsv < sites.tsv | sponge sites.tsv
 	grep -v "web.archive.org/web" < sites.tsv | sponge sites.tsv
+	grep -v "whatsapp.com" < sites.tsv | sponge sites.tsv # spam (11/2024)
 	sed -e 's@?verb=.*@@' < sites.tsv | sponge sites.tsv
 	sed -e 's@?$$@@' < sites.tsv | sponge sites.tsv
 	sort -o sites.tsv -u sites.tsv
