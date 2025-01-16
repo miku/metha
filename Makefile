@@ -55,3 +55,7 @@ update-version:
 	sed -i -e 's@^Version:.*@Version: $(VERSION)@' packaging/deb/metha/DEBIAN/control
 	sed -i -e 's@^Version:.*@Version:    $(VERSION)@' packaging/rpm/metha.spec
 
+docs/metha.1: docs/metha.md
+	# https://github.com/sunaku/md2man
+	md2man-roff docs/metha.md > docs/metha.1
+
