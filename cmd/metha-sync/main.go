@@ -42,6 +42,7 @@ var (
 	timeout                    = flag.Duration("T", 30*time.Second, "http client timeout")
 	maxRetries                 = flag.Int("r", 10, "max number of retries")
 	keepTemporaryFiles         = flag.Bool("k", false, "keep temporary files when interrupted")
+	ignoreUnexpectedEOF        = flag.Bool("ignore-unexpected-eof", false, "ignore unexpected EOF")
 )
 
 func main() {
@@ -133,6 +134,7 @@ func main() {
 	harvest.ExtraHeaders = extra
 	harvest.Delay = *delay
 	harvest.KeepTemporaryFiles = *keepTemporaryFiles
+	harvest.IgnoreHTTPErrors = *ignoreUnexpectedEOF
 	log.Printf("harvest: %+v", harvest)
 	if *removeCached {
 		log.Printf("removing already cached files from %s", harvest.Dir())

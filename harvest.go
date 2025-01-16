@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -68,6 +69,7 @@ type Harvest struct {
 	DailyInterval              bool
 	ExtraHeaders               http.Header
 	KeepTemporaryFiles         bool
+	IgnoreUnexpectedEOF        bool
 
 	Delay int
 
@@ -309,6 +311,10 @@ func (h *Harvest) run() (err error) {
 
 	for _, iv := range intervals {
 		if err := h.runInterval(iv); err != nil {
+			if h.IgnoreUnexpectedEOF && err == io.ErrUnexpectedEOF {
+				log.Printf("ignoring unexpected EOF and moving to next interval")
+				continue
+			}
 			return err
 		}
 	}
