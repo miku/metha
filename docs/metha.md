@@ -69,6 +69,9 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-ignore-http-errors`
         do not stop on HTTP errors, just skip to the next interval
 
+`-ignore-unexpected-eof`
+        do not stop on unexpected EOF from endpoint
+
 `-list`
         list a selection of OAI endpoints (might be outdated)
 
