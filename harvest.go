@@ -365,8 +365,10 @@ func (h *Harvest) runInterval(iv Interval) error {
 				}
 			}
 			if h.IgnoreHTTPErrors {
-				log.Printf("stopping early due to failed request (IgnoreHTTPErrors=true): %s", err)
-				break
+				log.Printf("retrying an HTTP error (-ignore-http-errors): %v", err)
+				time.Sleep(30 * time.Second)
+				i++ // Count towards the total request limit.
+				continue
 			}
 			return err
 		}
