@@ -20,7 +20,7 @@ var (
 	baseDir                    = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	hourly                     = flag.Bool("hourly", false, "use hourly intervals for harvesting")
 	daily                      = flag.Bool("daily", false, "use daily intervals for harvesting")
-	delay                      = flag.Int("delay", 0, "sleep (seconds) between each OAI-PMH request")
+	delay                      = flag.Duration("delay", 0, "sleep between each OAI-PMH request")
 	disableSelectiveHarvesting = flag.Bool("no-intervals", false, "harvest in one go, for funny endpoints")
 	endpointList               = flag.Bool("list", false, "list a selection of OAI endpoints (might be outdated)")
 	format                     = flag.String("format", "oai_dc", "metadata format")
@@ -65,11 +65,11 @@ func main() {
 	metha.BaseDir = *baseDir
 	baseURL := metha.PrependSchema(flag.Arg(0))
 	if *showDir {
-		harvest := metha.Harvest{
+		harvest := metha.Harvest{Config: &metha.Config{
 			BaseURL: baseURL,
 			Format:  *format,
 			Set:     *set,
-		}
+		}}
 		fmt.Println(harvest.Dir())
 		os.Exit(0)
 	}
@@ -111,30 +111,30 @@ func main() {
 		log.Fatal(err)
 	}
 	// if the harvest resulted in any extra header set, add them here
-	if harvest.ExtraHeaders != nil {
-		for k, vs := range harvest.ExtraHeaders {
+	if harvest.Config.ExtraHeaders != nil {
+		for k, vs := range harvest.Config.ExtraHeaders {
 			for _, v := range vs {
 				extra.Add(k, v)
 			}
 		}
 	}
 	harvest.Client = metha.CreateClient(*timeout, *maxRetries)
-	harvest.From = *from
-	harvest.Until = *until
-	harvest.Format = *format
-	harvest.Set = *set
-	harvest.MaxRequests = *maxRequests
-	harvest.CleanBeforeDecode = true
-	harvest.DisableSelectiveHarvesting = *disableSelectiveHarvesting
-	harvest.MaxEmptyResponses = *maxEmptyReponses
-	harvest.IgnoreHTTPErrors = *ignoreHTTPErrors
-	harvest.SuppressFormatParameter = *suppressFormatParameter
-	harvest.HourlyInterval = *hourly
-	harvest.DailyInterval = *daily
-	harvest.ExtraHeaders = extra
-	harvest.Delay = *delay
-	harvest.KeepTemporaryFiles = *keepTemporaryFiles
-	harvest.IgnoreHTTPErrors = *ignoreUnexpectedEOF
+	harvest.Config.From = *from
+	harvest.Config.Until = *until
+	harvest.Config.Format = *format
+	harvest.Config.Set = *set
+	harvest.Config.MaxRequests = *maxRequests
+	harvest.Config.CleanBeforeDecode = true
+	harvest.Config.DisableSelectiveHarvesting = *disableSelectiveHarvesting
+	harvest.Config.MaxEmptyResponses = *maxEmptyReponses
+	harvest.Config.IgnoreHTTPErrors = *ignoreHTTPErrors
+	harvest.Config.SuppressFormatParameter = *suppressFormatParameter
+	harvest.Config.HourlyInterval = *hourly
+	harvest.Config.DailyInterval = *daily
+	harvest.Config.ExtraHeaders = extra
+	harvest.Config.Delay = *delay
+	harvest.Config.KeepTemporaryFiles = *keepTemporaryFiles
+	harvest.Config.IgnoreHTTPErrors = *ignoreUnexpectedEOF
 	log.Printf("harvest: %+v", harvest)
 	if *removeCached {
 		log.Printf("removing already cached files from %s", harvest.Dir())
