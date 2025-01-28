@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-snapshot
+TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune
 VERSION = 0.3.21
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
