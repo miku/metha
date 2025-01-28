@@ -26,11 +26,11 @@ func main() {
 		log.Fatal("endpoint required")
 	}
 	metha.BaseDir = *baseDir
-	harvest := metha.Harvest{
+	harvest := metha.Harvest{Config: &metha.Config{
 		BaseURL: metha.PrependSchema(flag.Arg(0)),
 		Format:  *format,
 		Set:     *set,
-	}
+	}}
 	for _, fn := range harvest.Files() {
 		fmt.Println(fn)
 	}

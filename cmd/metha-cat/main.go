@@ -32,11 +32,11 @@ func main() {
 	}
 	baseURL := metha.PrependSchema(flag.Arg(0))
 	metha.BaseDir = *baseDir
-	harvest := metha.Harvest{
+	harvest := metha.Harvest{Config: &metha.Config{
 		BaseURL: baseURL,
 		Format:  *format,
 		Set:     *set,
-	}
+	}}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
 	opts := &metha.RenderOpts{

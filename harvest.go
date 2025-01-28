@@ -36,6 +36,12 @@ var (
 	ErrInvalidEarliestDate = errors.New("invalid earliest date")
 )
 
+type Harvester interface {
+	Run() error
+	Files() []string
+	Dir() string
+}
+
 // PrependSchema prepends http, if its missing.
 func PrependSchema(s string) string {
 	if !strings.HasPrefix(s, "http") {
@@ -44,21 +50,12 @@ func PrependSchema(s string) string {
 	return s
 }
 
-// Harvest contains parameters for mass-download. MaxRequests and
-// CleanBeforeDecode are switches to handle broken token implementations and
-// funny chars in responses. Some repos do not support selective harvesting
-// (e.g. zvdd.org/oai2). Set "DisableSelectiveHarvesting" to try to grab
-// metadata from these repositories. From and Until must always be given with
-// 2006-01-02 layout. TODO(miku): make zero type work (lazily run identify).
-type Harvest struct {
-	BaseURL string
-	Format  string
-	Set     string
-	From    string
-	Until   string
-	Client  *Client
-
-	// XXX: Factor these out into options.
+type Config struct {
+	BaseURL                    string
+	Format                     string
+	Set                        string
+	From                       string
+	Until                      string
 	MaxRequests                int
 	DisableSelectiveHarvesting bool
 	CleanBeforeDecode          bool
@@ -70,13 +67,22 @@ type Harvest struct {
 	ExtraHeaders               http.Header
 	KeepTemporaryFiles         bool
 	IgnoreUnexpectedEOF        bool
+	Delay                      time.Duration
+}
 
-	Delay int
+// Harvest contains parameters for mass-download. MaxRequests and
+// CleanBeforeDecode are switches to handle broken token implementations and
+// funny chars in responses. Some repos do not support selective harvesting
+// (e.g. zvdd.org/oai2). Set "DisableSelectiveHarvesting" to try to grab
+// metadata from these repositories. From and Until must always be given with
+// 2006-01-02 layout. TODO(miku): make zero type work (lazily run identify).
+type Harvest struct {
+	Config *Config
+	Client *Client
 
 	// XXX: Lazy via sync.Once?
 	Identify *Identify
 	Started  time.Time
-
 	// Protects the rare case, where we are in the process of renaming
 	// harvested files and get a termination signal at the same time.
 	sync.Mutex
@@ -84,7 +90,7 @@ type Harvest struct {
 
 // NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
 func NewHarvest(baseURL string) (*Harvest, error) {
-	h := Harvest{BaseURL: baseURL}
+	h := Harvest{Config: &Config{BaseURL: baseURL}}
 	if err := h.identify(); err != nil {
 		return nil, err
 	}
@@ -93,12 +99,17 @@ func NewHarvest(baseURL string) (*Harvest, error) {
 
 // Dir returns the absolute path to the harvesting directory.
 func (h *Harvest) Dir() string {
-	data := []byte(h.Set + "#" + h.Format + "#" + h.BaseURL)
+	data := []byte(h.Config.Set + "#" + h.Config.Format + "#" + h.Config.BaseURL)
 	return filepath.Join(BaseDir, base64.RawURLEncoding.EncodeToString(data))
 }
 
-// MkdirAll creates necessary directories.
-func (h *Harvest) MkdirAll() error {
+// Files returns all files for a given harvest, without the temporary files.
+func (h *Harvest) Files() []string {
+	return MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
+}
+
+// mkdirAll creates necessary directories.
+func (h *Harvest) mkdirAll() error {
 	if _, err := os.Stat(h.Dir()); os.IsNotExist(err) {
 		if err := os.MkdirAll(h.Dir(), 0755); err != nil {
 			return err
@@ -107,14 +118,9 @@ func (h *Harvest) MkdirAll() error {
 	return nil
 }
 
-// Files returns all files for a given harvest, without the temporary files.
-func (h *Harvest) Files() []string {
-	return MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
-}
-
-// DateLayout converts the repository endpoints advertised granularity to Go
+// dateLayout converts the repository endpoints advertised granularity to Go
 // date format strings.
-func (h *Harvest) DateLayout() string {
+func (h *Harvest) dateLayout() string {
 	switch h.Identify.Granularity {
 	case "YYYY-MM-DD":
 		return "2006-01-02"
@@ -126,7 +132,7 @@ func (h *Harvest) DateLayout() string {
 
 // Run starts the harvest.
 func (h *Harvest) Run() error {
-	if err := h.MkdirAll(); err != nil {
+	if err := h.mkdirAll(); err != nil {
 		return err
 	}
 	h.setupInterruptHandler()
@@ -146,7 +152,7 @@ func (h *Harvest) temporaryFilesSuffix(suffix string) []string {
 
 // cleanupTemporaryFiles will remove all temporary files in the harvesting dir.
 func (h *Harvest) cleanupTemporaryFiles() error {
-	if h.KeepTemporaryFiles {
+	if h.Config.KeepTemporaryFiles {
 		log.Printf("keeping %d temporary file(s) under %s",
 			len(h.temporaryFiles()), h.Dir())
 		return nil
@@ -166,14 +172,11 @@ func (h *Harvest) cleanupTemporaryFiles() error {
 func (h *Harvest) setupInterruptHandler() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt)
-
 	go func() {
 		<-sigc
-
 		log.Println("waiting for any rename to finish...")
 		h.Lock()
 		defer h.Unlock()
-
 		if err := h.cleanupTemporaryFiles(); err != nil {
 			log.Fatal(err)
 		}
@@ -224,10 +227,10 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	var err error
 
 	// refs #9100
-	if h.From == "" {
+	if h.Config.From == "" {
 		earliestDate, err = h.earliestDate()
 	} else {
-		earliestDate, err = time.Parse("2006-01-02", h.From)
+		earliestDate, err = time.Parse("2006-01-02", h.Config.From)
 	}
 	if err != nil {
 		return Interval{}, err
@@ -262,8 +265,8 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	}
 
 	var end time.Time
-	if h.Until != "" {
-		end, err = time.Parse("2006-01-02", h.Until)
+	if h.Config.Until != "" {
+		end, err = time.Parse("2006-01-02", h.Config.Until)
 		if err != nil {
 			return Interval{}, err
 		}
@@ -289,21 +292,21 @@ func (h *Harvest) run() (err error) {
 		}
 	}()
 
-	if h.DisableSelectiveHarvesting {
+	if h.Config.DisableSelectiveHarvesting {
 		return h.runInterval(Interval{})
 	}
 
 	interval, err := h.defaultInterval()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get default interval: %w", err)
 	}
 
 	var intervals []Interval
 
 	switch {
-	case h.HourlyInterval:
+	case h.Config.HourlyInterval:
 		intervals = interval.HourlyIntervals()
-	case h.DailyInterval:
+	case h.Config.DailyInterval:
 		intervals = interval.DailyIntervals()
 	default:
 		intervals = interval.MonthlyIntervals()
@@ -311,7 +314,7 @@ func (h *Harvest) run() (err error) {
 
 	for _, iv := range intervals {
 		if err := h.runInterval(iv); err != nil {
-			if h.IgnoreUnexpectedEOF && err == io.ErrUnexpectedEOF {
+			if h.Config.IgnoreUnexpectedEOF && err == io.ErrUnexpectedEOF {
 				log.Printf("ignoring unexpected EOF and moving to next interval")
 				continue
 			}
@@ -327,32 +330,32 @@ func (h *Harvest) runInterval(iv Interval) error {
 	var token string
 	var i, empty int
 	for {
-		if h.MaxRequests == i {
-			log.Printf("max requests limit (%d) reached", h.MaxRequests)
+		if h.Config.MaxRequests == i {
+			log.Printf("max requests limit (%d) reached", h.Config.MaxRequests)
 			break
 		}
 		req := Request{
-			BaseURL:                 h.BaseURL,
-			MetadataPrefix:          h.Format,
+			BaseURL:                 h.Config.BaseURL,
+			MetadataPrefix:          h.Config.Format,
 			Verb:                    "ListRecords",
-			Set:                     h.Set,
+			Set:                     h.Config.Set,
 			ResumptionToken:         token,
-			CleanBeforeDecode:       h.CleanBeforeDecode,
-			SuppressFormatParameter: h.SuppressFormatParameter,
-			ExtraHeaders:            h.ExtraHeaders,
+			CleanBeforeDecode:       h.Config.CleanBeforeDecode,
+			SuppressFormatParameter: h.Config.SuppressFormatParameter,
+			ExtraHeaders:            h.Config.ExtraHeaders,
 		}
 		var filedate string
-		if h.DisableSelectiveHarvesting {
+		if h.Config.DisableSelectiveHarvesting {
 			// Used, when endpoint cannot handle from and until.
 			filedate = h.Started.Format("2006-01-02")
 		} else {
 			filedate = iv.End.Format("2006-01-02")
-			req.From = iv.Begin.Format(h.DateLayout())
-			req.Until = iv.End.Format(h.DateLayout())
+			req.From = iv.Begin.Format(h.dateLayout())
+			req.Until = iv.End.Format(h.dateLayout())
 		}
 
-		if h.Delay > 0 {
-			time.Sleep(time.Duration(h.Delay) * time.Second)
+		if h.Config.Delay > 0 {
+			time.Sleep(h.Config.Delay)
 		}
 		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
 		resp, err := h.Client.Do(&req)
@@ -364,7 +367,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 					break
 				}
 			}
-			if h.IgnoreHTTPErrors {
+			if h.Config.IgnoreHTTPErrors {
 				log.Printf("retrying an HTTP error (-ignore-http-errors): %v", err)
 				time.Sleep(30 * time.Second)
 				i++ // Count towards the total request limit.
@@ -425,9 +428,9 @@ func (h *Harvest) runInterval(iv Interval) error {
 			empty = 0
 		} else {
 			empty++
-			log.Printf("warning: successive empty response: %d/%d", empty, h.MaxEmptyResponses)
+			log.Printf("warning: successive empty response: %d/%d", empty, h.Config.MaxEmptyResponses)
 		}
-		if empty == h.MaxEmptyResponses {
+		if empty == h.Config.MaxEmptyResponses {
 			log.Printf("max number of empty responses reached")
 			break
 		}
@@ -460,8 +463,8 @@ func (h *Harvest) earliestDate() (time.Time, error) {
 func (h *Harvest) identify() error {
 	req := Request{
 		Verb:         "Identify",
-		BaseURL:      h.BaseURL,
-		ExtraHeaders: h.ExtraHeaders,
+		BaseURL:      h.Config.BaseURL,
+		ExtraHeaders: h.Config.ExtraHeaders,
 	}
 	if h.Client == nil {
 		h.Client = DefaultClient
@@ -470,12 +473,12 @@ func (h *Harvest) identify() error {
 	if err != nil {
 		log.Printf("trying workaround: %v", err)
 		// try to workaround for the whole harvest
-		if h.ExtraHeaders == nil {
-			h.ExtraHeaders = make(http.Header)
+		if h.Config.ExtraHeaders == nil {
+			h.Config.ExtraHeaders = make(http.Header)
 		}
-		h.ExtraHeaders.Set("Accept-Encoding", "identity")
+		h.Config.ExtraHeaders.Set("Accept-Encoding", "identity")
 		// also apply to this request
-		req.ExtraHeaders = h.ExtraHeaders
+		req.ExtraHeaders = h.Config.ExtraHeaders
 		resp, err = h.Client.Do(&req)
 		if err != nil {
 			return err
