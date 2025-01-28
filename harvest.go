@@ -68,6 +68,9 @@ type Config struct {
 	KeepTemporaryFiles         bool
 	IgnoreUnexpectedEOF        bool
 	Delay                      time.Duration
+	MaxRetries                 int           // Maximum number of retry attempts
+	RetryDelay                 time.Duration // Delay between retries
+	RetryBackoff               float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
 }
 
 // Harvest contains parameters for mass-download. MaxRequests and
@@ -90,7 +93,12 @@ type Harvest struct {
 
 // NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
 func NewHarvest(baseURL string) (*Harvest, error) {
-	h := Harvest{Config: &Config{BaseURL: baseURL}}
+	h := Harvest{Config: &Config{
+		BaseURL:      baseURL,
+		MaxRetries:   3,
+		RetryDelay:   10 * time.Second,
+		RetryBackoff: 2.0,
+	}}
 	if err := h.identify(); err != nil {
 		return nil, err
 	}
@@ -281,6 +289,60 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	return Interval{Begin: begin, End: end}, nil
 }
 
+// retry attempts an operation with exponential backoff
+func (h *Harvest) retry(operation func() (*Response, error)) (*Response, error) {
+	var lastErr error
+	delay := h.Config.RetryDelay
+	for attempt := 0; attempt <= h.Config.MaxRetries; attempt++ {
+		if attempt > 0 {
+			log.Printf("retry attempt %d/%d after %v", attempt, h.Config.MaxRetries, delay)
+			time.Sleep(delay)
+			// Apply backoff for next attempt
+			delay = time.Duration(float64(delay) * h.Config.RetryBackoff)
+		}
+		resp, err := operation()
+		if err == nil {
+			return resp, nil
+		}
+		// Save the error for potential return
+		lastErr = err
+		// Check if we should retry based on the error
+		if !h.shouldRetry(err) {
+			return nil, err
+		}
+		log.Printf("request failed (attempt %d/%d): %v", attempt+1, h.Config.MaxRetries, err)
+	}
+	return nil, fmt.Errorf("failed after %d retries: %w", h.Config.MaxRetries, lastErr)
+}
+
+// shouldRetry determines if an error should trigger a retry
+func (h *Harvest) shouldRetry(err error) bool {
+	// Don't retry if we're not configured to handle HTTP errors
+	if !h.Config.IgnoreHTTPErrors {
+		return false
+	}
+	// Check for specific HTTP errors that we want to retry
+	if httpErr, ok := err.(HTTPError); ok {
+		switch httpErr.StatusCode {
+		case 408, // Request Timeout
+			429, // Too Many Requests
+			500, // Internal Server Error
+			502, // Bad Gateway
+			503, // Service Unavailable
+			504: // Gateway Timeout
+			return true
+		}
+	}
+	// Check for network-related errors
+	if errors.Is(err, io.ErrUnexpectedEOF) ||
+		strings.Contains(err.Error(), "connection refused") ||
+		strings.Contains(err.Error(), "no such host") ||
+		strings.Contains(err.Error(), "timeout") {
+		return true
+	}
+	return false
+}
+
 // run runs a harvest: one request plus subsequent tokens.
 func (h *Harvest) run() (err error) {
 	defer func() {
@@ -357,24 +419,22 @@ func (h *Harvest) runInterval(iv Interval) error {
 		if h.Config.Delay > 0 {
 			time.Sleep(h.Config.Delay)
 		}
-		// Do request, return any http error, except when we ignore HTTPErrors - in that case, break out early.
-		resp, err := h.Client.Do(&req)
+
+		// Use retry mechanism for the request
+		resp, err := h.retry(func() (*Response, error) {
+			return h.Client.Do(&req)
+		})
+
 		if err != nil {
-			if e, ok := err.(HTTPError); ok {
-				if e.StatusCode == 422 {
-					// https://github.com/miku/metha/issues/39
-					// https://zenodo.org/oai2d?from=2014-02-03T00:00:00Z&metadataPrefix=marcxml&set=user-lory_phlu&until=2014-02-28T23:59:59Z&verb=ListRecords
-					break
-				}
+			// If we've exhausted all retries and still have an error
+			if !h.Config.IgnoreHTTPErrors {
+				return fmt.Errorf("failed to make request after retries: %w", err)
 			}
-			if h.Config.IgnoreHTTPErrors {
-				log.Printf("retrying an HTTP error (-ignore-http-errors): %v", err)
-				time.Sleep(30 * time.Second)
-				i++ // Count towards the total request limit.
-				continue
-			}
-			return err
+			// If we're ignoring HTTP errors, continue to next iteration
+			i++
+			continue
 		}
+
 		// Handle OAI specific errors. XXX: An badResumptionToken kind of error
 		// might be recoverable, by simply restarting the harvest.
 		if resp.Error.Code != "" {
