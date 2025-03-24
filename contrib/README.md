@@ -7,7 +7,7 @@ $ ./update-sites-oa.sh
 $ make
 ```
 
-About 75% of the URLs in `sites.tsv` may be usable (about 125000 as of 01/2024).
+About 71% of the URLs in `sites.tsv` may be usable (about 132585 as of 03/2025).
 
 ----
 
