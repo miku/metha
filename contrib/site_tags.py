@@ -15,35 +15,39 @@ from pydantic import BaseModel
 from urllib.parse import urlparse
 from typing import Optional
 
-edu_domains = set([
-    "brocku.ca",
-    "cuni.cz",
-    "hua.gr",
-    "lagh-univ.dz"
-    "mtak.hu",
-    "sfu.ca",
-    "u-szeged.hu",
-    "uniag.sk",
-    "uoc.gr",
-    "yorku.ca",
-    "ru.lv",
-])
+edu_domains = set(
+    [
+        "brocku.ca",
+        "cuni.cz",
+        "hua.gr",
+        "lagh-univ.dzmtak.hu",
+        "sfu.ca",
+        "u-szeged.hu",
+        "uniag.sk",
+        "uoc.gr",
+        "yorku.ca",
+        "ru.lv",
+    ]
+)
+
 
 class Site(BaseModel):
     url: str
-    tld = ""
-    platform = ""
-    is_edu = False
-    is_edu_world = False
-    is_id = False
-    is_museum = False
-    is_gov = False
+    tld: str = ""
+    platform: str = ""
+    is_edu: bool = False
+    is_edu_world: bool = False
+    is_id: bool = False
+    is_museum: bool = False
+    is_gov: bool = False
+
 
 def url_domain(url):
     u = urlparse(url)
-    domain = '.'.join(u.netloc.split('.')[-2:])
-    domain = domain.split(':')[0]
+    domain = ".".join(u.netloc.split(".")[-2:])
+    domain = domain.split(":")[0]
     return domain
+
 
 def url_tld(url):
     tld = url_domain(url).split(".")[-1]
@@ -51,7 +55,8 @@ def url_tld(url):
         return ""
     return tld
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     for line in fileinput.input():
         line = line.strip()
         if not line:
@@ -61,7 +66,7 @@ if __name__ == '__main__':
         if site_domain in edu_domains:
             site.is_edu = True
         if "casirgrid" in line:
-            site.is_edu = True # http://159.226.100.13/bitstream/12502/3497/3/CASIR-Grid-Poster-ZHU%20Z.M.%20et%20al.pdf
+            site.is_edu = True  # http://159.226.100.13/bitstream/12502/3497/3/CASIR-Grid-Poster-ZHU%20Z.M.%20et%20al.pdf
             site.is_edu_world = True
         if site_domain.endswith(".edu"):
             site.is_edu = True
@@ -106,4 +111,4 @@ if __name__ == '__main__':
         if "museum" in line:
             site.is_museum = True
 
-        print(site.json())
+        print(site.model_dump_json())
