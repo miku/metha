@@ -11,13 +11,13 @@ About 71% of the URLs in `sites.tsv` may be usable (about 132585 as of 03/2025).
 
 ----
 
-* sites: 171815
+* sites: 193791
 
 ```
 wc -l sites.tsv
 ```
 
-* domains: 45927
+* domains: 50439
 
 ```
 awk -F / '{print $3}' < sites.tsv | sort | uniq -c | wc -l
@@ -27,62 +27,62 @@ Top 20 domains:
 
 ```
 $ awk -F / '{print $3}' < sites.tsv | sort | uniq -c | sort -nr | head -20
-    594 www.raco.cat
-    592 www.ajol.info
-    547 raco.cat
-    532 vjol.info.vn
-    527 www.vjol.info.vn
-    485 www.nepjol.info
-    409 nepjol.info
+    654 vjol.info.vn
+    649 www.vjol.info.vn
+    640 www.ajol.info
+    614 raco.cat
+    595 www.raco.cat
+    574 www.nepjol.info
+    498 nepjol.info
+    327 ejournal.unsrat.ac.id
+    316 jurnal-pharmaconmw.com
+    312 www.jurnal-pharmaconmw.com
     308 tidsskrift.dk
-    299 ejournal.unsrat.ac.id
-    287 periodicos.ufpb.br
-    284 ojs3.relawanjurnal.id
+    292 periodicos.ufpb.br
+    285 ojs3.relawanjurnal.id
+    258 revistas.unc.edu.ar
     251 aplicaciones.bibliolatino.com:81
+    250 www.banglajol.info
     244 www.revistas.usp.br
-    233 conference.tdmu.edu.ua
-    223 ejournal.upi.edu
-    222 revistas.unc.edu.ar
-    220 journal.unnes.ac.id
-    219 sol.sbc.org.br
-    218 www.banglajol.info
-    205 ojs.uho.ac.id
+    242 conference.tdmu.edu.ua
+    228 sol.sbc.org.br
+    227 ejournal.upi.edu
 ```
 
 Top 30 TLDs:
 
 ```
 $ awk -F / '{print $3}' < sites.tsv | rev | cut -d . -f 1 | rev | sort | uniq -c | sort -nr | head -30
-  54317 id
-  21618 com
-  16874 org
-  13909 br
-   3489 edu
-   3368 my
-   2862 co
-   2737 ua
-   2708 info
-   2674 es
-   2321 mx
-   2259 in
-   2147 ar
-   1888 net
-   1674 cl
-   1613 pl
-   1571 pe
-   1505 it
-   1457 ca
-   1448 vn
-   1421 ru
-   1404 de
-   1294 cat
-   1153 pk
-    895 uk
-    797 ec
-    781 pt
-    751 eu
-    671 ng
-    662 hu
+  59888 id
+  25080 com
+  18843 org
+  15252 br
+   3745 edu
+   3584 my
+   3299 info
+   3222 co
+   3036 ua
+   3031 es
+   2513 mx
+   2386 in
+   2369 ar
+   2159 net
+   1964 cl
+   1908 pl
+   1799 it
+   1755 pe
+   1753 de
+   1721 vn
+   1648 ca
+   1604 ru
+   1373 cat
+   1265 pk
+   1037 uk
+    882 eu
+    879 ec
+    862 pt
+    778 za
+    765 ng
 ```
 
 ## Filtering edu domains
@@ -95,10 +95,10 @@ $ jq -rc 'select(.is_edu == true)' sites.json | \
     grep -v '[.]id' | \
     wc -l
 
-9348
+10056
 ```
 
-9348 likely edu domains (outside .id TLD).
+10056 likely edu domains (outside .id TLD).
 
 Random sample:
 
