@@ -74,6 +74,7 @@ func CreateDoer(timeout time.Duration, retries int) Doer {
 		return client
 	}
 	c := pester.New()
+	c.RetryOnHTTP429 = true
 	c.EmbedHTTPClient(client)
 	c.Timeout = timeout // does this propagate to client
 	c.MaxRetries = retries
