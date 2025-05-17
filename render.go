@@ -6,10 +6,11 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 // RenderOpts controls output by the metha-cat command.
@@ -24,10 +25,11 @@ type RenderOpts struct {
 
 // RenderHarvest renders harvest to JSON or XML.
 func Render(opts *RenderOpts) error {
-	files, err := ioutil.ReadDir(opts.Harvest.Dir())
+	files, err := os.ReadDir(opts.Harvest.Dir())
 	if err != nil {
 		return err
 	}
+
 	if opts.Root != "" && !opts.UseJson {
 		if _, err := fmt.Fprintf(opts.Writer,
 			"<%s xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n", opts.Root); err != nil {
@@ -37,31 +39,58 @@ func Render(opts *RenderOpts) error {
 			fmt.Fprintf(opts.Writer, "</%s>\n", opts.Root)
 		}()
 	}
+
 	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".xml.gz") {
+		fileName := file.Name()
+		// Check if file is a compressed XML file (either gzip or zstd)
+		if !strings.HasSuffix(fileName, ".xml.gz") && !strings.HasSuffix(fileName, ".xml.zst") {
 			continue
 		}
-		if opts.From != "" && file.Name() < opts.From {
+
+		if opts.From != "" && fileName < opts.From {
 			continue
 		}
-		abspath := filepath.Join(opts.Harvest.Dir(), file.Name())
+
+		abspath := filepath.Join(opts.Harvest.Dir(), fileName)
 		fi, err := os.Open(abspath)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to open file %s: %w", abspath, err)
 		}
-		r, err := gzip.NewReader(fi)
-		if err != nil {
-			return err
+		defer fi.Close()
+
+		// Create appropriate reader based on file extension
+		var xmlReader io.Reader
+		if strings.HasSuffix(fileName, ".xml.gz") {
+			r, err := gzip.NewReader(fi)
+			if err != nil {
+				return fmt.Errorf("failed to create gzip reader for %s: %w", abspath, err)
+			}
+			defer r.Close()
+			xmlReader = r
+		} else if strings.HasSuffix(fileName, ".xml.zst") {
+			r, err := zstd.NewReader(fi)
+			if err != nil {
+				return fmt.Errorf("failed to create zstd reader for %s: %w", abspath, err)
+			}
+			defer r.Close()
+			xmlReader = r
+		} else {
+			// This shouldn't happen based on earlier check, but just in case
+			return fmt.Errorf("unsupported file format: %s", fileName)
 		}
-		dec := xml.NewDecoder(r)
+
+		// Decode the XML
+		dec := xml.NewDecoder(xmlReader)
 		dec.Strict = false
 		var (
 			resp Response
 			b    []byte
 		)
 		if err := dec.Decode(&resp); err != nil {
-			return err
+			return fmt.Errorf("failed to decode XML from %s: %w", abspath, err)
 		}
+
+		// Process each record
 		for _, rec := range resp.ListRecords.Records {
 			if opts.From != "" && rec.Header.DateStamp < opts.From {
 				continue
@@ -69,6 +98,7 @@ func Render(opts *RenderOpts) error {
 			if opts.Until != "" && rec.Header.DateStamp > opts.Until {
 				continue
 			}
+
 			if opts.UseJson {
 				b, err = json.Marshal(rec)
 			} else {
@@ -76,10 +106,11 @@ func Render(opts *RenderOpts) error {
 				b, err = xml.Marshal(rec)
 			}
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to marshal record: %w", err)
 			}
+
 			if _, err := io.WriteString(opts.Writer, string(b)+"\n"); err != nil {
-				return err
+				return fmt.Errorf("failed to write to output: %w", err)
 			}
 		}
 	}

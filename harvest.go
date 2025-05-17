@@ -28,7 +28,7 @@ const Day = 24 * time.Hour
 var (
 	// BaseDir is where all data is stored.
 	BaseDir   = filepath.Join(UserHomeDir(), ".cache", "metha")
-	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz)?$")
+	fnPattern = regexp.MustCompile("(?P<Date>[0-9]{4,4}-[0-9]{2,2}-[0-9]{2,2})-[0-9]{8,}.xml(.gz|.zst)?$")
 
 	// ErrAlreadySynced signals completion.
 	ErrAlreadySynced = errors.New("already synced")
@@ -41,6 +41,13 @@ type Harvester interface {
 	Files() []string
 	Dir() string
 }
+
+type CompressionType int
+
+const (
+	CompZstd CompressionType = iota
+	CompGzip
+)
 
 // PrependSchema prepends http, if its missing.
 func PrependSchema(s string) string {
@@ -71,6 +78,8 @@ type Config struct {
 	MaxRetries                 int           // Maximum number of retry attempts
 	RetryDelay                 time.Duration // Delay between retries
 	RetryBackoff               float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
+	CompressionType            CompressionType
+	CompressionLevel           int // -5 to 22 for zstd
 }
 
 // Harvest contains parameters for mass-download. MaxRequests and
@@ -113,7 +122,9 @@ func (h *Harvest) Dir() string {
 
 // Files returns all files for a given harvest, without the temporary files.
 func (h *Harvest) Files() []string {
-	return MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
+	gzipFiles := MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
+	zstdFiles := MustGlob(filepath.Join(h.Dir(), "*.xml.zst"))
+	return append(gzipFiles, zstdFiles...)
 }
 
 // mkdirAll creates necessary directories.
@@ -136,6 +147,16 @@ func (h *Harvest) dateLayout() string {
 		return "2006-01-02T15:04:05Z"
 	}
 	return ""
+}
+
+// Helper to add the appropriate extension based on compression type
+func compressedFilename(base string, compressionType CompressionType) string {
+	switch compressionType {
+	case CompZstd:
+		return base + ".zst"
+	default:
+		return base + ".gz"
+	}
 }
 
 // Run starts the harvest.
@@ -192,6 +213,17 @@ func (h *Harvest) setupInterruptHandler() {
 	}()
 }
 
+func (h *Harvest) compressedFileExt() string {
+	switch h.Config.CompressionType {
+	case CompGzip:
+		return "gz"
+	case CompZstd:
+		return "zst"
+	default:
+		return "zst"
+	}
+}
+
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
 	var renamed []string
@@ -200,9 +232,9 @@ func (h *Harvest) finalize(suffix string) error {
 	defer h.Unlock()
 
 	for _, src := range h.temporaryFilesSuffix(suffix) {
-		dst := fmt.Sprintf("%s.gz", strings.Replace(src, suffix, "", -1))
+		dst := fmt.Sprintf("%s.%s", strings.Replace(src, suffix, "", -1), h.compressedFileExt())
 		var err error
-		if err = MoveCompressFile(src, dst); err == nil {
+		if err = MoveCompressFile(src, dst, h.Config.CompressionType, h.Config.CompressionLevel); err == nil {
 			renamed = append(renamed, dst)
 			continue
 		}

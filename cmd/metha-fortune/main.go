@@ -125,7 +125,7 @@ func createSearcher(endpoint string) Search {
 			ids = append(ids, h.Identifier)
 		}
 		if len(ids) == 0 {
-			return Result{Err: err}
+			return Result{Err: fmt.Errorf("no identifiers found")}
 		}
 		if *debug {
 			events := len(ids) * len(metha.Endpoints)
@@ -142,11 +142,17 @@ func createSearcher(endpoint string) Search {
 		if err != nil {
 			return Result{Err: err}
 		}
+
+		// If we got empty response body, return an error
+		if len(resp.GetRecord.Record.Metadata.Body) == 0 {
+			return Result{Err: fmt.Errorf("empty metadata body")}
+		}
+
 		var record Dc
 		dec := xml.NewDecoder(bytes.NewReader(resp.GetRecord.Record.Metadata.Body))
 		dec.Strict = false
 		if err := dec.Decode(&record); err != nil {
-			return Result{Err: err}
+			return Result{Err: fmt.Errorf("XML decode error: %w", err)}
 		}
 		if len(record.Description) == 0 {
 			return Result{Err: fmt.Errorf("no descriptions")}

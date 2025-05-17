@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html/charset"
@@ -109,10 +110,30 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	if gr, err := gzip.NewReader(bytes.NewReader(buf)); err == nil {
-		log.Println("decompress-on-the-fly")
-		return gr, nil
+
+	// Check for zstd magic number (0x28 0xB5 0x2F 0xFD)
+	if len(buf) >= 4 && buf[0] == 0x28 && buf[1] == 0xB5 && buf[2] == 0x2F && buf[3] == 0xFD {
+		zr, err := zstd.NewReader(bytes.NewReader(buf))
+		if err == nil {
+			log.Println("zstd-decompress-on-the-fly")
+			return ioutil.NopCloser(zr), nil
+		}
+		// If zstd decompression fails, don't try gzip - it's definitely meant to be zstd
+		return nil, fmt.Errorf("failed to decompress zstd data: %w", err)
 	}
+
+	// Check for gzip magic number (0x1F 0x8B)
+	if len(buf) >= 2 && buf[0] == 0x1F && buf[1] == 0x8B {
+		gr, err := gzip.NewReader(bytes.NewReader(buf))
+		if err == nil {
+			log.Println("gzip-decompress-on-the-fly")
+			return gr, nil
+		}
+		// If gzip decompression fails, it's definitely meant to be gzip
+		return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
+	}
+
+	// No compression detected
 	return ioutil.NopCloser(bytes.NewReader(buf)), nil
 }
 
