@@ -22,6 +22,7 @@ var (
 	dryRun           = flag.Bool("D", false, "only show what would be done without making changes")
 	removeOriginal   = flag.Bool("f", false, "remove original gzip files after conversion")
 	numWorkers       = flag.Int("w", 4, "number of parallel workers")
+	bestEffort       = flag.Bool("B", false, "best effort, only log errors, do not halt")
 )
 
 func main() {
@@ -92,22 +93,17 @@ func main() {
 }
 
 func convertFile(src, dst string, level int) error {
-	// First check if the source file is too small to be a valid gzip file
 	fileInfo, err := os.Stat(src)
 	if err != nil {
 		return fmt.Errorf("failed to stat source file: %w", err)
 	}
-
-	// Special handling for files smaller than 20 bytes (minimum valid gzip size)
+	// handle like invalid gzip files
 	if fileInfo.Size() < 20 {
-		// For too small files, just create an empty zstd file
 		tmpDst := fmt.Sprintf("%s.tmp-%d", dst, os.Getpid())
 		dstFile, err := os.Create(tmpDst)
 		if err != nil {
 			return fmt.Errorf("failed to create destination file: %w", err)
 		}
-
-		// Create and close the zstd writer to write proper zstd headers
 		zstdOpts := zstd.WithEncoderLevel(zstd.EncoderLevelFromZstd(level))
 		zstdWriter, err := zstd.NewWriter(dstFile, zstdOpts)
 		if err != nil {
@@ -115,28 +111,21 @@ func convertFile(src, dst string, level int) error {
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to create zstd writer: %w", err)
 		}
-
-		// Close the zstd writer to write the frame
 		if err := zstdWriter.Close(); err != nil {
 			dstFile.Close()
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to close zstd writer: %w", err)
 		}
-
-		// Close the file and rename
 		if err := dstFile.Close(); err != nil {
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to close destination file: %w", err)
 		}
-
 		if err := os.Rename(tmpDst, dst); err != nil {
 			return fmt.Errorf("failed to rename temp file: %w", err)
 		}
-
 		return nil
 	}
 
-	// Original code for files that are potentially valid gzip files
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
@@ -154,7 +143,6 @@ func convertFile(src, dst string, level int) error {
 		if err != nil {
 			return fmt.Errorf("failed to create destination file: %w", err)
 		}
-
 		zstdOpts := zstd.WithEncoderLevel(zstd.EncoderLevelFromZstd(level))
 		zstdWriter, err := zstd.NewWriter(dstFile, zstdOpts)
 		if err != nil {
@@ -162,22 +150,18 @@ func convertFile(src, dst string, level int) error {
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to create zstd writer: %w", err)
 		}
-
 		if err := zstdWriter.Close(); err != nil {
 			dstFile.Close()
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to close zstd writer: %w", err)
 		}
-
 		if err := dstFile.Close(); err != nil {
 			os.Remove(tmpDst)
 			return fmt.Errorf("failed to close destination file: %w", err)
 		}
-
 		if err := os.Rename(tmpDst, dst); err != nil {
 			return fmt.Errorf("failed to rename temp file: %w", err)
 		}
-
 		return nil
 	}
 	defer gzReader.Close()
@@ -193,7 +177,6 @@ func convertFile(src, dst string, level int) error {
 			os.Remove(tmpDst)
 		}
 	}()
-
 	zstdOpts := zstd.WithEncoderLevel(zstd.EncoderLevelFromZstd(level))
 	zstdWriter, err := zstd.NewWriter(dstFile, zstdOpts)
 	if err != nil {
@@ -202,20 +185,20 @@ func convertFile(src, dst string, level int) error {
 	defer zstdWriter.Close()
 
 	if _, err := io.Copy(zstdWriter, gzReader); err != nil {
+		if *bestEffort {
+			log.Printf("failed to copy likely broken file: %v", src)
+			return nil
+		}
 		return fmt.Errorf("failed to copy data (%v): %w", src, err)
 	}
-
 	if err := zstdWriter.Close(); err != nil {
 		return fmt.Errorf("failed to close zstd writer: %w", err)
 	}
-
 	if err := dstFile.Close(); err != nil {
 		return fmt.Errorf("failed to close destination file: %w", err)
 	}
-
 	if err := os.Rename(tmpDst, dst); err != nil {
 		return fmt.Errorf("failed to rename temp file: %w", err)
 	}
-
 	return nil
 }
