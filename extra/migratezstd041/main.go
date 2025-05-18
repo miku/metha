@@ -35,19 +35,17 @@ func main() {
 			if !de.IsDir() && strings.HasSuffix(path, ".xml.gz") {
 				gzipFiles = append(gzipFiles, path)
 				if numFound := len(gzipFiles); numFound%10_000_000 == 0 && numFound > 0 {
-					fmt.Fprintf(os.Stderr, "found % 10d files [...]\n", numFound)
+					log.Printf("walk: found %d files [...]", numFound)
 				}
 			}
 			return nil
 		},
-		Unsorted: true, // For faster traversal
+		Unsorted: true,
 	})
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Fprintf(os.Stderr, "found %d gzip files to convert\n", len(gzipFiles))
+	log.Printf("found %d gzip files to convert", len(gzipFiles))
 	if *dryRun {
 		for _, file := range gzipFiles {
 			fmt.Println(file)
