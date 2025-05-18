@@ -92,6 +92,51 @@ func main() {
 }
 
 func convertFile(src, dst string, level int) error {
+	// First check if the source file is empty
+	fileInfo, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("failed to stat source file: %w", err)
+	}
+
+	// Special handling for 0-byte files
+	if fileInfo.Size() == 0 {
+		// For 0-byte files, just create an empty zstd file
+		tmpDst := fmt.Sprintf("%s.tmp-%d", dst, os.Getpid())
+		dstFile, err := os.Create(tmpDst)
+		if err != nil {
+			return fmt.Errorf("failed to create destination file: %w", err)
+		}
+
+		// Create and close the zstd writer to write proper zstd headers
+		zstdOpts := zstd.WithEncoderLevel(zstd.EncoderLevelFromZstd(level))
+		zstdWriter, err := zstd.NewWriter(dstFile, zstdOpts)
+		if err != nil {
+			dstFile.Close()
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to create zstd writer: %w", err)
+		}
+
+		// Close the zstd writer to write the frame
+		if err := zstdWriter.Close(); err != nil {
+			dstFile.Close()
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to close zstd writer: %w", err)
+		}
+
+		// Close the file and rename
+		if err := dstFile.Close(); err != nil {
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to close destination file: %w", err)
+		}
+
+		if err := os.Rename(tmpDst, dst); err != nil {
+			return fmt.Errorf("failed to rename temp file: %w", err)
+		}
+
+		return nil
+	}
+
+	// Original code for non-empty files
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
