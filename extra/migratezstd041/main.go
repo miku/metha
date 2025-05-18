@@ -92,15 +92,15 @@ func main() {
 }
 
 func convertFile(src, dst string, level int) error {
-	// First check if the source file is empty
+	// First check if the source file is too small to be a valid gzip file
 	fileInfo, err := os.Stat(src)
 	if err != nil {
 		return fmt.Errorf("failed to stat source file: %w", err)
 	}
 
-	// Special handling for 0-byte files
-	if fileInfo.Size() == 0 {
-		// For 0-byte files, just create an empty zstd file
+	// Special handling for files smaller than 20 bytes (minimum valid gzip size)
+	if fileInfo.Size() < 20 {
+		// For too small files, just create an empty zstd file
 		tmpDst := fmt.Sprintf("%s.tmp-%d", dst, os.Getpid())
 		dstFile, err := os.Create(tmpDst)
 		if err != nil {
@@ -136,7 +136,7 @@ func convertFile(src, dst string, level int) error {
 		return nil
 	}
 
-	// Original code for non-empty files
+	// Original code for files that are potentially valid gzip files
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
@@ -145,7 +145,40 @@ func convertFile(src, dst string, level int) error {
 
 	gzReader, err := gzip.NewReader(srcFile)
 	if err != nil {
-		return fmt.Errorf("failed to create gzip reader: %w", err)
+		// If we still can't create a gzip reader despite the file size check,
+		// the file might not be a valid gzip file. Create an empty zstd file instead.
+		srcFile.Close() // Close the file before proceeding
+
+		tmpDst := fmt.Sprintf("%s.tmp-%d", dst, os.Getpid())
+		dstFile, err := os.Create(tmpDst)
+		if err != nil {
+			return fmt.Errorf("failed to create destination file: %w", err)
+		}
+
+		zstdOpts := zstd.WithEncoderLevel(zstd.EncoderLevelFromZstd(level))
+		zstdWriter, err := zstd.NewWriter(dstFile, zstdOpts)
+		if err != nil {
+			dstFile.Close()
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to create zstd writer: %w", err)
+		}
+
+		if err := zstdWriter.Close(); err != nil {
+			dstFile.Close()
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to close zstd writer: %w", err)
+		}
+
+		if err := dstFile.Close(); err != nil {
+			os.Remove(tmpDst)
+			return fmt.Errorf("failed to close destination file: %w", err)
+		}
+
+		if err := os.Rename(tmpDst, dst); err != nil {
+			return fmt.Errorf("failed to rename temp file: %w", err)
+		}
+
+		return nil
 	}
 	defer gzReader.Close()
 
@@ -169,7 +202,7 @@ func convertFile(src, dst string, level int) error {
 	defer zstdWriter.Close()
 
 	if _, err := io.Copy(zstdWriter, gzReader); err != nil {
-		return fmt.Errorf("failed to copy data (%s): %w", src, err)
+		return fmt.Errorf("failed to copy data: %w", err)
 	}
 
 	if err := zstdWriter.Close(); err != nil {
