@@ -169,7 +169,7 @@ func convertFile(src, dst string, level int) error {
 	defer zstdWriter.Close()
 
 	if _, err := io.Copy(zstdWriter, gzReader); err != nil {
-		return fmt.Errorf("failed to copy data: %w", err)
+		return fmt.Errorf("failed to copy data (%s): %w", src, err)
 	}
 
 	if err := zstdWriter.Close(); err != nil {
