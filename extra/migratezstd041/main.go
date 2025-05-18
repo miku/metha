@@ -49,7 +49,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "found %d gzip files to convert\n", len(gzipFiles))
 	if *dryRun {
 		for _, file := range gzipFiles {
-			fmt.Fprintf(os.Stderr, "%s\n", file)
+			fmt.Println(file)
 		}
 		return
 	}
