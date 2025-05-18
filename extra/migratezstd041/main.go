@@ -33,8 +33,8 @@ func main() {
 		}
 		if !info.IsDir() && strings.HasSuffix(path, ".xml.gz") {
 			gzipFiles = append(gzipFiles, path)
-			if numFound := len(gzipFiles); numFound%1_000_000 == 0 && numFound > 0 {
-				fmt.Fprintf(os.Stderr, "found %d files [...]\n", numFound)
+			if numFound := len(gzipFiles); numFound%10_000_000 == 0 && numFound > 0 {
+				fmt.Fprintf(os.Stderr, "found % 10d files [...]\n", numFound)
 			}
 		}
 		return nil
