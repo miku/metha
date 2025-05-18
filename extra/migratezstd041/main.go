@@ -20,7 +20,7 @@ var (
 	cacheDir         = flag.String("d", metha.GetBaseDir(), "metha cache directory to convert")
 	compressionLevel = flag.Int("l", 3, "zstd compression level (-5 to 22)")
 	dryRun           = flag.Bool("D", false, "only show what would be done without making changes")
-	removeOriginal   = flag.Bool("f", false, "remove original gzip files after conversion")
+	keepOriginal     = flag.Bool("F", false, "keep gzip after conversion (not recommeded)")
 	numWorkers       = flag.Int("w", 4, "number of parallel workers")
 	bestEffort       = flag.Bool("B", false, "best effort, only log errors, do not halt")
 )
@@ -44,6 +44,10 @@ func main() {
 	})
 	if err != nil {
 		log.Fatal(err)
+	}
+	if len(gzipFiles) == 0 {
+		log.Println("nothing to do")
+		os.Exit(0)
 	}
 	log.Printf("found %d gzip files to convert", len(gzipFiles))
 	if *dryRun {
@@ -72,7 +76,7 @@ func main() {
 					log.Fatal(err)
 				}
 
-				if *removeOriginal {
+				if !*keepOriginal {
 					if err := os.Remove(file); err != nil {
 						log.Fatal(err)
 					}

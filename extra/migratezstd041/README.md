@@ -7,3 +7,9 @@ faster to decompress.
 $ make
 $ ./metha-migrate-041
 ```
+
+With options:
+
+```
+$ ./metha-migrate-041 -l 6 -w 32 -f -B
+```
