@@ -68,9 +68,8 @@ func main() {
 						if err := os.Remove(file); err != nil {
 							log.Fatal(err)
 						}
-					} else {
-						continue
 					}
+					continue
 				}
 				if err := convertFile(file, destFile, *compressionLevel); err != nil {
 					log.Fatal(err)
