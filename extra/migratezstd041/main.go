@@ -23,6 +23,7 @@ var (
 	keepOriginal     = flag.Bool("F", false, "keep gzip after conversion (not recommeded)")
 	numWorkers       = flag.Int("w", 4, "number of parallel workers")
 	bestEffort       = flag.Bool("B", false, "best effort, only log errors, do not halt")
+	forceRemove      = flag.Bool("f", false, "remove existing gzip file, if zstd file is already present (weaker than -F)")
 )
 
 func main() {
@@ -63,7 +64,13 @@ func main() {
 			for file := range jobs {
 				destFile := strings.TrimSuffix(file, ".gz") + ".zst"
 				if _, err := os.Stat(destFile); err == nil {
-					continue
+					if !*keepOriginal && *forceRemove {
+						if err := os.Remove(file); err != nil {
+							log.Fatal(err)
+						}
+					} else {
+						continue
+					}
 				}
 				if err := convertFile(file, destFile, *compressionLevel); err != nil {
 					log.Fatal(err)
