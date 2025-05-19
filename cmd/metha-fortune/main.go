@@ -21,10 +21,11 @@ import (
 )
 
 var (
-	debug    = flag.Bool("d", false, "debug output")
-	k        = flag.Int("k", 16, "number of endpoints to query in parallel")
-	timeout  = flag.Duration("t", 8*time.Second, "timeout")
-	sentence = flag.Bool("s", false, "only one sentence")
+	debug           = flag.Bool("d", false, "debug output")
+	k               = flag.Int("k", 16, "number of endpoints to query in parallel")
+	timeout         = flag.Duration("t", 8*time.Second, "timeout")
+	sentence        = flag.Bool("s", false, "only one sentence (deprecated)")
+	oneSentenceOnly = flag.Bool("1", false, "one sentence only")
 )
 
 // Dc was generated 2018-05-10 14:57:24 by tir on sol.
@@ -162,7 +163,7 @@ func createSearcher(endpoint string) Search {
 			return Result{Err: fmt.Errorf("empty description")}
 		}
 		var buf bytes.Buffer
-		if *sentence {
+		if *sentence || *oneSentenceOnly {
 			tokenizer, err := english.NewSentenceTokenizer(nil)
 			if err != nil {
 				log.Println(err)
