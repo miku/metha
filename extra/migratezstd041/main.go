@@ -47,7 +47,7 @@ func main() {
 		log.Println("nothing to do")
 		os.Exit(0)
 	}
-	log.Printf("found %d gzip files to convert", len(gzipFiles))
+	log.Printf("found %d gzip file(s) to convert", len(gzipFiles))
 	if *dryRun {
 		for _, file := range gzipFiles {
 			fmt.Println(file)
