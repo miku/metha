@@ -27,9 +27,7 @@ var (
 
 func main() {
 	flag.Parse()
-
 	var gzipFiles []string
-
 	err := godirwalk.Walk(*cacheDir, &godirwalk.Options{
 		Callback: func(path string, de *godirwalk.Dirent) error {
 			if !de.IsDir() && strings.HasSuffix(path, ".xml.gz") {
@@ -56,26 +54,20 @@ func main() {
 		}
 		return
 	}
-
 	jobs := make(chan string, len(gzipFiles))
 	var wg sync.WaitGroup
-
-	// Start workers
 	for w := 0; w < *numWorkers; w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for file := range jobs {
 				destFile := strings.TrimSuffix(file, ".gz") + ".zst"
-
 				if _, err := os.Stat(destFile); err == nil {
 					continue
 				}
-
 				if err := convertFile(file, destFile, *compressionLevel); err != nil {
 					log.Fatal(err)
 				}
-
 				if !*keepOriginal {
 					if err := os.Remove(file); err != nil {
 						log.Fatal(err)
@@ -84,14 +76,11 @@ func main() {
 			}
 		}()
 	}
-
 	for _, file := range gzipFiles {
 		jobs <- file
 	}
 	close(jobs)
-
 	wg.Wait()
-	fmt.Println("Conversion complete!")
 }
 
 func convertFile(src, dst string, level int) error {
@@ -138,7 +127,7 @@ func convertFile(src, dst string, level int) error {
 	if err != nil {
 		// If we still can't create a gzip reader despite the file size check,
 		// the file might not be a valid gzip file. Create an empty zstd file instead.
-		srcFile.Close() // Close the file before proceeding
+		srcFile.Close()
 
 		tmpDst := fmt.Sprintf("%s.tmp-%d", dst, os.Getpid())
 		dstFile, err := os.Create(tmpDst)
