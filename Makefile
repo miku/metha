@@ -1,8 +1,9 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune
-VERSION = 0.4.2
+VERSION = 0.4.3
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
+GO_FILES := $(shell find . -name "*.go" -type f -not -path "./cmd/*")
 MAKEFLAGS := --jobs=$(shell nproc)
 
 PKGNAME = metha
@@ -10,7 +11,7 @@ PKGNAME = metha
 .PHONY: all
 all: $(TARGETS)
 
-$(TARGETS): %: cmd/%/main.go
+$(TARGETS): %: cmd/%/main.go contrib/sites.tsv $(GO_FILES)
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags="-w -s" -o $@ $<
 
 .PHONY: test
