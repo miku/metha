@@ -4,6 +4,8 @@
 # dependencies = ["bs4"]
 # ///
 
+#!/usr/bin/env python3
+
 import json
 import re
 import sys
@@ -213,29 +215,34 @@ def main():
     cache_dir = get_cache_dir()
     base_url = "https://www.base-search.net/about/en/about_sources_date.php?&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&page="
 
-    # Get first page to determine total pages
-    first_url = f"{base_url}1"
-    first_page_content = fetch_page(first_url, cache_dir, args.sleep)
-
+    # Determine total pages - only fetch page 1 if we need to auto-detect
     if args.end_page is None:
+        # Need to auto-detect total pages from page 1
+        first_url = f"{base_url}1"
+        first_page_content = fetch_page(first_url, cache_dir, args.sleep)
         total_pages = get_total_pages(first_page_content)
         print(f"Detected {total_pages} total pages", file=sys.stderr)
+
+        # Process page 1 if it's in our range
+        if args.start_page == 1:
+            providers = process_page(first_page_content)
+            for provider in providers:
+                print(json.dumps(provider, ensure_ascii=False))
+
+        # Set start page for remaining iterations
+        start_page = (
+            max(args.start_page, 2) if args.start_page == 1 else args.start_page
+        )
     else:
+        # End page is specified, no need to auto-detect
         total_pages = args.end_page
+        start_page = args.start_page
 
     # Apply max_pages limit if specified
     if args.max_pages:
         total_pages = min(total_pages, args.start_page + args.max_pages - 1)
 
-    # Process first page
-    if args.start_page == 1:
-        providers = process_page(first_page_content)
-        for provider in providers:
-            print(json.dumps(provider, ensure_ascii=False))
-
-    # Process remaining pages
-    start_page = max(args.start_page, 2) if args.start_page == 1 else args.start_page
-
+    # Process pages
     for page_num in range(start_page, total_pages + 1):
         url = f"{base_url}{page_num}"
         html_content = fetch_page(url, cache_dir, args.sleep)
