@@ -1,0 +1,958 @@
+	<!DOCTYPE html>
+<html lang="en">
+
+<!-- en/about_sources_date.php --> 
+
+<head>
+  <title>BASE - Bielefeld Academic Search Engine | Indexed content providers by date</title>
+    
+		<!-- en/head.php -->
+
+		<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="../css/all-font-awesome.min.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/jquery-ui.1.12.1.min.css">
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <link rel="icon" href="/base_favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/base_favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/apple-touch-icon-152x152-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144x144-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/apple-touch-icon-120x120-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114x114-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/apple-touch-icon-76x76-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72x72-precomposed.png" />
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-57x57-precomposed.png" />
+    <link rel="search" type="application/opensearchdescription+xml" title="BASE" href="//www.base-search.net/Search/OpenSearch?method=describe" />
+
+	 			<script src="../js/jquery/jquery.min.js"></script>
+		<script src="../js/base_head.js"></script>
+  <script type='text/javascript'> 
+    $(document).ready(function() {    
+      AjaxSearch('20');  
+    });
+  </script>
+</head>
+
+<body>
+	<div id="wrapper">
+		<div class="container">		
+			
+			<!-- =================== Header =================== -->
+  				<!-- en/header.php -->
+	<header>   
+		 <div id="top">
+			<ul class="sr-only" aria-label="Skip link section">
+		  <a href="#HeaderNavSkip">Skip to header navigation</a>
+		  <a href="#TextSkip">Skip to content</a>
+		  <a href="#FooterNavSkip">Skip to footer navigation</a>
+			</ul>
+		 </div> 
+         <div class="row" id ="logo-row">
+            <div class="col-sm-12">
+	           	<a href="https://www.base-search.net/"><img src="../images/base_logo_kl.png" alt="BASE Logo (Link to the Home Page)" class="pull-left" /></a>
+	            <ul role="presentation" class="nav nav-pills pull-right">
+		          	              	<li role="presentation">
+			         	<div id="loginTop" >
+					     	<form method="post" action="/MyResearch/Home?refid=dcstatde">
+						        <button type="submit" class="btn btn-default margin-right1">Login</button>
+				         	</form>
+				         </div>
+			         	<div id="logoutTop"  style="display: none;">
+				         	<form method="post" action="/MyResearch/Logout">
+					        	<span class="margin-right1 font13"><span id="logged-as">Logged in as </span><a class="link1" href="/MyResearch/Home?refid=dcstatde" rel="nofollow"><span class="hidden">Username</span><span id="UserNameInTop"></span></a></span><!--
+					        	--><button type="submit" class="btn btn-default margin-right1">Log Out</button>
+				         	</form>
+				         </div>    
+	              	</li>
+	               
+	              		            <li role="presentation" class="dropdown" name="langForm" id="langForm">
+	                							<script>
+     						document.write('<button id="btn-lang" class="btn btn-default btn-dropdown" data-toggle="dropdown" aria-expanded="false" aria-controls="list-lang"><span class="sr-only">Language Selection: </span>English</button>');
+						</script>
+						          
+		              	<ul class="dropdown-menu" id="list-lang">    		
+	                		<li><a hreflang="en" lang="en" href="/about/en/about_sources_date.php?l=en" rel="nofollow">English</a></li>
+	                		<li><a hreflang="de" lang="de" href="/about/en/about_sources_date.php?l=de" rel="nofollow">Deutsch</a></li>
+	                				                </ul>
+		                 
+		                <script>
+		                	var btnLangWidth = document.getElementById("btn-lang").offsetWidth;
+		                	$("#list-lang").css("min-width", btnLangWidth);
+		                </script>
+	                	<noscript>
+			      			<form method="post" name="langForm" id="langForm">
+			                  <select name="l" class="btn btn-default" aria-label="Language Selection: English">				            
+				           		<option value="en" selected="selected">English</option>
+						        <option value="de">Deutsch</option>
+						        			                  </select>
+			                  <button type="submit" title="Set" class="btn btn-default margin-left1">Set</button>
+			                 </form>
+		          		</noscript>		                
+		              </li>
+	            </ul>
+	        </div>   
+        </div>     
+      
+        <div class="row" id="HeaderNavSkip">
+          <nav class="navbar navbar-default" id="topnavi">
+            <button type="button" class="navbar-toggle pull-left" data-toggle="collapse" data-target="#navbarTop" aria-haspopup="true" aria-expanded="false">
+            	<span class="sr-only">Menu</span>
+              	<span class="icon-bar"></span>
+              	<span class="icon-bar"></span>
+              	<span class="icon-bar"></span>
+            </button>
+            <div class="col-sm-offset-1 collapse navbar-collapse" id="navbarTop">
+              <ul class="nav nav-tabs">
+                <li role="presentation"><a href="/">Basic search</a></li>
+                <li role="presentation"><a href="/Search/Advanced">Advanced search</a></li>
+                <li role="presentation"><a href="/Browse/Home">Browsing</a></li>
+                <li role="presentation"><a href="/Search/History" rel="nofollow">Search history</a></li>
+              </ul>
+            </div>
+            <div class="nav-line"></div>
+          </nav>
+        </div>
+      </header> 			
+			<!-- =================== Main =================== --> 					    
+			<main>
+				<a id="TextSkip"></a>
+                                <div class="row">
+					<div class="col-sm-9 text-box"> 
+						<div class="first-panel panel panel-default">
+							<h1 class="panel-heading">Indexed content providers by date</h1>
+						  	<div class="panel-body">				
+                                                            <p>This is a complete list of content providers indexed by BASE.</p>
+						    
+                                                            <ul role="presentation" class="padding-top0 padding-bottom5">
+                                                                <li><div class="details-sources">Number of documents:</div> 
+                                                                    423,322,590								</li>
+                                                                <li><div class="details-sources">Number of content providers:</div>
+                                                                    11,815								</li>
+                                                                <li><div class="details-sources">Last update:</div>
+                                                                    2025-06-01                                                                </li>
+                                                            </ul>
+                                                            <div class="bold600" aria-hidden="true">Legend:</div>
+													      	<div class="margin-left1" aria-hidden="true">
+													        	<img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access"/> Open Access <br />        
+													        	<img src="../images/some_open_access.png" width="10" height="16" alt="" data-tooltip="Some Open Access Documents" /> Some Open Access Documents
+													      	</div> 
+                                                  </div>
+                                          </div>
+                                    </div>
+				
+					<!-- =================== Rechts =================== -->    
+				    <aside class="col-sm-3">
+                                          <div class="panel panel-default">
+                                                <div class="panel-heading"><h2 role="heading" aria-level="2">Indexed content providers</h2></div>
+												<div class="panel-body">
+							                    	<ul class="pfeil">
+														<li><a href="about_sources_date.php">By date</a></li>
+														 <li><a href="about_countries_land_up.php">By country</a></li>      
+                                                    </ul>			  	
+                                                </div>
+												<div class="panel-footer"></div>
+                                          </div>						
+                                          		<!-- en/aside.php -->
+		
+		<div class="hidden-xs panel panel-default">
+			<div class="panel-heading"><h2 role="heading" aria-level="2">Quick access</h2></div>
+		  	<div class="panel-body">
+		  		<ul class="pfeil">
+					<li><a href="help.php">Help</a></li>
+					<li><a href="faq.php">FAQ</a></li>	                
+					<li><a href="suggest.php">Become a content provider</a></li>
+                </ul>			  	
+		  	</div>
+		  	<div class="panel-footer"></div>
+		</div>		
+                    </aside>
+				</div>
+				<div class="row">
+					<div class="col-sm-12 text-box"> 				      
+						<nav aria-label="Page navigation" style="float: left;" id="PagerTop">		
+                                                    <ul class="pagination"><li class="active"><span><span class="sr-only">Current Page: </span><strong>1</strong></span></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=2" onclick="this.href=''; AjaxReq4Sources('page=2&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 2">2</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=3" onclick="this.href=''; AjaxReq4Sources('page=3&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 3">3</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=4" onclick="this.href=''; AjaxReq4Sources('page=4&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 4">4</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=5" onclick="this.href=''; AjaxReq4Sources('page=5&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 5">5</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=6" onclick="this.href=''; AjaxReq4Sources('page=6&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 6">6</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=7" onclick="this.href=''; AjaxReq4Sources('page=7&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 7">7</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=8" onclick="this.href=''; AjaxReq4Sources('page=8&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 8">8</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=9" onclick="this.href=''; AjaxReq4Sources('page=9&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 9">9</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=10" onclick="this.href=''; AjaxReq4Sources('page=10&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 10">10</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=11" onclick="this.href=''; AjaxReq4Sources('page=11&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 11">11</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=12" onclick="this.href=''; AjaxReq4Sources('page=12&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 12">12</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=13" onclick="this.href=''; AjaxReq4Sources('page=13&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 13">13</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=14" onclick="this.href=''; AjaxReq4Sources('page=14&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 14">14</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=15" onclick="this.href=''; AjaxReq4Sources('page=15&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 15">15</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=2" onclick="this.href=''; AjaxReq4Sources('page=2&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Next Page"><img src="../images/pfeil_gruen_rechts.png" alt="Next Page" /></a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=591" onclick="this.href=''; AjaxReq4Sources('page=591&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Last Page">[591]</a></li><li><a onclick="this.href=''; show='all'; AjaxReq4Sources('&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1&show=all'); return false;" href="about_sources_date.php?&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&amp;show=all"> All</a></li></ul>						
+                                                    </nav>
+                                                    <div id="loading">Loading ...</div>
+                            
+                                                    <form method="post" class="form-inline" name="searchForm" accept-charset="UTF-8" action="/about/en/about_sources_date.php">
+                                                            <table class="table" id="TabSources">
+                                                                
+		    <colgroup>
+		      <col width="35%"/>
+		      <col width="10%" />
+		      <col width="7%" />
+		      <col width="8%" />
+		      <col width="14%" />
+		      <col width="14%" />
+		      <col width="12%" />
+		    </colgroup><thead><tr style="height:40px;">
+	    <th scope="col" class="border-right-grau text-center text-nowrap">Content provider 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=name&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=name&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-up" title="Sorting: A-Z" aria-hidden="true"></span><span class="hidden">Sorting from A to Z</span>
+	    	</a> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=name&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=name&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-down" title="Sorting: Z-A" aria-hidden="true"></span><span class="hidden">Sorting from Z to A</span>
+	    	</a>
+	    </th>
+	  	<th scope="col" class="text-center text-nowrap"><span class="sr-only">Number of </span>Documents 
+	  		<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=num&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=num&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	  			<span class="fas fa-caret-up" title="Sorting: Smallest first" aria-hidden="true"></span><span class="hidden">Sorting: Smallest first</span>
+	  		</a> 
+	  		<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=num&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=num&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	  			<span class="fas fa-caret-down" title="Sorting: Biggest first" aria-hidden="true"></span><span class="hidden">Sorting: Biggest first</span>
+	  		</a>
+	  	</th>
+	    <th scope="col" class="text-center text-nowrap"><nobr><span class="sr-only">Percentage of open access documents</span><span aria-hidden="true">% OA</span> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=oa&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=oa&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-up" title="Sorting: Lowest OA share first" aria-hidden="true"></span><span class="hidden">Sorting: Lowest OA share first</span>
+	    	</a> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=oa&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=oa&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-down" title="Sorting: Hightest OA share first" aria-hidden="true"></span><span class="hidden">Sorting: Hightest OA share first</span>
+	    	</a></nobr>
+	    </th>
+	    	<th scope="col" class="text-center text-nowrap">Country 
+	    		<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=land&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=land&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    			<span class="fas fa-caret-up" title="Sorting: A-Z" aria-hidden="true"></span><span class="hidden">Sorting from A to Z</span>
+	    		</a> 
+	    		<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=land&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=land&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    			<span class="fas fa-caret-down" title="Sorting: Z-A" aria-hidden="true"></span><span class="hidden">Sorting from Z to A</span>
+	    		</a>
+	    	</th>
+	    <th scope="col" class="text-center text-nowrap">System 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=system&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=system&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-up" title="Sorting: A-Z" aria-hidden="true"></span><span class="hidden">Sorting from A to Z</span>
+	    	</a> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=system&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=system&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-down" title="Sorting: Z-A" aria-hidden="true"></span><span class="hidden">Sorting from Z to A</span>
+	    	</a>
+	    </th>
+	    <th scope="col" class="text-center text-nowrap">Type 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=type&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=type&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-up" title="Sorting: A-Z" aria-hidden="true"></span><span class="hidden">Sorting from A to Z</span>
+	    	</a> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=type&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=type&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-down" title="Sorting: Z-A" aria-hidden="true"></span><span class="hidden">Sorting from Z to A</span>
+	    	</a>
+	    </th>
+	    <th scope="col" class="text-center text-nowrap">In BASE since 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=date&order=asc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=date&amp;order=asc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-up" title="Sorting: Oldest first" aria-hidden="true"></span><span class="hidden">Sorting: Oldest sources first</span>
+	    	</a> 
+	    	<a aria-hidden="true" tabindex="-1" onclick="this.href=''; AjaxReq4Sources('ajax=1&country=&sort=date&order=desc&show=20&search_source=&search_country=&search_date=&search_system=&search_type='); return false;" href="about_sources_date.php?&amp;sort=date&amp;order=desc&amp;show=20&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;search_type=">
+	    		<span class="fas fa-caret-down" title="Sorting: Newest first" aria-hidden="true"></span><span class="hidden">Sorting: Newest sources first</span>
+	    	</a>
+	    </th>
+	  </tr></thead>                                                                <tbody>
+                                                                  <tr class="text-center">
+                                                                    <td class="border-right-grau padding-top0-5 padding-bottom0-5">Name/URL: <input aria-label="Search for the name of data provider or for URL" id="search_source" name="search_source" type="search" class="form-control input-sm center-block" style="width:70%;" value="" /></td>
+                                                                    <td>&nbsp;</td>
+                                                                    <td>&nbsp;</td>
+                                                                    <td class="padding-top0-5 dropdown">
+																    																	    		<script>
+													     						document.write('<button style="width:100px" id="btn-countries" class="btn btn-default btn-dropdown" data-toggle="dropdown" aria-expanded="false" aria-controls="list-countries" aria-label="Search for country. Current selection: All" data-selected-value="">All</button>');
+																			</script>
+																			<ul class="dropdown-menu" id="list-countries">    		
+																				<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','', this,'All');return false;" data-selected-value="" rel="nofollow">All</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','af', this,'Afghanistan','');return false;" data-selected-value="af" rel="nofollow">Afghanistan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','al', this,'Albania','');return false;" data-selected-value="al" rel="nofollow">Albania</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','dz', this,'Algeria','');return false;" data-selected-value="dz" rel="nofollow">Algeria</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ad', this,'Andorra','');return false;" data-selected-value="ad" rel="nofollow">Andorra</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ao', this,'Angola','');return false;" data-selected-value="ao" rel="nofollow">Angola</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ar', this,'Argentina','');return false;" data-selected-value="ar" rel="nofollow">Argentina</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','am', this,'Armenia','');return false;" data-selected-value="am" rel="nofollow">Armenia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','au', this,'Australia','');return false;" data-selected-value="au" rel="nofollow">Australia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','at', this,'Austria','');return false;" data-selected-value="at" rel="nofollow">Austria</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','az', this,'Azerbaijan','');return false;" data-selected-value="az" rel="nofollow">Azerbaijan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bs', this,'Bahama','');return false;" data-selected-value="bs" rel="nofollow">Bahama</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bd', this,'Bangladesh','');return false;" data-selected-value="bd" rel="nofollow">Bangladesh</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bb', this,'Barbados','');return false;" data-selected-value="bb" rel="nofollow">Barbados</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','by', this,'Belarus','');return false;" data-selected-value="by" rel="nofollow">Belarus</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','be', this,'Belgium','');return false;" data-selected-value="be" rel="nofollow">Belgium</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bz', this,'Belize','');return false;" data-selected-value="bz" rel="nofollow">Belize</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bo', this,'Bolivia','');return false;" data-selected-value="bo" rel="nofollow">Bolivia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ba', this,'Bosnia and Herzegovina','');return false;" data-selected-value="ba" rel="nofollow">Bosnia and Herzegovina</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bw', this,'Botswana','');return false;" data-selected-value="bw" rel="nofollow">Botswana</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','br', this,'Brazil','');return false;" data-selected-value="br" rel="nofollow">Brazil</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bn', this,'Brunei Darussalam','');return false;" data-selected-value="bn" rel="nofollow">Brunei Darussalam</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','bg', this,'Bulgaria','');return false;" data-selected-value="bg" rel="nofollow">Bulgaria</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','kh', this,'Cambodia','');return false;" data-selected-value="kh" rel="nofollow">Cambodia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ca', this,'Canada','');return false;" data-selected-value="ca" rel="nofollow">Canada</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cl', this,'Chile','');return false;" data-selected-value="cl" rel="nofollow">Chile</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cn', this,'China','');return false;" data-selected-value="cn" rel="nofollow">China</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','co', this,'Colombia','');return false;" data-selected-value="co" rel="nofollow">Colombia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cg', this,'Congo','');return false;" data-selected-value="cg" rel="nofollow">Congo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cr', this,'Costa Rica','');return false;" data-selected-value="cr" rel="nofollow">Costa Rica</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','hr', this,'Croatia','');return false;" data-selected-value="hr" rel="nofollow">Croatia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cu', this,'Cuba','');return false;" data-selected-value="cu" rel="nofollow">Cuba</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cy', this,'Cyprus','');return false;" data-selected-value="cy" rel="nofollow">Cyprus</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','cz', this,'Czech Republic','');return false;" data-selected-value="cz" rel="nofollow">Czech Republic</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','dk', this,'Denmark','');return false;" data-selected-value="dk" rel="nofollow">Denmark</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','do', this,'Dominican Republic','');return false;" data-selected-value="do" rel="nofollow">Dominican Republic</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ec', this,'Ecuador','');return false;" data-selected-value="ec" rel="nofollow">Ecuador</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','eg', this,'Egypt','');return false;" data-selected-value="eg" rel="nofollow">Egypt</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sv', this,'El Salvador','');return false;" data-selected-value="sv" rel="nofollow">El Salvador</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ee', this,'Estonia','');return false;" data-selected-value="ee" rel="nofollow">Estonia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','et', this,'Ethiopia','');return false;" data-selected-value="et" rel="nofollow">Ethiopia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','eu', this,'European Organisations','');return false;" data-selected-value="eu" rel="nofollow">European Organisations</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','fi', this,'Finland','');return false;" data-selected-value="fi" rel="nofollow">Finland</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','fr', this,'France','');return false;" data-selected-value="fr" rel="nofollow">France</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ge', this,'Georgia','');return false;" data-selected-value="ge" rel="nofollow">Georgia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','de', this,'Germany','');return false;" data-selected-value="de" rel="nofollow">Germany</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','gh', this,'Ghana','');return false;" data-selected-value="gh" rel="nofollow">Ghana</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','gr', this,'Greece','');return false;" data-selected-value="gr" rel="nofollow">Greece</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','gt', this,'Guatemala','');return false;" data-selected-value="gt" rel="nofollow">Guatemala</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','hn', this,'Honduras','');return false;" data-selected-value="hn" rel="nofollow">Honduras</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','hk', this,'Hong Kong','');return false;" data-selected-value="hk" rel="nofollow">Hong Kong</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','hu', this,'Hungary','');return false;" data-selected-value="hu" rel="nofollow">Hungary</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','is', this,'Iceland','');return false;" data-selected-value="is" rel="nofollow">Iceland</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','in', this,'India','');return false;" data-selected-value="in" rel="nofollow">India</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','id', this,'Indonesia','');return false;" data-selected-value="id" rel="nofollow">Indonesia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ir', this,'Iran','');return false;" data-selected-value="ir" rel="nofollow">Iran</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','iq', this,'Iraq','');return false;" data-selected-value="iq" rel="nofollow">Iraq</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ie', this,'Ireland','');return false;" data-selected-value="ie" rel="nofollow">Ireland</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','it', this,'Italy','');return false;" data-selected-value="it" rel="nofollow">Italy</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ci', this,'Ivory Coast','');return false;" data-selected-value="ci" rel="nofollow">Ivory Coast</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','jm', this,'Jamaica','');return false;" data-selected-value="jm" rel="nofollow">Jamaica</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','jp', this,'Japan','');return false;" data-selected-value="jp" rel="nofollow">Japan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','jo', this,'Jordan','');return false;" data-selected-value="jo" rel="nofollow">Jordan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','kz', this,'Kazakhstan','');return false;" data-selected-value="kz" rel="nofollow">Kazakhstan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ke', this,'Kenya','');return false;" data-selected-value="ke" rel="nofollow">Kenya</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ko', this,'Kosovo','');return false;" data-selected-value="ko" rel="nofollow">Kosovo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','kw', this,'Kuwait','');return false;" data-selected-value="kw" rel="nofollow">Kuwait</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','kg', this,'Kyrgyzstan','');return false;" data-selected-value="kg" rel="nofollow">Kyrgyzstan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','la', this,'Lao People's Democratic Republic','');return false;" data-selected-value="la" rel="nofollow">Lao People's Democratic Republic</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','lv', this,'Latvia','');return false;" data-selected-value="lv" rel="nofollow">Latvia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','lb', this,'Lebanon','');return false;" data-selected-value="lb" rel="nofollow">Lebanon</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ls', this,'Lesotho','');return false;" data-selected-value="ls" rel="nofollow">Lesotho</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ly', this,'Libyan Arab Jamahiriya','');return false;" data-selected-value="ly" rel="nofollow">Libyan Arab Jamahiriya</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','lt', this,'Lithuania','');return false;" data-selected-value="lt" rel="nofollow">Lithuania</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','lu', this,'Luxembourg','');return false;" data-selected-value="lu" rel="nofollow">Luxembourg</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mk', this,'Macedonia','');return false;" data-selected-value="mk" rel="nofollow">Macedonia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mw', this,'Malawi','');return false;" data-selected-value="mw" rel="nofollow">Malawi</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','my', this,'Malaysia','');return false;" data-selected-value="my" rel="nofollow">Malaysia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ml', this,'Mali','');return false;" data-selected-value="ml" rel="nofollow">Mali</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mt', this,'Malta','');return false;" data-selected-value="mt" rel="nofollow">Malta</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mx', this,'Mexico','');return false;" data-selected-value="mx" rel="nofollow">Mexico</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','md', this,'Moldova, Republic of','');return false;" data-selected-value="md" rel="nofollow">Moldova, Republic of</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mn', this,'Mongolia','');return false;" data-selected-value="mn" rel="nofollow">Mongolia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ma', this,'Morocco','');return false;" data-selected-value="ma" rel="nofollow">Morocco</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mz', this,'Mozambique','');return false;" data-selected-value="mz" rel="nofollow">Mozambique</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','mm', this,'Myanmar','');return false;" data-selected-value="mm" rel="nofollow">Myanmar</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','na', this,'Namibia','');return false;" data-selected-value="na" rel="nofollow">Namibia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','np', this,'Nepal','');return false;" data-selected-value="np" rel="nofollow">Nepal</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','nl', this,'Netherlands','');return false;" data-selected-value="nl" rel="nofollow">Netherlands</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','nc', this,'New Caledonia','');return false;" data-selected-value="nc" rel="nofollow">New Caledonia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','nz', this,'New Zealand','');return false;" data-selected-value="nz" rel="nofollow">New Zealand</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ni', this,'Nicaragua','');return false;" data-selected-value="ni" rel="nofollow">Nicaragua</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ng', this,'Nigeria','');return false;" data-selected-value="ng" rel="nofollow">Nigeria</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','no', this,'Norway','');return false;" data-selected-value="no" rel="nofollow">Norway</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','om', this,'Oman','');return false;" data-selected-value="om" rel="nofollow">Oman</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pk', this,'Pakistan','');return false;" data-selected-value="pk" rel="nofollow">Pakistan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ps', this,'Palestinian Territory','');return false;" data-selected-value="ps" rel="nofollow">Palestinian Territory</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pa', this,'Panama','');return false;" data-selected-value="pa" rel="nofollow">Panama</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','py', this,'Paraguay','');return false;" data-selected-value="py" rel="nofollow">Paraguay</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pe', this,'Peru','');return false;" data-selected-value="pe" rel="nofollow">Peru</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ph', this,'Philippines','');return false;" data-selected-value="ph" rel="nofollow">Philippines</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pl', this,'Poland','');return false;" data-selected-value="pl" rel="nofollow">Poland</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pt', this,'Portugal','');return false;" data-selected-value="pt" rel="nofollow">Portugal</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','pr', this,'Puerto Rico','');return false;" data-selected-value="pr" rel="nofollow">Puerto Rico</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','qa', this,'Qatar','');return false;" data-selected-value="qa" rel="nofollow">Qatar</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ro', this,'Romania','');return false;" data-selected-value="ro" rel="nofollow">Romania</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ru', this,'Russia','');return false;" data-selected-value="ru" rel="nofollow">Russia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sa', this,'Saudi Arabia','');return false;" data-selected-value="sa" rel="nofollow">Saudi Arabia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','rs', this,'Serbia','');return false;" data-selected-value="rs" rel="nofollow">Serbia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sg', this,'Singapore','');return false;" data-selected-value="sg" rel="nofollow">Singapore</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sk', this,'Slovakia','');return false;" data-selected-value="sk" rel="nofollow">Slovakia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','si', this,'Slovenia','');return false;" data-selected-value="si" rel="nofollow">Slovenia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sb', this,'Solomon Islands','');return false;" data-selected-value="sb" rel="nofollow">Solomon Islands</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','so', this,'Somalia','');return false;" data-selected-value="so" rel="nofollow">Somalia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','za', this,'South Africa','');return false;" data-selected-value="za" rel="nofollow">South Africa</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','kr', this,'South Korea','');return false;" data-selected-value="kr" rel="nofollow">South Korea</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','es', this,'Spain','');return false;" data-selected-value="es" rel="nofollow">Spain</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','lk', this,'Sri Lanka','');return false;" data-selected-value="lk" rel="nofollow">Sri Lanka</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sd', this,'Sudan','');return false;" data-selected-value="sd" rel="nofollow">Sudan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','se', this,'Sweden','');return false;" data-selected-value="se" rel="nofollow">Sweden</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ch', this,'Switzerland','');return false;" data-selected-value="ch" rel="nofollow">Switzerland</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','sy', this,'Syrian Arab Republic','');return false;" data-selected-value="sy" rel="nofollow">Syrian Arab Republic</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tw', this,'Taiwan','');return false;" data-selected-value="tw" rel="nofollow">Taiwan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tz', this,'Tanzania, United Republic of','');return false;" data-selected-value="tz" rel="nofollow">Tanzania, United Republic of</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','th', this,'Thailand','');return false;" data-selected-value="th" rel="nofollow">Thailand</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tl', this,'Timor-Leste','');return false;" data-selected-value="tl" rel="nofollow">Timor-Leste</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tt', this,'Trinidad & Tobago','');return false;" data-selected-value="tt" rel="nofollow">Trinidad & Tobago</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tn', this,'Tunisia','');return false;" data-selected-value="tn" rel="nofollow">Tunisia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tr', this,'Turkey','');return false;" data-selected-value="tr" rel="nofollow">Turkey</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','tm', this,'Turkmenistan','');return false;" data-selected-value="tm" rel="nofollow">Turkmenistan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ug', this,'Uganda','');return false;" data-selected-value="ug" rel="nofollow">Uganda</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ua', this,'Ukraine','');return false;" data-selected-value="ua" rel="nofollow">Ukraine</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ae', this,'United Arab Emirates','');return false;" data-selected-value="ae" rel="nofollow">United Arab Emirates</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','uk', this,'United Kingdom','');return false;" data-selected-value="uk" rel="nofollow">United Kingdom</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','us', this,'United States of America','');return false;" data-selected-value="us" rel="nofollow">United States of America</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','uy', this,'Uruguay','');return false;" data-selected-value="uy" rel="nofollow">Uruguay</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','uz', this,'Uzbekistan','');return false;" data-selected-value="uz" rel="nofollow">Uzbekistan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ve', this,'Venezuela','');return false;" data-selected-value="ve" rel="nofollow">Venezuela</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','vn', this,'Vietnam','');return false;" data-selected-value="vn" rel="nofollow">Vietnam</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','org', this,'Worldwide Organizations','');return false;" data-selected-value="org" rel="nofollow">Worldwide Organizations</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','ye', this,'Yemen','');return false;" data-selected-value="ye" rel="nofollow">Yemen</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','zm', this,'Zambia','');return false;" data-selected-value="zm" rel="nofollow">Zambia</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-countries','zw', this,'Zimbabwe','');return false;" data-selected-value="zw" rel="nofollow">Zimbabwe</a></li>
+														                																	                </ul>	
+																    		<noscript>
+																	    		<select aria-label="Search for country" name="search_country" id="search_country" style="width:100%;" class="input-sm">
+																	    			<option value=""></option>
+																		    																				    			<option value="af" >Afghanistan</option>
+																		    																				    			<option value="al" >Albania</option>
+																		    																				    			<option value="dz" >Algeria</option>
+																		    																				    			<option value="ad" >Andorra</option>
+																		    																				    			<option value="ao" >Angola</option>
+																		    																				    			<option value="ar" >Argentina</option>
+																		    																				    			<option value="am" >Armenia</option>
+																		    																				    			<option value="au" >Australia</option>
+																		    																				    			<option value="at" >Austria</option>
+																		    																				    			<option value="az" >Azerbaijan</option>
+																		    																				    			<option value="bs" >Bahama</option>
+																		    																				    			<option value="bd" >Bangladesh</option>
+																		    																				    			<option value="bb" >Barbados</option>
+																		    																				    			<option value="by" >Belarus</option>
+																		    																				    			<option value="be" >Belgium</option>
+																		    																				    			<option value="bz" >Belize</option>
+																		    																				    			<option value="bo" >Bolivia</option>
+																		    																				    			<option value="ba" >Bosnia and Herzegovina</option>
+																		    																				    			<option value="bw" >Botswana</option>
+																		    																				    			<option value="br" >Brazil</option>
+																		    																				    			<option value="bn" >Brunei Darussalam</option>
+																		    																				    			<option value="bg" >Bulgaria</option>
+																		    																				    			<option value="kh" >Cambodia</option>
+																		    																				    			<option value="ca" >Canada</option>
+																		    																				    			<option value="cl" >Chile</option>
+																		    																				    			<option value="cn" >China</option>
+																		    																				    			<option value="co" >Colombia</option>
+																		    																				    			<option value="cg" >Congo</option>
+																		    																				    			<option value="cr" >Costa Rica</option>
+																		    																				    			<option value="hr" >Croatia</option>
+																		    																				    			<option value="cu" >Cuba</option>
+																		    																				    			<option value="cy" >Cyprus</option>
+																		    																				    			<option value="cz" >Czech Republic</option>
+																		    																				    			<option value="dk" >Denmark</option>
+																		    																				    			<option value="do" >Dominican Republic</option>
+																		    																				    			<option value="ec" >Ecuador</option>
+																		    																				    			<option value="eg" >Egypt</option>
+																		    																				    			<option value="sv" >El Salvador</option>
+																		    																				    			<option value="ee" >Estonia</option>
+																		    																				    			<option value="et" >Ethiopia</option>
+																		    																				    			<option value="eu" >European Organisations</option>
+																		    																				    			<option value="fi" >Finland</option>
+																		    																				    			<option value="fr" >France</option>
+																		    																				    			<option value="ge" >Georgia</option>
+																		    																				    			<option value="de" >Germany</option>
+																		    																				    			<option value="gh" >Ghana</option>
+																		    																				    			<option value="gr" >Greece</option>
+																		    																				    			<option value="gt" >Guatemala</option>
+																		    																				    			<option value="hn" >Honduras</option>
+																		    																				    			<option value="hk" >Hong Kong</option>
+																		    																				    			<option value="hu" >Hungary</option>
+																		    																				    			<option value="is" >Iceland</option>
+																		    																				    			<option value="in" >India</option>
+																		    																				    			<option value="id" >Indonesia</option>
+																		    																				    			<option value="ir" >Iran</option>
+																		    																				    			<option value="iq" >Iraq</option>
+																		    																				    			<option value="ie" >Ireland</option>
+																		    																				    			<option value="it" >Italy</option>
+																		    																				    			<option value="ci" >Ivory Coast</option>
+																		    																				    			<option value="jm" >Jamaica</option>
+																		    																				    			<option value="jp" >Japan</option>
+																		    																				    			<option value="jo" >Jordan</option>
+																		    																				    			<option value="kz" >Kazakhstan</option>
+																		    																				    			<option value="ke" >Kenya</option>
+																		    																				    			<option value="ko" >Kosovo</option>
+																		    																				    			<option value="kw" >Kuwait</option>
+																		    																				    			<option value="kg" >Kyrgyzstan</option>
+																		    																				    			<option value="la" >Lao People's Democratic Republic</option>
+																		    																				    			<option value="lv" >Latvia</option>
+																		    																				    			<option value="lb" >Lebanon</option>
+																		    																				    			<option value="ls" >Lesotho</option>
+																		    																				    			<option value="ly" >Libyan Arab Jamahiriya</option>
+																		    																				    			<option value="lt" >Lithuania</option>
+																		    																				    			<option value="lu" >Luxembourg</option>
+																		    																				    			<option value="mk" >Macedonia</option>
+																		    																				    			<option value="mw" >Malawi</option>
+																		    																				    			<option value="my" >Malaysia</option>
+																		    																				    			<option value="ml" >Mali</option>
+																		    																				    			<option value="mt" >Malta</option>
+																		    																				    			<option value="mx" >Mexico</option>
+																		    																				    			<option value="md" >Moldova, Republic of</option>
+																		    																				    			<option value="mn" >Mongolia</option>
+																		    																				    			<option value="ma" >Morocco</option>
+																		    																				    			<option value="mz" >Mozambique</option>
+																		    																				    			<option value="mm" >Myanmar</option>
+																		    																				    			<option value="na" >Namibia</option>
+																		    																				    			<option value="np" >Nepal</option>
+																		    																				    			<option value="nl" >Netherlands</option>
+																		    																				    			<option value="nc" >New Caledonia</option>
+																		    																				    			<option value="nz" >New Zealand</option>
+																		    																				    			<option value="ni" >Nicaragua</option>
+																		    																				    			<option value="ng" >Nigeria</option>
+																		    																				    			<option value="no" >Norway</option>
+																		    																				    			<option value="om" >Oman</option>
+																		    																				    			<option value="pk" >Pakistan</option>
+																		    																				    			<option value="ps" >Palestinian Territory</option>
+																		    																				    			<option value="pa" >Panama</option>
+																		    																				    			<option value="py" >Paraguay</option>
+																		    																				    			<option value="pe" >Peru</option>
+																		    																				    			<option value="ph" >Philippines</option>
+																		    																				    			<option value="pl" >Poland</option>
+																		    																				    			<option value="pt" >Portugal</option>
+																		    																				    			<option value="pr" >Puerto Rico</option>
+																		    																				    			<option value="qa" >Qatar</option>
+																		    																				    			<option value="ro" >Romania</option>
+																		    																				    			<option value="ru" >Russia</option>
+																		    																				    			<option value="sa" >Saudi Arabia</option>
+																		    																				    			<option value="rs" >Serbia</option>
+																		    																				    			<option value="sg" >Singapore</option>
+																		    																				    			<option value="sk" >Slovakia</option>
+																		    																				    			<option value="si" >Slovenia</option>
+																		    																				    			<option value="sb" >Solomon Islands</option>
+																		    																				    			<option value="so" >Somalia</option>
+																		    																				    			<option value="za" >South Africa</option>
+																		    																				    			<option value="kr" >South Korea</option>
+																		    																				    			<option value="es" >Spain</option>
+																		    																				    			<option value="lk" >Sri Lanka</option>
+																		    																				    			<option value="sd" >Sudan</option>
+																		    																				    			<option value="se" >Sweden</option>
+																		    																				    			<option value="ch" >Switzerland</option>
+																		    																				    			<option value="sy" >Syrian Arab Republic</option>
+																		    																				    			<option value="tw" >Taiwan</option>
+																		    																				    			<option value="tz" >Tanzania, United Republic of</option>
+																		    																				    			<option value="th" >Thailand</option>
+																		    																				    			<option value="tl" >Timor-Leste</option>
+																		    																				    			<option value="tt" >Trinidad & Tobago</option>
+																		    																				    			<option value="tn" >Tunisia</option>
+																		    																				    			<option value="tr" >Turkey</option>
+																		    																				    			<option value="tm" >Turkmenistan</option>
+																		    																				    			<option value="ug" >Uganda</option>
+																		    																				    			<option value="ua" >Ukraine</option>
+																		    																				    			<option value="ae" >United Arab Emirates</option>
+																		    																				    			<option value="uk" >United Kingdom</option>
+																		    																				    			<option value="us" >United States of America</option>
+																		    																				    			<option value="uy" >Uruguay</option>
+																		    																				    			<option value="uz" >Uzbekistan</option>
+																		    																				    			<option value="ve" >Venezuela</option>
+																		    																				    			<option value="vn" >Vietnam</option>
+																		    																				    			<option value="org" >Worldwide Organizations</option>
+																		    																				    			<option value="ye" >Yemen</option>
+																		    																				    			<option value="zm" >Zambia</option>
+																		    																				    			<option value="zw" >Zimbabwe</option>
+																		    																			    		</select>
+																    		</noscript>
+																    																	    </td>
+                                                                    <td class="padding-top0-5 dropdown">
+																    																	    		<script>
+													     						document.write('<button style="width:100px;" id="btn-systems" class="btn btn-default btn-dropdown" data-toggle="dropdown" aria-expanded="false" aria-controls="list-systems" aria-label="Search for system. Current selection: All" data-selected-value="">All</button>');
+																			</script>
+																			<ul class="dropdown-menu"  id="list-systems">    		
+																				<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','', this,'All');return false;" data-selected-value="" rel="nofollow">All</a></li>			
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Alfresco', this,'');return false;" data-selected-value="Alfresco" rel="nofollow">Alfresco</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','AVESIS', this,'');return false;" data-selected-value="AVESIS" rel="nofollow">AVESIS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Brocade', this,'');return false;" data-selected-value="Brocade" rel="nofollow">Brocade</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','CDSware', this,'');return false;" data-selected-value="CDSware" rel="nofollow">CDSware</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','CollectionBuilder', this,'');return false;" data-selected-value="CollectionBuilder" rel="nofollow">CollectionBuilder</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','ContentDM', this,'');return false;" data-selected-value="ContentDM" rel="nofollow">ContentDM</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','CRIS', this,'');return false;" data-selected-value="CRIS" rel="nofollow">CRIS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','CrossRef', this,'');return false;" data-selected-value="CrossRef" rel="nofollow">CrossRef</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','CyberLeninka', this,'');return false;" data-selected-value="CyberLeninka" rel="nofollow">CyberLeninka</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Dataverse', this,'');return false;" data-selected-value="Dataverse" rel="nofollow">Dataverse</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DIAL', this,'');return false;" data-selected-value="DIAL" rel="nofollow">DIAL</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Digibis', this,'');return false;" data-selected-value="Digibis" rel="nofollow">Digibis</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DigitalCommons / BEPress', this,'');return false;" data-selected-value="DigitalCommons / BEPress" rel="nofollow">DigitalCommons / BEPress</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Digital Commons Data', this,'');return false;" data-selected-value="Digital Commons Data" rel="nofollow">Digital Commons Data</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Digitool', this,'');return false;" data-selected-value="Digitool" rel="nofollow">Digitool</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Diva', this,'');return false;" data-selected-value="Diva" rel="nofollow">Diva</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DLibra', this,'');return false;" data-selected-value="DLibra" rel="nofollow">DLibra</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DLPS', this,'');return false;" data-selected-value="DLPS" rel="nofollow">DLPS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Doks', this,'');return false;" data-selected-value="Doks" rel="nofollow">Doks</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Drupal', this,'');return false;" data-selected-value="Drupal" rel="nofollow">Drupal</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DSpace', this,'');return false;" data-selected-value="DSpace" rel="nofollow">DSpace</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DSpace CRIS', this,'');return false;" data-selected-value="DSpace CRIS" rel="nofollow">DSpace CRIS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DSpace IRIS', this,'');return false;" data-selected-value="DSpace IRIS" rel="nofollow">DSpace IRIS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','DSpace XOAI', this,'');return false;" data-selected-value="DSpace XOAI" rel="nofollow">DSpace XOAI</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Editorum', this,'');return false;" data-selected-value="Editorum" rel="nofollow">Editorum</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','edoc', this,'');return false;" data-selected-value="edoc" rel="nofollow">edoc</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Eigenentwicklung', this,'');return false;" data-selected-value="Eigenentwicklung" rel="nofollow">Eigenentwicklung</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','eJournal Management System', this,'');return false;" data-selected-value="eJournal Management System" rel="nofollow">eJournal Management System</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','eLABA', this,'');return false;" data-selected-value="eLABA" rel="nofollow">eLABA</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','enKORE', this,'');return false;" data-selected-value="enKORE" rel="nofollow">enKORE</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','EPress', this,'');return false;" data-selected-value="EPress" rel="nofollow">EPress</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Eprints', this,'');return false;" data-selected-value="Eprints" rel="nofollow">Eprints</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Eprints 2', this,'');return false;" data-selected-value="Eprints 2" rel="nofollow">Eprints 2</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Eprints 3', this,'');return false;" data-selected-value="Eprints 3" rel="nofollow">Eprints 3</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Equella', this,'');return false;" data-selected-value="Equella" rel="nofollow">Equella</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Esploro', this,'');return false;" data-selected-value="Esploro" rel="nofollow">Esploro</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','ETD', this,'');return false;" data-selected-value="ETD" rel="nofollow">ETD</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','eXistdb', this,'');return false;" data-selected-value="eXistdb" rel="nofollow">eXistdb</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Fedora', this,'');return false;" data-selected-value="Fedora" rel="nofollow">Fedora</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Fez', this,'');return false;" data-selected-value="Fez" rel="nofollow">Fez</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Figshare', this,'');return false;" data-selected-value="Figshare" rel="nofollow">Figshare</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Goobi', this,'');return false;" data-selected-value="Goobi" rel="nofollow">Goobi</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Greenstone', this,'');return false;" data-selected-value="Greenstone" rel="nofollow">Greenstone</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','HAL', this,'');return false;" data-selected-value="HAL" rel="nofollow">HAL</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Haplo', this,'');return false;" data-selected-value="Haplo" rel="nofollow">Haplo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Huma-Num', this,'');return false;" data-selected-value="Huma-Num" rel="nofollow">Huma-Num</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Hyku', this,'');return false;" data-selected-value="Hyku" rel="nofollow">Hyku</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Hyrax', this,'');return false;" data-selected-value="Hyrax" rel="nofollow">Hyrax</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','imeji', this,'');return false;" data-selected-value="imeji" rel="nofollow">imeji</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','IMIS', this,'');return false;" data-selected-value="IMIS" rel="nofollow">IMIS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Invenio', this,'');return false;" data-selected-value="Invenio" rel="nofollow">Invenio</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','ISCIMA', this,'');return false;" data-selected-value="ISCIMA" rel="nofollow">ISCIMA</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Islandora', this,'');return false;" data-selected-value="Islandora" rel="nofollow">Islandora</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Jadox', this,'');return false;" data-selected-value="Jadox" rel="nofollow">Jadox</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Janeway', this,'');return false;" data-selected-value="Janeway" rel="nofollow">Janeway</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Keystone', this,'');return false;" data-selected-value="Keystone" rel="nofollow">Keystone</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Kitodo', this,'');return false;" data-selected-value="Kitodo" rel="nofollow">Kitodo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','LibreCat', this,'');return false;" data-selected-value="LibreCat" rel="nofollow">LibreCat</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Luna', this,'');return false;" data-selected-value="Luna" rel="nofollow">Luna</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','LUP', this,'');return false;" data-selected-value="LUP" rel="nofollow">LUP</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','MEDIATUM', this,'');return false;" data-selected-value="MEDIATUM" rel="nofollow">MEDIATUM</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','MOAI', this,'');return false;" data-selected-value="MOAI" rel="nofollow">MOAI</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','MyCoRe', this,'');return false;" data-selected-value="MyCoRe" rel="nofollow">MyCoRe</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Neliti', this,'');return false;" data-selected-value="Neliti" rel="nofollow">Neliti</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Nuxeo', this,'');return false;" data-selected-value="Nuxeo" rel="nofollow">Nuxeo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OAI static', this,'');return false;" data-selected-value="OAI static" rel="nofollow">OAI static</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OCS', this,'');return false;" data-selected-value="OCS" rel="nofollow">OCS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Octopus', this,'');return false;" data-selected-value="Octopus" rel="nofollow">Octopus</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OHS', this,'');return false;" data-selected-value="OHS" rel="nofollow">OHS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OJS', this,'');return false;" data-selected-value="OJS" rel="nofollow">OJS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Omeka', this,'');return false;" data-selected-value="Omeka" rel="nofollow">Omeka</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OMP', this,'');return false;" data-selected-value="OMP" rel="nofollow">OMP</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','OPS', this,'');return false;" data-selected-value="OPS" rel="nofollow">OPS</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Opus', this,'');return false;" data-selected-value="Opus" rel="nofollow">Opus</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Opus 4', this,'');return false;" data-selected-value="Opus 4" rel="nofollow">Opus 4</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Pandora', this,'');return false;" data-selected-value="Pandora" rel="nofollow">Pandora</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Phaidra', this,'');return false;" data-selected-value="Phaidra" rel="nofollow">Phaidra</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Pica-Verbundkatalog', this,'');return false;" data-selected-value="Pica-Verbundkatalog" rel="nofollow">Pica-Verbundkatalog</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','PMB', this,'');return false;" data-selected-value="PMB" rel="nofollow">PMB</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','ProQuest', this,'');return false;" data-selected-value="ProQuest" rel="nofollow">ProQuest</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','PubMan', this,'');return false;" data-selected-value="PubMan" rel="nofollow">PubMan</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Pure', this,'');return false;" data-selected-value="Pure" rel="nofollow">Pure</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Qucosa', this,'');return false;" data-selected-value="Qucosa" rel="nofollow">Qucosa</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Radar', this,'');return false;" data-selected-value="Radar" rel="nofollow">Radar</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','REPOX', this,'');return false;" data-selected-value="REPOX" rel="nofollow">REPOX</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Resourcespace', this,'');return false;" data-selected-value="Resourcespace" rel="nofollow">Resourcespace</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Samvera', this,'');return false;" data-selected-value="Samvera" rel="nofollow">Samvera</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Scigloo', this,'');return false;" data-selected-value="Scigloo" rel="nofollow">Scigloo</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','SCIX', this,'');return false;" data-selected-value="SCIX" rel="nofollow">SCIX</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Ubiquity', this,'');return false;" data-selected-value="Ubiquity" rel="nofollow">Ubiquity</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Unbekannt', this,'');return false;" data-selected-value="Unbekannt" rel="nofollow">Unbekannt</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','VisualLibrary', this,'');return false;" data-selected-value="VisualLibrary" rel="nofollow">VisualLibrary</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','vital', this,'');return false;" data-selected-value="vital" rel="nofollow">vital</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','VTOAI', this,'');return false;" data-selected-value="VTOAI" rel="nofollow">VTOAI</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','VuFind', this,'');return false;" data-selected-value="VuFind" rel="nofollow">VuFind</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','WEKO', this,'');return false;" data-selected-value="WEKO" rel="nofollow">WEKO</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','Worktribe', this,'');return false;" data-selected-value="Worktribe" rel="nofollow">Worktribe</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-systems','XOOPS', this,'');return false;" data-selected-value="XOOPS" rel="nofollow">XOOPS</a></li>
+														                																	                </ul>	
+																    		<noscript>
+																	    		<select aria-label="Search for system" name="search_system" id="search_system" style="width:100%;" class="input-sm">
+																	    			<option value=""></option>
+																		    																				    			<option value="Alfresco" >Alfresco</option>
+																		    																				    			<option value="AVESIS" >AVESIS</option>
+																		    																				    			<option value="Brocade" >Brocade</option>
+																		    																				    			<option value="CDSware" >CDSware</option>
+																		    																				    			<option value="CollectionBuilder" >CollectionBuilder</option>
+																		    																				    			<option value="ContentDM" >ContentDM</option>
+																		    																				    			<option value="CRIS" >CRIS</option>
+																		    																				    			<option value="CrossRef" >CrossRef</option>
+																		    																				    			<option value="CyberLeninka" >CyberLeninka</option>
+																		    																				    			<option value="Dataverse" >Dataverse</option>
+																		    																				    			<option value="DIAL" >DIAL</option>
+																		    																				    			<option value="Digibis" >Digibis</option>
+																		    																				    			<option value="DigitalCommons / BEPress" >DigitalCommons / BEPress</option>
+																		    																				    			<option value="Digital Commons Data" >Digital Commons Data</option>
+																		    																				    			<option value="Digitool" >Digitool</option>
+																		    																				    			<option value="Diva" >Diva</option>
+																		    																				    			<option value="DLibra" >DLibra</option>
+																		    																				    			<option value="DLPS" >DLPS</option>
+																		    																				    			<option value="Doks" >Doks</option>
+																		    																				    			<option value="Drupal" >Drupal</option>
+																		    																				    			<option value="DSpace" >DSpace</option>
+																		    																				    			<option value="DSpace CRIS" >DSpace CRIS</option>
+																		    																				    			<option value="DSpace IRIS" >DSpace IRIS</option>
+																		    																				    			<option value="DSpace XOAI" >DSpace XOAI</option>
+																		    																				    			<option value="Editorum" >Editorum</option>
+																		    																				    			<option value="edoc" >edoc</option>
+																		    																				    			<option value="Eigenentwicklung" >Eigenentwicklung</option>
+																		    																				    			<option value="eJournal Management System" >eJournal Management System</option>
+																		    																				    			<option value="eLABA" >eLABA</option>
+																		    																				    			<option value="enKORE" >enKORE</option>
+																		    																				    			<option value="EPress" >EPress</option>
+																		    																				    			<option value="Eprints" >Eprints</option>
+																		    																				    			<option value="Eprints 2" >Eprints 2</option>
+																		    																				    			<option value="Eprints 3" >Eprints 3</option>
+																		    																				    			<option value="Equella" >Equella</option>
+																		    																				    			<option value="Esploro" >Esploro</option>
+																		    																				    			<option value="ETD" >ETD</option>
+																		    																				    			<option value="eXistdb" >eXistdb</option>
+																		    																				    			<option value="Fedora" >Fedora</option>
+																		    																				    			<option value="Fez" >Fez</option>
+																		    																				    			<option value="Figshare" >Figshare</option>
+																		    																				    			<option value="Goobi" >Goobi</option>
+																		    																				    			<option value="Greenstone" >Greenstone</option>
+																		    																				    			<option value="HAL" >HAL</option>
+																		    																				    			<option value="Haplo" >Haplo</option>
+																		    																				    			<option value="Huma-Num" >Huma-Num</option>
+																		    																				    			<option value="Hyku" >Hyku</option>
+																		    																				    			<option value="Hyrax" >Hyrax</option>
+																		    																				    			<option value="imeji" >imeji</option>
+																		    																				    			<option value="IMIS" >IMIS</option>
+																		    																				    			<option value="Invenio" >Invenio</option>
+																		    																				    			<option value="ISCIMA" >ISCIMA</option>
+																		    																				    			<option value="Islandora" >Islandora</option>
+																		    																				    			<option value="Jadox" >Jadox</option>
+																		    																				    			<option value="Janeway" >Janeway</option>
+																		    																				    			<option value="Keystone" >Keystone</option>
+																		    																				    			<option value="Kitodo" >Kitodo</option>
+																		    																				    			<option value="LibreCat" >LibreCat</option>
+																		    																				    			<option value="Luna" >Luna</option>
+																		    																				    			<option value="LUP" >LUP</option>
+																		    																				    			<option value="MEDIATUM" >MEDIATUM</option>
+																		    																				    			<option value="MOAI" >MOAI</option>
+																		    																				    			<option value="MyCoRe" >MyCoRe</option>
+																		    																				    			<option value="Neliti" >Neliti</option>
+																		    																				    			<option value="Nuxeo" >Nuxeo</option>
+																		    																				    			<option value="OAI static" >OAI static</option>
+																		    																				    			<option value="OCS" >OCS</option>
+																		    																				    			<option value="Octopus" >Octopus</option>
+																		    																				    			<option value="OHS" >OHS</option>
+																		    																				    			<option value="OJS" >OJS</option>
+																		    																				    			<option value="Omeka" >Omeka</option>
+																		    																				    			<option value="OMP" >OMP</option>
+																		    																				    			<option value="OPS" >OPS</option>
+																		    																				    			<option value="Opus" >Opus</option>
+																		    																				    			<option value="Opus 4" >Opus 4</option>
+																		    																				    			<option value="Pandora" >Pandora</option>
+																		    																				    			<option value="Phaidra" >Phaidra</option>
+																		    																				    			<option value="Pica-Verbundkatalog" >Pica-Verbundkatalog</option>
+																		    																				    			<option value="PMB" >PMB</option>
+																		    																				    			<option value="ProQuest" >ProQuest</option>
+																		    																				    			<option value="PubMan" >PubMan</option>
+																		    																				    			<option value="Pure" >Pure</option>
+																		    																				    			<option value="Qucosa" >Qucosa</option>
+																		    																				    			<option value="Radar" >Radar</option>
+																		    																				    			<option value="REPOX" >REPOX</option>
+																		    																				    			<option value="Resourcespace" >Resourcespace</option>
+																		    																				    			<option value="Samvera" >Samvera</option>
+																		    																				    			<option value="Scigloo" >Scigloo</option>
+																		    																				    			<option value="SCIX" >SCIX</option>
+																		    																				    			<option value="Ubiquity" >Ubiquity</option>
+																		    																				    			<option value="Unbekannt" >Unbekannt</option>
+																		    																				    			<option value="VisualLibrary" >VisualLibrary</option>
+																		    																				    			<option value="vital" >vital</option>
+																		    																				    			<option value="VTOAI" >VTOAI</option>
+																		    																				    			<option value="VuFind" >VuFind</option>
+																		    																				    			<option value="WEKO" >WEKO</option>
+																		    																				    			<option value="Worktribe" >Worktribe</option>
+																		    																				    			<option value="XOOPS" >XOOPS</option>
+																		    																			    		</select>
+																	    	</noscript>
+																    																	    </td>
+                                                                    <td class="padding-top0-5 dropdown">
+																    																	    		<script>
+													     						document.write('<button style="width:130px;" id="btn-types" class="btn btn-default btn-dropdown" data-toggle="dropdown" aria-expanded="false" aria-controls="list-types" aria-label="Search for type. Current selection: All" data-selected-value="">All</button>');
+																			</script>
+																			<ul class="dropdown-menu" id="list-types">    		
+														                		<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','', this, 'All');return false;" data-selected-value="" rel="nofollow">All</a></li>
+																    																	                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Academic publications', this,'');return false;" data-selected-value="Academic publications" rel="nofollow">Academic publications</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Audio / videos', this,'');return false;" data-selected-value="Audio / videos" rel="nofollow">Audio / videos</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Conference objects', this,'');return false;" data-selected-value="Conference objects" rel="nofollow">Conference objects</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Course materials', this,'');return false;" data-selected-value="Course materials" rel="nofollow">Course materials</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Datasets', this,'');return false;" data-selected-value="Datasets" rel="nofollow">Datasets</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Digital collection', this,'');return false;" data-selected-value="Digital collection" rel="nofollow">Digital collection</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','E-books', this,'');return false;" data-selected-value="E-books" rel="nofollow">E-books</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','E-journal', this,'');return false;" data-selected-value="E-journal" rel="nofollow">E-journal</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','E-journal platform', this,'');return false;" data-selected-value="E-journal platform" rel="nofollow">E-journal platform</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Images', this,'');return false;" data-selected-value="Images" rel="nofollow">Images</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Images / videos', this,'');return false;" data-selected-value="Images / videos" rel="nofollow">Images / videos</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Maps', this,'');return false;" data-selected-value="Maps" rel="nofollow">Maps</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Publications', this,'');return false;" data-selected-value="Publications" rel="nofollow">Publications</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Reports', this,'');return false;" data-selected-value="Reports" rel="nofollow">Reports</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Theses', this,'');return false;" data-selected-value="Theses" rel="nofollow">Theses</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Unknown', this,'');return false;" data-selected-value="Unknown" rel="nofollow">Unknown</a></li>
+														                																                			<li><a href="/about/en/about_sources_date.php" onclick="return BuildLink4SelectBoxes('btn-types','Videos', this,'');return false;" data-selected-value="Videos" rel="nofollow">Videos</a></li>
+														                																	                </ul>
+																    		<noscript>
+																	    		<select aria-label="Search for type" name="search_type" id="search_type" style="width:100%;" class="input-sm">
+																	    			<option value=""></option>
+																		    																				    			<option value="Academic publications" >Academic publications</option>
+																		    																				    			<option value="Audio / videos" >Audio / videos</option>
+																		    																				    			<option value="Conference objects" >Conference objects</option>
+																		    																				    			<option value="Course materials" >Course materials</option>
+																		    																				    			<option value="Datasets" >Datasets</option>
+																		    																				    			<option value="Digital collection" >Digital collection</option>
+																		    																				    			<option value="E-books" >E-books</option>
+																		    																				    			<option value="E-journal" >E-journal</option>
+																		    																				    			<option value="E-journal platform" >E-journal platform</option>
+																		    																				    			<option value="Images" >Images</option>
+																		    																				    			<option value="Images / videos" >Images / videos</option>
+																		    																				    			<option value="Maps" >Maps</option>
+																		    																				    			<option value="Publications" >Publications</option>
+																		    																				    			<option value="Reports" >Reports</option>
+																		    																				    			<option value="Theses" >Theses</option>
+																		    																				    			<option value="Unknown" >Unknown</option>
+																		    																				    			<option value="Videos" >Videos</option>
+																		    																			    		</select>
+																	    	</noscript>
+																    																	    </td>
+                                                                    <td class="padding-top0-5"><input aria-label="Search for activation date. Format: year hyphen month hyphen day" id="search_date" name="search_date" type="search" class="form-control input-sm" style="width:95px;" value="" /></td>
+                                                                    <td class="padding-top0-5"><noscript><button type="submit" title="Search" class="btn btn-default btn-sm" style="line-height: 1.2;">Search</button></noscript></td>
+                                                                  </tr>
+                                                                  <tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Cambridge International Publishing<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14225&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14225" data-target="#list_ftid14225"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14225">
+			    <li><strong>URL: </strong><a href="https://www.cambridgepublish.com" target="_blank" >https://www.cambridgepublish.com</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>United Kingdom</li><li><strong>Number of documents: </strong>40<br /><strong>davon Open Access</strong>: 40 (100%)</li><li><strong>Type: </strong>Hochschulpublikationen</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-28">2025-05-28</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14225&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14225</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14225&amp;refid=dctableen ">40</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14225&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">uk<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/UK.png" alt="United Kingdom" aria-label="Flag of United Kingdom"  data-tooltip="United Kingdom" /></span></td><td class="text-center">OJS</td><td class="text-center">Academic publications</td><td class="text-center"><time datetime="2025-05-28">2025-05-28</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">CTU Journal of Science<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14221&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14221" data-target="#list_ftid14221"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14221">
+			    <li><strong>URL: </strong><a href="https://ctujsvn.ctu.edu.vn" target="_blank" >https://ctujsvn.ctu.edu.vn</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Vietnam</li><li><strong>Number of documents: </strong>4864<br /><strong>davon Open Access</strong>: 4864 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-28">2025-05-28</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14221&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14221</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14221&amp;refid=dctableen ">4.864</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14221&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">vn<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/VN.png" alt="Vietnam" aria-label="Flag of Vietnam"  data-tooltip="Vietnam" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-28">2025-05-28</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">CV EDUJAVARE PUBLISHING<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14224&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14224" data-target="#list_ftid14224"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14224">
+			    <li><strong>URL: </strong><a href="https://edujavare.com" target="_blank" >https://edujavare.com</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Indonesia</li><li><strong>Number of documents: </strong>631<br /><strong>davon Open Access</strong>: 194 (31%)</li><li><strong>Type: </strong>E-Journal-Plattform</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-28">2025-05-28</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14224&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14224</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14224&amp;refid=dctableen ">631</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14224&amp;refid=dctableen"><img src="../images/some_open_access.png" width="10" height="16" alt="" data-tooltip="Some Open Access Documents" /> [31%]</a></td><td class="text-center">id<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/ID.png" alt="Indonesia" aria-label="Flag of Indonesia"  data-tooltip="Indonesia" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal platform</td><td class="text-center"><time datetime="2025-05-28">2025-05-28</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">E-Journal Naifaderu<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14226&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14226" data-target="#list_ftid14226"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14226">
+			    <li><strong>URL: </strong><a href="https://e-journal.naifaderu.org" target="_blank" >https://e-journal.naifaderu.org</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Indonesia</li><li><strong>Number of documents: </strong>30<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>E-Journal-Plattform</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-28">2025-05-28</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14226&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14226</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14226&amp;refid=dctableen ">30</a></td><td class="text-center"></td><td class="text-center">id<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/ID.png" alt="Indonesia" aria-label="Flag of Indonesia"  data-tooltip="Indonesia" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal platform</td><td class="text-center"><time datetime="2025-05-28">2025-05-28</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Prisma Journal<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14227&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14227" data-target="#list_ftid14227"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14227">
+			    <li><strong>URL: </strong><a href="https://www.prismajournal.org" target="_blank" >https://www.prismajournal.org</a></li><li><strong>Continent: </strong>South America</li><li><strong>Country: </strong>Ecuador</li><li><strong>Number of documents: </strong>7<br /><strong>davon Open Access</strong>: 7 (100%)</li><li><strong>Type: </strong>E-Journal-Plattform</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-28">2025-05-28</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14227&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14227</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14227&amp;refid=dctableen ">7</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14227&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">ec<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/EC.png" alt="Ecuador" aria-label="Flag of Ecuador"  data-tooltip="Ecuador" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal platform</td><td class="text-center"><time datetime="2025-05-28">2025-05-28</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">DAARUS TSAQOFAH, Jurnal Pendidikan Pascasarjana Universitas Qomaruddin<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14210&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14210" data-target="#list_ftid14210"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14210">
+			    <li><strong>URL: </strong><a href="https://jurnalpasca.uqgresik.ac.id" target="_blank" >https://jurnalpasca.uqgresik.ac.id</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Indonesia</li><li><strong>Number of documents: </strong>30<br /><strong>davon Open Access</strong>: 30 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-26">2025-05-26</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14210&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14210</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14210&amp;refid=dctableen ">30</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14210&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">id<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/ID.png" alt="Indonesia" aria-label="Flag of Indonesia"  data-tooltip="Indonesia" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-26">2025-05-26</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Diffusion Fundamentals<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14213&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14213" data-target="#list_ftid14213"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14213">
+			    <li><strong>URL: </strong><a href="https://diffusion.publia.org/" target="_blank" >https://diffusion.publia.org/</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Germany</li><li><strong>Number of documents: </strong>1214<br /><strong>davon Open Access</strong>: 460 (38%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-26">2025-05-26</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14213&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14213</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14213&amp;refid=dctableen ">1.214</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14213&amp;refid=dctableen"><img src="../images/some_open_access.png" width="10" height="16" alt="" data-tooltip="Some Open Access Documents" /> [38%]</a></td><td class="text-center">de<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/DE.png" alt="Germany" aria-label="Flag of Germany"  data-tooltip="Germany" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-26">2025-05-26</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Namenkundliche Informationen (NI)<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14215&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14215" data-target="#list_ftid14215"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14215">
+			    <li><strong>URL: </strong><a href="https://www.namenkundliche-informationen.de/" target="_blank" >https://www.namenkundliche-informationen.de/</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Germany</li><li><strong>Number of documents: </strong>718<br /><strong>davon Open Access</strong>: 718 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-26">2025-05-26</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14215&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14215</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14215&amp;refid=dctableen ">718</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14215&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">de<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/DE.png" alt="Germany" aria-label="Flag of Germany"  data-tooltip="Germany" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-26">2025-05-26</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Tech Science Press<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14212&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14212" data-target="#list_ftid14212"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14212">
+			    <li><strong>URL: </strong><a href="https://www.techscience.com/journals" target="_blank" >https://www.techscience.com/journals</a></li><li><strong>Continent: </strong>North America</li><li><strong>Country: </strong>United States of America</li><li><strong>Number of documents: </strong>4999<br /><strong>davon Open Access</strong>: 4999 (100%)</li><li><strong>Type: </strong>E-Journal-Plattform</li><li><strong>System: </strong>Unbekannt</li><li><strong>In BASE since: </strong><time datetime="2025-05-26">2025-05-26</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14212&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14212</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14212&amp;refid=dctableen ">4.999</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14212&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">us<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/US.png" alt="United States of America" aria-label="Flag of United States of America"  data-tooltip="United States of America" /></span></td><td class="text-center">Unbekannt</td><td class="text-center">E-journal platform</td><td class="text-center"><time datetime="2025-05-26">2025-05-26</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Curtin University: espace<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=316&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftcurtin" data-target="#list_ftcurtin"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftcurtin">
+			    <li><strong>URL: </strong><a href="https://espace.curtin.edu.au" target="_blank" >https://espace.curtin.edu.au</a></li><li><strong>Research Organization Registry (ROR):</strong> <a href="https://ror.org/02n415q13" target="_blank" rel="noopener" class="link1">Curtin University</a></li><li><strong>Continent: </strong>Australia/Oceania</li><li><strong>Country: </strong>Australia</li><li><strong>Latitude/Longitude: </strong>-32.006120 / 115.907200<br />(<a href="http://maps.google.com/maps?q=-32.006120,115.907200&z=17&t=h&hl=en" target="_blank" rel="noopener">Google Maps</a> | <a href="http://www.openstreetmap.org/?mlat=-32.006120&mlon=115.907200" target="_blank" rel="noopener">OpenStreetMap</a>)</li><li><strong>Number of documents: </strong>75818<br /><strong>davon Open Access</strong>: 4833 (7%)</li><li><strong>Type: </strong>Hochschulpublikationen</li><li><strong>System: </strong>DSpace XOAI</li><li><strong>In BASE since: </strong><time datetime="2025-05-21">2025-05-21</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftcurtin&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftcurtin</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftcurtin&amp;refid=dctableen ">75.818</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftcurtin&amp;refid=dctableen"><img src="../images/some_open_access.png" width="10" height="16" alt="" data-tooltip="Some Open Access Documents" /> [7%]</a></td><td class="text-center">au<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/AU.png" alt="Australia" aria-label="Flag of Australia"  data-tooltip="Australia" /></span></td><td class="text-center">DSpace XOAI</td><td class="text-center">Academic publications</td><td class="text-center"><time datetime="2025-05-21">2025-05-21</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">chronotopos – A Journal of Translation History<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14214&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14214" data-target="#list_ftid14214"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14214">
+			    <li><strong>URL: </strong><a href="https://www.chronotopos.eu/" target="_blank" >https://www.chronotopos.eu/</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Germany</li><li><strong>Number of documents: </strong>100<br /><strong>davon Open Access</strong>: 100 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14214&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14214</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14214&amp;refid=dctableen ">100</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14214&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">de<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/DE.png" alt="Germany" aria-label="Flag of Germany"  data-tooltip="Germany" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Innova Science Journal<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14216&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14216" data-target="#list_ftid14216"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14216">
+			    <li><strong>URL: </strong><a href="https://innovasciencejournal.omeditorial.com/" target="_blank" >https://innovasciencejournal.omeditorial.com/</a></li><li><strong>Continent: </strong>South America</li><li><strong>Country: </strong>Ecuador</li><li><strong>Number of documents: </strong>51<br /><strong>davon Open Access</strong>: 51 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14216&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14216</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14216&amp;refid=dctableen ">51</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14216&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">ec<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/EC.png" alt="Ecuador" aria-label="Flag of Ecuador"  data-tooltip="Ecuador" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">JURNAL TEOLOGI RAI<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14219&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14219" data-target="#list_ftid14219"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14219">
+			    <li><strong>URL: </strong><a href="https://jurnal.stt-rai.ac.id" target="_blank" >https://jurnal.stt-rai.ac.id</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Indonesia</li><li><strong>Number of documents: </strong>31<br /><strong>davon Open Access</strong>: 31 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14219&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14219</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14219&amp;refid=dctableen ">31</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14219&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">id<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/ID.png" alt="Indonesia" aria-label="Flag of Indonesia"  data-tooltip="Indonesia" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Manisa Celal Bayar Üniversitesi Akademik Arşiv Sistemi<br /><span class="sr-only">Weitere Bezeichnung </span><em>Manisa Celal Bayar University</em><span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14159&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14159" data-target="#list_ftid14159"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14159">
+			    <li><strong>URL: </strong><a href="https://akademikarsiv.cbu.edu.tr" target="_blank" >https://akademikarsiv.cbu.edu.tr</a></li><li><strong>Research Organization Registry (ROR):</strong> <a href="https://ror.org/053f2w588" target="_blank" rel="noopener" class="link1">Manisa Celal Bayar University</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Turkey</li><li><strong>Number of documents: </strong>26856<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>Hochschulpublikationen</li><li><strong>System: </strong>DSpace XOAI</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14159&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14159</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14159&amp;refid=dctableen ">26.856</a></td><td class="text-center"></td><td class="text-center">tr<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/TR.png" alt="Turkey" aria-label="Flag of Turkey"  data-tooltip="Turkey" /></span></td><td class="text-center">DSpace XOAI</td><td class="text-center">Academic publications</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Odessa National Medical University<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14180&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14180" data-target="#list_ftid14180"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14180">
+			    <li><strong>URL: </strong><a href="https://repo.odmu.edu.ua" target="_blank" >https://repo.odmu.edu.ua</a></li><li><strong>Research Organization Registry (ROR):</strong> <a href="https://ror.org/0110at529" target="_blank" rel="noopener" class="link1">Odessa National Medical University</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Ukraine</li><li><strong>Number of documents: </strong>15778<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>Hochschulpublikationen</li><li><strong>System: </strong>DSpace XOAI</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14180&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14180</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14180&amp;refid=dctableen ">15.778</a></td><td class="text-center"></td><td class="text-center">ua<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/UA.png" alt="Ukraine" aria-label="Flag of Ukraine"  data-tooltip="Ukraine" /></span></td><td class="text-center">DSpace XOAI</td><td class="text-center">Academic publications</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Revista da Extensão da UFRGS<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14201&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14201" data-target="#list_ftid14201"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14201">
+			    <li><strong>URL: </strong><a href="https://seer.ufrgs.br/revext" target="_blank" >https://seer.ufrgs.br/revext</a></li><li><strong>Research Organization Registry (ROR):</strong> <a href="https://ror.org/01z9cds67" target="_blank" rel="noopener" class="link1">https://ror.org/01z9cds67</a></li><li><strong>Continent: </strong>South America</li><li><strong>Country: </strong>Brazil</li><li><strong>Number of documents: </strong>355<br /><strong>davon Open Access</strong>: 355 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14201&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14201</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14201&amp;refid=dctableen ">355</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14201&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">br<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/BR.png" alt="Brazil" aria-label="Flag of Brazil"  data-tooltip="Brazil" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">SCOPUA Books<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14209&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14209" data-target="#list_ftid14209"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14209">
+			    <li><strong>URL: </strong><a href="https://books.scopua.com" target="_blank" >https://books.scopua.com</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Pakistan</li><li><strong>Number of documents: </strong>1<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>E-Books</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14209&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14209</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14209&amp;refid=dctableen ">1</a></td><td class="text-center"></td><td class="text-center">pk<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/PK.png" alt="Pakistan" aria-label="Flag of Pakistan"  data-tooltip="Pakistan" /></span></td><td class="text-center">OJS</td><td class="text-center">E-books</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">Wah Academia Journal of Health and Nutrition<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14217&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14217" data-target="#list_ftid14217"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14217">
+			    <li><strong>URL: </strong><a href="https://wajhn.com/" target="_blank" >https://wajhn.com/</a></li><li><strong>Continent: </strong>Asia</li><li><strong>Country: </strong>Pakistan</li><li><strong>Number of documents: </strong>6<br /><strong>davon Open Access</strong>: 6 (100%)</li><li><strong>Type: </strong>E-Journal</li><li><strong>System: </strong>OJS</li><li><strong>In BASE since: </strong><time datetime="2025-05-20">2025-05-20</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14217&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14217</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14217&amp;refid=dctableen ">6</a></td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14217&amp;refid=dctableen"><img src="../images/open_access.png" width="10" height="16" alt="" data-tooltip="Open Access" /> [100%]</a></td><td class="text-center">pk<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/PK.png" alt="Pakistan" aria-label="Flag of Pakistan"  data-tooltip="Pakistan" /></span></td><td class="text-center">OJS</td><td class="text-center">E-journal</td><td class="text-center"><time datetime="2025-05-20">2025-05-20</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">PPCU Repository of Dissertations<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14197&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14197" data-target="#list_ftid14197"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14197">
+			    <li><strong>URL: </strong><a href="https://disszertacio.ppke.hu" target="_blank" >https://disszertacio.ppke.hu</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Hungary</li><li><strong>Number of documents: </strong>581<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>Publikationen</li><li><strong>System: </strong>Eprints 3</li><li><strong>In BASE since: </strong><time datetime="2025-05-19">2025-05-19</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14197&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14197</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14197&amp;refid=dctableen ">581</a></td><td class="text-center"></td><td class="text-center">hu<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/HU.png" alt="Hungary" aria-label="Flag of Hungary"  data-tooltip="Hungary" /></span></td><td class="text-center">Eprints 3</td><td class="text-center">Publications</td><td class="text-center"><time datetime="2025-05-19">2025-05-19</time></td></tr><tr class="border-top-grau"><td class="border-right-grau"><div class="ContentProvider">PPCU Repository of Publications<span class="text-nowrap">&nbsp;<a href="about_source.php?&subpage=about_sources_date.php&id=14202&back=about_sources_date.php&sort=date&order=desc&show=20&page=1&search_source=&search_country=&search_date=&search_system=" onclick="this.href=''; SourceDetails(this); return false;" data-toggle="collapse" aria-expanded="false" aria-controls="list_ftid14202" data-target="#list_ftid14202"><span class="fas fa-question-circle" data-tooltip="Further information" ></span><span class="sr-only">Further information about content provider</span></a></span></div><ul class="TabSourcesUl" id="list_ftid14202">
+			    <li><strong>URL: </strong><a href="https://publikacio.ppke.hu" target="_blank" >https://publikacio.ppke.hu</a></li><li><strong>Research Organization Registry (ROR):</strong> <a href="https://ror.org/05v9kya57" target="_blank" rel="noopener" class="link1">Pázmány Péter Catholic University</a></li><li><strong>Continent: </strong>Europe</li><li><strong>Country: </strong>Hungary</li><li><strong>Number of documents: </strong>2529<br /><strong>davon Open Access</strong>: unknown</li><li><strong>Type: </strong>Publikationen</li><li><strong>System: </strong>Eprints 3</li><li><strong>In BASE since: </strong><time datetime="2025-05-19">2025-05-19</time></li><li><strong>BASE URL: </strong><a href="//www.base-search.net/Search/Results?q=coll:ftid14202&amp;refid=dctableen" >https://www.base-search.net/Search/Results?q=coll:ftid14202</a></li></li>
+			  </ul>  
+			  </td><td class="text-center"><a href="//www.base-search.net/Search/Results?q=coll:ftid14202&amp;refid=dctableen ">2.529</a></td><td class="text-center"></td><td class="text-center">hu<span class="text-nowrap">&nbsp;<img style="margin-top:-2px;" src="../images/flags/HU.png" alt="Hungary" aria-label="Flag of Hungary"  data-tooltip="Hungary" /></span></td><td class="text-center">Eprints 3</td><td class="text-center">Publications</td><td class="text-center"><time datetime="2025-05-19">2025-05-19</time></td></tr>                                                                </tbody>
+                                                            </table>
+                                                    </form>
+                                                    <nav aria-label="Page navigation" id="PagerBottom" class="margin-bottom1-5">		
+                                                    <ul class="pagination"><li class="active"><span><span class="sr-only">Current Page: </span><strong>1</strong></span></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=2" onclick="this.href=''; AjaxReq4Sources('page=2&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 2">2</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=3" onclick="this.href=''; AjaxReq4Sources('page=3&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 3">3</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=4" onclick="this.href=''; AjaxReq4Sources('page=4&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 4">4</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=5" onclick="this.href=''; AjaxReq4Sources('page=5&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 5">5</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=6" onclick="this.href=''; AjaxReq4Sources('page=6&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 6">6</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=7" onclick="this.href=''; AjaxReq4Sources('page=7&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 7">7</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=8" onclick="this.href=''; AjaxReq4Sources('page=8&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 8">8</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=9" onclick="this.href=''; AjaxReq4Sources('page=9&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 9">9</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=10" onclick="this.href=''; AjaxReq4Sources('page=10&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 10">10</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=11" onclick="this.href=''; AjaxReq4Sources('page=11&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 11">11</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=12" onclick="this.href=''; AjaxReq4Sources('page=12&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 12">12</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=13" onclick="this.href=''; AjaxReq4Sources('page=13&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 13">13</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=14" onclick="this.href=''; AjaxReq4Sources('page=14&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 14">14</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=15" onclick="this.href=''; AjaxReq4Sources('page=15&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Page 15">15</a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=2" onclick="this.href=''; AjaxReq4Sources('page=2&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Next Page"><img src="../images/pfeil_gruen_rechts.png" alt="Next Page" /></a></li><li><a href="about_sources_date.php?&amp;country=&amp;sort=date&amp;order=desc&amp;search_source=&amp;search_country=&amp;search_date=&amp;search_system=&amp;type=&amp;page=591" onclick="this.href=''; AjaxReq4Sources('page=591&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1'); return false;" title="Last Page">[591]</a></li><li><a onclick="this.href=''; show='all'; AjaxReq4Sources('&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&ajax=1&show=all'); return false;" href="about_sources_date.php?&country=&sort=date&order=desc&search_source=&search_country=&search_date=&search_system=&type=&amp;show=all"> All</a></li></ul>                                                </nav>
+					</div>
+				</div>
+			</main>
+                </div>
+                <!-- =================== Ende von container =================== -->  
+
+		<!-- =================== Footer =================== --> 
+			<!-- en/footer.php -->
+	<!-- =================== Footer =================== -->
+    <footer id="FooterNavSkip">
+    	<div class="container" id="footer-box">
+    		<div class="orange-linie"></div>
+	        <div class="row col-sm-offset-1 col-sm-10">
+		          <div class="col-xs-4 col-sm-1">
+		            <h2>About BASE</h2>
+		            <ul>
+		              <li><a href="index.php">What is BASE?</a></li>
+		              <li><a href="about_sources_date.php">Content providers</a></li>
+		              <li><a href="about_statistics.php">Statistics</a></li>
+		              <li><a href="about_team.php">Team</a></li>
+		              <li><a href="contact.php">Contact</a></li>
+		              <li><a href="privacy_statement.php">Privacy statement</a></li>
+		              <li><a href="legal_notice.php">Legal notice</a></li>
+		            </ul>
+		          </div>
+		          <div class="col-xs-4 col-sm-2">
+		            <h2>Services / How To</h2>
+		            <ul>
+		              <li><a href="suggest.php">Become a content provider</a></li>
+		              <li><a href="faq_oai.php">Golden Rules</a></li>
+		              <li><a href="https://oval.base-search.net/" target="_blank" rel="noopener">Validate your source (OVAL)</a></li>
+		              <li><a href="faq.php#claim">Add ORCID iD</a></li>
+		              <li><a href="https://api.base-search.net/" target="_blank" rel="noopener">HTTP interface</a></li>
+		              <li><a href="http://oai.base-search.net/" target="_blank" rel="noopener">OAI interface</a></li>
+		              <li><a href="about_develop.php">Further tools</a></li>
+		            </ul>
+		          </div>
+		          <div class="col-xs-4 col-sm-3">
+		            <h2>Further information</h2>
+		            <ul>
+		              <li><a href="help.php">Help</a></li>
+		              <li><a href="faq.php">FAQ</a></li>
+					  <li><a href="about_publications.php">Publications</a></li>
+		              <li><a href="https://openbiblio.social/@base" target="_blank" rel="me noopener">Mastodon</a></li>
+		              <li><a href="about_infomat.php">Logos / Downloads</a></li>
+		              <li><a href="https://www.uni-bielefeld.de/ub/barrierefreiheit/base/" target="_blank" rel="noopener">Accessibility</a></li>
+		            </ul>
+		          </div>
+		    	  <div class="clearfix visible-xs"></div>
+		          <div class="col-sm-4" id="logos-box">
+		              <p class="margin-top0-5"><img id="logo-uni-ub" src="../images/logoverbund_ub_transp.png" alt="" usemap="#Map"></p>
+		              <map name="Map" id="Map" >
+		 				<area shape="rect" coords="0,0,235,60" href="https://www.uni-bielefeld.de" target="_blank" rel="noopener" alt="Logo of Bielefeld University" />
+		  				<area shape="rect" coords="0,60,240,107" href="https://www.ub.uni-bielefeld.de" target="_blank" rel="noopener" alt="Logo of Bielefeld University Library" />
+		              </map>
+		              <p><a href="https://orcid.org" target="_blank" rel="noopener"><img id="logo-orcid" src="../images/logo_orcid_member.png" alt="Logo of ORCID"/></a></p>
+		              <div id="badges-box">
+		              	<a href="faq.php#orcid_badges" title="ORCID Collect & Connect badges">
+			              	<p><img id="orcid-badge1" src="../images/orcid_badge1.png" alt="ORCID Collect & Connect badge - Authenticate" /></p>
+			              	<p><img id="orcid-badge2" src="../images/orcid_badge2.png" alt="ORCID Collect & Connect badge - Display" /></p>
+			              	<p><img id="orcid-badge3" src="../images/orcid_badge3.png" alt="ORCID Collect & Connect badge - Connect" /></p>
+		              	</a>
+		          	  </div>
+		          </div>
+	        </div>
+	        <div class="row col-sm-offset-1 col-sm-10" id="copyright">
+          		<p>&copy; by <a href="http://www.ub.uni-bielefeld.de/" target="_blank" rel="noopener">Bielefeld University Library</a> <time datetime="2004">2004</time><span class="sr-only"> to </span>-<time datetime="2025">2025</time> | Powered by <a href="http://lucene.apache.org/solr/" target="_blank" rel="noopener">SolrCloud</a> &amp; <a href="http://vufind.org/" target="_blank" rel="noopener">VuFind</a></p>
+	        </div>
+    	</div>
+    </footer>
+
+ 	 	<script src="../js/bootstrap/bootstrap.min.js"></script>
+    <script src="../js/jquery/jquery-ui.1.12.1.min.js"></script>
+	<script src="../js/base_footer.js"></script>
+  	
+ 	</div>
+</body>
+</html>
