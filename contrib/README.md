@@ -1025,3 +1025,17 @@ $ cat links.txt | LC_ALL=C grep '.*/index.php/[^/]*/article' | \
     LC_ALL=C sort -S30% -u > crossref-possibly-oai-2024-04-25.txt
 ```
 
+## Base OJS
+
+```
+$ cat ../extra/base/providers/base-providers-2025-06-01.json | \
+    jq -rc 'select(.system=="OJS") | .url' |
+    parallel ./ojslist.sh > candidates.txt
+
+$ grep -v ' ' candidates.txt | grep -v worldcat | sponge candidates.txt
+$ wc -l candidates.txt
+28122
+```
+
+Net additions: 1738
+
