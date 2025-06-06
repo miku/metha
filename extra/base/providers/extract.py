@@ -4,8 +4,6 @@
 # dependencies = ["bs4"]
 # ///
 
-#!/usr/bin/env python3
-
 import json
 import re
 import sys
