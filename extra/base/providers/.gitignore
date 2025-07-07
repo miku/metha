@@ -1,2 +1,3 @@
 *.duckdb
 *.duckdb.wal
+wspcm.py
