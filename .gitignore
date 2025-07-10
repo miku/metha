@@ -5,3 +5,5 @@ metha*.rpm
 /TODO.md
 /tmp
 *.pprof
+
+.venv
