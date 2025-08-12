@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["bs4"]
+# dependencies = ["bs4", "requests"]
 # ///
 
 import json
@@ -15,6 +15,240 @@ from pathlib import Path
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from bs4 import BeautifulSoup
+import requests
+import hashlib
+from urllib.parse import urljoin, urlencode
+from requests.adapters import HTTPAdapter
+
+# Anubis Adapter
+
+"""
+Anubis HTTPAdapter for requests library
+Automatically detects and solves Anubis challenges transparently
+"""
+
+
+
+class AnubisHTTPAdapter(HTTPAdapter):
+    """
+    HTTPAdapter that automatically handles Anubis proof-of-work challenges.
+
+    Usage:
+        session = requests.Session()
+        adapter = AnubisHTTPAdapter()
+        session.mount('https://', adapter)  # Mount for all HTTPS requests
+        # or mount for specific domain:
+        # session.mount('https://protected-site.com', adapter)
+
+        response = session.get('https://protected-site.com/api/data')
+        # Anubis challenges will be automatically solved
+    """
+
+    def __init__(self, max_retries=1, **kwargs):
+        super().__init__(**kwargs)
+        self.max_retries = max_retries
+
+    def send(
+        self, request, stream=False, timeout=None, verify=None, cert=None, proxies=None
+    ):
+        """Override send to intercept responses and handle Anubis challenges"""
+        # Send the original request
+        response = super().send(request, stream, timeout, verify, cert, proxies)
+
+        # Check if it's an Anubis challenge
+        if self._is_anubis_challenge(response):
+            print(f"Anubis challenge detected for {request.url}")
+
+            # Solve the challenge and get a new response
+            solved_response = self._solve_anubis_challenge(response, request)
+            if solved_response:
+                return solved_response
+
+        return response
+
+    def _is_anubis_challenge(self, response):
+        """Detect if the response contains an Anubis challenge"""
+        if response.status_code != 200:
+            return False
+
+        try:
+            content = response.text.lower()
+            return (
+                "anubis" in content
+                and "making sure you" in content
+                and "not a bot" in content
+                and "anubis_challenge" in content
+            )
+        except:
+            return False
+
+    def _extract_challenge_data(self, html_content):
+        """Extract challenge data from HTML"""
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        # Extract challenge data
+        challenge_script = soup.find("script", id="anubis_challenge")
+        if not challenge_script:
+            raise ValueError("Could not find anubis_challenge script tag")
+
+        challenge_data = json.loads(challenge_script.string.strip())
+
+        # Extract base prefix
+        prefix_script = soup.find("script", id="anubis_base_prefix")
+        if not prefix_script:
+            raise ValueError("Could not find anubis_base_prefix script tag")
+
+        base_prefix = json.loads(prefix_script.string.strip())
+
+        return challenge_data, base_prefix
+
+    def _solve_pow(self, challenge, difficulty):
+        """Solve the proof-of-work challenge"""
+        print(f"Solving PoW challenge with difficulty: {difficulty}")
+
+        nonce = 0
+        start_time = time.time()
+
+        while True:
+            # Create the string to hash: challenge + nonce
+            test_string = challenge + str(nonce)
+
+            # Calculate SHA-256 hash
+            hash_bytes = hashlib.sha256(test_string.encode()).digest()
+            hash_hex = hash_bytes.hex()
+
+            # Check if hash starts with enough zeros
+            if hash_hex.startswith("0" * difficulty):
+                elapsed = time.time() - start_time
+                print(
+                    f"Found solution! Nonce: {nonce} in {elapsed:.2f}s ({nonce / elapsed:.0f} H/s)"
+                )
+                return hash_hex, nonce
+
+            nonce += 1
+
+            # Progress indicator every 50000 iterations
+            if nonce % 50000 == 0:
+                elapsed = time.time() - start_time
+                if elapsed > 0:
+                    rate = nonce / elapsed
+                    print(f"Progress: {nonce} iterations, {rate:.0f} H/s")
+
+    def _solve_anubis_challenge(self, challenge_response, original_request):
+        """Solve the Anubis challenge and return the final response"""
+        try:
+            # Extract challenge data
+            challenge_data, base_prefix = self._extract_challenge_data(
+                challenge_response.text
+            )
+
+            # Get challenge parameters
+            rules = challenge_data["rules"]
+            challenge = challenge_data["challenge"]
+            difficulty = rules["difficulty"]
+
+            # Solve the proof-of-work
+            start_time = time.time()
+            response_hash, nonce = self._solve_pow(challenge, difficulty)
+            elapsed_time = time.time() - start_time
+
+            # Submit the solution
+            return self._submit_solution(
+                challenge_response.url,
+                base_prefix,
+                response_hash,
+                nonce,
+                original_request.url,
+                elapsed_time,
+            )
+
+        except Exception as e:
+            print(f"Failed to solve Anubis challenge: {e}")
+            return challenge_response
+
+    def _submit_solution(
+        self, base_url, base_prefix, response_hash, nonce, redirect_url, elapsed_time
+    ):
+        """Submit the proof-of-work solution"""
+        # Construct the submission URL
+        if base_prefix:
+            api_path = f"{base_prefix}/.within.website/x/cmd/anubis/api/pass-challenge"
+        else:
+            api_path = "/.within.website/x/cmd/anubis/api/pass-challenge"
+
+        submit_url = urljoin(base_url, api_path)
+
+        # Parameters for the submission
+        params = {
+            "response": response_hash,
+            "nonce": str(nonce),
+            "redir": redirect_url,
+            "elapsedTime": str(int(elapsed_time * 1000)),  # Convert to milliseconds
+        }
+
+        submit_url_with_params = f"{submit_url}?{urlencode(params)}"
+        print("Submitting solution...")
+
+        # Make the submission request using the same session
+        response = self.session.get(submit_url_with_params, allow_redirects=True)
+
+        print(f"Challenge solved! Status: {response.status_code}")
+        return response
+
+
+# Convenience function to create a session with Anubis handling
+def create_anubis_session():
+    """Create a requests session with Anubis challenge handling enabled"""
+    session = requests.Session()
+    adapter = AnubisHTTPAdapter()
+
+    # Mount for all HTTPS requests
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+
+    return session
+
+
+# Example usage
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: python anubis_adapter.py <url>")
+        sys.exit(1)
+
+    url = sys.argv[1]
+
+    # Method 1: Using the convenience function
+    print("=== Using convenience function ===")
+    session = create_anubis_session()
+    response = session.get(url)
+    print(f"Status: {response.status_code}")
+    print(f"Content length: {len(response.text)}")
+
+    print("\n" + "=" * 50)
+    print("RESPONSE CONTENT:")
+    print("=" * 50)
+    print(response.text[:500])
+    if len(response.text) > 500:
+        print("... (truncated)")
+
+    # Method 2: Manual mounting (commented out)
+    """
+    print("\n=== Manual mounting example ===")
+    session = requests.Session()
+    adapter = AnubisHTTPAdapter()
+
+    # Mount only for specific domain
+    session.mount('https://protected-site.com', adapter)
+
+    response = session.get(url)
+    print(f"Status: {response.status_code}")
+    """
+
+
+# extraction script
+# =================
 
 
 def get_cache_dir():
