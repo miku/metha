@@ -10,6 +10,8 @@ Vendor:     Leipzig University Library, https://www.ub.uni-leipzig.de
 URL:        https://github.com/miku/metha
 Source:     %{name}.tar.gz
 
+%define _binary_payload w1.zstdio
+
 %description
 
 No frills incremental OAI harvesting for the command line.

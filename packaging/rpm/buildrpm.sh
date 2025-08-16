@@ -25,7 +25,7 @@ if [ -d ${1} ] ;then
 fi
 
 # build the package
-fakeroot rpmbuild -ba ../SPECS/${1}.spec || { echo >&2 "error: rpmbuild failed"; exit 1; }
+fakeroot rpmbuild -ba --without debuginfo ../SPECS/${1}.spec || { echo >&2 "error: rpmbuild failed"; exit 1; }
 
 # if there is a directory, then delete the .tar.gz again
 if [ -d ${1} ] ;then

@@ -51,7 +51,7 @@ rpm: $(TARGETS)
 	cp docs/$(PKGNAME).1 $(HOME)/rpmbuild/SOURCES/metha
 	cp extra/linux/metha.service $(HOME)/rpmbuild/SOURCES/metha
 	./packaging/rpm/buildrpm.sh $(PKGNAME)
-	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)*.rpm .
+	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)-$(VERSION)*.rpm .
 
 .PHONY: update-version
 update-version:
