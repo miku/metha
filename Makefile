@@ -12,7 +12,7 @@ PKGNAME = metha
 all: $(TARGETS)
 
 $(TARGETS): %: cmd/%/main.go contrib/sites.tsv $(GO_FILES)
-	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags="-w -s" -o $@ $<
+	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ $<
 
 .PHONY: test
 test:
@@ -42,11 +42,14 @@ deb: $(TARGETS)
 
 .PHONY: rpm
 rpm: $(TARGETS)
+	# on deb based distros, you may need:
+	# sudo rpm --initdb && sudo chmod -R a+r /var/lib/rpm/
 	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
+	mkdir -p $(HOME)/rpmbuild/SOURCES/metha
 	cp ./packaging/rpm/$(PKGNAME).spec $(HOME)/rpmbuild/SPECS
-	cp $(TARGETS) $(HOME)/rpmbuild/BUILD
-	cp docs/$(PKGNAME).1 $(HOME)/rpmbuild/BUILD
-	cp extra/linux/metha.service $(HOME)/rpmbuild/BUILD
+	cp $(TARGETS) $(HOME)/rpmbuild/SOURCES/metha
+	cp docs/$(PKGNAME).1 $(HOME)/rpmbuild/SOURCES/metha
+	cp extra/linux/metha.service $(HOME)/rpmbuild/SOURCES/metha
 	./packaging/rpm/buildrpm.sh $(PKGNAME)
 	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)*.rpm .
 

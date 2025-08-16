@@ -8,18 +8,22 @@ BuildRoot:  %{_tmppath}/%{name}-build
 Group:      System/Base
 Vendor:     Leipzig University Library, https://www.ub.uni-leipzig.de
 URL:        https://github.com/miku/metha
+Source:     %{name}.tar.gz
 
 %description
 
 No frills incremental OAI harvesting for the command line.
 
 %prep
+%setup -q -n metha
 
 %build
+# Nothing to build - precompiled binaries
 
 %pre
 
 %install
+
 mkdir -p $RPM_BUILD_ROOT/usr/local/bin
 install -m 755 metha-cat $RPM_BUILD_ROOT/usr/local/bin
 install -m 755 metha-id $RPM_BUILD_ROOT/usr/local/bin
@@ -27,12 +31,12 @@ install -m 755 metha-sync $RPM_BUILD_ROOT/usr/local/bin
 install -m 755 metha-ls $RPM_BUILD_ROOT/usr/local/bin
 install -m 755 metha-files $RPM_BUILD_ROOT/usr/local/bin
 install -m 755 metha-fortune $RPM_BUILD_ROOT/usr/local/bin
-
 mkdir -p $RPM_BUILD_ROOT/usr/local/share/man/man1
 install -m 644 metha.1 $RPM_BUILD_ROOT/usr/local/share/man/man1/metha.1
-
 mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system
 install -m 644 metha.service $RPM_BUILD_ROOT/usr/lib/systemd/system/metha.service
+
+
 %post
 
 %clean

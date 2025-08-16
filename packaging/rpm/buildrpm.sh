@@ -1,6 +1,9 @@
 #!/bin/bash
 
-hash rpmbuild 2> /dev/null || { echo >&2 "[EE] rpmbuild executable required"; exit 1; }
+set -eu -o pipefail
+
+hash rpmbuild 2> /dev/null || { echo >&2 "error: rpmbuild executable required"; exit 1; }
+hash fakeroot 2> /dev/null || { echo >&2 "error: fakeroot executable required"; exit 1; }
 
 if [ -z "$1" ];then
    echo "You didn't specify anything to build";
@@ -22,7 +25,7 @@ if [ -d ${1} ] ;then
 fi
 
 # build the package
-rpmbuild -ba ../SPECS/${1}.spec
+fakeroot rpmbuild -ba ../SPECS/${1}.spec || { echo >&2 "error: rpmbuild failed"; exit 1; }
 
 # if there is a directory, then delete the .tar.gz again
 if [ -d ${1} ] ;then
