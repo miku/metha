@@ -127,7 +127,8 @@ func processDirectory(path string, stats *Stats) {
 	if *dryRun {
 		stats.ProcessedDirs++
 		stats.BytesSaved += int64(len(compressedFiles)-1) * 4096
-		fmt.Printf("[%d] %s: ✓ packed %d files -> %s (DRY RUN)\n", stats.TotalDirs, filepath.Base(path), len(compressedFiles), latestFile)
+		fileCount := colorizeFileCount(len(compressedFiles))
+		fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s files -> %s (DRY RUN)\n", stats.TotalDirs, filepath.Base(path), fileCount, latestFile)
 		return
 	}
 
@@ -157,7 +158,8 @@ func processDirectory(path string, stats *Stats) {
 
 	stats.ProcessedDirs++
 	stats.BytesSaved += int64(deletedCount) * 4096
-	fmt.Printf("[%d] %s: ✓ packed %d files, deleted %d files -> %s\n", stats.TotalDirs, filepath.Base(path), len(compressedFiles), deletedCount, latestFile)
+	fileCount := colorizeFileCount(len(compressedFiles))
+	fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s files, deleted %d files -> %s\n", stats.TotalDirs, filepath.Base(path), fileCount, deletedCount, latestFile)
 }
 
 func sortFilesByDate(files []string) {
@@ -217,4 +219,17 @@ func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string
 	}
 
 	return true
+}
+
+func colorizeFileCount(count int) string {
+	var color string
+	switch {
+	case count < 500:
+		color = "\033[33m" // yellow - small batches
+	case count < 1000:
+		color = "\033[36m" // cyan - medium batches
+	default:
+		color = "\033[35m" // magenta - large batches
+	}
+	return fmt.Sprintf("%s%d\033[0m", color, count)
 }
