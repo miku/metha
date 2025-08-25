@@ -1798,3 +1798,8 @@ http://acikerisim.isikun.edu.tr/oai/request
 http://acikerisim.kirklareli.edu.tr:8080/oai/request
 http://acikerisim.klu.edu.tr/oai/request
 http://acikerisim.ktu.edu.tr/oai/request
+http://ir.mksu.ac.ke/oai/request
+http://ir.mu.ac.ke:8080/oai/request
+http://ir.niist.res.in:8080/oai/request
+http://ir.polissiauniver.edu.ua/oai/request
+http://ir.stu.cn.ua/oai/request
