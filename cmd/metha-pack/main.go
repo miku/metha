@@ -1,3 +1,8 @@
+// metha-pack iterates over all harvested files and will compact them per
+// endpoint into a single file. This should improve read speeds for
+// snapshotting.
+//
+// This is mostly LLM generated code, and not officially supported yet.
 package main
 
 import (
