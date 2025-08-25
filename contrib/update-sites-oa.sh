@@ -6,12 +6,9 @@
 # TODO: Add, http://roar.eprints.org/listfriends.xml
 set -e
 set -o pipefail
-# Check if ANTIWAF environment variable is set to 1 and waffle is available
+
 HTTP_CLIENT="curl"
-if [ "${ANTIWAF:-0}" = "1" ] && command -v waffle >/dev/null 2>&1; then
-    HTTP_CLIENT="waffle"
-    echo "Using waffle for HTTP requests (with WAF protection handling)"
-fi
+
 for prog in xmlstarlet $HTTP_CLIENT; do
         command -v $prog >/dev/null 2>&1 || {
                 echo >&2 "$prog required"
