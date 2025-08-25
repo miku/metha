@@ -1707,3 +1707,13 @@ https://repositorio.uchile.cl/oai/request
 https://repositorio.uci.cu/oai/request
 https://repositorio.ucjc.edu/oai/request
 https://repositorio.ucm.edu.co/oai/request
+http://bdm.ufmt.br/oai/request
+http://bdor.sibi.ufrj.br/oai/request
+http://openaccess.dogus.edu.tr/oai/request
+http://dspace.wunu.edu.ua/oai/request
+http://dspace.xmu.edu.cn/oai/request
+http://dspace.zsea.edu.ua/oai/request
+http://dsp.tecnalia.com/oai/request
+http://193.105.7.137/oai/request
+http://openaccess.ihu.edu.tr/oai/request
+http://dspace-s.msu.edu.ua:8080/oai/request
