@@ -42,7 +42,7 @@ func main() {
 		root = *baseDir
 	}
 
-	fmt.Fprintf(os.Stderr, "Analyzing directory structure: %s\n", root)
+	fmt.Fprintf(os.Stderr, "analyzing directory structure: %s\n", root)
 
 	stats := &Stats{}
 	if *dryRun {
@@ -52,6 +52,10 @@ func main() {
 	// Process directories in streaming fashion - only walk dirs, not individual files
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
+			// Ignore "no such file" errors - we may have deleted files during processing
+			if os.IsNotExist(err) {
+				return nil
+			}
 			return err
 		}
 		if !info.IsDir() {
@@ -60,27 +64,21 @@ func main() {
 		if path == root {
 			return nil
 		}
-
 		stats.TotalDirs++
-		if stats.TotalDirs%100 == 0 {
-			fmt.Fprintf(os.Stderr, "Processed %d directories...\n", stats.TotalDirs)
-		}
-
 		processDirectory(path, stats)
 		return nil
 	})
 
 	if err != nil {
-		log.Fatalf("Error walking directories: %v", err)
+		log.Fatalf("error walking directories: %v", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "\n=== Final Statistics ===\n")
-	fmt.Fprintf(os.Stderr, "Directories processed: %d/%d\n", stats.ProcessedDirs, stats.TotalDirs)
-	fmt.Fprintf(os.Stderr, "Directories skipped: %d\n", stats.SkippedDirs)
-	fmt.Fprintf(os.Stderr, "Files packed: %d\n", stats.PackedFiles)
-	fmt.Fprintf(os.Stderr, "Total files before: %d\n", stats.TotalFiles)
+	fmt.Fprintf(os.Stderr, "directories processed: %d/%d\n", stats.ProcessedDirs, stats.TotalDirs)
+	fmt.Fprintf(os.Stderr, "directories skipped: %d\n", stats.SkippedDirs)
+	fmt.Fprintf(os.Stderr, "files packed: %d\n", stats.PackedFiles)
+	fmt.Fprintf(os.Stderr, "total files before: %d\n", stats.TotalFiles)
 	if stats.BytesSaved > 0 {
-		fmt.Fprintf(os.Stderr, "Estimated metadata overhead saved: %.2f MB\n", float64(stats.BytesSaved)/(1024*1024))
+		fmt.Fprintf(os.Stderr, "estimated metadata overhead saved: %.2f MB\n", float64(stats.BytesSaved)/(1024*1024))
 	}
 }
 
@@ -92,7 +90,7 @@ func processDirectory(path string, stats *Stats) {
 	files, err := os.ReadDir(path)
 	if err != nil {
 		if *verbose {
-			log.Printf("Warning: cannot read directory %s: %v", path, err)
+			log.Printf("warning: cannot read directory %s: %v", path, err)
 		}
 		stats.SkippedDirs++
 		return
@@ -108,7 +106,7 @@ func processDirectory(path string, stats *Stats) {
 
 	if len(compressedFiles) < *minFiles {
 		if *verbose {
-			log.Printf("Skipped %s: only %d files (minimum: %d)", filepath.Base(path), len(compressedFiles), *minFiles)
+			log.Printf("skipped %s: only %d files (minimum: %d)", filepath.Base(path), len(compressedFiles), *minFiles)
 		}
 		stats.SkippedDirs++
 		return
@@ -118,14 +116,13 @@ func processDirectory(path string, stats *Stats) {
 	sortFilesByDate(compressedFiles)
 	latestFile := compressedFiles[len(compressedFiles)-1]
 
-	log.Printf("Processing %s: packing %d files into %s", filepath.Base(path), len(compressedFiles), latestFile)
-
 	stats.TotalFiles += len(compressedFiles)
 	stats.PackedFiles += len(compressedFiles)
 
 	if *dryRun {
 		stats.ProcessedDirs++
 		stats.BytesSaved += int64(len(compressedFiles)-1) * 4096
+		fmt.Printf("[%d] %s: ✓ packed %d files -> %s (DRY RUN)\n", stats.TotalDirs, filepath.Base(path), len(compressedFiles), latestFile)
 		return
 	}
 
@@ -145,7 +142,7 @@ func processDirectory(path string, stats *Stats) {
 			fullPath := filepath.Join(path, filename)
 			if err := os.Remove(fullPath); err != nil {
 				if *verbose {
-					log.Printf("Warning: failed to delete %s: %v", fullPath, err)
+					log.Printf("warning: failed to delete %s: %v", fullPath, err)
 				}
 			} else {
 				deletedCount++
@@ -155,7 +152,7 @@ func processDirectory(path string, stats *Stats) {
 
 	stats.ProcessedDirs++
 	stats.BytesSaved += int64(deletedCount) * 4096
-	log.Printf("✓ Packed %d files, deleted %d files in %s", len(compressedFiles), deletedCount, filepath.Base(path))
+	fmt.Printf("[%d] %s: ✓ packed %d files, deleted %d files -> %s\n", stats.TotalDirs, filepath.Base(path), len(compressedFiles), deletedCount, latestFile)
 }
 
 func sortFilesByDate(files []string) {
@@ -175,7 +172,7 @@ func sortFilesByDate(files []string) {
 func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string) bool {
 	out, err := os.Create(tmpPath)
 	if err != nil {
-		log.Printf("Error creating temp file: %v", err)
+		log.Printf("error creating temp file: %v", err)
 		return false
 	}
 
@@ -184,7 +181,7 @@ func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string
 		fullPath := filepath.Join(dir, filename)
 		in, err := os.Open(fullPath)
 		if err != nil {
-			log.Printf("Error opening %s: %v", fullPath, err)
+			log.Printf("error opening %s: %v", fullPath, err)
 			success = false
 			in.Close() // safe to call on nil
 			break
@@ -194,7 +191,7 @@ func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string
 		in.Close() // explicit close, no defer
 
 		if err != nil {
-			log.Printf("Error copying %s: %v", fullPath, err)
+			log.Printf("error copying %s: %v", fullPath, err)
 			success = false
 			break
 		}
@@ -209,7 +206,7 @@ func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string
 
 	// Atomic replace
 	if err := os.Rename(tmpPath, targetPath); err != nil {
-		log.Printf("Error replacing file: %v", err)
+		log.Printf("error replacing file: %v", err)
 		os.Remove(tmpPath) // cleanup on failure
 		return false
 	}
