@@ -49,12 +49,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "DRY RUN MODE - no files will be modified\n")
 	}
 
-	// Process directories in streaming fashion
+	// Process directories in streaming fashion - only walk dirs, not individual files
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() || path == root {
+		if !info.IsDir() {
+			return nil // Skip files entirely - we handle them in processDirectory
+		}
+		if path == root {
 			return nil
 		}
 
