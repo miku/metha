@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,7 +44,52 @@ var (
 	maxRetries                 = flag.Int("r", 10, "max number of retries")
 	keepTemporaryFiles         = flag.Bool("k", false, "keep temporary files when interrupted")
 	ignoreUnexpectedEOF        = flag.Bool("ignore-unexpected-eof", false, "ignore unexpected EOF")
+	rateLimit                  = flag.String("rate-limit", "", "download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable")
 )
+
+// parseRateLimit converts a human-readable rate limit string to bytes per second
+func parseRateLimit(input string) (float64, error) {
+	if input == "" || input == "0" {
+		return 0, nil
+	}
+
+	// Remove '/s' suffix if present (e.g., "1MB/s" -> "1MB")
+	input = strings.TrimSuffix(strings.ToUpper(input), "/S")
+
+	// Check for unit suffixes
+	multiplier := 1.0
+	var numStr string
+
+	if strings.HasSuffix(input, "KB") {
+		multiplier = 1024
+		numStr = strings.TrimSuffix(input, "KB")
+	} else if strings.HasSuffix(input, "MB") {
+		multiplier = 1024 * 1024
+		numStr = strings.TrimSuffix(input, "MB")
+	} else if strings.HasSuffix(input, "GB") {
+		multiplier = 1024 * 1024 * 1024
+		numStr = strings.TrimSuffix(input, "GB")
+	} else if strings.HasSuffix(input, "K") {
+		multiplier = 1024
+		numStr = strings.TrimSuffix(input, "K")
+	} else if strings.HasSuffix(input, "M") {
+		multiplier = 1024 * 1024
+		numStr = strings.TrimSuffix(input, "M")
+	} else if strings.HasSuffix(input, "G") {
+		multiplier = 1024 * 1024 * 1024
+		numStr = strings.TrimSuffix(input, "G")
+	} else {
+		// No unit, assume bytes
+		numStr = input
+	}
+
+	rate, err := strconv.ParseFloat(numStr, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid rate limit format: %s", input)
+	}
+
+	return rate * multiplier, nil
+}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -62,6 +108,17 @@ func main() {
 	if flag.NArg() == 0 {
 		log.Fatalf("An endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 	}
+
+	// Parse rate limit
+	rateLimitBytesPerSec, err := parseRateLimit(*rateLimit)
+	if err != nil {
+		log.Fatalf("Invalid rate limit: %v", err)
+	}
+	if rateLimitBytesPerSec > 0 {
+		log.Printf("Rate limiting enabled: %.2f bytes/sec (%.2f KB/s)",
+			rateLimitBytesPerSec, rateLimitBytesPerSec/1024)
+	}
+
 	metha.BaseDir = *baseDir
 	baseURL := metha.PrependSchema(flag.Arg(0))
 	if *showDir {
@@ -118,7 +175,14 @@ func main() {
 			}
 		}
 	}
-	harvest.Client = metha.CreateClient(*timeout, *maxRetries)
+
+	// Create client with rate limiting support
+	if rateLimitBytesPerSec > 0 {
+		harvest.Client = metha.CreateClientWithRateLimit(*timeout, *maxRetries, rateLimitBytesPerSec)
+	} else {
+		harvest.Client = metha.CreateClient(*timeout, *maxRetries)
+	}
+
 	harvest.Config.From = *from
 	harvest.Config.Until = *until
 	harvest.Config.Format = *format

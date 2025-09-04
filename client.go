@@ -3,6 +3,7 @@ package metha
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/tls"
 	"encoding/xml"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/html/charset"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -24,6 +26,8 @@ const (
 	DefaultTimeout = 10 * time.Minute
 	// DefaultMaxRetries is the default number of retries on a single request.
 	DefaultMaxRetries = 8
+	// burstLimit for traffic shaping
+	burstLimit = 1000 * 1000 * 1000
 )
 
 var (
@@ -63,6 +67,50 @@ func (e HTTPError) Error() string {
 	return fmt.Sprintf("failed with %s on %s: %v", http.StatusText(e.StatusCode), e.URL, e.RequestError)
 }
 
+// RateLimitedReader wraps an io.Reader with rate limiting
+type RateLimitedReader struct {
+	r       io.Reader
+	limiter *rate.Limiter
+	ctx     context.Context
+}
+
+// NewRateLimitedReader creates a new rate limited reader
+func NewRateLimitedReader(r io.Reader, ctx context.Context) *RateLimitedReader {
+	return &RateLimitedReader{
+		r:   r,
+		ctx: ctx,
+	}
+}
+
+// SetRateLimit sets rate limit (bytes/sec) to the reader.
+func (s *RateLimitedReader) SetRateLimit(bytesPerSec float64) {
+	s.limiter = rate.NewLimiter(rate.Limit(bytesPerSec), burstLimit)
+	s.limiter.AllowN(time.Now(), burstLimit) // spend initial burst
+}
+
+// Read reads bytes into p with rate limiting.
+func (s *RateLimitedReader) Read(p []byte) (int, error) {
+	if s.limiter == nil {
+		return s.r.Read(p)
+	}
+	n, err := s.r.Read(p)
+	if err != nil {
+		return n, err
+	}
+	if err := s.limiter.WaitN(s.ctx, n); err != nil {
+		return n, err
+	}
+	return n, nil
+}
+
+// Close closes the underlying reader if it implements io.Closer
+func (s *RateLimitedReader) Close() error {
+	if c, ok := s.r.(io.Closer); ok {
+		return c.Close()
+	}
+	return nil
+}
+
 // CreateDoer will return http request clients with specific timeout and retry
 // properties.
 func CreateDoer(timeout time.Duration, retries int) Doer {
@@ -89,6 +137,13 @@ func CreateClient(timeout time.Duration, retries int) *Client {
 	return &Client{Doer: CreateDoer(timeout, retries)}
 }
 
+// CreateClientWithRateLimit creates a client with timeout, retry properties, and rate limiting.
+func CreateClientWithRateLimit(timeout time.Duration, retries int, bytesPerSec float64) *Client {
+	client := &Client{Doer: CreateDoer(timeout, retries)}
+	client.SetRateLimit(bytesPerSec)
+	return client
+}
+
 // Doer is a minimal HTTP interface.
 type Doer interface {
 	Do(*http.Request) (*http.Response, error)
@@ -96,7 +151,19 @@ type Doer interface {
 
 // Client can execute requests.
 type Client struct {
-	Doer Doer
+	Doer              Doer
+	downloadRateLimit float64 // bytes per second, 0 means no limit
+}
+
+// SetRateLimit sets the download rate limit in bytes per second.
+// Set to 0 to disable rate limiting.
+func (c *Client) SetRateLimit(bytesPerSec float64) {
+	c.downloadRateLimit = bytesPerSec
+}
+
+// GetRateLimit returns the current rate limit setting.
+func (c *Client) GetRateLimit() float64 {
+	return c.downloadRateLimit
 }
 
 // Do is a shortcut for DefaultClient.Do.
@@ -137,6 +204,18 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	return ioutil.NopCloser(bytes.NewReader(buf)), nil
 }
 
+// wrapWithRateLimit wraps a reader with rate limiting if enabled
+func (c *Client) wrapWithRateLimit(reader io.Reader, ctx context.Context) io.Reader {
+	if c.downloadRateLimit <= 0 {
+		return reader
+	}
+
+	rateLimitedReader := NewRateLimitedReader(reader, ctx)
+	rateLimitedReader.SetRateLimit(c.downloadRateLimit)
+	log.Printf("applying rate limit: %.2f bytes/sec", c.downloadRateLimit)
+	return rateLimitedReader
+}
+
 // Do executes a single OAIRequest. ResumptionToken handling must happen in the
 // caller. Only Identify and GetRecord requests will return a complete response.
 func (c *Client) Do(r *Request) (*Response, error) {
@@ -156,6 +235,10 @@ func (c *Client) Do(r *Request) (*Response, error) {
 			req.Header.Add(name, value)
 		}
 	}
+
+	// Use request context for rate limiting
+	ctx := req.Context()
+
 	resp, err := c.Doer.Do(req)
 	if err != nil {
 		return nil, err
@@ -164,13 +247,21 @@ func (c *Client) Do(r *Request) (*Response, error) {
 		return nil, HTTPError{URL: link, RequestError: err, StatusCode: resp.StatusCode}
 	}
 	defer resp.Body.Close()
-	var reader = resp.Body
+
+	// Apply rate limiting to the response body if enabled
+	var reader io.Reader = c.wrapWithRateLimit(resp.Body, ctx)
+
 	// Detect compressed response.
 	reader, err = maybeCompressed(reader)
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	defer func() {
+		if c, ok := reader.(io.Closer); ok {
+			c.Close()
+		}
+	}()
+
 	if r.CleanBeforeDecode {
 		// Remove some chars, that the XML decoder will complain about.
 		b, err := ioutil.ReadAll(reader)
