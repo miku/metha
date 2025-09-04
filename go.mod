@@ -3,6 +3,8 @@ module github.com/miku/metha
 require (
 	github.com/adrg/xdg v0.5.3
 	github.com/briandowns/spinner v1.23.2
+	github.com/dustin/go-humanize v1.0.1
+	github.com/fujiwara/shapeio v1.0.0
 	github.com/jinzhu/now v1.1.5
 	github.com/karrick/godirwalk v1.17.0
 	github.com/klauspost/compress v1.18.0
@@ -12,6 +14,7 @@ require (
 	github.com/sethgrid/pester v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/net v0.42.0
+	golang.org/x/time v0.12.0
 )
 
 require (
