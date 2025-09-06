@@ -176,6 +176,17 @@ func sortFilesByDate(files []string) {
 	})
 }
 
+// copyFile copies file content from a file given its path into a writer.
+func copyFile(dst io.Writer, srcPath string) error {
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	_, err = io.Copy(dst, src)
+	return err
+}
+
 func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string) bool {
 	out, err := os.Create(tmpPath)
 	if err != nil {
@@ -186,19 +197,7 @@ func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string
 	success := true
 	for _, filename := range filenames {
 		fullPath := filepath.Join(dir, filename)
-		in, err := os.Open(fullPath)
-		if err != nil {
-			log.Printf("error opening %s: %v", fullPath, err)
-			success = false
-			in.Close() // safe to call on nil
-			break
-		}
-
-		_, err = io.Copy(out, in)
-		in.Close() // explicit close, no defer
-
-		if err != nil {
-			log.Printf("error copying %s: %v", fullPath, err)
+		if err := copyFile(out, fullPath); err != nil {
 			success = false
 			break
 		}
