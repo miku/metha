@@ -10,7 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var version = flag.Bool("v", false, "show version")
+var (
+	version      = flag.Bool("v", false, "show version")
+	showSizeOnly = flag.Bool("s", false, "show size only")
+)
 
 func main() {
 	flag.Parse()
@@ -27,23 +30,38 @@ func main() {
 		m       = make(map[string]interface{})
 		req     = metha.Request{Verb: "Identify", BaseURL: baseURL}
 	)
-	resp, err := metha.StdClient.Do(&req)
-	if err != nil {
-		log.Fatal(err)
+	switch {
+	case *showSizeOnly:
+		size, err := repo.CompleteListSize()
+		if err != nil {
+			log.Println(err)
+		} else {
+			fmt.Printf("%s\t%d\n", baseURL, size)
+		}
+	default:
+		resp, err := metha.StdClient.Do(&req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		m["identify"] = resp.Identify
+		size, err := repo.CompleteListSize()
+		if err != nil {
+			log.Fatal(err)
+		}
+		m["size"] = size
+		if formats, err := repo.Formats(); err == nil {
+			m["formats"] = formats
+		} else {
+			log.Println(err)
+		}
+		if sets, err := repo.Sets(); err == nil {
+			m["sets"] = sets
+		} else {
+			log.Println(err)
+		}
+		if err := json.NewEncoder(os.Stdout).Encode(m); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println()
 	}
-	m["identify"] = resp.Identify
-	if formats, err := repo.Formats(); err == nil {
-		m["formats"] = formats
-	} else {
-		log.Println(err)
-	}
-	if sets, err := repo.Sets(); err == nil {
-		m["sets"] = sets
-	} else {
-		log.Println(err)
-	}
-	if err := json.NewEncoder(os.Stdout).Encode(m); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println()
 }

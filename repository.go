@@ -3,6 +3,7 @@ package metha
 import (
 	"encoding/base64"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -47,6 +48,19 @@ func (r Repository) Sets() ([]Set, error) {
 		token = resp.GetResumptionToken()
 	}
 	return sets, nil
+}
+
+func (r Repository) CompleteListSize() (int, error) {
+	req := Request{BaseURL: r.BaseURL, Verb: "ListIdentifiers", MetadataPrefix: "oai_dc"}
+	resp, err := Do(&req)
+	if err != nil {
+		return -1, err
+	}
+	size, err := strconv.Atoi(resp.ListIdentifiers.ResumptionToken.CompleteListSize)
+	if err != nil {
+		return -1, err
+	}
+	return size, nil
 }
 
 // FindRepositoriesByString returns a list of already harvested base URLs given a
