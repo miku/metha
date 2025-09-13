@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Repository represents an OAI endpoint.
@@ -51,8 +52,9 @@ func (r Repository) Sets() ([]Set, error) {
 }
 
 func (r Repository) CompleteListSize() (int, error) {
+	client := CreateClient(30*time.Second, 3)
 	req := Request{BaseURL: r.BaseURL, Verb: "ListIdentifiers", MetadataPrefix: "oai_dc"}
-	resp, err := Do(&req)
+	resp, err := client.Do(&req)
 	if err != nil {
 		return -1, err
 	}
