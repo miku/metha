@@ -10,3 +10,9 @@ Partial:
 $ cat ../extra/sites-stats/2025-09-13-size.tsv| awk '$2 ~ /[0-9]/ {print $2}' | paste -sd+ | bc -l
 393729890
 ```
+
+From 23026 endpoints: 788M records.
+
+```
+788941653
+```
