@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-pack
-VERSION = 0.4.16
+VERSION = 0.4.17
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
 GO_FILES := $(shell find . -name "*.go" -type f -not -path "./cmd/*")
