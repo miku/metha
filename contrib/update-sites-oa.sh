@@ -16,6 +16,9 @@
 set -e
 set -o pipefail
 
+echo "service discontinued"
+exit 0
+
 HTTP_CLIENT="curl"
 
 for prog in xmlstarlet $HTTP_CLIENT; do
