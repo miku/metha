@@ -4,6 +4,15 @@
 # To join all, run: cat sites-* | sort -u > sites.tsv
 #
 # TODO: Add, http://roar.eprints.org/listfriends.xml
+# OAI-PMH ListFriends - Discontinued
+#
+# The OAI-PMH validation service was discontinued 2025-07-18 and consequently
+# this list of related repositories based on the Implementation Guidelines for
+# the Open Archives Initiative Protocol for Metadata Harvesting - XML Schema
+# for repositories to list confederate repositories is also discontinued.
+#
+# A static dump of the data from 2025-10-08 is available at
+# https://www.openarchives.org/pmh/registry/ListFriends_HISTORICAL_2025-10-08.xml.
 set -e
 set -o pipefail
 
