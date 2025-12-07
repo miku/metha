@@ -465,12 +465,10 @@ func TestHarvestCleanupTemporaryFiles(t *testing.T) {
 	origBaseDir := BaseDir
 	BaseDir = tempDir
 	defer func() { BaseDir = origBaseDir }()
-
 	testDir := h.Dir()
 	if err := os.MkdirAll(testDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-
 	tempFiles := []string{
 		"test.xml-tmp-12345",
 		"test.xml-tmp-67890",
@@ -481,19 +479,16 @@ func TestHarvestCleanupTemporaryFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-
 	err := h.cleanupTemporaryFiles()
 	if err != nil {
-		t.Errorf("cleanupTemporaryFiles() returned error: %v", err)
+		t.Errorf("cleanupTemporaryFiles: %v", err)
 	}
-
 	for _, filename := range tempFiles {
 		filePath := filepath.Join(testDir, filename)
 		if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-			t.Errorf("cleanupTemporaryFiles() did not remove temporary file: %s", filePath)
+			t.Errorf("cleanupTemporaryFiles: %s", filePath)
 		}
 	}
-
 	h.Config.KeepTemporaryFiles = true
 	tempFile := filepath.Join(testDir, "test2.xml-tmp-abcde")
 	if err := ioutil.WriteFile(tempFile, []byte("test"), 0644); err != nil {
@@ -501,10 +496,10 @@ func TestHarvestCleanupTemporaryFiles(t *testing.T) {
 	}
 	err = h.cleanupTemporaryFiles()
 	if err != nil {
-		t.Errorf("cleanupTemporaryFiles() returned error with KeepTemporaryFiles=true: %v", err)
+		t.Errorf("cleanupTemporaryFiles: %v", err)
 	}
 	if _, err := os.Stat(tempFile); os.IsNotExist(err) {
-		t.Errorf("cleanupTemporaryFiles() removed temporary file when KeepTemporaryFiles=true")
+		t.Errorf("cleanupTemporaryFiles: %v", err)
 	}
 }
 
@@ -512,7 +507,6 @@ func TestNewHarvest(t *testing.T) {
 	// This test will mock the Client to avoid actual network calls
 	// For now, test that the function properly initializes with default values
 	baseURL := "http://example.com/oai"
-
 	harvest, err := NewHarvest(baseURL)
 	if err != nil {
 		// Since we don't have a real endpoint, this will likely fail,
@@ -527,18 +521,17 @@ func TestNewHarvest(t *testing.T) {
 			},
 		}
 	}
-
 	if harvest.Config.BaseURL != baseURL {
-		t.Errorf("NewHarvest().Config.BaseURL = %q; expected %q", harvest.Config.BaseURL, baseURL)
+		t.Errorf("got %q, want %q", harvest.Config.BaseURL, baseURL)
 	}
 	if harvest.Config.MaxRetries != 3 {
-		t.Errorf("NewHarvest().Config.MaxRetries = %d; expected %d", harvest.Config.MaxRetries, 3)
+		t.Errorf("got %d, want %d", harvest.Config.MaxRetries, 3)
 	}
 	if harvest.Config.RetryDelay != 10*time.Second {
-		t.Errorf("NewHarvest().Config.RetryDelay = %v; expected %v", harvest.Config.RetryDelay, 10*time.Second)
+		t.Errorf("got %v, want %v", harvest.Config.RetryDelay, 10*time.Second)
 	}
 	if harvest.Config.RetryBackoff != 2.0 {
-		t.Errorf("NewHarvest().Config.RetryBackoff = %f; expected %f", harvest.Config.RetryBackoff, 2.0)
+		t.Errorf("got %f, want %f", harvest.Config.RetryBackoff, 2.0)
 	}
 }
 
@@ -559,32 +552,30 @@ func (c *MockClient) Do(req *Request) (*Response, error) {
 }
 
 func TestHarvestIdentify(t *testing.T) {
-	// Test with successful response
+	name := "Test Repository"
 	mockClient := &Client{Doer: &harvestMockDoer{
 		Response: &Response{
 			Identify: Identify{
-				RepositoryName:    "Test Repository",
+				RepositoryName:    name,
 				Granularity:       "YYYY-MM-DD",
 				EarliestDatestamp: "2020-01-01",
 			},
 		},
 	}}
-
 	h := &Harvest{
 		Config: &Config{
 			BaseURL: "http://example.com/oai",
 		},
 		Client: mockClient,
 	}
-
 	err := h.identify()
 	if err != nil {
-		t.Errorf("identify() returned error: %v", err)
+		t.Errorf("identify: %v", err)
 	}
 	if h.Identify == nil {
-		t.Error("identify() did not set Identify field")
+		t.Error("unexpected nil identify")
 	} else if h.Identify.RepositoryName != "Test Repository" {
-		t.Errorf("identify() set RepositoryName to %q; expected %q", h.Identify.RepositoryName, "Test Repository")
+		t.Errorf("identify got %q, want %q", h.Identify.RepositoryName, name)
 	}
 }
 
@@ -598,15 +589,11 @@ func (m *harvestMockDoer) Do(req *http.Request) (*http.Response, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
-
-	// Create a mock HTTP response with XML content
 	xmlContent := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	if m.Response != nil {
-		// Convert the response to XML
 		xmlBytes, _ := xml.Marshal(m.Response)
 		xmlContent = string(xmlBytes)
 	}
-
 	return &http.Response{
 		StatusCode: 200,
 		Body:       ioutil.NopCloser(strings.NewReader(xmlContent)),
@@ -637,27 +624,21 @@ func TestHarvestRun(t *testing.T) {
 		Client:  mockClient,
 		Started: time.Now(),
 	}
-	// Override the BaseDir for testing
 	origBaseDir := BaseDir
 	BaseDir = tempDir
 	defer func() { BaseDir = origBaseDir }()
-
-	// Create test directory
 	testDir := h.Dir()
 	if err := os.MkdirAll(testDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-
-	// Test run method
 	err := h.run()
 	if err != nil {
-		t.Errorf("run() returned error: %v", err)
+		t.Errorf("run: %v", err)
 	}
 }
 
 func TestHarvestRunInterval(t *testing.T) {
 	tempDir := t.TempDir()
-	// Create a mock client that returns a response without resumption token
 	mockClient := &Client{Doer: &harvestMockDoer{
 		Response: &Response{
 			ListRecords: ListRecords{
@@ -665,7 +646,6 @@ func TestHarvestRunInterval(t *testing.T) {
 			},
 		},
 	}}
-
 	h := &Harvest{
 		Config: &Config{
 			BaseURL:      "http://example.com/oai",
@@ -683,27 +663,20 @@ func TestHarvestRunInterval(t *testing.T) {
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-	// Override the BaseDir for testing
 	origBaseDir := BaseDir
 	BaseDir = tempDir
 	defer func() { BaseDir = origBaseDir }()
-
-	// Create test directory
 	testDir := h.Dir()
 	if err := os.MkdirAll(testDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-
-	// Create test interval
 	interval := Interval{
 		Begin: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 		End:   time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
 	}
-
-	// Test runInterval method
 	err := h.runInterval(interval)
 	if err != nil {
-		t.Errorf("runInterval() returned error: %v", err)
+		t.Errorf("runInterval: %v", err)
 	}
 }
 
@@ -718,19 +691,12 @@ func TestCompressedFilename(t *testing.T) {
 		{"test", CompZstd, "test.zst"},
 		{"test", CompGzip, "test.gz"},
 	}
-
 	for _, test := range tests {
 		result := compressedFilename(test.base, test.compType)
 		if result != test.expected {
-			t.Errorf("compressedFilename(%q, %d) = %q; expected %q", test.base, test.compType, result, test.expected)
+			t.Errorf("got (%q, %d) = %q, want %q", test.base, test.compType, result, test.expected)
 		}
 	}
-}
-
-func TestHarvestFinalize(t *testing.T) {
-	// This test is complex as finalize involves MoveCompressFile which is not available in test environment
-	// For now, we'll skip it or just test the locking mechanism part of finalize
-	t.Skip("finalize test requires MoveCompressFile implementation which is not available in test environment")
 }
 
 // Additional test to verify the fnPattern regex
@@ -746,11 +712,10 @@ func TestFnPatternRegex(t *testing.T) {
 		{"2020-1-01-12345678.xml.gz", false}, // wrong month format
 		{"invalid-file.xml.gz", false},       // doesn't match date pattern
 	}
-
 	for _, test := range tests {
 		matches := fnPattern.MatchString(test.filename)
 		if matches != test.matches {
-			t.Errorf("fnPattern.MatchString(%q) = %v; expected %v", test.filename, matches, test.matches)
+			t.Errorf("got %q: %v, want %v", test.filename, matches, test.matches)
 		}
 	}
 }
