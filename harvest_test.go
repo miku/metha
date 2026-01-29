@@ -2,6 +2,7 @@ package metha
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -244,6 +245,52 @@ func TestHarvestDefaultInterval(t *testing.T) {
 		if !interval.End.Equal(expectedEnd) {
 			t.Errorf("defaultInterval().End = %v; expected %v", interval.End, expectedEnd)
 		}
+	}
+}
+
+func TestDefaultIntervalAlreadySynced(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// Create harvest without custom Until date, so it defaults to yesterday
+	h := &Harvest{
+		Config: &Config{
+			Set:     "testSet",
+			Format:  "testFormat",
+			BaseURL: "http://example.com",
+			From:    "2020-01-01",
+			// No Until set - will default to yesterday's end-of-day
+		},
+		Started: time.Now(),
+	}
+
+	origBaseDir := BaseDir
+	BaseDir = tempDir
+	defer func() { BaseDir = origBaseDir }()
+
+	testDir := h.Dir()
+	if err := os.MkdirAll(testDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a cache file with yesterday's date
+	// This matches what defaultInterval() considers the "end" date
+	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+	testFile := filepath.Join(testDir, yesterday+"-00000001.xml.gz")
+	if err := ioutil.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Call defaultInterval and verify it returns ErrAlreadySynced
+	_, err := h.defaultInterval()
+	if err == nil {
+		t.Error("defaultInterval() should have returned an error for already synced repository")
+		return
+	}
+
+	// Verify the error is ErrAlreadySynced using errors.Is
+	// This properly handles both wrapped and unwrapped errors
+	if !errors.Is(err, ErrAlreadySynced) {
+		t.Errorf("defaultInterval() returned wrong error: got %v, want ErrAlreadySynced", err)
 	}
 }
 
