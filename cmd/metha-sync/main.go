@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -207,12 +208,11 @@ func main() {
 		}
 	}
 	if err := harvest.Run(); err != nil {
-		switch err {
-		case metha.ErrAlreadySynced:
+		if errors.Is(err, metha.ErrAlreadySynced) {
 			log.Println("this repository is up-to-date")
-		default:
-			log.Fatal(err)
+			return
 		}
+		log.Fatal(err)
 	}
 }
 
