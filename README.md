@@ -190,8 +190,10 @@ interaction in resource conservation.
 ## Scrape all metadata in a best-effort way
 
 Use an endless loop with a timeout to get out of any hanging connection (which
-happen). Example scrape, converted to JSON (326M records, 60+ GB:
-[2023-11-01-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_2023-11-01/2023-11-01-metha-oai.ndjson.zst)).
+happen). Example scrapes, converted to JSON: 326M records, 60+ GB:
+[2023-11-01-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_2023-11-01/2023-11-01-metha-oai.ndjson.zst),
+and
+[2026-02-23-oaiscrape-unique.jsonl.zst](https://archive.org/download/oaiscrape-2026-02-27/2026-02-23-oaiscrape-unique.jsonl.zst) (214M records, 41GB compressed).
 
 ```shell
 $ while true; do \
