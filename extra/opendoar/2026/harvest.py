@@ -7,12 +7,19 @@
 # ]
 # ///
 
-"""Harvest OpenDOAR repository metadata as JSON (one JSON object per line)."""
+"""Harvest OpenDOAR repository metadata as JSON (one JSON object per line).
+
+Responses are cached under $XDG_CACHE_HOME/metha-extra-opendoar/ (one file
+per ID) so the script can be stopped and restarted without re-fetching.
+Cache writes are atomic (write-to-temp + rename).
+"""
 
 import argparse
 import json
 import logging
+import os
 import sys
+import tempfile
 import time
 
 import httpx
@@ -26,6 +33,42 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 log = logging.getLogger(__name__)
+
+
+def cache_dir() -> str:
+    base = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    return os.path.join(base, "metha-extra-opendoar")
+
+
+def cache_path(repo_id: int) -> str:
+    return os.path.join(cache_dir(), f"{repo_id}.html")
+
+
+def cache_read(repo_id: int) -> str | None:
+    """Return cached HTML for repo_id, or None if not cached."""
+    p = cache_path(repo_id)
+    try:
+        with open(p, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
+
+def cache_write(repo_id: int, html: str) -> None:
+    """Atomically write HTML to cache (write tmp + rename)."""
+    d = cache_dir()
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(html)
+        os.rename(tmp, cache_path(repo_id))
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def parse_repository_page(html: str, repo_id: int) -> dict | None:
@@ -88,25 +131,30 @@ def harvest(
         headers={"User-Agent": "opendoar-harvest/0.1 (metadata collection)"},
     ) as client:
         for repo_id in range(start, end + 1):
-            url = BASE_URL.format(id=repo_id)
-            try:
-                resp = client.get(url)
-                resp.raise_for_status()
-            except httpx.HTTPError as exc:
-                log.warning("id=%d: %s", repo_id, exc)
+            html = cache_read(repo_id)
+            if html is not None:
+                log.info("id=%d: cached", repo_id)
+            else:
+                url = BASE_URL.format(id=repo_id)
+                try:
+                    resp = client.get(url)
+                    resp.raise_for_status()
+                except httpx.HTTPError as exc:
+                    log.warning("id=%d: %s", repo_id, exc)
+                    if delay > 0:
+                        time.sleep(delay)
+                    continue
+                html = resp.text
+                cache_write(repo_id, html)
                 if delay > 0:
                     time.sleep(delay)
-                continue
 
-            record = parse_repository_page(resp.text, repo_id)
+            record = parse_repository_page(html, repo_id)
             if record is None:
                 log.info("id=%d: not found (soft 404)", repo_id)
             else:
                 print(json.dumps(record, ensure_ascii=False))
                 log.info("id=%d: ok (%s)", repo_id, record.get("name", "?"))
-
-            if delay > 0:
-                time.sleep(delay)
 
 
 def main():
