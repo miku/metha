@@ -79,6 +79,7 @@ type Config struct {
 	RetryBackoff               float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
 	CompressionType            CompressionType
 	CompressionLevel           int // -5 to 22 for zstd
+	NoCompression              bool
 }
 
 // Harvest contains parameters for mass-download. MaxRequests and
@@ -121,9 +122,11 @@ func (h *Harvest) Dir() string {
 
 // Files returns all files for a given harvest, without the temporary files.
 func (h *Harvest) Files() []string {
+	xmlFiles := MustGlob(filepath.Join(h.Dir(), "*.xml"))
 	gzipFiles := MustGlob(filepath.Join(h.Dir(), "*.xml.gz"))
 	zstdFiles := MustGlob(filepath.Join(h.Dir(), "*.xml.zst"))
-	return append(gzipFiles, zstdFiles...)
+	files := append(xmlFiles, gzipFiles...)
+	return append(files, zstdFiles...)
 }
 
 // mkdirAll creates necessary directories.
@@ -223,6 +226,22 @@ func (h *Harvest) compressedFileExt() string {
 	}
 }
 
+// finalFileName replace func compressedFileExt
+func (h *Harvest) finalFileName(src, suffix string) string {
+	base := strings.Replace(src, suffix, "", -1)
+	if h.Config.NoCompression {
+		return base
+	}
+	switch h.Config.CompressionType {
+	case CompGzip:
+		return base + ".gz"
+	case CompZstd:
+		return base + ".zst"
+	default:
+		return base + ".zst"
+	}
+}
+
 // finalize will move all files with a given suffix into place.
 func (h *Harvest) finalize(suffix string) error {
 	var renamed []string
@@ -231,9 +250,15 @@ func (h *Harvest) finalize(suffix string) error {
 	defer h.Unlock()
 
 	for _, src := range h.temporaryFilesSuffix(suffix) {
-		dst := fmt.Sprintf("%s.%s", strings.Replace(src, suffix, "", -1), h.compressedFileExt())
+		//		dst := fmt.Sprintf("%s.%s", strings.Replace(src, suffix, "", -1), h.compressedFileExt())
+		dst := h.finalFileName(src, suffix)
 		var err error
-		if err = MoveCompressFile(src, dst, h.Config.CompressionType, h.Config.CompressionLevel); err == nil {
+		if h.Config.NoCompression {
+			err = os.Rename(src, dst)
+		} else {
+			err = MoveCompressFile(src, dst, h.Config.CompressionType, h.Config.CompressionLevel)
+		}
+		if err == nil {
 			renamed = append(renamed, dst)
 			continue
 		}

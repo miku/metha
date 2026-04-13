@@ -46,6 +46,7 @@ var (
 	keepTemporaryFiles         = flag.Bool("k", false, "keep temporary files when interrupted")
 	ignoreUnexpectedEOF        = flag.Bool("ignore-unexpected-eof", false, "ignore unexpected EOF")
 	rateLimit                  = flag.String("rate-limit", "", "download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable")
+	noCompression              = flag.Bool("no-compression", false, "store harvested files as plain XML instead of .xml.gz or .xml.zst")
 )
 
 // parseRateLimit converts a human-readable rate limit string to bytes per second
@@ -200,6 +201,7 @@ func main() {
 	harvest.Config.Delay = *delay
 	harvest.Config.KeepTemporaryFiles = *keepTemporaryFiles
 	harvest.Config.IgnoreHTTPErrors = *ignoreUnexpectedEOF
+	harvest.Config.NoCompression = *noCompression
 	log.Printf("harvest: %+v", harvest)
 	if *removeCached {
 		log.Printf("removing already cached files from %s", harvest.Dir())
