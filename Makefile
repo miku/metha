@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-pack
-VERSION = 0.4.24
+VERSION = 0.4.25
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
 GO_FILES := $(shell find . -name "*.go" -type f -not -path "./cmd/*")
@@ -43,8 +43,6 @@ rpm: $(TARGETS)
 .PHONY: update-version
 update-version:
 	sed -i -e 's@^const Version =.*@const Version = "$(VERSION)"@' version.go
-	sed -i -e 's@^Version:.*@Version: $(VERSION)@' packaging/deb/metha/DEBIAN/control
-	sed -i -e 's@^Version:.*@Version:    $(VERSION)@' packaging/rpm/metha.spec
 
 docs/metha.1: docs/metha.md
 	# https://github.com/sunaku/md2man
