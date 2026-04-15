@@ -29,29 +29,16 @@ clean:
 imports:
 	goimports -w .
 
+# nfpm-based packaging (preferred).
+SEMVER := $(shell echo $(VERSION) | sed 's/^v//')
+
 .PHONY: deb
 deb: $(TARGETS)
-	mkdir -p packaging/deb/$(PKGNAME)/usr/local/bin
-	cp $(TARGETS) packaging/deb/$(PKGNAME)/usr/local/bin
-	mkdir -p packaging/deb/$(PKGNAME)/usr/local/share/man/man1
-	cp docs/$(PKGNAME).1 packaging/deb/$(PKGNAME)/usr/local/share/man/man1
-	mkdir -p packaging/deb/$(PKGNAME)/usr/lib/systemd/system
-	cp extra/linux/metha.service packaging/deb/$(PKGNAME)/usr/lib/systemd/system
-	cd packaging/deb && fakeroot dpkg-deb -Zzstd --build $(PKGNAME) .
-	mv packaging/deb/$(PKGNAME)_*.deb .
+	SEMVER=$(SEMVER) GOARCH=amd64 nfpm package -p deb -f nfpm.yaml
 
 .PHONY: rpm
 rpm: $(TARGETS)
-	# on deb based distros, you may need:
-	# sudo rpm --initdb && sudo chmod -R a+r /var/lib/rpm/
-	mkdir -p $(HOME)/rpmbuild/{BUILD,SOURCES,SPECS,RPMS}
-	mkdir -p $(HOME)/rpmbuild/SOURCES/metha
-	cp ./packaging/rpm/$(PKGNAME).spec $(HOME)/rpmbuild/SPECS
-	cp $(TARGETS) $(HOME)/rpmbuild/SOURCES/metha
-	cp docs/$(PKGNAME).1 $(HOME)/rpmbuild/SOURCES/metha
-	cp extra/linux/metha.service $(HOME)/rpmbuild/SOURCES/metha
-	./packaging/rpm/buildrpm.sh $(PKGNAME)
-	cp $(HOME)/rpmbuild/RPMS/x86_64/$(PKGNAME)-$(VERSION)*.rpm .
+	SEMVER=$(SEMVER) GOARCH=amd64 nfpm package -p rpm -f nfpm.yaml
 
 .PHONY: update-version
 update-version:

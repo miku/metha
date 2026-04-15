@@ -1,0 +1,72 @@
+name: metha
+arch: ${GOARCH}
+platform: linux
+version: ${SEMVER}
+version_schema: semver
+epoch: 0
+release: 0
+section: utils
+priority: optional
+maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+description: No frills incremental OAI harvesting for the command line.
+vendor: Leipzig University Library
+homepage: https://github.com/miku/metha
+license: GPL
+disable_globbing: false
+
+contents:
+  # Binaries
+  - src: metha-sync
+    dst: /usr/local/bin/metha-sync
+    file_info:
+      mode: 0755
+
+  - src: metha-cat
+    dst: /usr/local/bin/metha-cat
+    file_info:
+      mode: 0755
+
+  - src: metha-id
+    dst: /usr/local/bin/metha-id
+    file_info:
+      mode: 0755
+
+  - src: metha-ls
+    dst: /usr/local/bin/metha-ls
+    file_info:
+      mode: 0755
+
+  - src: metha-files
+    dst: /usr/local/bin/metha-files
+    file_info:
+      mode: 0755
+
+  - src: metha-fortune
+    dst: /usr/local/bin/metha-fortune
+    file_info:
+      mode: 0755
+
+  - src: metha-pack
+    dst: /usr/local/bin/metha-pack
+    file_info:
+      mode: 0755
+
+  # Man page
+  - src: docs/metha.1
+    dst: /usr/local/share/man/man1/metha.1
+    file_info:
+      mode: 0644
+
+  # Systemd service
+  - src: extra/linux/metha.service
+    dst: /usr/lib/systemd/system/metha.service
+    file_info:
+      mode: 0644
+
+umask: 0o002
+
+deb:
+  compression: zstd
+
+rpm:
+  compression: zstd
