@@ -2,7 +2,7 @@ package metha
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -18,7 +18,7 @@ func TestCopyHook(t *testing.T) {
 	w := &bytes.Buffer{}
 
 	log.SetFormatter(new(testformatter))
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	log.AddHook(NewCopyHook(w, log.InfoLevel))
 
 	exp := "A"

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -74,7 +73,7 @@ func TestHarvestFiles(t *testing.T) {
 		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 			t.Fatal(err)
 		}
-		if err := ioutil.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -229,7 +228,7 @@ func TestHarvestDefaultInterval(t *testing.T) {
 	}
 
 	testFile := filepath.Join(testDir, "2020-01-15-00000001.xml.gz")
-	if err := ioutil.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -276,7 +275,7 @@ func TestDefaultIntervalAlreadySynced(t *testing.T) {
 	// This matches what defaultInterval() considers the "end" date
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 	testFile := filepath.Join(testDir, yesterday+"-00000001.xml.gz")
-	if err := ioutil.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -481,7 +480,7 @@ func TestHarvestTemporaryFiles(t *testing.T) {
 	}
 	for _, filename := range tempFiles {
 		filePath := filepath.Join(testDir, filename)
-		if err := ioutil.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -522,7 +521,7 @@ func TestHarvestCleanupTemporaryFiles(t *testing.T) {
 	}
 	for _, filename := range tempFiles {
 		filePath := filepath.Join(testDir, filename)
-		if err := ioutil.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -538,7 +537,7 @@ func TestHarvestCleanupTemporaryFiles(t *testing.T) {
 	}
 	h.Config.KeepTemporaryFiles = true
 	tempFile := filepath.Join(testDir, "test2.xml-tmp-abcde")
-	if err := ioutil.WriteFile(tempFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(tempFile, []byte("test"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	err = h.cleanupTemporaryFiles()
@@ -643,7 +642,7 @@ func (m *harvestMockDoer) Do(req *http.Request) (*http.Response, error) {
 	}
 	return &http.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(strings.NewReader(xmlContent)),
+		Body:       io.NopCloser(strings.NewReader(xmlContent)),
 	}, nil
 }
 

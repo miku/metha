@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -496,7 +495,7 @@ func (h *Harvest) runInterval(iv Interval) error {
 		// request in progress.
 		filename := filepath.Join(h.Dir(), fmt.Sprintf("%s-%08d.xml%s", filedate, i, suffix))
 		if b, err := xml.Marshal(resp); err == nil {
-			if e := ioutil.WriteFile(filename, b, 0644); e != nil {
+			if e := os.WriteFile(filename, b, 0644); e != nil {
 				return e
 			}
 			log.Printf("wrote %s", filename)
