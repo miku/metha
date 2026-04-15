@@ -1,7 +1,6 @@
 package metha
 
 import (
-	"io/ioutil"
 	"os"
 	"sort"
 )
@@ -18,12 +17,12 @@ type Laster interface {
 type DirLaster struct {
 	Dir           string
 	DefaultValue  string
-	ExtractorFunc func(os.FileInfo) string
+	ExtractorFunc func(os.DirEntry) string
 }
 
 // Last extracts the maximum value from a directory, given an extractor function.
 func (l DirLaster) Last() (string, error) {
-	files, err := ioutil.ReadDir(l.Dir)
+	files, err := os.ReadDir(l.Dir)
 	if err != nil {
 		return "", err
 	}

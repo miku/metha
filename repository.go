@@ -2,7 +2,7 @@ package metha
 
 import (
 	"encoding/base64"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -68,7 +68,7 @@ func (r Repository) CompleteListSize() (int, error) {
 // FindRepositoriesByString returns a list of already harvested base URLs given a
 // fragment of the base URL.
 func FindRepositoriesByString(s string) (urls []string, err error) {
-	files, err := ioutil.ReadDir(BaseDir)
+	files, err := os.ReadDir(BaseDir)
 	if err != nil {
 		return urls, err
 	}

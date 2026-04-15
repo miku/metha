@@ -280,8 +280,8 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	laster := DirLaster{
 		Dir:          h.Dir(),
 		DefaultValue: earliestDate.Format("2006-01-02"),
-		ExtractorFunc: func(fi os.FileInfo) string {
-			groups := fnPattern.FindStringSubmatch(fi.Name())
+		ExtractorFunc: func(dirent os.DirEntry) string {
+			groups := fnPattern.FindStringSubmatch(dirent.Name())
 			if len(groups) > 1 {
 				return groups[1]
 			}

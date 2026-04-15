@@ -8,7 +8,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -173,7 +172,7 @@ func Do(r *Request) (*Response, error) {
 
 // maybeCompressed detects compressed content and decompresses it on the fly.
 func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
-	buf, err := ioutil.ReadAll(r)
+	buf, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +182,7 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 		zr, err := zstd.NewReader(bytes.NewReader(buf))
 		if err == nil {
 			log.Println("zstd-decompress-on-the-fly")
-			return ioutil.NopCloser(zr), nil
+			return io.NopCloser(zr), nil
 		}
 		// If zstd decompression fails, don't try gzip - it's definitely meant to be zstd
 		return nil, fmt.Errorf("failed to decompress zstd data: %w", err)
@@ -201,7 +200,7 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	}
 
 	// No compression detected
-	return ioutil.NopCloser(bytes.NewReader(buf)), nil
+	return io.NopCloser(bytes.NewReader(buf)), nil
 }
 
 // wrapWithRateLimit wraps a reader with rate limiting if enabled
@@ -264,15 +263,15 @@ func (c *Client) Do(r *Request) (*Response, error) {
 
 	if r.CleanBeforeDecode {
 		// Remove some chars, that the XML decoder will complain about.
-		b, err := ioutil.ReadAll(reader)
+		b, err := io.ReadAll(reader)
 		if err != nil {
 			return nil, err
 		}
-		reader = ioutil.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
+		reader = io.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
 	}
 	// Drain response XML, iterate over various XML encoding declarations.
 	// Limit the amount we can read, to 1GB, cf. https://github.com/miku/metha/issues/35
-	respBody, err := ioutil.ReadAll(io.LimitReader(reader, 1<<30))
+	respBody, err := io.ReadAll(io.LimitReader(reader, 1<<30))
 	if err != nil {
 		return nil, err
 	}
