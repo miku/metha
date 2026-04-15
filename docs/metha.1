@@ -8,13 +8,17 @@ metha \- harvest OAI\-PMH conform endpoints
 .PP
 \fB\fCmetha\-sync\fR [\fB\fC\-dir\fR] \fIendpoint\fP
 .PP
-\fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
+\fB\fCmetha\-cat\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP, \fB\fC\-from\fR \fIDATE\fP, \fB\fC\-until\fR \fIDATE\fP, \fB\fC\-root\fR \fINAME\fP, \fB\fC\-j\fR] \fIendpoint\fP
 .PP
-\fB\fCmetha\-id\fR \fIendpoint\fP
+\fB\fCmetha\-id\fR [\fB\fC\-s\fR] \fIendpoint\fP
 .PP
-\fB\fCmetha\-ls\fR [\fB\fC\-a\fR] \fIendpoint\fP
+\fB\fCmetha\-ls\fR [\fB\fC\-a\fR] [\fB\fC\-b\fR]
 .PP
 \fB\fCmetha\-files\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
+.PP
+\fB\fCmetha\-pack\fR [\fB\fC\-d\fR \fIDIR\fP, \fB\fC\-m\fR \fIN\fP, \fB\fC\-r\fR, \fB\fC\-v\fR]
+.PP
+\fB\fCmetha\-fortune\fR [\fB\fC\-1\fR, \fB\fC\-k\fR \fIN\fP, \fB\fC\-t\fR \fIDURATION\fP, \fB\fC\-d\fR]
 .SH DESCRIPTION
 .PP
 The Open Archives Initiative Protocol for Metadata Harvesting (OAI\-PMH) is a
@@ -27,14 +31,15 @@ endpoint are fast.
 .PP
 A list of over 80000 (more or less usable) endpoints can be found here: \[la]https://is.gd/UrST8m\[ra]\&.
 .SH OPTIONS
+.SS metha\-sync
 .PP
-Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to see flags for other commands.
+Harvest an OAI\-PMH endpoint into the local cache.
 .PP
 \fB\fC\-H\fR \fIvalue\fP
         extra HTTP header to pass to requests (repeatable); e.g. \-H "token: 123"
 .PP
 \fB\fC\-T\fR \fIduration\fP
-        client timeout (default 30s)
+        http client timeout (default 30s)
 .PP
 \fB\fC\-base\-dir\fR \fIstring\fP
         base dir for harvested files (default "$HOME/.cache/metha")
@@ -42,8 +47,8 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
 \fB\fC\-daily\fR
         use daily intervals for harvesting
 .PP
-\fB\fC\-delay\fR
-        sleep (seconds) between each OAI\-PMH request
+\fB\fC\-delay\fR \fIduration\fP
+        sleep between each OAI\-PMH request
 .PP
 \fB\fC\-dir\fR
         show target directory
@@ -61,7 +66,9 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
         do not stop on HTTP errors, just skip to the next interval
 .PP
 \fB\fC\-ignore\-unexpected\-eof\fR
-        do not stop on unexpected EOF from endpoint
+        ignore unexpected EOF
+.PP
+\fB\fC\-k\fR    keep temporary files when interrupted
 .PP
 \fB\fC\-list\fR
         list a selection of OAI endpoints (might be outdated)
@@ -76,7 +83,10 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
         maximum number of token loops (default 1048576)
 .PP
 \fB\fC\-max\-empty\-responses\fR \fIint\fP
-       allow a number of empty responses before failing (default 10)
+        allow a number of empty responses before failing (default 10)
+.PP
+\fB\fC\-no\-compression\fR
+        store harvested files as plain XML instead of .xml.gz or .xml.zst
 .PP
 \fB\fC\-no\-intervals\fR
         harvest in one go, for funny endpoints
@@ -84,7 +94,10 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
 \fB\fC\-q\fR    suppress all output
 .PP
 \fB\fC\-r\fR \fIint\fP
-        max number of retries for client (default: 10)
+        max number of retries (default 10)
+.PP
+\fB\fC\-rate\-limit\fR \fIstring\fP
+        download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable
 .PP
 \fB\fC\-rm\fR
         remove all cached files before starting anew
@@ -95,10 +108,92 @@ Options for the \fB\fCmetha\-sync\fR command are as follows. Use \fB\fC\-h\fR to
 \fB\fC\-suppress\-format\-parameter\fR
         do not send format parameter
 .PP
+\fB\fC\-u\fR \fIstring\fP
+        basic auth, like: user:password
+.PP
 \fB\fC\-until\fR \fIstring\fP
         set the end date, format: 2006\-01\-02, use only if you do not want got records till today
 .PP
 \fB\fC\-v\fR    show version
+.SS metha\-cat
+.PP
+Stream harvested records as XML (or JSON) to stdout.
+.PP
+\fB\fC\-base\-dir\fR \fIstring\fP
+        base dir for harvested files (default "$HOME/.cache/metha")
+.PP
+\fB\fC\-format\fR \fIstring\fP
+        metadata format (default "oai_dc")
+.PP
+\fB\fC\-from\fR \fIstring\fP
+        ignore records before this date
+.PP
+\fB\fC\-j\fR    output json, not xml
+.PP
+\fB\fC\-root\fR \fIstring\fP
+        root element to wrap records into (default "Records")
+.PP
+\fB\fC\-set\fR \fIstring\fP
+        set name
+.PP
+\fB\fC\-until\fR \fIstring\fP
+        ignore records after this date
+.PP
+\fB\fC\-v\fR    show version
+.SS metha\-id
+.PP
+Print endpoint metadata (identity, formats, sets) as JSON.
+.PP
+\fB\fC\-s\fR    show size only
+.PP
+\fB\fC\-v\fR    show version
+.SS metha\-ls
+.PP
+List cached endpoints.
+.PP
+\fB\fC\-a\fR    show full path
+.PP
+\fB\fC\-b\fR    continue in the presence of errors
+.SS metha\-files
+.PP
+List file paths of a local harvest.
+.PP
+\fB\fC\-base\-dir\fR \fIstring\fP
+        base dir for harvested files (default "$HOME/.cache/metha")
+.PP
+\fB\fC\-format\fR \fIstring\fP
+        metadata format (default "oai_dc")
+.PP
+\fB\fC\-set\fR \fIstring\fP
+        set name
+.PP
+\fB\fC\-v\fR    show version
+.SS metha\-pack
+.PP
+Pack a harvest directory into larger files to reduce filesystem pressure.
+.PP
+\fB\fC\-d\fR \fIstring\fP
+        base directory for harvested files (default "$HOME/.cache/metha")
+.PP
+\fB\fC\-m\fR \fIint\fP
+        minimum number of files before packing (default 3)
+.PP
+\fB\fC\-r\fR    show what would be done without actually doing it
+.PP
+\fB\fC\-v\fR    verbose output
+.SS metha\-fortune
+.PP
+Display a random record description from a random endpoint.
+.PP
+\fB\fC\-1\fR    one sentence only
+.PP
+\fB\fC\-d\fR    debug output
+.PP
+\fB\fC\-k\fR \fIint\fP
+        number of endpoints to query in parallel (default 16)
+.PP
+\fB\fC\-t\fR \fIduration\fP
+        timeout (default 8s)
 .SH EXAMPLES
 .PP
 Show metadata about endpoint in JSON format:

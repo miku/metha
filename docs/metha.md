@@ -13,13 +13,17 @@ SYNOPSIS
 
 `metha-sync` [`-dir`] *endpoint*
 
-`metha-cat` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
+`metha-cat` [`-format` *FORMAT*, `-set` *SET*, `-from` *DATE*, `-until` *DATE*, `-root` *NAME*, `-j`] *endpoint*
 
-`metha-id` *endpoint*
+`metha-id` [`-s`] *endpoint*
 
-`metha-ls` [`-a`] *endpoint*
+`metha-ls` [`-a`] [`-b`]
 
 `metha-files` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
+
+`metha-pack` [`-d` *DIR*, `-m` *N*, `-r`, `-v`]
+
+`metha-fortune` [`-1`, `-k` *N*, `-t` *DURATION*, `-d`]
 
 DESCRIPTION
 -----------
@@ -37,13 +41,15 @@ A list of over 80000 (more or less usable) endpoints can be found here: https://
 OPTIONS
 -------
 
-Options for the `metha-sync` command are as follows. Use `-h` to see flags for other commands.
+### metha-sync
+
+Harvest an OAI-PMH endpoint into the local cache.
 
 `-H` *value*
         extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123"
 
 `-T` *duration*
-        client timeout (default 30s)
+        http client timeout (default 30s)
 
 `-base-dir` *string*
         base dir for harvested files (default "$HOME/.cache/metha")
@@ -51,8 +57,8 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-daily`
         use daily intervals for harvesting
 
-`-delay`
-        sleep (seconds) between each OAI-PMH request
+`-delay` *duration*
+        sleep between each OAI-PMH request
 
 `-dir`
         show target directory
@@ -70,7 +76,9 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
         do not stop on HTTP errors, just skip to the next interval
 
 `-ignore-unexpected-eof`
-        do not stop on unexpected EOF from endpoint
+        ignore unexpected EOF
+
+`-k`    keep temporary files when interrupted
 
 `-list`
         list a selection of OAI endpoints (might be outdated)
@@ -85,7 +93,10 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
         maximum number of token loops (default 1048576)
 
 `-max-empty-responses` *int*
-       allow a number of empty responses before failing (default 10)
+        allow a number of empty responses before failing (default 10)
+
+`-no-compression`
+        store harvested files as plain XML instead of .xml.gz or .xml.zst
 
 `-no-intervals`
         harvest in one go, for funny endpoints
@@ -93,7 +104,10 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-q`    suppress all output
 
 `-r` *int*
-        max number of retries for client (default: 10)
+        max number of retries (default 10)
+
+`-rate-limit` *string*
+        download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable
 
 `-rm`
         remove all cached files before starting anew
@@ -104,10 +118,98 @@ Options for the `metha-sync` command are as follows. Use `-h` to see flags for o
 `-suppress-format-parameter`
         do not send format parameter
 
+`-u` *string*
+        basic auth, like: user:password
+
 `-until` *string*
         set the end date, format: 2006-01-02, use only if you do not want got records till today
 
 `-v`    show version
+
+### metha-cat
+
+Stream harvested records as XML (or JSON) to stdout.
+
+`-base-dir` *string*
+        base dir for harvested files (default "$HOME/.cache/metha")
+
+`-format` *string*
+        metadata format (default "oai_dc")
+
+`-from` *string*
+        ignore records before this date
+
+`-j`    output json, not xml
+
+`-root` *string*
+        root element to wrap records into (default "Records")
+
+`-set` *string*
+        set name
+
+`-until` *string*
+        ignore records after this date
+
+`-v`    show version
+
+### metha-id
+
+Print endpoint metadata (identity, formats, sets) as JSON.
+
+`-s`    show size only
+
+`-v`    show version
+
+### metha-ls
+
+List cached endpoints.
+
+`-a`    show full path
+
+`-b`    continue in the presence of errors
+
+### metha-files
+
+List file paths of a local harvest.
+
+`-base-dir` *string*
+        base dir for harvested files (default "$HOME/.cache/metha")
+
+`-format` *string*
+        metadata format (default "oai_dc")
+
+`-set` *string*
+        set name
+
+`-v`    show version
+
+### metha-pack
+
+Pack a harvest directory into larger files to reduce filesystem pressure.
+
+`-d` *string*
+        base directory for harvested files (default "$HOME/.cache/metha")
+
+`-m` *int*
+        minimum number of files before packing (default 3)
+
+`-r`    show what would be done without actually doing it
+
+`-v`    verbose output
+
+### metha-fortune
+
+Display a random record description from a random endpoint.
+
+`-1`    one sentence only
+
+`-d`    debug output
+
+`-k` *int*
+        number of endpoints to query in parallel (default 16)
+
+`-t` *duration*
+        timeout (default 8s)
 
 
 EXAMPLES
