@@ -1,7 +1,6 @@
 package metha
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,7 +11,7 @@ func TestMustGlob(t *testing.T) {
 	testFiles := []string{"test1.txt", "test2.txt", "test.doc"}
 	for _, filename := range testFiles {
 		filePath := filepath.Join(tempDir, filename)
-		if err := ioutil.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
 			t.Fatalf("failed to create test file: %v", err)
 		}
 	}
@@ -53,7 +52,7 @@ func TestMoveCompressFile_Gzip(t *testing.T) {
 		src     = filepath.Join(tempDir, "source.txt")
 		content = []byte("test content for compression")
 	)
-	if err := ioutil.WriteFile(src, content, 0644); err != nil {
+	if err := os.WriteFile(src, content, 0644); err != nil {
 		t.Fatalf("failed to create source file: %v", err)
 	}
 	var (
@@ -77,7 +76,7 @@ func TestMoveCompressFile_Zstd(t *testing.T) {
 		src     = filepath.Join(tempDir, "source.txt")
 		content = []byte("test content for zstd compression")
 	)
-	if err := ioutil.WriteFile(src, content, 0644); err != nil {
+	if err := os.WriteFile(src, content, 0644); err != nil {
 		t.Fatalf("failed to create source file: %v", err)
 	}
 	var (

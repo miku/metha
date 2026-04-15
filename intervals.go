@@ -22,10 +22,7 @@ func (iv Interval) String() string {
 func (iv Interval) MonthlyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin
-	for {
-		if start.After(iv.End) {
-			break
-		}
+	for !start.After(iv.End) {
 		end := now.New(start).EndOfMonth()
 		if end.After(iv.End) {
 			ivals = append(ivals, Interval{Begin: start, End: iv.End})
@@ -41,10 +38,7 @@ func (iv Interval) MonthlyIntervals() []Interval {
 func (iv Interval) DailyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin
-	for {
-		if start.After(iv.End) {
-			break
-		}
+	for !start.After(iv.End) {
 		end := now.New(start).EndOfDay()
 		if end.After(iv.End) {
 			ivals = append(ivals, Interval{Begin: start, End: end})
@@ -60,10 +54,7 @@ func (iv Interval) DailyIntervals() []Interval {
 func (iv Interval) HourlyIntervals() []Interval {
 	var ivals []Interval
 	start := iv.Begin
-	for {
-		if start.After(iv.End) {
-			break
-		}
+	for !start.After(iv.End) {
 		end := now.New(start).EndOfHour()
 		if end.After(iv.End) {
 			ivals = append(ivals, Interval{Begin: start, End: end})
