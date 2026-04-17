@@ -21,16 +21,18 @@ import (
 )
 
 var (
-	baseDir  = flag.String("d", metha.GetBaseDir(), "base directory for harvested files")
-	minFiles = flag.Int("m", 3, "minimum number of files before packing")
-	verbose  = flag.Bool("v", false, "verbose output")
-	dryRun   = flag.Bool("r", false, "show what would be done without actually doing it")
+	baseDir      = flag.String("d", metha.GetBaseDir(), "base directory for harvested files")
+	minFiles     = flag.Int("m", 3, "minimum number of files before packing")
+	verbose      = flag.Bool("v", false, "verbose output")
+	dryRun       = flag.Bool("r", false, "show what would be done without actually doing it")
+	quietPeriod  = flag.Duration("quiet", 60*time.Second, "skip endpoint dirs whose newest compressed file was modified within this window (heuristic: avoid packing while a harvest may be writing)")
 )
 
 type Stats struct {
 	TotalDirs     int
 	ProcessedDirs int
 	SkippedDirs   int
+	FailedDirs    int
 	TotalFiles    int
 	PackedFiles   int
 	BytesSaved    int64
@@ -48,6 +50,21 @@ func main() {
 	}
 
 	fmt.Fprintf(os.Stderr, "analyzing directory structure: %s\n", root)
+
+	// Guard against two metha-pack runs racing each other on the same tree.
+	// This does NOT coordinate with metha-sync — that would require the same
+	// lock to be taken on the harvest side. The -quiet flag is the heuristic
+	// safety net for harvest concurrency.
+	if !*dryRun {
+		lockPath := filepath.Join(root, ".metha-pack.lock")
+		lockFile, err := acquireLock(lockPath)
+		if err != nil {
+			log.Fatalf("could not acquire pack lock: %v", err)
+		}
+		if lockFile != nil {
+			defer lockFile.Close()
+		}
+	}
 
 	stats := &Stats{}
 	if *dryRun {
@@ -80,19 +97,46 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "directories processed: %d/%d\n", stats.ProcessedDirs, stats.TotalDirs)
 	fmt.Fprintf(os.Stderr, "directories skipped: %d\n", stats.SkippedDirs)
+	fmt.Fprintf(os.Stderr, "directories failed:  %d\n", stats.FailedDirs)
 	fmt.Fprintf(os.Stderr, "files packed: %d\n", stats.PackedFiles)
 	fmt.Fprintf(os.Stderr, "total files before: %d\n", stats.TotalFiles)
 	if stats.BytesSaved > 0 {
 		fmt.Fprintf(os.Stderr, "estimated metadata overhead saved: %.2f MB\n", float64(stats.BytesSaved)/(1024*1024))
 	}
+	if stats.FailedDirs > 0 {
+		// Surface failures via exit code so CI/cron can detect them.
+		os.Exit(1)
+	}
 }
 
-func isCompressedFile(filename string) bool {
-	return strings.HasSuffix(filename, ".zst") || strings.HasSuffix(filename, ".gz")
+// packExts lists the compressed file extensions metha-pack handles. Files of
+// different extensions must never be concatenated together: a .gz stream and a
+// .zst stream packed into one file produce an unreadable hybrid.
+var packExts = []string{".gz", ".zst"}
+
+// staleSuffix marks originals that have been quarantined during a pack.
+// Quarantined files are ignored by future pack runs because the suffix sits
+// past the .gz/.zst extension, so compressedExt no longer matches. Visible
+// .stale files after a run indicate something went wrong; they can be deleted
+// once the user has verified the packed file.
+const staleSuffix = ".stale"
+
+// quarantineMove records a successful rename so we can roll it back.
+type quarantineMove struct{ from, to string }
+
+// compressedExt returns the matching extension from packExts, or "" if the
+// file is not a packable compressed file.
+func compressedExt(filename string) string {
+	for _, ext := range packExts {
+		if strings.HasSuffix(filename, ext) {
+			return ext
+		}
+	}
+	return ""
 }
 
 func processDirectory(path string, stats *Stats) {
-	files, err := os.ReadDir(path)
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		if *verbose {
 			log.Printf("warning: cannot read directory %s: %v", path, err)
@@ -101,65 +145,169 @@ func processDirectory(path string, stats *Stats) {
 		return
 	}
 
-	// Count and collect compressed files in one pass
-	var compressedFiles []string
-	for _, file := range files {
-		if isCompressedFile(file.Name()) {
-			compressedFiles = append(compressedFiles, file.Name())
+	// Group by extension so we never mix .gz and .zst into one packed file.
+	// Track the newest mtime so we can skip dirs that look like a harvest is
+	// currently writing them.
+	groups := make(map[string][]string, len(packExts))
+	var newestMtime time.Time
+	for _, e := range entries {
+		if compressedExt(e.Name()) == "" {
+			continue
 		}
+		info, err := e.Info()
+		if err != nil {
+			if *verbose {
+				log.Printf("warning: stat %s: %v", filepath.Join(path, e.Name()), err)
+			}
+			continue
+		}
+		if m := info.ModTime(); m.After(newestMtime) {
+			newestMtime = m
+		}
+		ext := compressedExt(e.Name())
+		groups[ext] = append(groups[ext], e.Name())
 	}
 
-	if len(compressedFiles) < *minFiles {
+	// Heuristic harvest-collision guard: if any compressed file was written
+	// recently, a harvest may still be active; skip and let the next run
+	// catch it.
+	if !newestMtime.IsZero() && *quietPeriod > 0 && time.Since(newestMtime) < *quietPeriod {
 		if *verbose {
-			log.Printf("skipped %s: only %d files (minimum: %d)", filepath.Base(path), len(compressedFiles), *minFiles)
+			log.Printf("skipped %s: newest file modified %s ago (< quiet period %s)", filepath.Base(path), time.Since(newestMtime).Round(time.Second), *quietPeriod)
 		}
 		stats.SkippedDirs++
 		return
 	}
 
-	// Sort by date (no need to worry about extension since same date = same extension)
-	sortFilesByDate(compressedFiles)
-	latestFile := compressedFiles[len(compressedFiles)-1]
+	// Pack each extension group independently. Iterate packExts (not the map)
+	// for deterministic processing order.
+	processed := false
+	for _, ext := range packExts {
+		files := groups[ext]
+		if len(files) == 0 {
+			continue
+		}
+		if packGroup(path, ext, files, stats) {
+			processed = true
+		}
+	}
+	if !processed {
+		stats.SkippedDirs++
+	}
+}
 
-	stats.TotalFiles += len(compressedFiles)
-	stats.PackedFiles += len(compressedFiles)
+// packGroup packs a single extension's files in one directory. Returns true
+// when the group was packed (or would have been, in dry-run mode); false when
+// it was skipped (too few files, concat failure, etc.).
+//
+// Pack ordering is designed so a crash never causes silent duplication on the
+// next run:
+//
+//  1. concat all inputs to a tmp file (originals untouched)
+//  2. quarantine all non-latest originals by renaming to <name>.stale
+//  3. atomic rename tmp -> latestFile (the harvest offset signal)
+//  4. best-effort rm of .stale files
+//
+// If phase 2 or 3 fails, we roll back any quarantine renames so the directory
+// returns to its starting state. Leftover .stale files (or a leftover tmp)
+// are visible signals of an incomplete prior run.
+func packGroup(path, ext string, files []string, stats *Stats) bool {
+	if len(files) < *minFiles {
+		if *verbose {
+			log.Printf("skipped %s (%s): only %d files (minimum: %d)", filepath.Base(path), ext, len(files), *minFiles)
+		}
+		return false
+	}
+
+	sortFilesByDate(files)
+	latestFile := files[len(files)-1]
+
+	stats.TotalFiles += len(files)
+	stats.PackedFiles += len(files)
 
 	if *dryRun {
 		stats.ProcessedDirs++
-		stats.BytesSaved += int64(len(compressedFiles)-1) * 4096
-		fileCount := colorizeFileCount(len(compressedFiles))
-		fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s files -> %s (DRY RUN)\n", stats.TotalDirs, filepath.Base(path), fileCount, latestFile)
-		return
+		stats.BytesSaved += int64(len(files)-1) * 4096
+		fileCount := colorizeFileCount(len(files))
+		fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s %s files -> %s (DRY RUN)\n", stats.TotalDirs, filepath.Base(path), fileCount, ext, latestFile)
+		return true
 	}
 
-	// Concatenate files - explicit cleanup, no defer in loop
 	targetPath := filepath.Join(path, latestFile)
-	tmpPath := filepath.Join(path, ".tmp_concat")
+	// Tmp path is per-extension so a same-dir group of the other extension
+	// can't collide. Any leftover from a prior crashed run is overwritten
+	// when we open it for writing.
+	tmpPath := filepath.Join(path, ".tmp_pack"+ext)
 
-	if !concatenateFiles(path, compressedFiles, tmpPath, targetPath) {
-		stats.SkippedDirs++
-		return
+	// Phase 1: concat all inputs into the tmp file. Originals untouched.
+	if err := writeConcat(path, files, tmpPath); err != nil {
+		log.Printf("error: concat for %s (%s) failed: %v", path, ext, err)
+		os.Remove(tmpPath)
+		stats.FailedDirs++
+		return false
 	}
 
-	// Delete other files
+	// Phase 2: quarantine non-latest originals so a partial-failure or crash
+	// in phase 3+ can't cause future runs to re-include them and produce
+	// duplicates. Renames are atomic on the same filesystem.
+	var moves []quarantineMove
+	for _, fn := range files {
+		if fn == latestFile {
+			continue
+		}
+		from := filepath.Join(path, fn)
+		to := from + staleSuffix
+		if err := os.Rename(from, to); err != nil {
+			log.Printf("error: cannot quarantine %s: %v; rolling back", from, err)
+			rollbackQuarantine(moves, stats)
+			os.Remove(tmpPath)
+			stats.FailedDirs++
+			return false
+		}
+		moves = append(moves, quarantineMove{from, to})
+	}
+
+	// Phase 3: install the new pack atomically. Until this rename completes
+	// the directory still contains the old latestFile (which is one of our
+	// concat inputs and therefore fully represented in the tmp file).
+	if err := os.Rename(tmpPath, targetPath); err != nil {
+		log.Printf("error: cannot install pack file %s: %v; rolling back", targetPath, err)
+		rollbackQuarantine(moves, stats)
+		os.Remove(tmpPath)
+		stats.FailedDirs++
+		return false
+	}
+
+	// Phase 4: best-effort cleanup of quarantined files. Failures here don't
+	// affect correctness — .stale files are skipped by future pack runs.
 	deletedCount := 0
-	for _, filename := range compressedFiles {
-		if filename != latestFile {
-			fullPath := filepath.Join(path, filename)
-			if err := os.Remove(fullPath); err != nil {
-				if *verbose {
-					log.Printf("warning: failed to delete %s: %v", fullPath, err)
-				}
-			} else {
-				deletedCount++
+	for _, m := range moves {
+		if err := os.Remove(m.to); err != nil {
+			if *verbose {
+				log.Printf("warning: failed to delete %s: %v (left as orphan; safe to remove manually)", m.to, err)
 			}
+		} else {
+			deletedCount++
 		}
 	}
 
 	stats.ProcessedDirs++
 	stats.BytesSaved += int64(deletedCount) * 4096
-	fileCount := colorizeFileCount(len(compressedFiles))
-	fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s files, deleted %d files -> %s\n", stats.TotalDirs, filepath.Base(path), fileCount, deletedCount, latestFile)
+	fileCount := colorizeFileCount(len(files))
+	fmt.Printf("[%d] \033[90m%s\033[0m: ✓ packed %s %s files, deleted %d files -> %s\n", stats.TotalDirs, filepath.Base(path), fileCount, ext, deletedCount, latestFile)
+	return true
+}
+
+// rollbackQuarantine reverses successful quarantine renames. A rollback
+// failure leaves the directory in a half-quarantined state — uncommon (same
+// filesystem, file we just created) but loud when it happens.
+func rollbackQuarantine(moves []quarantineMove, stats *Stats) {
+	for _, m := range moves {
+		if err := os.Rename(m.to, m.from); err != nil {
+			log.Printf("FATAL: rollback rename %s -> %s failed: %v; manual cleanup required", m.to, m.from, err)
+			stats.FailedDirs++
+		}
+	}
 }
 
 func sortFilesByDate(files []string) {
@@ -187,37 +335,25 @@ func copyFile(dst io.Writer, srcPath string) error {
 	return err
 }
 
-func concatenateFiles(dir string, filenames []string, tmpPath, targetPath string) bool {
+// writeConcat writes the concatenation of filenames (in order) to tmpPath.
+// The caller is responsible for renaming tmpPath into place and for removing
+// it on error.
+func writeConcat(dir string, filenames []string, tmpPath string) error {
 	out, err := os.Create(tmpPath)
 	if err != nil {
-		log.Printf("error creating temp file: %v", err)
-		return false
+		return fmt.Errorf("create tmp: %w", err)
 	}
-
-	success := true
 	for _, filename := range filenames {
-		fullPath := filepath.Join(dir, filename)
-		if err := copyFile(out, fullPath); err != nil {
-			success = false
-			break
+		full := filepath.Join(dir, filename)
+		if err := copyFile(out, full); err != nil {
+			out.Close()
+			return fmt.Errorf("copy %s: %w", full, err)
 		}
 	}
-
-	out.Close() // explicit close
-
-	if !success {
-		os.Remove(tmpPath) // cleanup on failure
-		return false
+	if err := out.Close(); err != nil {
+		return fmt.Errorf("close tmp: %w", err)
 	}
-
-	// Atomic replace
-	if err := os.Rename(tmpPath, targetPath); err != nil {
-		log.Printf("error replacing file: %v", err)
-		os.Remove(tmpPath) // cleanup on failure
-		return false
-	}
-
-	return true
+	return nil
 }
 
 func colorizeFileCount(count int) string {
