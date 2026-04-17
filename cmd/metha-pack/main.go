@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/miku/metha"
@@ -123,6 +124,24 @@ const staleSuffix = ".stale"
 
 // quarantineMove records a successful rename so we can roll it back.
 type quarantineMove struct{ from, to string }
+
+// acquireLock takes a non-blocking exclusive flock on path, creating the file
+// if needed. The returned file must outlive the lock; it is released when the
+// file is closed or the process exits. Unix-only (matches the rest of metha).
+func acquireLock(path string) (*os.File, error) {
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("open lock file: %w", err)
+	}
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		f.Close()
+		if err == syscall.EWOULDBLOCK {
+			return nil, fmt.Errorf("another metha-pack is running (lock held on %s)", path)
+		}
+		return nil, fmt.Errorf("flock %s: %w", path, err)
+	}
+	return f, nil
+}
 
 // compressedExt returns the matching extension from packExts, or "" if the
 // file is not a packable compressed file.
