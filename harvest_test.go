@@ -62,11 +62,16 @@ func TestHarvestFiles(t *testing.T) {
 	BaseDir = tempDir
 	defer func() { BaseDir = origBaseDir }()
 
+	// Mix of final files (one per supported storage form) and a real
+	// temporary file. Files() must return the three final files and must
+	// exclude the temporary one. Plain .xml is a valid final file (used when
+	// Config.NoCompression is set); temp files use the *.xml-tmp* pattern, so
+	// they never match the *.xml glob.
 	testFiles := []string{
-		"test-00000001.xml.gz",
-		"test-00000002.xml.zst",
-		"test-00000003.xml",
-		"test-temp.xml",
+		"2020-01-01-00000001.xml",           // final, uncompressed
+		"2020-01-01-00000002.xml.gz",        // final, gzip
+		"2020-01-01-00000003.xml.zst",       // final, zstd
+		"2020-01-01-00000004.xml-tmp-12345", // temporary, must be excluded
 	}
 	for _, filename := range testFiles {
 		filePath := filepath.Join(h.Dir(), filename)
@@ -77,17 +82,30 @@ func TestHarvestFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	var (
-		files         = h.Files()
-		expectedCount = 2 // Only .gz and .zst files should be returned
-	)
-	if len(files) != expectedCount {
-		t.Errorf("got %d files; want %d", len(files), expectedCount)
+	files := h.Files()
+	if got, want := len(files), 3; got != want {
+		t.Fatalf("got %d files; want %d (%v)", got, want, files)
 	}
+	seen := make(map[string]bool, len(files))
 	for _, file := range files {
+		base := filepath.Base(file)
+		seen[base] = true
 		ext := filepath.Ext(file)
-		if ext != ".gz" && ext != ".zst" {
+		// .xml (uncompressed), .gz, .zst are all valid; -tmp* files are not.
+		if ext != ".xml" && ext != ".gz" && ext != ".zst" {
 			t.Errorf("unexpected extension: %s", file)
+		}
+		if strings.Contains(base, "-tmp-") {
+			t.Errorf("temporary file was not excluded: %s", file)
+		}
+	}
+	for _, want := range []string{
+		"2020-01-01-00000001.xml",
+		"2020-01-01-00000002.xml.gz",
+		"2020-01-01-00000003.xml.zst",
+	} {
+		if !seen[want] {
+			t.Errorf("missing expected final file: %s", want)
 		}
 	}
 }
