@@ -4,7 +4,7 @@ VERSION = 0.4.28
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
 GO_FILES := $(shell find . -name "*.go" -type f -not -path "./cmd/*")
-MAKEFLAGS := --jobs=$(shell nproc)
+MAKEFLAGS := --jobs=$(shell nproc 2>/dev/null || sysctl -n hw.physicalcpu)
 
 PKGNAME = metha
 
