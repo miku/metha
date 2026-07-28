@@ -21,9 +21,10 @@ builds:
     main: ./cmd/metha-sync
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    # metha keeps its version in a const (version.go), so skip the default
-    # -X main.version injection (a cmd also has a bool `version` flag).
-    ldflags: [-s, -w]
+    # Inject the version (from the git tag) into the shared metha package var,
+    # not main.version (a cmd also has a bool `version` flag). Local builds
+    # keep the "dev" default from version.go.
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -32,7 +33,7 @@ builds:
     main: ./cmd/metha-cat
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -41,7 +42,7 @@ builds:
     main: ./cmd/metha-id
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -50,7 +51,7 @@ builds:
     main: ./cmd/metha-ls
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -59,7 +60,7 @@ builds:
     main: ./cmd/metha-files
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -68,7 +69,7 @@ builds:
     main: ./cmd/metha-fortune
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
@@ -77,7 +78,7 @@ builds:
     main: ./cmd/metha-pack
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
-    ldflags: [-s, -w]
+    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
