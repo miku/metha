@@ -1,0 +1,178 @@
+# goreleaser config for metha. See https://goreleaser.com
+#
+# Local dry run:   make snapshot   (writes artifacts to ./dist, no publishing)
+# Real release:    git tag vX.Y.Z && make release   (needs GITHUB_TOKEN)
+version: 2
+
+project_name: metha
+
+before:
+  hooks:
+    - go mod tidy
+
+# One build per command. CGO disabled on purpose, see
+# https://github.com/miku/metha/issues/31
+builds:
+  - id: metha-sync
+    binary: metha-sync
+    main: ./cmd/metha-sync
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-cat
+    binary: metha-cat
+    main: ./cmd/metha-cat
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-id
+    binary: metha-id
+    main: ./cmd/metha-id
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-ls
+    binary: metha-ls
+    main: ./cmd/metha-ls
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-files
+    binary: metha-files
+    main: ./cmd/metha-files
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-fortune
+    binary: metha-fortune
+    main: ./cmd/metha-fortune
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+  - id: metha-pack
+    binary: metha-pack
+    main: ./cmd/metha-pack
+    env: [CGO_ENABLED=0]
+    flags: [-trimpath]
+    # metha keeps its version in a const (version.go), so skip the default
+    # -X main.version injection (a cmd also has a bool `version` flag).
+    ldflags: [-s, -w]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    # No windows: metha-pack uses syscall.Flock (unix only).
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+
+# All commands ship together in a single archive per os/arch.
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    # windows lacks metha-pack (syscall.Flock), so counts differ per platform.
+    allow_different_binary_count: true
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+      - docs/metha.1
+      - extra/linux/metha.service
+
+# Linux packages, mirrors the previous nfpm.yaml. nfpm only packages linux
+# builds, so darwin/windows are skipped automatically.
+nfpms:
+  - id: packages
+    package_name: metha
+    vendor: Leipzig University Library
+    homepage: https://github.com/miku/metha
+    maintainer: Martin Czygan <martin.czygan@uni-leipzig.de>
+    description: No frills incremental OAI harvesting for the command line.
+    license: GPL
+    section: utils
+    priority: optional
+    formats: [deb, rpm]
+    # Native package naming: metha_0.4.29_amd64.deb, metha-0.4.29.x86_64.rpm
+    file_name_template: "{{ .ConventionalFileName }}"
+    umask: 0o002
+    bindir: /usr/local/bin
+    contents:
+      - src: docs/metha.1
+        dst: /usr/local/share/man/man1/metha.1
+        file_info:
+          mode: 0644
+      - src: extra/linux/metha.service
+        dst: /usr/lib/systemd/system/metha.service
+        file_info:
+          mode: 0644
+    deb:
+      compression: zstd
+    rpm:
+      compression: zstd
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^Merge "
+
+release:
+  github:
+    owner: miku
+    name: metha

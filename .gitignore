@@ -1,6 +1,7 @@
 /metha-*
 metha*.deb
 metha*.rpm
+/dist/
 /TODO.md
 /tmp
 *.pprof

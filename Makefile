@@ -11,6 +11,9 @@ PKGNAME = metha
 .PHONY: all
 all: $(TARGETS)
 
+# Local, native builds for development. Cross-platform release artifacts
+# (linux/darwin/windows, amd64/arm64, deb/rpm) are built by goreleaser, see
+# the snapshot/release targets below and .goreleaser.yaml.
 $(TARGETS): %: cmd/%/main.go contrib/sites.tsv $(GO_FILES)
 	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ $<
 
@@ -21,24 +24,27 @@ test:
 .PHONY: clean
 clean:
 	rm -f $(TARGETS)
-	rm -f $(PKGNAME)_*deb
-	rm -f $(PKGNAME)-*rpm
-	rm -rf packaging/deb/$(PKGNAME)/usr
+	rm -rf dist
 
 .PHONY: imports
 imports:
 	goimports -w .
 
-# nfpm-based packaging (preferred).
-SEMVER := $(shell echo $(VERSION) | sed 's/^v//')
+# Build all release artifacts locally into ./dist without publishing. Use this
+# to sanity-check a release before tagging.
+.PHONY: snapshot
+snapshot:
+	goreleaser release --snapshot --clean --skip=publish
 
-.PHONY: deb
-deb: $(TARGETS)
-	SEMVER=$(SEMVER) GOARCH=amd64 nfpm package -p deb -f nfpm.yaml
+# Cross-compile every target into ./dist without archiving or packaging.
+.PHONY: dist
+dist:
+	goreleaser build --snapshot --clean
 
-.PHONY: rpm
-rpm: $(TARGETS)
-	SEMVER=$(SEMVER) GOARCH=amd64 nfpm package -p rpm -f nfpm.yaml
+# Publish a release. Requires a git tag (e.g. v$(VERSION)) and GITHUB_TOKEN.
+.PHONY: release
+release:
+	goreleaser release --clean
 
 .PHONY: update-version
 update-version:
@@ -47,4 +53,3 @@ update-version:
 docs/metha.1: docs/metha.md
 	# https://github.com/sunaku/md2man
 	md2man-roff docs/metha.md > docs/metha.1
-
