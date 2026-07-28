@@ -12,8 +12,6 @@ import time
 import random
 import argparse
 from pathlib import Path
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
 from bs4 import BeautifulSoup
 import requests
 import hashlib
@@ -26,7 +24,6 @@ from requests.adapters import HTTPAdapter
 Anubis HTTPAdapter for requests library
 Automatically detects and solves Anubis challenges transparently
 """
-
 
 
 class AnubisHTTPAdapter(HTTPAdapter):
@@ -57,11 +54,22 @@ class AnubisHTTPAdapter(HTTPAdapter):
 
         # Check if it's an Anubis challenge
         if self._is_anubis_challenge(response):
-            print(f"Anubis challenge detected for {request.url}")
+            print(f"Anubis challenge detected for {request.url}", file=sys.stderr)
+
+            # Reuse the same transport settings when submitting the solution.
+            send_kwargs = {
+                "stream": stream,
+                "timeout": timeout,
+                "verify": verify,
+                "cert": cert,
+                "proxies": proxies,
+            }
 
             # Solve the challenge and get a new response
-            solved_response = self._solve_anubis_challenge(response, request)
-            if solved_response:
+            solved_response = self._solve_anubis_challenge(
+                response, request, send_kwargs
+            )
+            if solved_response is not None:
                 return solved_response
 
         return response
@@ -73,13 +81,12 @@ class AnubisHTTPAdapter(HTTPAdapter):
 
         try:
             content = response.text.lower()
-            return (
-                "anubis" in content
-                and "making sure you" in content
-                and "not a bot" in content
-                and "anubis_challenge" in content
-            )
-        except:
+            # The `anubis_challenge` <script> tag holds the challenge JSON we
+            # need to solve it. Detect on that alone: the human-readable
+            # strings ("making sure you", "not a bot") are localized and are
+            # dropped from the minimal template Anubis serves to some clients.
+            return "anubis" in content and "anubis_challenge" in content
+        except Exception:
             return False
 
     def _extract_challenge_data(self, html_content):
@@ -104,7 +111,7 @@ class AnubisHTTPAdapter(HTTPAdapter):
 
     def _solve_pow(self, challenge, difficulty):
         """Solve the proof-of-work challenge"""
-        print(f"Solving PoW challenge with difficulty: {difficulty}")
+        print(f"Solving PoW challenge with difficulty: {difficulty}", file=sys.stderr)
 
         nonce = 0
         start_time = time.time()
@@ -121,7 +128,8 @@ class AnubisHTTPAdapter(HTTPAdapter):
             if hash_hex.startswith("0" * difficulty):
                 elapsed = time.time() - start_time
                 print(
-                    f"Found solution! Nonce: {nonce} in {elapsed:.2f}s ({nonce / elapsed:.0f} H/s)"
+                    f"Found solution! Nonce: {nonce} in {elapsed:.2f}s ({nonce / elapsed:.0f} H/s)",
+                    file=sys.stderr,
                 )
                 return hash_hex, nonce
 
@@ -132,9 +140,13 @@ class AnubisHTTPAdapter(HTTPAdapter):
                 elapsed = time.time() - start_time
                 if elapsed > 0:
                     rate = nonce / elapsed
-                    print(f"Progress: {nonce} iterations, {rate:.0f} H/s")
+                    print(
+                        f"Progress: {nonce} iterations, {rate:.0f} H/s", file=sys.stderr
+                    )
 
-    def _solve_anubis_challenge(self, challenge_response, original_request):
+    def _solve_anubis_challenge(
+        self, challenge_response, original_request, send_kwargs
+    ):
         """Solve the Anubis challenge and return the final response"""
         try:
             # Extract challenge data
@@ -147,6 +159,14 @@ class AnubisHTTPAdapter(HTTPAdapter):
             challenge = challenge_data["challenge"]
             difficulty = rules["difficulty"]
 
+            # Newer Anubis ships the challenge as an object with `randomData`
+            # (the string hashed with the nonce) and `id` (used to look the
+            # challenge up on submission); older versions used a bare string.
+            challenge_id = None
+            if isinstance(challenge, dict):
+                challenge_id = challenge.get("id")
+                challenge = challenge["randomData"]
+
             # Solve the proof-of-work
             start_time = time.time()
             response_hash, nonce = self._solve_pow(challenge, difficulty)
@@ -154,20 +174,30 @@ class AnubisHTTPAdapter(HTTPAdapter):
 
             # Submit the solution
             return self._submit_solution(
-                challenge_response.url,
+                challenge_response,
                 base_prefix,
+                challenge_id,
                 response_hash,
                 nonce,
                 original_request.url,
                 elapsed_time,
+                send_kwargs,
             )
 
         except Exception as e:
-            print(f"Failed to solve Anubis challenge: {e}")
+            print(f"Failed to solve Anubis challenge: {e}", file=sys.stderr)
             return challenge_response
 
     def _submit_solution(
-        self, base_url, base_prefix, response_hash, nonce, redirect_url, elapsed_time
+        self,
+        challenge_response,
+        base_prefix,
+        challenge_id,
+        response_hash,
+        nonce,
+        redirect_url,
+        elapsed_time,
+        send_kwargs,
     ):
         """Submit the proof-of-work solution"""
         # Construct the submission URL
@@ -176,30 +206,55 @@ class AnubisHTTPAdapter(HTTPAdapter):
         else:
             api_path = "/.within.website/x/cmd/anubis/api/pass-challenge"
 
-        submit_url = urljoin(base_url, api_path)
+        submit_url = urljoin(challenge_response.url, api_path)
 
-        # Parameters for the submission
+        # Parameters for the submission. Newer Anubis stores the challenge
+        # server-side keyed by `id` and looks it up via this field, so it must
+        # be included or the server returns a 500 (challenge not found).
         params = {
             "response": response_hash,
             "nonce": str(nonce),
             "redir": redirect_url,
             "elapsedTime": str(int(elapsed_time * 1000)),  # Convert to milliseconds
         }
+        if challenge_id:
+            params["id"] = challenge_id
 
         submit_url_with_params = f"{submit_url}?{urlencode(params)}"
-        print("Submitting solution...")
+        print("Submitting solution...", file=sys.stderr)
 
-        # Make the submission request using the same session
-        response = self.session.get(submit_url_with_params, allow_redirects=True)
+        # We intercepted the challenge response here in the adapter, so the
+        # session never saw the test cookie Anubis set on it. Carry that cookie
+        # (and the original User-Agent) on the submission request explicitly.
+        # The pass-challenge endpoint responds with a redirect to the target
+        # plus the auth cookie; returning it lets the outer session follow the
+        # redirect and re-fetch the now-unprotected page.
+        submit_request = requests.Request("GET", submit_url_with_params)
+        prepared = submit_request.prepare()
+        user_agent = challenge_response.request.headers.get("User-Agent")
+        if user_agent:
+            prepared.headers["User-Agent"] = user_agent
+        prepared.prepare_cookies(challenge_response.cookies)
 
-        print(f"Challenge solved! Status: {response.status_code}")
+        response = super().send(prepared, **send_kwargs)
+
+        print(f"Challenge solved! Status: {response.status_code}", file=sys.stderr)
         return response
+
+
+# A real browser User-Agent. Anubis serves a full, solvable challenge page to
+# browser-like clients; the default python-requests UA gets a stripped page.
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
 
 # Convenience function to create a session with Anubis handling
 def create_anubis_session():
     """Create a requests session with Anubis challenge handling enabled"""
     session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
     adapter = AnubisHTTPAdapter()
 
     # Mount for all HTTPS requests
@@ -209,58 +264,41 @@ def create_anubis_session():
     return session
 
 
-# Example usage
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 2:
-        print("Usage: python anubis_adapter.py <url>")
-        sys.exit(1)
-
-    url = sys.argv[1]
-
-    # Method 1: Using the convenience function
-    print("=== Using convenience function ===")
-    session = create_anubis_session()
-    response = session.get(url)
-    print(f"Status: {response.status_code}")
-    print(f"Content length: {len(response.text)}")
-
-    print("\n" + "=" * 50)
-    print("RESPONSE CONTENT:")
-    print("=" * 50)
-    print(response.text[:500])
-    if len(response.text) > 500:
-        print("... (truncated)")
-
-    # Method 2: Manual mounting (commented out)
-    """
-    print("\n=== Manual mounting example ===")
-    session = requests.Session()
-    adapter = AnubisHTTPAdapter()
-
-    # Mount only for specific domain
-    session.mount('https://protected-site.com', adapter)
-
-    response = session.get(url)
-    print(f"Status: {response.status_code}")
-    """
-
-
 # extraction script
 # =================
+
+app_name = "metha-extra-base-provider-scrape"  # for cache
 
 
 def get_cache_dir():
     """Get the cache directory following XDG Base Directory Specification."""
     xdg_cache = os.environ.get("XDG_CACHE_HOME")
     if xdg_cache:
-        cache_dir = Path(xdg_cache) / "basescrape"
+        cache_dir = Path(xdg_cache) / app_name
     else:
-        cache_dir = Path.home() / ".cache" / "basescrape"
+        cache_dir = Path.home() / ".cache" / app_name
 
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
+
+
+# Lazily-created session that transparently solves Anubis challenges. Reused
+# across pages so the auth cookie obtained by solving one challenge carries
+# over and later pages don't each have to solve a fresh one.
+_ANUBIS_SESSION = None
+
+
+def get_anubis_session():
+    global _ANUBIS_SESSION
+    if _ANUBIS_SESSION is None:
+        _ANUBIS_SESSION = create_anubis_session()
+    return _ANUBIS_SESSION
+
+
+def _looks_like_challenge(html_content):
+    """True if the HTML is an unsolved Anubis challenge page, not real content."""
+    lowered = html_content.lower()
+    return "anubis" in lowered and "anubis_challenge" in lowered
 
 
 def fetch_page(url, cache_dir, sleep_time=3):
@@ -269,24 +307,33 @@ def fetch_page(url, cache_dir, sleep_time=3):
     page_num = url.split("page=")[-1].split("&")[0] if "page=" in url else "1"
     cache_file = cache_dir / f"page_{page_num}.html"
 
-    # Check if cached version exists
+    # Check if cached version exists (but never trust a cached challenge page,
+    # which an earlier broken run may have written).
     if cache_file.exists():
-        print(f"Using cached page {page_num}", file=sys.stderr)
         with open(cache_file, "r", encoding="utf-8") as f:
-            return f.read()
+            cached = f.read()
+        if not _looks_like_challenge(cached):
+            print(f"Using cached page {page_num}", file=sys.stderr)
+            return cached
+        print(
+            f"Cached page {page_num} is a challenge page, refetching", file=sys.stderr
+        )
 
     # Fetch from web
     print(f"Downloading page {page_num}...", file=sys.stderr)
 
     try:
-        # Add some headers to look like a real browser
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        req = Request(url, headers=headers)
+        # The session transparently detects and solves Anubis challenges.
+        response = get_anubis_session().get(url, timeout=30)
+        response.raise_for_status()
+        html_content = response.text
 
-        with urlopen(req, timeout=30) as response:
-            html_content = response.read().decode("utf-8")
+        if _looks_like_challenge(html_content):
+            print(
+                f"Failed to solve Anubis challenge for page {page_num}",
+                file=sys.stderr,
+            )
+            return None
 
         # Cache the content
         with open(cache_file, "w", encoding="utf-8") as f:
@@ -301,7 +348,7 @@ def fetch_page(url, cache_dir, sleep_time=3):
 
         return html_content
 
-    except (URLError, HTTPError) as e:
+    except requests.RequestException as e:
         print(f"Error fetching page {page_num}: {e}", file=sys.stderr)
         return None
 
