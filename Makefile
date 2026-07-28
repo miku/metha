@@ -30,21 +30,22 @@ clean:
 imports:
 	goimports -w .
 
-# Build all release artifacts locally into ./dist without publishing. Use this
+# Build the deb/rpm packages locally into ./dist without publishing. Use this
 # to sanity-check a release before tagging.
 .PHONY: snapshot
 snapshot:
-	goreleaser release --snapshot --clean --skip=publish
+	goreleaser release --snapshot --clean --skip=publish,archive
 
 # Cross-compile every target into ./dist without archiving or packaging.
 .PHONY: dist
 dist:
 	goreleaser build --snapshot --clean
 
-# Publish a release. Requires a git tag (e.g. v$(VERSION)) and GITHUB_TOKEN.
+# Publish a release (deb/rpm only, no tarballs). Requires a git tag
+# (e.g. v$(VERSION)) and GITHUB_TOKEN.
 .PHONY: release
 release:
-	goreleaser release --clean
+	goreleaser release --clean --skip=archive
 
 .PHONY: update-version
 update-version:
