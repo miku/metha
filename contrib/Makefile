@@ -3,9 +3,10 @@
 # requires: python, curl, pup, jq, moreutils
 #
 SHELL := /bin/bash
+.SHELLFLAGS := -e -u -o pipefail -c
 
 sites.tsv: sites-extra.tsv sites-roar.tsv sites-oa.tsv
-	cat $^ | python unique_by_schema.py | sed -e 's@/$$@@g' | sed -e 's@https://api.whatsapp.com/send?text=@@g' | sort -u > $@
+	cat $^ | python3 unique_by_schema.py | sed -e 's@/$$@@g' | sed -e 's@https://api.whatsapp.com/send?text=@@g' | sort -u > $@
 	# try to filter out predatory journals
 	grep -v -f predatory.tsv < sites.tsv | sponge sites.tsv
 	grep -v "web.archive.org/web" < sites.tsv | sponge sites.tsv
