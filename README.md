@@ -6,8 +6,7 @@
 > then make OAI-PMH service requests to harvest that metadata. -- https://www.openarchives.org/pmh/
 
 The metha command line tools can gather information on OAI-PMH endpoints and
-harvest data incrementally. The goal of metha is to make it simple to get
-access to data, its focus is not to manage it.
+harvest data incrementally. The goal of metha is to simplify data access.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20804433.svg)](https://zenodo.org/badge/latestdoi/56384577) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
@@ -23,11 +22,7 @@ The metha tool has been developed for [project finc](https://finc.info) at
   there. It is a widely used
   [protocol](http://www.openarchives.org/OAI/openarchivesprotocol.html) and
   somewhat worth knowing.
-* I wanted something simple for the command line; also fast and robust - metha
-  as it is implemented now, is relatively robust and more efficient than
-  requesting all record one-by-one (there is one
-  [annoyance](https://github.com/miku/metha/issues/6) which will hopefully be
-  fixed soon).
+* I wanted something simple for the command line; also fast and robust, while not stressing servers too much
 
 ## How it works
 
