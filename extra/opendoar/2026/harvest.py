@@ -159,31 +159,32 @@ def harvest(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Harvest OpenDOAR repository metadata to NDJSON."
+        description="Harvest OpenDOAR repository metadata to NDJSON.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-s", "--start", type=int, default=1, help="first repository ID (default: 1)"
+        "-s", "--start", type=int, default=1, help="first repository ID"
     )
     parser.add_argument(
         "-e",
         "--end",
         type=int,
-        default=10000,
-        help="last repository ID (default: 10000)",
+        default=12000,
+        help="last repository ID",
     )
     parser.add_argument(
         "-d",
         "--delay",
         type=float,
         default=1.0,
-        help="seconds to wait between requests (default: 1.0)",
+        help="seconds to wait between requests",
     )
     parser.add_argument(
         "-t",
         "--timeout",
         type=float,
         default=30.0,
-        help="HTTP request timeout in seconds (default: 30.0)",
+        help="HTTP request timeout in seconds",
     )
     parser.add_argument(
         "-k",
@@ -192,7 +193,9 @@ def main():
         help="disable SSL certificate verification",
     )
     args = parser.parse_args()
-    harvest(args.start, args.end, args.delay, args.timeout, verify_ssl=not args.insecure)
+    harvest(
+        args.start, args.end, args.delay, args.timeout, verify_ssl=not args.insecure
+    )
 
 
 if __name__ == "__main__":
