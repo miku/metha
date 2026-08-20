@@ -10,7 +10,7 @@ require (
 	github.com/neurosnap/sentences v1.1.2
 	github.com/nytlabs/mxj v0.0.0-20140325221504-70c0faeef2e6
 	github.com/sethgrid/pester v1.2.0
-	github.com/sirupsen/logrus v1.10.0
+	github.com/sirupsen/logrus v1.10.1
 	golang.org/x/net v0.58.0
 	golang.org/x/time v0.15.0
 )
