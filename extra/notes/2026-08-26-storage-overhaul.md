@@ -446,6 +446,41 @@ shards carries a sidecar pair per failed endpoint; metha-sync now runs the
 harvest in a function that returns its error, so the writer is closed on every
 path, interrupts included
 
+## phase 3, first half
+
+**index-driven reads**: `ReadOptions` grew `SetSpec` and a `DeletedPolicy`; with
+any filter set, the v2 reader asks the index which frames can hold a match and
+decompresses only those, and with no filter it still just walks the segments,
+which is faster than a query for "give me everything"
+
+the index prunes, it never decides: every record that comes out of a frame is
+checked against the filter again, so an index that has fallen behind the
+segments can only cost time, never produce a wrong answer; a group the index
+cannot answer for falls back to a full scan; a test asserts the two paths agree
+across eight filter combinations, and another that a two-month query on a
+six-frame shard touches two frames
+
+setSpec is deliberately *not* pushed into the query: a record can be in several
+sets and the index keeps them as one space-separated field, so matching that
+field could drop a frame that holds a match; the datestamp bounds and the
+deleted status do the pruning, and the set is matched on the record
+
+**deleted records**: always stored, and `metha-cat` now suppresses them by
+default, `-deleted` includes them, `-only-deleted` isolates them - a behavior
+change, and the one thing in phase 3 that an existing pipeline would notice;
+`-setspec` is new too, and every filter works the same against v1, by scanning
+
+**metha-stat**: windows, how many were empty or failed, requests, records,
+tombstones, coverage, bytes on disk against bytes fetched, compression ratio,
+harvest time and throughput; one endpoint in detail, or a line per endpoint over
+the whole cache, `-json` for piping, `-failed` to list only the endpoints with
+failed windows; v1 has no index so its counts read `-`
+
+window timestamps went to nanosecond precision, so a window that took a fraction
+of a second still reports a rate
+
+still open in phase 3: metha-export and the derived catalog.sqlite
+
 ## open questions
 
 * one shard per (baseURL, format, set) as today, or one per baseURL with format

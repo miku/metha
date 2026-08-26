@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"iter"
 	"os"
+	"slices"
 
 	"github.com/miku/metha"
 )
@@ -67,13 +68,57 @@ type Entry struct {
 	Dir      string
 }
 
+// DeletedPolicy says what to do with records an endpoint has marked deleted.
+// A store keeps them always: a tombstone is the only evidence that a record
+// used to exist, and dropping it at write time would lose that for good.
+type DeletedPolicy int
+
+const (
+	// DeletedKeep yields deleted records along with the rest. It is the zero
+	// value because a store hands back what it holds; suppressing tombstones
+	// is a decision for whoever is asking.
+	DeletedKeep DeletedPolicy = iota
+	// DeletedSkip yields only records that are not deleted.
+	DeletedSkip
+	// DeletedOnly yields only the tombstones.
+	DeletedOnly
+)
+
 // ReadOptions filters a record stream. The zero value selects everything.
 // Bounds are compared against the record datestamp as strings, which works
 // because OAI datestamps are ISO 8601: a "2023-01-01" bound also matches the
 // "2023-01-01T12:00:00Z" form used by endpoints with finer granularity.
 type ReadOptions struct {
-	From  string // inclusive lower bound on the record datestamp
-	Until string // inclusive upper bound on the record datestamp
+	From    string // inclusive lower bound on the record datestamp
+	Until   string // inclusive upper bound on the record datestamp
+	SetSpec string // only records carrying this setSpec
+	Deleted DeletedPolicy
+}
+
+// match reports whether a record passes the filter.
+func (opts ReadOptions) match(rec *metha.Record) bool {
+	if opts.From != "" && rec.Header.DateStamp < opts.From {
+		return false
+	}
+	if opts.Until != "" && rec.Header.DateStamp > opts.Until {
+		return false
+	}
+	if opts.SetSpec != "" && !slices.Contains(rec.Header.SetSpec, opts.SetSpec) {
+		return false
+	}
+	switch opts.Deleted {
+	case DeletedSkip:
+		return !rec.Deleted()
+	case DeletedOnly:
+		return rec.Deleted()
+	}
+	return true
+}
+
+// selective reports whether the filter can rule records out, and so whether
+// consulting an index before decompressing anything can pay off.
+func (opts ReadOptions) selective() bool {
+	return opts.From != "" || opts.Until != "" || opts.SetSpec != "" || opts.Deleted != DeletedKeep
 }
 
 // Store is the read side of a single harvested endpoint.

@@ -134,10 +134,7 @@ func recordsFromFile(path string, opts ReadOptions, yield func(metha.Record, err
 			return false
 		}
 		for _, rec := range resp.ListRecords.Records {
-			if opts.From != "" && rec.Header.DateStamp < opts.From {
-				continue
-			}
-			if opts.Until != "" && rec.Header.DateStamp > opts.Until {
+			if !opts.match(&rec) {
 				continue
 			}
 			if !yield(rec, nil) {

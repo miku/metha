@@ -103,6 +103,11 @@ type Record struct {
 	About    About    `xml:"about,omitempty" json:"about,omitempty"`
 }
 
+// Deleted reports whether the endpoint has marked this record as deleted. The
+// status attribute is the only place that is said; the record still carries its
+// identifier and datestamp, and usually an empty metadata element.
+func (rec Record) Deleted() bool { return rec.Header.Status == "deleted" }
+
 // ListIdentifiers lists headers only.
 type ListIdentifiers struct {
 	Headers         []Header        `xml:"header,omitempty" json:"header,omitempty"`

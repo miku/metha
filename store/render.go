@@ -15,6 +15,8 @@ type RenderOpts struct {
 	Root    string
 	From    string
 	Until   string
+	SetSpec string
+	Deleted DeletedPolicy
 	UseJson bool
 }
 
@@ -28,7 +30,12 @@ func Render(s Store, opts RenderOpts) error {
 			return err
 		}
 	}
-	read := ReadOptions{From: opts.From, Until: opts.Until}
+	read := ReadOptions{
+		From:    opts.From,
+		Until:   opts.Until,
+		SetSpec: opts.SetSpec,
+		Deleted: opts.Deleted,
+	}
 	for rec, err := range s.Records(read) {
 		if err != nil {
 			return err

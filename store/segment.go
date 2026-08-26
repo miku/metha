@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/miku/metha"
@@ -19,17 +20,18 @@ const (
 	// segExt marks a segment file. The extension is honest: a segment is a
 	// plain sequence of zstd frames, so every zstd tool can read one.
 	segExt = ".zst"
-	// frameTarget is how much uncompressed response data accumulates before a
-	// frame is flushed. One frame per response would compress badly, since a
-	// single response is small and shares little with itself; one frame per
-	// segment would rule out reading a record without decompressing
-	// everything before it.
-	frameTarget = 8 << 20
 	// segMaxSize is the compressed size past which a new segment is started at
 	// the next window boundary. Segments are rotated between windows only, so
 	// the frames of one window always land in one file.
 	segMaxSize = 256 << 20
 )
+
+// frameTarget is how much uncompressed response data accumulates before a frame
+// is flushed. One frame per response would compress badly, since a single
+// response is small and shares little with itself; one frame per segment would
+// rule out reading a record without decompressing everything before it. A
+// variable so that tests can produce several frames without writing megabytes.
+var frameTarget int64 = 8 << 20
 
 // segFileName returns the name of the nth segment of a group.
 func segFileName(n int) string {
@@ -122,10 +124,10 @@ func scanRecords(raw []byte) ([]recordRef, error) {
 		end := dec.InputOffset()
 		start := prev + int64(bytes.IndexByte(raw[prev:end], '<'))
 		sum := sha256.Sum256(raw[start:end])
-		var setSpec string
-		if len(rec.Header.SetSpec) > 0 {
-			setSpec = rec.Header.SetSpec[0]
-		}
+		// A record can be in several sets. They are kept as one field,
+		// space separated, which a setSpec cannot contain: enough for an
+		// export to read back, though not for the index to filter on.
+		setSpec := strings.Join(rec.Header.SetSpec, " ")
 		refs = append(refs, recordRef{
 			Identifier: rec.Header.Identifier,
 			Datestamp:  rec.Header.DateStamp,

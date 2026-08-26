@@ -328,7 +328,9 @@ func ts(t time.Time) string {
 	if t.IsZero() {
 		return ""
 	}
-	return t.UTC().Format(time.RFC3339)
+	// Nanosecond precision, so that a window that took a fraction of a second
+	// still reports a duration and a rate.
+	return t.UTC().Format(time.RFC3339Nano)
 }
 
 // windowDate renders a stored boundary as the date a harvest resumes from.

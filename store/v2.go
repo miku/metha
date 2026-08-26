@@ -215,26 +215,6 @@ func (s *v2Store) segments() ([]string, error) {
 	return files, nil
 }
 
-// Records streams the group's records by walking the segments in order. The
-// index is not consulted: a segment is the source of truth, and reading it
-// whole is the right shape for "give me everything". Resolving a filter
-// against the index, so that only the frames that can match are decompressed,
-// is what the index is for and comes with the query work.
-func (s *v2Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
-	return func(yield func(metha.Record, error) bool) {
-		files, err := s.segments()
-		if err != nil {
-			yield(metha.Record{}, err)
-			return
-		}
-		for _, file := range files {
-			if !recordsFromFile(file, opts, yield) {
-				return
-			}
-		}
-	}
-}
-
 // Last returns the end of the most recent harvested window, from the index.
 func (s *v2Store) Last() (string, error) {
 	if !isShard(s.Dir()) {
