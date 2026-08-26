@@ -17,6 +17,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -80,6 +81,12 @@ func report(s *store.Stats) {
 		fmt.Fprintf(tw, "set\t%s\n", s.Identity.Set)
 	}
 	fmt.Fprintf(tw, "layout\t%s\n", s.Layout)
+	if s.Superseded {
+		fmt.Fprintf(tw, "\tmigrated to v2 already; this directory is a leftover copy\n")
+	}
+	if s.StaleV1 != "" {
+		fmt.Fprintf(tw, "stale v1\t%s\n", s.StaleV1)
+	}
 	fmt.Fprintf(tw, "files\t%d\n", s.Files)
 	fmt.Fprintf(tw, "size\t%s\n", humanBytes(s.Bytes))
 	fmt.Fprintf(tw, "windows\t%s", count(s.Windows))
@@ -107,7 +114,7 @@ func report(s *store.Stats) {
 		fmt.Fprintf(tw, "compression\t%.1fx\n", r)
 	}
 	if s.Elapsed > 0 {
-		fmt.Fprintf(tw, "harvest time\t%s\n", s.Elapsed.Round(time.Second))
+		fmt.Fprintf(tw, "harvest time\t%s\n", duration(s.Elapsed))
 	}
 	if rate := s.Rate(); rate > 0 {
 		fmt.Fprintf(tw, "rate\t%s/s\n", humanBytes(int64(rate)))
@@ -122,10 +129,11 @@ func statCache() error {
 		fmt.Fprintln(tw, "LAYOUT\tSIZE\tWINDOWS\tRECORDS\tDELETED\tFAILED\tLAST\tENDPOINT")
 	}
 	var (
-		total   store.Stats
-		shards  int
-		v1, v2  int
-		skipped int
+		total      store.Stats
+		shards     int
+		v1, v2     int
+		superseded int
+		skipped    int
 	)
 	for entry, err := range store.List(*baseDir) {
 		if err != nil {
@@ -133,7 +141,10 @@ func statCache() error {
 			skipped++
 			continue
 		}
-		stats, err := store.Stat(*baseDir, entry.Identity)
+		// The entry's own layout, not a detected one: a migration that kept
+		// its source leaves the same identity in both layouts, and each copy
+		// gets the line that describes it.
+		stats, err := store.StatLayout(*baseDir, entry.Identity, entry.Layout)
 		if err != nil {
 			log.Printf("%s: %v", entry.Identity.BaseURL, err)
 			skipped++
@@ -148,6 +159,9 @@ func statCache() error {
 			v1++
 		case store.V2:
 			v2++
+		}
+		if stats.Superseded {
+			superseded++
 		}
 		total.Bytes += stats.Bytes
 		total.Files += stats.Files
@@ -174,7 +188,7 @@ func statCache() error {
 			continue
 		}
 		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-			stats.Layout, humanBytes(stats.Bytes), count(stats.Windows), count(stats.Records),
+			layout(stats), humanBytes(stats.Bytes), count(stats.Windows), count(stats.Records),
 			count(stats.Deleted), count(stats.Failed), dash(stats.Last), stats.Identity.BaseURL)
 	}
 	if *asJson {
@@ -182,7 +196,7 @@ func statCache() error {
 	}
 	tw.Flush()
 	fmt.Fprintf(os.Stderr, "\n%d %s (%d v1, %d v2), %s on disk, %d records, %d deleted, %d failed windows",
-		shards, plural(shards, "endpoint"), v1, v2, humanBytes(total.Bytes), total.Records, total.Deleted, total.Failed)
+		shards, plural(shards, "entry"), v1, v2, humanBytes(total.Bytes), total.Records, total.Deleted, total.Failed)
 	if total.Fetched > 0 {
 		fmt.Fprintf(os.Stderr, ", %s fetched", humanBytes(total.Fetched))
 	}
@@ -190,7 +204,20 @@ func statCache() error {
 		fmt.Fprintf(os.Stderr, ", %d skipped", skipped)
 	}
 	fmt.Fprintln(os.Stderr)
+	if superseded > 0 {
+		fmt.Fprintf(os.Stderr, "%d v1 %s already migrated (*), still on disk: remove with metha-migrate -rm\n",
+			superseded, plural(superseded, "directory"))
+	}
 	return nil
+}
+
+// layout renders the layout column, marking a v1 directory that has already
+// been migrated: it is why the same endpoint can appear twice.
+func layout(s *store.Stats) string {
+	if s.Superseded {
+		return string(s.Layout) + "*"
+	}
+	return string(s.Layout)
 }
 
 // writeJSON emits one object per line, for piping onward.
@@ -211,12 +238,29 @@ func count(n int) string {
 	return fmt.Sprintf("%d", n)
 }
 
+// duration renders a span at a precision that keeps it meaningful: rounding a
+// fast harvest to the second prints "0s" beside a rate of megabytes per second.
+func duration(d time.Duration) string {
+	switch {
+	case d < time.Second:
+		return d.Round(time.Millisecond).String()
+	case d < time.Minute:
+		return d.Round(10 * time.Millisecond).String()
+	default:
+		return d.Round(time.Second).String()
+	}
+}
+
 // plural gives a count its noun.
 func plural(n int, noun string) string {
-	if n == 1 {
+	switch {
+	case n == 1:
 		return noun
+	case strings.HasSuffix(noun, "y"):
+		return noun[:len(noun)-1] + "ies"
+	default:
+		return noun + "s"
 	}
-	return noun + "s"
 }
 
 // dash renders an empty string as a dash, so columns stay readable.

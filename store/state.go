@@ -201,6 +201,23 @@ func (s *state) hasWindow(groupID int64, from, until string) (bool, error) {
 	return n > 0, err
 }
 
+// windowRecords returns how many records the index holds for one range. A
+// migration checking a window it did not write this run compares this against
+// the source, so the answer comes from the records themselves rather than from
+// the count the window row was stamped with.
+func (s *state) windowRecords(groupID int64, from, until string) (int, error) {
+	var n int
+	err := s.db.QueryRow(`
+		SELECT COUNT(*) FROM records
+		JOIN windows ON records.window_id = windows.id
+		WHERE windows.group_id = ? AND windows.from_ts = ? AND windows.until_ts = ?`,
+		groupID, from, until).Scan(&n)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	return n, err
+}
+
 // windowRow is one harvested range, with what it cost and what it yielded.
 type windowRow struct {
 	GroupID  int64

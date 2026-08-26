@@ -222,6 +222,12 @@ func (w *Writer) HasWindow(from, until time.Time) (bool, error) {
 	return w.st.hasWindow(w.groupID, ts(from), ts(until))
 }
 
+// WindowRecords returns how many records the shard has indexed for one range,
+// which is what checking an already migrated window against its source needs.
+func (w *Writer) WindowRecords(from, until time.Time) (int, error) {
+	return w.st.windowRecords(w.groupID, ts(from), ts(until))
+}
+
 // Begin opens a window. Every Append until Commit belongs to it.
 func (w *Writer) Begin(from, until time.Time) error {
 	if w.win != nil {

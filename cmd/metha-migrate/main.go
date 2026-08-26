@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/miku/metha"
 	"github.com/miku/metha/store"
@@ -46,21 +47,33 @@ func main() {
 		fmt.Fprintln(os.Stderr, "nothing to migrate")
 		return
 	}
-	var migrated, failed int
+	var converted, current, failed int
 	for _, id := range targets {
 		if *dryRun {
 			fmt.Printf("would migrate\t%s\t%s\t%s\n", id.BaseURL, id.Format, id.Set)
-			migrated++
+			converted++
 			continue
 		}
-		if err := migrate(id); err != nil {
+		wrote, err := migrate(id)
+		if err != nil {
 			log.Printf("%s: %v", id.BaseURL, err)
 			failed++
 			continue
 		}
-		migrated++
+		// An endpoint migrated by an earlier run is not a failure and not work
+		// done either; counting it apart is what makes "metha-migrate -rm"
+		// after a plain "metha-migrate" read as the second step it is.
+		if wrote {
+			converted++
+		} else {
+			current++
+		}
 	}
-	fmt.Fprintf(os.Stderr, "%d migrated, %d failed\n", migrated, failed)
+	fmt.Fprintf(os.Stderr, "%d converted", converted)
+	if current > 0 {
+		fmt.Fprintf(os.Stderr, ", %d already up to date", current)
+	}
+	fmt.Fprintf(os.Stderr, ", %d failed\n", failed)
 	if failed > 0 {
 		os.Exit(1)
 	}
@@ -93,34 +106,48 @@ func targets() ([]store.Identity, error) {
 	return ids, nil
 }
 
-// migrate converts one endpoint and reports what it moved.
-func migrate(id store.Identity) error {
+// migrate converts one endpoint, reporting whether it had anything to write.
+func migrate(id store.Identity) (bool, error) {
 	result, err := store.Migrate(*baseDir, id)
 	if err != nil {
-		return err
+		return false, err
 	}
 	for _, file := range result.Skipped {
 		log.Printf("skipped, no window date in the filename: %s", file)
 	}
+	wrote := result.Windows > 0
 	if !result.Verified() {
-		return fmt.Errorf("verification failed: %d records indexed, %d read from %d requests",
-			result.Records, result.Appended, result.Requests)
+		if len(result.Diverged) > 0 {
+			return wrote, fmt.Errorf("verification failed: %d records in the v1 files, %d in the shard, differing in %d %s: %s",
+				result.Source, result.Present, len(result.Diverged),
+				plural(len(result.Diverged), "window"), strings.Join(result.Diverged, " "))
+		}
+		return wrote, fmt.Errorf("verification failed: %d records in the v1 files, %d in the shard",
+			result.Source, result.Present)
 	}
 	if *verbose {
-		fmt.Printf("%s\t%s\t%s\t%d windows\t%d requests\t%d records\n",
-			id.BaseURL, id.Format, id.Set, result.Windows, result.Requests, result.Records)
+		fmt.Printf("%s\t%s\t%s\t%d windows\t%d requests\t%d records\t%d in shard\n",
+			id.BaseURL, id.Format, id.Set, result.Windows, result.Requests, result.Source, result.Records)
 	}
 	if !*remove {
-		return nil
+		return wrote, nil
 	}
 	// Only ever after the counts match, and only the directory this identity
 	// owns - a v1 directory holds exactly one format and set.
 	src, err := store.OpenLayout(*baseDir, id, store.V1)
 	if err != nil {
-		return err
+		return wrote, err
 	}
 	if filepath.Dir(src.Dir()) != filepath.Clean(*baseDir) {
-		return fmt.Errorf("refusing to remove %s: not directly under %s", src.Dir(), *baseDir)
+		return wrote, fmt.Errorf("refusing to remove %s: not directly under %s", src.Dir(), *baseDir)
 	}
-	return os.RemoveAll(src.Dir())
+	return wrote, os.RemoveAll(src.Dir())
+}
+
+// plural gives a count its noun.
+func plural(n int, noun string) string {
+	if n == 1 {
+		return noun
+	}
+	return noun + "s"
 }

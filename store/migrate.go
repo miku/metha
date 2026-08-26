@@ -17,17 +17,29 @@ import (
 // MigrateResult reports what a migration moved, and what it could not.
 type MigrateResult struct {
 	Identity Identity
-	Windows  int
-	Requests int
-	Records  int      // records indexed in the shard afterwards
-	Appended int      // records seen while reading the v1 files
+	Windows  int      // windows written by this run
+	Requests int      // responses read by this run
+	Appended int      // records written by this run
 	Bytes    int64    // uncompressed response bytes written
+	Records  int      // records the shard holds for this group afterwards
+	Source   int      // records the v1 directory holds
+	Present  int      // records the shard holds for the source's windows
+	Diverged []string // windows where the two disagree, by end date
 	Skipped  []string // files whose name carries no window date
 }
 
-// Verified reports whether the shard holds every record the source did. A
-// migration that does not verify must not be followed by removing the source.
-func (r *MigrateResult) Verified() bool { return r.Records == r.Appended }
+// Verified reports whether the shard holds every record the v1 directory does.
+// It is checked window by window: the ones this run wrote match by
+// construction, and the ones that were already there are counted again from the
+// source and compared against the index, so a second run verifies exactly as
+// strictly as the first. Comparing per window rather than in total is what lets
+// a shard that has since been harvested further still verify - those windows
+// are not the source's, and are not counted here.
+//
+// A migration that does not verify must not be followed by removing the source.
+func (r *MigrateResult) Verified() bool {
+	return len(r.Diverged) == 0 && r.Source == r.Present
+}
 
 // Migrate builds a v2 shard from an endpoint's v1 directory, without touching
 // the network: a v1 file holds complete responses, so everything v2 needs is
@@ -93,6 +105,22 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 			return nil, err
 		}
 		if has {
+			// Already migrated. Count the source again and check it against
+			// the index, rather than assume an earlier run got it right: this
+			// is the only evidence there is that the v1 files can go.
+			source, err := countV1Records(byDate[date])
+			if err != nil {
+				return nil, err
+			}
+			present, err := w.WindowRecords(from, until)
+			if err != nil {
+				return nil, err
+			}
+			result.Source += source
+			result.Present += present
+			if source != present {
+				result.Diverged = append(result.Diverged, date)
+			}
 			continue
 		}
 		if err := w.Begin(from, until); err != nil {
@@ -101,7 +129,11 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 		if err := migrateWindow(w, byDate[date], result); err != nil {
 			return nil, errors.Join(err, w.Abort(err))
 		}
+		// Written here, so the shard holds what the source did by
+		// construction; both counts move together.
 		result.Appended += w.Records()
+		result.Source += w.Records()
+		result.Present += w.Records()
 		if err := w.Commit(); err != nil {
 			return nil, err
 		}
@@ -129,6 +161,27 @@ func migrateWindow(w *Writer, files []string, result *MigrateResult) error {
 		}
 	}
 	return nil
+}
+
+// countV1Records counts the records in a window's v1 files, by the same scan
+// that indexes them on the way in, so that the two numbers being compared were
+// produced the same way.
+func countV1Records(files []string) (int, error) {
+	var n int
+	for _, file := range files {
+		raws, err := rawResponses(file)
+		if err != nil {
+			return 0, fmt.Errorf("%s: %w", file, err)
+		}
+		for _, raw := range raws {
+			refs, err := scanRecords(raw)
+			if err != nil {
+				return 0, fmt.Errorf("%s: %w", file, err)
+			}
+			n += len(refs)
+		}
+	}
+	return n, nil
 }
 
 // rawResponses returns the response documents of a v1 file, as bytes. A file

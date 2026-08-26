@@ -479,6 +479,32 @@ failed windows; v1 has no index so its counts read `-`
 window timestamps went to nanosecond precision, so a window that took a fraction
 of a second still reports a rate
 
+**half migrated caches**: `metha-migrate` keeps its source unless `-rm`, so the
+same identity can sit in both layouts at once, and two things were wrong about
+that. `Detect` only asked whether a shard existed for the base URL, which would
+have answered v2 for a format still living in v1 and read an empty group instead
+of the data on disk; it now asks about the format and set, falls back to a v1
+directory that exists, and only then lets the bare presence of a shard decide -
+so a newly harvested format still joins the shard its endpoint already has.
+`Stat` re-detected the layout instead of trusting the entry it was handed, so a
+leftover v1 directory reported itself as v2 and had its records counted twice;
+`StatLayout` takes the layout, and `metha-stat` passes the one `List` gave it,
+marks a migrated-but-still-present v1 directory with `*`, and names the stale
+directory when reporting the v2 copy
+
+**verification on a re-run**: `Verified()` compared the shard's record count
+against what the current run appended, which is right on the first pass and
+always false on a second one - it skips the windows it already has, appends
+nothing, and so compared 358 against 0. That made `metha-migrate -rm` unusable
+as the second step after a plain `metha-migrate`, which is the obvious way to
+run it. Verification is now per window and re-counts the source: windows written
+by this run match by construction, windows already present are read from the v1
+files again and checked against the index, and the ones that disagree are named
+in `Diverged`. Comparing per window rather than in total also means a shard that
+has been harvested further since the migration still verifies. The summary
+counts "converted" apart from "already up to date", so a no-op run does not read
+as failure
+
 still open in phase 3: metha-export and the derived catalog.sqlite
 
 ## open questions

@@ -176,15 +176,42 @@ func OpenLayout(baseDir string, id Identity, layout Layout) (Store, error) {
 	}
 }
 
-// Detect reports which layout holds an identity's data. A v2 shard announces
-// itself with a meta.json; anything else is read as v1, including a cache that
-// holds nothing yet, so that the default stays what every existing metha
-// installation already has on disk.
+// Detect reports which layout holds an identity's data. It asks about the
+// format and set, not just the endpoint: a half migrated cache can hold oai_dc
+// in a shard and marcxml still in a v1 directory, and answering V2 for both
+// would make the marcxml data invisible. So a shard that already lists the
+// group wins, an existing v1 directory comes next, and only then does the bare
+// presence of a shard decide - which is what puts a newly harvested format into
+// the shard its endpoint already has. A cache that holds nothing yet reads as
+// v1, so the default stays what every existing metha installation has on disk.
 func Detect(baseDir string, id Identity) Layout {
+	if hasV2Group(baseDir, id) {
+		return V2
+	}
+	if isDir(v1Dir(baseDir, id)) {
+		return V1
+	}
 	if isShard(shardDir(baseDir, id.BaseURL)) {
 		return V2
 	}
 	return V1
+}
+
+// hasV2Group reports whether a shard exists for the base URL and already holds
+// this format and set. The meta is the shard's own account of its groups, so
+// this costs one small file read and never opens the index.
+func hasV2Group(baseDir string, id Identity) bool {
+	m, err := readMeta(shardDir(baseDir, id.BaseURL))
+	if err != nil {
+		return false
+	}
+	return m.hasGroup(id.group())
+}
+
+// isDir reports whether path exists and is a directory.
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }
 
 // Remove deletes everything stored for one identity, which is what a harvest

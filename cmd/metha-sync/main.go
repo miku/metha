@@ -49,7 +49,7 @@ var (
 	ignoreUnexpectedEOF        = flag.Bool("ignore-unexpected-eof", false, "ignore unexpected EOF")
 	rateLimit                  = flag.String("rate-limit", "", "download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable")
 	noCompression              = flag.Bool("no-compression", false, "store harvested files as plain XML instead of .xml.gz or .xml.zst")
-	layout                     = flag.String("layout", "", "storage layout: v1 (a directory of files) or v2 (a sharded, indexed store); default is the layout the endpoint already uses, or v1")
+	layout                     = flag.String("layout", "", "storage layout: v1 (a directory of files) or v2 (a sharded, indexed store); default is the layout the endpoint already uses, or v2")
 )
 
 // harvestLayout decides where a harvest writes. An endpoint that already has a

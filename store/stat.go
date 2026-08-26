@@ -32,14 +32,30 @@ type Stats struct {
 	Elapsed  time.Duration // time spent harvesting, summed over windows
 	Fetched  int64         // uncompressed response bytes, as harvested
 	LastSeen time.Time     // when the most recent window finished
+
+	// Superseded marks a v1 directory whose format and set now also live in a
+	// v2 shard: a leftover copy, since metha-migrate keeps the source unless
+	// -rm is given. Its bytes are still on disk and still counted here, but
+	// nothing reads them any more.
+	Superseded bool
+	// StaleV1 names that leftover directory when looking from the v2 side.
+	StaleV1 string
 }
 
 // Unknown marks a count the layout cannot answer.
 const Unknown = -1
 
-// Stat summarises one harvested identity.
+// Stat summarises one harvested identity, in whichever layout holds it.
 func Stat(baseDir string, id Identity) (*Stats, error) {
-	s, err := Open(baseDir, id)
+	return StatLayout(baseDir, id, "")
+}
+
+// StatLayout is Stat with the layout forced. An empty layout means detect.
+// Callers walking List pass the layout of the entry they were handed: while a
+// migration is under way the same identity can exist in both layouts, and
+// detection deliberately reports only the one that would be read.
+func StatLayout(baseDir string, id Identity, layout Layout) (*Stats, error) {
+	s, err := OpenLayout(baseDir, id, layout)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +79,11 @@ func Stat(baseDir string, id Identity) (*Stats, error) {
 		stats.Windows, stats.Empty, stats.Failed = Unknown, Unknown, Unknown
 		stats.Requests, stats.Records, stats.Deleted = Unknown, Unknown, Unknown
 		stats.Fetched = Unknown
+		stats.Superseded = hasV2Group(baseDir, id)
 		return stats, nil
+	}
+	if v1 := v1Dir(baseDir, id); isDir(v1) {
+		stats.StaleV1 = v1
 	}
 	if err := statIndex(s.Dir(), id, stats); err != nil {
 		return nil, err
