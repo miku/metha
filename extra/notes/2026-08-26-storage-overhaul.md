@@ -288,6 +288,9 @@ keeps tombstones, so an export can also suppress records that were deleted
 
 ## compatibility and migration
 
+superseded by "metha 1.0" at the end of this document, which keeps the offline
+migration below and drops the indefinite dual-layout support
+
 the important realization: v1 files hold complete responses, so v2 is buildable
 offline from an existing cache - **no re-harvest needed**; metha-migrate walks
 the v1 dirs, writes shards, verifies counts and optionally removes the source;
@@ -324,6 +327,10 @@ cmd/methad, cmd/metha-migrate, cmd/metha-export, cmd/metha-stat
 | 3 | 0.5.x | index-driven metha-cat, metha-export, metha-stat, catalog |
 | 4 | 0.6.0 | methad, scheduler, metrics; v2 default for new harvests |
 | 5 | later | adaptive windows, zstd dictionaries, hooks |
+
+superseded from phase 4 on: see "metha 1.0: one binary, one layout" at the end
+of this document, which drops v1 instead of defaulting away from it, and moves
+export to 1.1 and the daemon to 1.2
 
 ## phase 1 as built
 
@@ -539,4 +546,250 @@ still open in phase 3: metha-export and the derived catalog.sqlite
 * parquet writer dependency (parquet-go) vs shelling out to duckdb for export
 
 > parquet go depencency ok
+
+---
+
+# metha 1.0: one binary, one layout
+
+supersedes the "compatibility and migration" section above and the 0.6.0 row of
+the roadmap; that plan kept both layouts alive indefinitely, and phase 3 is the
+evidence that the seam costs more than it buys
+
+## the case
+
+three of the four bugs found in phase 3 were dual-layout bugs, and none of them
+were in the layouts themselves:
+
+* `Detect` answered on the base url alone, so a half migrated endpoint read as
+  an empty v2 group while its data sat in a v1 directory
+* `Stat` re-detected instead of trusting the entry it was handed, so a leftover
+  v1 directory reported itself as v2 and had its records counted twice
+* `Verified()` compared against what the current run appended, so a re-run never
+  verified and `-rm` could not be the second step it obviously is
+
+each was cheap to fix and none would exist with one layout; the pattern is that
+every new question - which layout holds this? which does the listing mean? which
+is being counted? - has to be asked again in every command, forever, and the
+answer is only ever interesting during a migration that happens once
+
+what the seam actually buys is a user who never migrates, and that user is
+better served by a pinned 0.5.x than by a 1.x that carries the fork
+
+## what 1.0 is
+
+* one binary, `metha`, with subcommands; the nine `metha-*` commands go away
+* cobra/pflag, so there is `--help` on every subcommand, shell completion, a
+  generated man page and consistent `--long` flags
+* v2 only, everywhere except `metha migrate`
+* `metha migrate` reads v1 and writes shards, offline, verified, and is the
+  entire compatibility story
+* a v1 cache found anywhere else is a hard, helpful error, never a fallback
+
+## what 1.0 is not
+
+it is a packaging and compatibility release, not a feature release; the api
+promise below is the reason to keep the scope closed
+
+* `metha export` and the derived catalog stay open from phase 3, and ship in 1.1
+* `metha serve` (methad, the scheduler, metrics) ships in 1.2
+* adaptive windows, dictionaries and hooks stay where they are, in "later"
+
+the exception is that anything already built in phases 2 and 3 rides along: the
+index-driven reads, `metha stat`, the deleted-record policy
+
+## the command tree
+
+| 1.0 | replaces | notes |
+|---|---|---|
+| `metha sync` | metha-sync | v2 only; `-layout`, `-no-compression`, `-k` gone |
+| `metha cat` | metha-cat | index-driven, `--deleted` / `--only-deleted` / `--setspec` |
+| `metha ls` | metha-ls | one line per group, from the shard metas |
+| `metha files` | metha-files | lists segments |
+| `metha id` | metha-id | Identify, still network-only |
+| `metha stat` | metha-stat | layout column and `*` marker drop out |
+| `metha migrate` | metha-migrate | the only v1 reader left |
+| `metha fortune` | metha-fortune | |
+| `metha endpoints` | `metha-sync -list` | it was never a sync option |
+| `metha dir` | `metha-sync -dir` | prints the shard path |
+| `metha version` | `-v` on every command | |
+| — | metha-pack | **deleted**: v2 segments are append-only and already packed, which is exactly what pack existed to fake |
+| `metha export` | — | 1.1 |
+| `metha serve` | — | 1.2 |
+
+persistent flags on the root command: `--base-dir`, `--format`, `--set`,
+`--verbose`/`-v`, `--quiet`/`-q`, `--json` where it applies
+
+## flag changes worth calling out
+
+**single-dash long flags stop working.** pflag rejects `-format oai_dc`; it must
+be `--format oai_dc`. This is the one change that touches every existing script,
+and it rides for free precisely because the binary name changed too: a script
+saying `metha-sync -format x` has to be edited anyway, and editing it to
+`metha sync --format x` is the same edit. Short forms stay for the common ones
+(`-f`, `-s`, `-q`, `-v`).
+
+**`-v` changes meaning**, from "show version" to "verbose"; `metha version` is
+the replacement. The silent-misread risk is low for the same reason: `-v` on a
+binary that no longer exists cannot be silently misread.
+
+dropped, because v2 makes them meaningless rather than because they are
+unwanted: `-no-compression` (segments are zstd frames by construction), `-k`
+(there are no temporary files to keep; a torn tail is truncated at open),
+`-layout` and `METHA_LAYOUT` (nothing to choose)
+
+## metha migrate
+
+the whole compatibility surface, and therefore the one thing that has to be
+right:
+
+```
+metha migrate                    # every v1 directory in the cache
+metha migrate --dry-run          # what would happen, with sizes
+metha migrate --rm               # convert, verify, then remove the sources
+metha migrate --jobs 8           # per-shard sqlite, so this parallelises
+metha migrate http://a/oai       # one endpoint
+```
+
+what it already does, from phase 2: copies response bytes verbatim rather than
+decoding and re-encoding, groups a directory's files into one window per date,
+re-runs as a no-op, and since this week verifies per window by re-counting the
+source, so `--rm` is safe as a second invocation
+
+what it still needs for 1.0:
+
+* **parallelism**, `--jobs` defaulting to NumCPU; a quarter million directories
+  is the actual scale, and per-shard sqlite means there is no shared writer
+* **progress**: converted / remaining / bytes, on a tty; a bulk run is minutes
+  to hours and currently says nothing until it ends
+* **`--keep-going`** semantics decided: default should be to carry on and exit
+  non-zero with a summary, since one bad directory must not strand the rest
+* **`--rm` must refuse when anything was skipped**; today an undated filename is
+  logged and the directory is removed anyway, which loses those files. This is
+  the only known way 1.0 can lose data, and it is a five-line fix
+* a fixture cache covering the shapes only migrate will ever see again: packed
+  multi-frame files, `.xml.gz`, plain `.xml` from `-no-compression`, undated
+  names, an empty directory, a directory with only a LOCK
+
+## the refusal path
+
+when any subcommand other than `migrate` resolves an identity that has no shard
+but does have a v1 directory, `store.Open` returns `ErrLegacyLayout` carrying
+the path; one place formats it, and it is the "simple, tailored list of
+commands" the top of this document asked for:
+
+```
+metha 1.0 reads only the sharded layout, and this cache is in the pre-1.0 one.
+
+  2481 endpoints, 1.4 GB, in /home/x/.cache/metha
+
+  metha migrate --dry-run     see what would be converted
+  metha migrate               convert in place, no re-harvest, nothing removed
+  metha migrate --rm          convert, verify, then remove the old directories
+
+Nothing is deleted without --rm. metha 0.5.x still reads both layouts.
+```
+
+detection is one readdir of the base dir looking for a base64-ish entry, so it
+costs nothing on a migrated cache; `metha ls` and `metha stat` should mention a
+legacy remainder in a footer rather than erroring, since listing a mixed cache
+is a reasonable thing to do while migrating
+
+## what gets deleted
+
+the payoff, and the reason to do this before the api freezes:
+
+* `Layout`, `Detect`, `OpenLayout`, `StatLayout`, `Remove`'s layout parameter,
+  `Stats.Superseded`, `Stats.StaleV1`, `LayoutEnv`, the `.metha-v2-notice` file
+  and `noticeOnce`
+* harvest.go's v1 writer: `finalize`, the `-tmp-<rand>` dance, `DirLaster`
+  (laster.go), the compression-suffix branches, and every `if h.Sink != nil`;
+  `Sink` stays - the import direction still forbids root importing `store` - but
+  becomes how harvesting works rather than a seam between two ways
+* `store/v1.go` shrinks to what migrate reads: `dataFiles`, `decompress`,
+  `rawResponses`, `listV1`, `parseV1Dir`; `v1Store` as a `Store` goes, along with
+  the scan-based `Records` path that only existed so v1 could answer filters
+* cmd/metha-pack entirely
+
+## semver, the module path, and a naming collision
+
+going 0.4.33 → 1.0.0 needs **no module path change**: go treats v0 and v1 the
+same, so `github.com/miku/metha` stays. That is the good news and also the
+commitment - after 1.0 a breaking change needs `github.com/miku/metha/v2`.
+
+which collides with the on-disk layout being called v2. `metha/v2` the module
+and `v2/` the shard directory would mean different things in the same
+sentences, in a codebase where "which v2" is exactly the ambiguity we are
+removing. Two moves, both cheap now and expensive later:
+
+* drop the `Layout` type entirely, per the deletion list; there is nothing left
+  to name
+* rename `$METHA_DIR/v2/` to `$METHA_DIR/shards/`, as a one-line rename inside
+  `metha migrate`; only shards created by 0.5.x exist, so the blast radius is a
+  handful of caches, and after 1.0 the path never has a version in it again
+
+## the library api, frozen
+
+1.0 says these do not break again without a `/v2` module, so decide now:
+
+* root keeps `Request`, `Response`, `Record`, `Client`, `Harvest`, `Identify`,
+  `Sink` - importers depend on them, and phase 1 already established that root
+  cannot import `store`
+* `store` exports `Store`, `Identity`, `Entry`, `ReadOptions`, `DeletedPolicy`,
+  `Writer`, `Stats`, `Stat`, `Migrate`, `MigrateResult`, `Render`, `List`, `Open`
+* everything cobra moves to `internal/cli`, one file per subcommand, so no one
+  can depend on the command wiring; `cmd/metha/main.go` is a `main` that calls it
+* the export, sched and hook packages named in "packages" above stay unexported
+  until they ship, in 1.1 and 1.2, so 1.0 does not freeze a design that has not
+  been written yet
+
+## packaging and docs
+
+* goreleaser drops from nine builds to one; nfpm gets `conflicts`/`replaces` for
+  the old `metha-*` package contents, or an upgrade leaves nine stale binaries on
+  `$PATH` shadowing nothing and confusing everyone
+* the deb/rpm ship the binary plus generated shell completions and `metha.1`;
+  cobra generates both, so docs/metha.1 stops being maintained by hand
+* README rewrite is a real chunk of work: every example is `metha-sync ...`, and
+  the `while true; timeout 120 ... | parallel -j 64` loop should be presented as
+  what `metha serve` replaces in 1.2
+
+## sequencing
+
+| step | content |
+|---|---|
+| 0.5.1 | the phase 3 fixes already made; last release of the dual-layout line |
+| 1.0.0-rc | cobra tree, v1 deleted, migrate hardened, shards/ rename, docs |
+| 1.0.0 | after a full-cache migration of the real corpus, timed and verified |
+| 1.1 | `metha export`, catalog.sqlite |
+| 1.2 | `metha serve`, scheduler, metrics |
+
+0.5.x stays available and documented as the bridge: it reads both layouts, and
+it is what someone pins if they cannot migrate today. It gets fixes, not
+features.
+
+## risks
+
+* **migrate is now load-bearing.** In the dual-layout world a failed migration
+  meant staying on v1; in 1.0 it means the data is unreadable by the current
+  binary. Mitigations: `--rm` is opt-in and separate, verification re-counts the
+  source per window, and 0.5.x remains a working reader. The full-corpus dry run
+  before tagging 1.0 is not optional.
+* **`--rm` on skipped files** loses data today; fix before anything is released
+  that calls itself 1.0.
+* **contrib/sites.tsv is embedded** and drives `metha endpoints`; it is 244k
+  lines and unchanged by any of this, but it is the reason a single binary is
+  still several MB, which matters now that there is only one.
+
+## open questions for 1.0
+
+* keep `metha-*` working for one release via argv[0] dispatch (a symlinked
+  binary dispatching to the matching subcommand, ~10 lines, warn on stderr,
+  remove in 1.1)? it is cheap and it makes distro upgrades soft. Against: it
+  re-introduces exactly the "two ways to do it" the release exists to remove,
+  and the flag syntax breaks anyway so the shim only half works
+* does `metha sync` keep harvesting to yesterday, or does "harvest up to now"
+  (deferred from phase 2) land in 1.0? it is a behavior change that is much
+  easier to make at a major version than after one
+* `metha cat` currently suppresses deleted records by default; confirm that is
+  the 1.0 default before it becomes a promise
 
