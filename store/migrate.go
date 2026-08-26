@@ -1,0 +1,178 @@
+package store
+
+import (
+	"bytes"
+	"encoding/xml"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"sort"
+	"time"
+
+	"github.com/miku/metha"
+)
+
+// MigrateResult reports what a migration moved, and what it could not.
+type MigrateResult struct {
+	Identity Identity
+	Windows  int
+	Requests int
+	Records  int      // records indexed in the shard afterwards
+	Appended int      // records seen while reading the v1 files
+	Bytes    int64    // uncompressed response bytes written
+	Skipped  []string // files whose name carries no window date
+}
+
+// Verified reports whether the shard holds every record the source did. A
+// migration that does not verify must not be followed by removing the source.
+func (r *MigrateResult) Verified() bool { return r.Records == r.Appended }
+
+// Migrate builds a v2 shard from an endpoint's v1 directory, without touching
+// the network: a v1 file holds complete responses, so everything v2 needs is
+// already on disk. It is safe to re-run - windows already present are skipped -
+// and it leaves the v1 directory alone; removing it is the caller's decision,
+// and only sensible once the result verifies.
+func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
+	src := &v1Store{baseDir: baseDir, id: id}
+	files, err := src.dataFiles()
+	if err != nil {
+		return nil, err
+	}
+	// Hold the v1 lock too, so a harvest cannot be finalizing files into the
+	// directory that is being read.
+	lock, err := metha.TryFlock(filepath.Join(src.Dir(), metha.LockName))
+	if err != nil {
+		return nil, err
+	}
+	if lock != nil {
+		defer lock.Close()
+	}
+	result := &MigrateResult{Identity: id}
+	byDate := map[string][]string{}
+	for _, file := range files {
+		groups := v1FilePattern.FindStringSubmatch(filepath.Base(file))
+		if len(groups) < 2 {
+			result.Skipped = append(result.Skipped, file)
+			continue
+		}
+		byDate[groups[1]] = append(byDate[groups[1]], file)
+	}
+	dates := make([]string, 0, len(byDate))
+	for date := range byDate {
+		dates = append(dates, date)
+	}
+	sort.Strings(dates)
+
+	w, err := OpenWriter(baseDir, id)
+	if err != nil {
+		return nil, err
+	}
+	defer w.Close()
+
+	for i, date := range dates {
+		until, err := time.Parse("2006-01-02", date)
+		if err != nil {
+			return nil, err
+		}
+		// v1 harvests contiguous ranges and only records where each one
+		// ended, so a window starts the day after the previous one. The first
+		// window is the exception: how far back it reached is not recorded
+		// anywhere, so it claims only the day it ended on.
+		from := until
+		if i > 0 {
+			prev, err := time.Parse("2006-01-02", dates[i-1])
+			if err != nil {
+				return nil, err
+			}
+			from = prev.AddDate(0, 0, 1)
+		}
+		has, err := w.HasWindow(from, until)
+		if err != nil {
+			return nil, err
+		}
+		if has {
+			continue
+		}
+		if err := w.Begin(from, until); err != nil {
+			return nil, err
+		}
+		if err := migrateWindow(w, byDate[date], result); err != nil {
+			return nil, errors.Join(err, w.Abort(err))
+		}
+		result.Appended += w.Records()
+		if err := w.Commit(); err != nil {
+			return nil, err
+		}
+		result.Windows++
+	}
+	if result.Records, err = w.CountRecords(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// migrateWindow appends every response of a day's files to the open window.
+func migrateWindow(w *Writer, files []string, result *MigrateResult) error {
+	for _, file := range files {
+		raws, err := rawResponses(file)
+		if err != nil {
+			return fmt.Errorf("%s: %w", file, err)
+		}
+		for _, raw := range raws {
+			if err := w.Append(raw); err != nil {
+				return fmt.Errorf("%s: %w", file, err)
+			}
+			result.Requests++
+			result.Bytes += int64(len(raw))
+		}
+	}
+	return nil
+}
+
+// rawResponses returns the response documents of a v1 file, as bytes. A file
+// may hold several: metha-pack concatenates them. The bytes are passed through
+// untouched rather than decoded and re-encoded, so a migrated shard holds
+// exactly what the endpoint sent.
+func rawResponses(path string) ([][]byte, error) {
+	data, err := readWhole(path)
+	if err != nil {
+		return nil, err
+	}
+	dec := xml.NewDecoder(bytes.NewReader(data))
+	dec.Strict = false
+	var out [][]byte
+	for {
+		prev := dec.InputOffset()
+		var resp metha.Response
+		if err := dec.Decode(&resp); err != nil {
+			if errors.Is(err, io.EOF) {
+				return out, nil
+			}
+			return nil, err
+		}
+		end := dec.InputOffset()
+		start := prev + int64(bytes.IndexByte(data[prev:end], '<'))
+		out = append(out, data[start:end])
+	}
+}
+
+// readWhole reads a data file, decompressing it if its name says to.
+func readWhole(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	r, err := decompress(path, f)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+	return io.ReadAll(r)
+}
+
+// CountRecords returns how many records the shard has indexed for this group,
+// which is what a migration checks its source against.
+func (w *Writer) CountRecords() (int, error) { return w.st.countRecords(w.groupID) }

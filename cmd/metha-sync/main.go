@@ -9,11 +9,13 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/store"
 	"github.com/miku/metha/xflag"
 	log "github.com/sirupsen/logrus"
 )
@@ -47,7 +49,53 @@ var (
 	ignoreUnexpectedEOF        = flag.Bool("ignore-unexpected-eof", false, "ignore unexpected EOF")
 	rateLimit                  = flag.String("rate-limit", "", "download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'). If no unit specified, bytes/sec assumed. Set to 0 or empty to disable")
 	noCompression              = flag.Bool("no-compression", false, "store harvested files as plain XML instead of .xml.gz or .xml.zst")
+	layout                     = flag.String("layout", "", "storage layout: v1 (a directory of files) or v2 (a sharded, indexed store); default is the layout the endpoint already uses, or v1")
 )
+
+// harvestLayout decides where a harvest writes. An endpoint that already has a
+// v2 shard keeps it, so a converted cache does not silently start writing files
+// beside it again; otherwise -layout, then METHA_LAYOUT, then v1, which is what
+// every existing installation has.
+func harvestLayout(id store.Identity) store.Layout {
+	if *layout != "" {
+		return store.Layout(*layout)
+	}
+	if env := os.Getenv(store.LayoutEnv); env != "" {
+		return store.Layout(env)
+	}
+	return store.Detect(*baseDir, id)
+}
+
+// noticeName marks a cache whose owner has been told about v2 already.
+const noticeName = ".metha-v2-notice"
+
+// noticeOnce tells the user once per cache that their v1 data can be
+// converted, with the command that does it, and never mentions it again.
+func noticeOnce(id store.Identity) {
+	marker := filepath.Join(*baseDir, noticeName)
+	if _, err := os.Stat(marker); err == nil {
+		return
+	}
+	src, err := store.OpenLayout(*baseDir, id, store.V1)
+	if err != nil {
+		return
+	}
+	if files, err := src.Files(); err != nil || len(files) == 0 {
+		return // Nothing harvested here yet, so nothing to convert.
+	}
+	fmt.Fprintf(os.Stderr, `
+A newer storage layout (v2) is available: one shard per endpoint, an index
+instead of a file per window, and no file at all for windows that returned
+nothing. Your harvested data can be converted in place, without refetching:
+
+    metha-migrate -base-dir %s        # convert everything, keeping the originals
+    metha-migrate -base-dir %s -rm    # and drop the originals once verified
+
+Harvests continue to work unchanged in v1. This notice is shown once.
+
+`, *baseDir, *baseDir)
+	os.WriteFile(marker, nil, 0644)
+}
 
 // parseRateLimit converts a human-readable rate limit string to bytes per second
 func parseRateLimit(input string) (float64, error) {
@@ -123,13 +171,13 @@ func main() {
 
 	metha.BaseDir = *baseDir
 	baseURL := metha.PrependSchema(flag.Arg(0))
+	identity := store.Identity{BaseURL: baseURL, Format: *format, Set: *set}
 	if *showDir {
-		harvest := metha.Harvest{Config: &metha.Config{
-			BaseURL: baseURL,
-			Format:  *format,
-			Set:     *set,
-		}}
-		fmt.Println(harvest.Dir())
+		st, err := store.OpenLayout(*baseDir, identity, harvestLayout(identity))
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(st.Dir())
 		os.Exit(0)
 	}
 	if *quiet {
@@ -202,14 +250,14 @@ func main() {
 	harvest.Config.KeepTemporaryFiles = *keepTemporaryFiles
 	harvest.Config.IgnoreUnexpectedEOF = *ignoreUnexpectedEOF
 	harvest.Config.NoCompression = *noCompression
-	log.Printf("harvest: %+v", harvest)
+	resolved := harvestLayout(identity)
 	if *removeCached {
-		log.Printf("removing already cached files from %s", harvest.Dir())
-		if err := os.RemoveAll(harvest.Dir()); err != nil {
+		log.Printf("removing already cached data for %s", identity.BaseURL)
+		if err := store.Remove(*baseDir, identity, resolved); err != nil {
 			log.Println(err)
 		}
 	}
-	if err := harvest.Run(); err != nil {
+	if err := runHarvest(harvest, identity, resolved); err != nil {
 		switch {
 		case errors.Is(err, metha.ErrAlreadySynced):
 			log.Println("this repository is up-to-date")
@@ -222,6 +270,36 @@ func main() {
 		}
 		log.Fatal(err)
 	}
+}
+
+// runHarvest points a harvest at the layout it should write into, and runs it.
+//
+// Every path out of here closes the sink, which is why it is a function and not
+// part of main: log.Fatal exits the process without running deferred calls, and
+// an index left open that way keeps its write-ahead log and shared-memory files
+// on disk, with the last committed window still in the log rather than in the
+// database.
+func runHarvest(harvest *metha.Harvest, id store.Identity, layout store.Layout) error {
+	switch layout {
+	case store.V1:
+		noticeOnce(id)
+	case store.V2:
+		w, err := store.OpenWriter(*baseDir, id)
+		if err != nil {
+			return err
+		}
+		defer w.Close()
+		// The identify response is what a shard needs to be self-describing,
+		// and v1 had nowhere to keep it.
+		if err := w.SetIdentify(harvest.Identify); err != nil {
+			return err
+		}
+		harvest.Sink = w
+	default:
+		return fmt.Errorf("unknown layout: %v, use v1 or v2", layout)
+	}
+	log.Printf("harvest: %+v", harvest)
+	return harvest.Run()
 }
 
 func basicAuth(username, password string) string {

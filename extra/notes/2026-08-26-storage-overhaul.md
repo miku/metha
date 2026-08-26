@@ -320,7 +320,7 @@ cmd/methad, cmd/metha-migrate, cmd/metha-export, cmd/metha-stat
 |---|---|---|
 | 0 ✓ | 0.4.34 | the phase 0 bugs, flock in metha-sync, context in Client |
 | 1 ✓ | 0.4.x | Store interface + v1 implementation behind it, no behavior change - the enabling refactor |
-| 2 | 0.5.0 | v2 writer/reader, metha-migrate, opt-in |
+| 2 ✓ | 0.5.0 | v2 writer/reader, metha-migrate, opt-in |
 | 3 | 0.5.x | index-driven metha-cat, metha-export, metha-stat, catalog |
 | 4 | 0.6.0 | methad, scheduler, metrics; v2 default for new harvests |
 | 5 | later | adaptive windows, zstd dictionaries, hooks |
@@ -372,6 +372,79 @@ previous binaries:
   invisible to it (`Files()` had always listed them; only the reader skipped them)
 * metha-files lists in datestamp order rather than grouped by extension, so
   `metha-files ... | xargs cat` is chronological in a mixed gz/zst directory
+
+## phase 2 as built
+
+the shard is the base url, as decided above, with format and set as groups
+inside it:
+
+```
+$METHA_DIR/v2/<aa>/<bb>/<sha256(baseURL)[:16]>/
+  meta.json               base url, identify response, the groups it holds
+  state.sqlite            groups, segments, windows, records, runs
+  LOCK                    one lock per endpoint, shared by every group
+  seg/oai_dc/000001.zst   append-only frames, one directory per group
+  seg/marcxml+abc/000001.zst
+```
+
+so `cat seg/oai_dc/*.zst | zstd -dc` is a complete, valid stream for exactly
+one format and set, which is what the answer to the open question asked for; a
+group directory is the readable `format+set`, escaped where a set contains
+something a path should not, with a short digest appended in that case so two
+sets cannot collide
+
+**the sink**: root cannot import `store`, so the harvester takes a `metha.Sink`
+(Begin / Append / Commit / Abort / HasWindow / LastWindow) and `store.Writer`
+implements it; that keeps every line of harvest logic - tokens, retries, empty
+response counting, interval splitting - shared between layouts, and the whole
+v2 write path in harvest.go is the three branches on `h.Sink != nil`; a harvest
+with a sink does not create or lock a v1 directory
+
+**window boundaries** are stored as UTC RFC3339 so `MAX(until_ts)` sorts, and
+converted back to local time when a resume asks for a date - a window ends at
+the close of a *local* day, and formatting that instant as a UTC date moves the
+resume point by a day in most of the world; caught by harvesting against a fake
+endpoint, now pinned by a test across four zones
+
+sub-day windows are not wired up yet: the schema and the writer take
+timestamps, but the interval splitting is still v1's monthly/daily/hourly, so
+"harvest up to now" is still a follow-up
+
+**metha-migrate** builds shards from v1 directories offline, no refetch: the
+response bytes are copied verbatim rather than decoded and re-encoded, so a
+shard holds what the endpoint sent; it groups a directory's files by the date
+in their names, one window per date, contiguous because v1 harvests contiguous
+ranges and only records where each one ended; the first window claims only its
+own day, since how far back it reached is nowhere on disk; re-running is a
+no-op, and `-rm` only removes a source directory after the record counts match
+
+one thing the migration turned up: `xml.Marshal` of a `Response` always emits an
+empty `<GetRecord><record>`, so every harvested file has a phantom record in it;
+v1's reader never noticed, since it only walked `ListRecords`; the segment
+scanner requires a record to sit directly under a list and to have an
+identifier
+
+**opt-in**: `metha-sync -layout v2`, or `METHA_LAYOUT=v2`; with neither, an
+endpoint that already has a shard keeps using it and everything else stays v1,
+so nothing changes for an existing installation until it asks; a v1 cache gets
+a one-time notice naming the exact metha-migrate command, marked by
+`.metha-v2-notice` in the cache
+
+`-rm` became `store.Remove`, which in v2 drops one group - its rows and its
+segment directory - and leaves the rest of the shard alone, matching what `-rm`
+has always meant in v1
+
+`modernc.org/sqlite` is in, `CGO_ENABLED=0` still builds
+
+**wal files**: the index runs in WAL mode, so `state.sqlite-wal` and
+`state.sqlite-shm` sit next to the database *while a harvest is running* and
+sqlite removes both when the last connection closes; they were being left
+behind because `log.Fatal` exits without running deferred calls, so a harvest
+that ended in an error never closed its index - the last committed window then
+sits in the log rather than in the database, and a cache of a quarter million
+shards carries a sidecar pair per failed endpoint; metha-sync now runs the
+harvest in a function that returns its error, so the writer is closed on every
+path, interrupts included
 
 ## open questions
 

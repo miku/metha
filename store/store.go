@@ -6,10 +6,19 @@
 // of to a directory of files, so that a second layout can be added without
 // every command growing a switch.
 //
-// Today there is exactly one layout, v1: one directory per triple, named by the
-// base64 encoding of "set#format#baseURL", holding one compressed file per
-// harvested window, the filename carrying the window's end date. The filename
-// is the entire state: Last reads it back to resume a harvest.
+// There are two layouts. In v1 the filename is the entire state: one directory
+// per triple, named by the base64 encoding of "set#format#baseURL", holding one
+// compressed file per harvested window whose name carries the window's end
+// date, which Last reads back to resume a harvest.
+//
+// In v2 a shard is one base URL, named by a hash so that a cache of every known
+// endpoint is not one enormous directory, and the formats and sets harvested
+// from it are groups inside it, each with its own run of append-only zstd
+// segments. What was harvested is recorded in a sqlite index rather than
+// implied by a filename, so a window that returned nothing costs a row instead
+// of a file, and a window becomes real in one transaction rather than by a
+// rename. The segments are the source of truth; the index is derived and can be
+// rebuilt from them.
 //
 // Iterators yield an error at most once per item. Records stops at the first
 // error, since a broken file means the rest of that file cannot be trusted;
@@ -22,6 +31,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"os"
 
 	"github.com/miku/metha"
 )
@@ -91,32 +101,82 @@ type Store interface {
 	Last() (string, error)
 }
 
+// LayoutEnv forces a layout when set, for the cases detection cannot decide:
+// where to put a harvest that does not exist yet.
+const LayoutEnv = "METHA_LAYOUT"
+
 // Open returns a store for id under baseDir. The layout is detected from the
-// directory itself, so a caller never has to know which one it is; a directory
-// that does not exist yet reads as the current default layout, and opening it
-// is not an error - it simply has no files and no records.
+// cache itself, so a caller never has to know which one it is; a directory
+// that does not exist yet reads as the default layout, and opening it is not
+// an error - it simply has no files and no records.
 func Open(baseDir string, id Identity) (Store, error) {
+	return OpenLayout(baseDir, id, Layout(os.Getenv(LayoutEnv)))
+}
+
+// OpenLayout is Open with the layout forced. An empty layout means detect.
+func OpenLayout(baseDir string, id Identity, layout Layout) (Store, error) {
 	if id.BaseURL == "" {
 		return nil, ErrNoBaseURL
 	}
-	switch layout := detect(baseDir, id); layout {
+	if layout == "" {
+		layout = Detect(baseDir, id)
+	}
+	switch layout {
 	case V1:
 		return &v1Store{baseDir: baseDir, id: id}, nil
+	case V2:
+		return &v2Store{baseDir: baseDir, id: id}, nil
 	default:
 		return nil, fmt.Errorf("store: unsupported layout: %s", layout)
 	}
 }
 
-// detect determines the layout of an already harvested identity. There is only
-// one layout so far, so the answer is always V1; the seam is here so that
-// adding a layout does not change any caller.
-func detect(baseDir string, id Identity) Layout {
+// Detect reports which layout holds an identity's data. A v2 shard announces
+// itself with a meta.json; anything else is read as v1, including a cache that
+// holds nothing yet, so that the default stays what every existing metha
+// installation already has on disk.
+func Detect(baseDir string, id Identity) Layout {
+	if isShard(shardDir(baseDir, id.BaseURL)) {
+		return V2
+	}
 	return V1
 }
 
-// List enumerates the harvested endpoints under baseDir, in directory order. A
+// Remove deletes everything stored for one identity, which is what a harvest
+// asked to start over does. It touches only the given format and set: other
+// groups of the same endpoint, and the shard itself, stay.
+func Remove(baseDir string, id Identity, layout Layout) error {
+	if id.BaseURL == "" {
+		return ErrNoBaseURL
+	}
+	if layout == "" {
+		layout = Detect(baseDir, id)
+	}
+	switch layout {
+	case V1:
+		return os.RemoveAll(v1Dir(baseDir, id))
+	case V2:
+		return removeV2(baseDir, id)
+	default:
+		return fmt.Errorf("store: unsupported layout: %s", layout)
+	}
+}
+
+// List enumerates the harvested endpoints under baseDir, v1 directories first,
+// then v2 shards - a cache can hold both while a migration is under way. A
 // base directory that does not exist yields nothing, which is the state of a
 // machine that has not harvested anything yet.
 func List(baseDir string) iter.Seq2[Entry, error] {
-	return listV1(baseDir)
+	return func(yield func(Entry, error) bool) {
+		for entry, err := range listV1(baseDir) {
+			if !yield(entry, err) {
+				return
+			}
+		}
+		for entry, err := range listV2(baseDir) {
+			if !yield(entry, err) {
+				return
+			}
+		}
+	}
 }

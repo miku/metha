@@ -41,6 +41,24 @@ type Harvester interface {
 	Dir() string
 }
 
+// Sink receives the responses of a harvest, one window at a time, in place of
+// the files metha has always written. It is the seam that lets a harvest target
+// a different storage layout without this package knowing anything about it:
+// store.Writer implements it.
+//
+// A window opens with Begin, takes one Append per response and becomes durable
+// at Commit, or is discarded by Abort. HasWindow and LastWindow answer what has
+// already been harvested - the questions the file layout answers with a readdir
+// over its filenames.
+type Sink interface {
+	Begin(from, until time.Time) error
+	Append(raw []byte) error
+	Commit() error
+	Abort(cause error) error
+	HasWindow(from, until time.Time) (bool, error)
+	LastWindow() (string, error)
+}
+
 type CompressionType int
 
 const (
@@ -91,6 +109,10 @@ type Config struct {
 type Harvest struct {
 	Config *Config
 	Client *Client
+
+	// Sink, when set, receives the harvested responses instead of the
+	// directory of files. The caller owns it, and closes it.
+	Sink Sink
 
 	// XXX: Lazy via sync.Once?
 	Identify *Identify
@@ -163,14 +185,18 @@ func compressedFilename(base string, compressionType CompressionType) string {
 
 // Run starts the harvest.
 func (h *Harvest) Run() error {
-	if err := h.mkdirAll(); err != nil {
-		return err
+	// A sink brings its own directory and its own lock; the file layout's
+	// directory must not be created for a harvest that will not write in it.
+	if h.Sink == nil {
+		if err := h.mkdirAll(); err != nil {
+			return err
+		}
+		unlock, err := h.lock()
+		if err != nil {
+			return err
+		}
+		defer unlock()
 	}
-	unlock, err := h.lock()
-	if err != nil {
-		return err
-	}
-	defer unlock()
 	h.setupInterruptHandler()
 	h.Started = time.Now()
 	return h.run()
@@ -229,6 +255,13 @@ func (h *Harvest) setupInterruptHandler() {
 		log.Println("waiting for any rename to finish...")
 		h.Lock()
 		defer h.Unlock()
+		// Closing the sink drops the window in flight and releases its lock;
+		// nothing below this runs, so it cannot be left to a defer.
+		if c, ok := h.Sink.(io.Closer); ok {
+			if err := c.Close(); err != nil {
+				log.Printf("closing sink: %v", err)
+			}
+		}
 		if err := h.cleanupTemporaryFiles(); err != nil {
 			log.Fatal(err)
 		}
@@ -321,20 +354,8 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 		return Interval{}, err
 	}
 
-	// Last value for this directory.
-	laster := DirLaster{
-		Dir:          h.Dir(),
-		DefaultValue: earliestDate.Format("2006-01-02"),
-		ExtractorFunc: func(dirent os.DirEntry) string {
-			groups := fnPattern.FindStringSubmatch(dirent.Name())
-			if len(groups) > 1 {
-				return groups[1]
-			}
-			return ""
-		},
-	}
-
-	last, err := laster.Last()
+	defaultValue := earliestDate.Format("2006-01-02")
+	last, err := h.lastHarvested(defaultValue)
 	if err != nil {
 		return Interval{}, err
 	}
@@ -344,7 +365,7 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 		return Interval{}, err
 	}
 
-	if last != laster.DefaultValue {
+	if last != defaultValue {
 		// Add a single day, only if we are not just starting.
 		begin = begin.AddDate(0, 0, 1)
 	}
@@ -364,6 +385,34 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 		return Interval{}, ErrAlreadySynced
 	}
 	return Interval{Begin: begin, End: end}, nil
+}
+
+// lastHarvested returns the end of the most recent harvested window, or
+// defaultValue if this endpoint was never harvested. In the file layout the
+// answer is the largest date over the filenames; a sink keeps it explicitly.
+func (h *Harvest) lastHarvested(defaultValue string) (string, error) {
+	if h.Sink != nil {
+		last, err := h.Sink.LastWindow()
+		if err != nil {
+			return "", err
+		}
+		if last == "" {
+			return defaultValue, nil
+		}
+		return last, nil
+	}
+	laster := DirLaster{
+		Dir:          h.Dir(),
+		DefaultValue: defaultValue,
+		ExtractorFunc: func(dirent os.DirEntry) string {
+			groups := fnPattern.FindStringSubmatch(dirent.Name())
+			if len(groups) > 1 {
+				return groups[1]
+			}
+			return ""
+		},
+	}
+	return laster.Last()
 }
 
 // retry attempts an operation with exponential backoff
@@ -464,8 +513,26 @@ func (h *Harvest) run() (err error) {
 }
 
 // runInterval runs a selective harvest on the given interval.
-func (h *Harvest) runInterval(iv Interval) error {
+func (h *Harvest) runInterval(iv Interval) (err error) {
 	suffix := fmt.Sprintf("-tmp-%d", rand.Intn(999999999))
+	if h.Sink != nil {
+		from, until := iv.Begin, iv.End
+		if h.Config.DisableSelectiveHarvesting {
+			// No range was requested, so the window is the run itself, the
+			// same thing the file layout puts in the filename.
+			from, until = h.Started, h.Started
+		}
+		if err := h.Sink.Begin(from, until); err != nil {
+			return err
+		}
+		defer func() {
+			// A window that did not reach Commit leaves nothing behind, the
+			// way an unrenamed temporary file did.
+			if err != nil {
+				err = errors.Join(err, h.Sink.Abort(err))
+			}
+		}()
+	}
 	var token string
 	var i, empty int
 	for {
@@ -536,17 +603,23 @@ func (h *Harvest) runInterval(iv Interval) error {
 				return resp.Error
 			}
 		}
-		// The filename consists of the right boundary (until), the
-		// serial number of the request and a suffix, marking this
-		// request in progress.
-		filename := filepath.Join(h.Dir(), fmt.Sprintf("%s-%08d.xml%s", filedate, i, suffix))
-		if b, err := xml.Marshal(resp); err == nil {
+		b, err := xml.Marshal(resp)
+		if err != nil {
+			return err
+		}
+		if h.Sink != nil {
+			if err := h.Sink.Append(b); err != nil {
+				return err
+			}
+		} else {
+			// The filename consists of the right boundary (until), the
+			// serial number of the request and a suffix, marking this
+			// request in progress.
+			filename := filepath.Join(h.Dir(), fmt.Sprintf("%s-%08d.xml%s", filedate, i, suffix))
 			if e := os.WriteFile(filename, b, 0644); e != nil {
 				return e
 			}
 			log.Printf("wrote %s", filename)
-		} else {
-			return err
 		}
 		// Issue first observed at
 		// https://gssrjournal.com/gssroai/?resumptionToken=33NjdYRs708&verb=ListRecords,
@@ -571,6 +644,9 @@ func (h *Harvest) runInterval(iv Interval) error {
 			log.Printf("max number of empty responses reached")
 			break
 		}
+	}
+	if h.Sink != nil {
+		return h.Sink.Commit()
 	}
 	return h.finalize(suffix)
 }
