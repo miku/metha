@@ -330,14 +330,31 @@ cmd/methad, cmd/metha-migrate, cmd/metha-export, cmd/metha-stat
 * one shard per (baseURL, format, set) as today, or one per baseURL with format
   and set as columns? the latter dedupes identify and locking, but changes the
   cli's mental model
+
+> The base URL is the main shard, everything else could be grouped under it. I
+> would like to still be able to quickly concat all zstd file for a specific
+> format + set, so it would be good, if they would be distringuishable as a
+> group
+
 * keep raw responses forever, or is a normalized record store enough? raw is
   the honest cache, and costs one envelope per response
+
+> keep raw responses for now
+
 * the global catalog is derived - rebuilt periodically by walking shard state,
   or written live by methad in wal mode? leaning rebuild, so that a plain
   metha-sync run never has to touch it
+
+> yes, that can be an on-off operation, does not need to be done all the time
+
 * how heavy should the per-shard `records` table be? it is what buys dedupe and
   fast filtering, but it is also the write amplification; a `-no-index` mode
   that keeps only `windows` and defers the record index to
   `metha-index -rebuild` may be worth having for the bulk-scrape case
+
+> i think network latency is heavier than write amplification
+
 * parquet writer dependency (parquet-go) vs shelling out to duckdb for export
+
+> parquet go depencency ok
 
