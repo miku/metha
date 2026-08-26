@@ -318,12 +318,60 @@ cmd/methad, cmd/metha-migrate, cmd/metha-export, cmd/metha-stat
 
 | phase | ships | content |
 |---|---|---|
-| 0 | 0.4.34 | the phase 0 bugs, flock in metha-sync, context in Client |
-| 1 | 0.4.x | Store interface + v1 implementation behind it, no behavior change - the enabling refactor |
+| 0 ✓ | 0.4.34 | the phase 0 bugs, flock in metha-sync, context in Client |
+| 1 ✓ | 0.4.x | Store interface + v1 implementation behind it, no behavior change - the enabling refactor |
 | 2 | 0.5.0 | v2 writer/reader, metha-migrate, opt-in |
 | 3 | 0.5.x | index-driven metha-cat, metha-export, metha-stat, catalog |
 | 4 | 0.6.0 | methad, scheduler, metrics; v2 default for new harvests |
 | 5 | later | adaptive windows, zstd dictionaries, hooks |
+
+## phase 1 as built
+
+`store` is one package, not `store` + `store/v1` + `store/v2`: the
+implementations need `store.Identity` and `store.ReadOptions`, so a subpackage
+per layout would import `store` and `store.Open` could not then dispatch to
+them without an import cycle; v1 lives in `store/v1.go`, v2 will live in
+`store/v2.go`
+
+direction of dependency: `store` imports the root package for `Response` and
+`Record`, so the root package can never import `store`; that is fine as long as
+the v2 harvest driver lands in `store` and metha-sync dispatches, leaving the
+root package's v1 harvester alone, which is what "root package unchanged"
+wanted anyway
+
+the interface is what the commands actually needed, no more:
+
+```go
+type Store interface {
+    Identity() Identity
+    Layout() Layout
+    Dir() string
+    Files() ([]string, error)
+    Records(opts ReadOptions) iter.Seq2[metha.Record, error]
+    Last() (string, error)
+}
+```
+
+`Open(baseDir, Identity)` detects the layout (always v1 so far) and `List(baseDir)`
+enumerates a cache, which is the seam metha-ls and, later, the catalog sit on
+
+metha-cat, metha-files and metha-ls read through the store; `metha.Render` and
+`metha.RenderOpts` moved to `store.Render` / `store.RenderOpts` - the one
+source-level break, taken because phase 3 rewrites that path anyway and because
+`RenderOpts.Harvest` was a `Harvest` by value, which is what made `go vet`
+report copylocks across the tree
+
+harvest.go still writes v1 files directly and resumes via its own `DirLaster`,
+duplicating what `store.Last` does; v1 is frozen, so the two cannot drift, and
+phase 2 replaces the writer rather than the reader
+
+two deliberate behavior changes, everything else byte-identical against the
+previous binaries:
+
+* metha-cat now reads `.xml` files, so a `-no-compression` harvest is no longer
+  invisible to it (`Files()` had always listed them; only the reader skipped them)
+* metha-files lists in datestamp order rather than grouped by extension, so
+  `metha-files ... | xargs cat` is chronological in a mixed gz/zst directory
 
 ## open questions
 

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,31 +24,19 @@ func ellipsis(s string, length int) string {
 
 func main() {
 	flag.Parse()
-	basedir := metha.GetBaseDir()
-	if _, err := os.Stat(basedir); os.IsNotExist(err) {
-		return
-	}
-	files, err := ioutil.ReadDir(metha.GetBaseDir())
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, file := range files {
-		b, err := base64.RawURLEncoding.DecodeString(file.Name())
+	for entry, err := range store.List(metha.GetBaseDir()) {
 		if err != nil {
 			if *bestEffort {
 				log.Println(err)
-			} else {
-				log.Fatal(err)
+				continue
 			}
+			log.Fatal(err)
 		}
-		parts := strings.SplitN(string(b), "#", 3)
-		if len(parts) < 3 {
-			continue
+		name := filepath.Base(entry.Dir)
+		if !*showAll {
+			name = ellipsis(name, 35)
 		}
-		name := ellipsis(file.Name(), 35)
-		if *showAll {
-			name = file.Name()
-		}
-		fmt.Printf("%s\t%s\n", name, strings.Join(parts, "\t"))
+		id := entry.Identity
+		fmt.Printf("%s\t%s\t%s\t%s\n", name, id.Set, id.Format, id.BaseURL)
 	}
 }

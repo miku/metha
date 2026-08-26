@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,13 +26,19 @@ func main() {
 	if flag.NArg() == 0 {
 		log.Fatal("endpoint required")
 	}
-	metha.BaseDir = *baseDir
-	harvest := metha.Harvest{Config: &metha.Config{
+	st, err := store.Open(*baseDir, store.Identity{
 		BaseURL: metha.PrependSchema(flag.Arg(0)),
 		Format:  *format,
 		Set:     *set,
-	}}
-	for _, fn := range harvest.Files() {
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	files, err := st.Files()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, fn := range files {
 		fmt.Println(fn)
 	}
 }

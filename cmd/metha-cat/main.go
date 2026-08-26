@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,24 +31,24 @@ func main() {
 	if flag.NArg() == 0 {
 		log.Fatal("endpoint required")
 	}
-	baseURL := metha.PrependSchema(flag.Arg(0))
-	metha.BaseDir = *baseDir
-	harvest := metha.Harvest{Config: &metha.Config{
-		BaseURL: baseURL,
+	st, err := store.Open(*baseDir, store.Identity{
+		BaseURL: metha.PrependSchema(flag.Arg(0)),
 		Format:  *format,
 		Set:     *set,
-	}}
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	bw := bufio.NewWriter(os.Stdout)
 	defer bw.Flush()
-	opts := &metha.RenderOpts{
+	opts := store.RenderOpts{
 		Writer:  bw,
-		Harvest: harvest,
 		From:    *from,
 		Until:   *until,
 		Root:    *root,
 		UseJson: *useJson,
 	}
-	if err := metha.Render(opts); err != nil {
+	if err := store.Render(st, opts); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/adrg/xdg"
 )
 
 func TestMustGlob(t *testing.T) {
@@ -96,8 +98,10 @@ func TestMoveCompressFile_Zstd(t *testing.T) {
 
 func TestGetBaseDir_Default(t *testing.T) {
 	os.Unsetenv("METHA_DIR")
+	// The default follows the XDG cache directory, which is ~/.cache on Linux
+	// but ~/Library/Caches on macOS - hardcoding either fails on the other.
 	var (
-		expected = filepath.Join(os.Getenv("HOME"), ".cache", "metha")
+		expected = filepath.Join(xdg.CacheHome, "metha")
 		result   = GetBaseDir()
 	)
 	if result != expected {
