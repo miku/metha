@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -84,18 +85,32 @@ func processFile(file os.DirEntry, opts *RenderOpts) error {
 		return fmt.Errorf("unsupported file format: %s", fileName)
 	}
 
-	// Decode the XML
+	// Decode the XML. A single file can hold more than one response:
+	// metha-pack concatenates compressed frames into one file, and both the
+	// gzip and the zstd reader stream those members transparently.
 	dec := xml.NewDecoder(xmlReader)
 	dec.Strict = false
-	var (
-		resp Response
-		b    []byte
-	)
-	if err := dec.Decode(&resp); err != nil {
-		return fmt.Errorf("failed to decode XML from %s: %w", abspath, err)
+	for {
+		var resp Response
+		if err := dec.Decode(&resp); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return fmt.Errorf("failed to decode XML from %s: %w", abspath, err)
+		}
+		if err := renderRecords(&resp, opts); err != nil {
+			return err
+		}
 	}
+}
 
-	// Process each record
+// renderRecords writes the records of a single response, applying the
+// datestamp filters.
+func renderRecords(resp *Response, opts *RenderOpts) error {
+	var (
+		b   []byte
+		err error
+	)
 	for _, rec := range resp.ListRecords.Records {
 		if opts.From != "" && rec.Header.DateStamp < opts.From {
 			continue
@@ -118,6 +133,5 @@ func processFile(file os.DirEntry, opts *RenderOpts) error {
 			return fmt.Errorf("failed to write to output: %w", err)
 		}
 	}
-
 	return nil
 }

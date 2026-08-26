@@ -200,7 +200,7 @@ func main() {
 	harvest.Config.ExtraHeaders = extra
 	harvest.Config.Delay = *delay
 	harvest.Config.KeepTemporaryFiles = *keepTemporaryFiles
-	harvest.Config.IgnoreHTTPErrors = *ignoreUnexpectedEOF
+	harvest.Config.IgnoreUnexpectedEOF = *ignoreUnexpectedEOF
 	harvest.Config.NoCompression = *noCompression
 	log.Printf("harvest: %+v", harvest)
 	if *removeCached {
@@ -210,8 +210,14 @@ func main() {
 		}
 	}
 	if err := harvest.Run(); err != nil {
-		if errors.Is(err, metha.ErrAlreadySynced) {
+		switch {
+		case errors.Is(err, metha.ErrAlreadySynced):
 			log.Println("this repository is up-to-date")
+			return
+		case errors.Is(err, metha.ErrLocked):
+			// Expected when the same endpoint is handed to two workers,
+			// e.g. by the shuf | parallel loop in the README. Not a failure.
+			log.Printf("another harvest holds this endpoint, skipping: %v", err)
 			return
 		}
 		log.Fatal(err)

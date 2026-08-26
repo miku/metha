@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/klauspost/compress/zstd"
@@ -110,14 +111,29 @@ func (s *RateLimitedReader) Close() error {
 	return nil
 }
 
+// sharedTransport is the transport behind every client metha creates.
+var sharedTransport = sync.OnceValue(newTransport)
+
+// newTransport returns a transport tuned for harvesting.
+func newTransport() *http.Transport {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// Endpoints in the long tail regularly have expired, self-signed or
+	// otherwise broken certificate chains.
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	// A large harvest touches thousands of distinct hosts; the stdlib
+	// defaults (100 idle overall, 2 per host) discard connections as fast as
+	// we open them.
+	tr.MaxIdleConns = 1024
+	tr.MaxIdleConnsPerHost = 4
+	tr.IdleConnTimeout = 90 * time.Second
+	return tr
+}
+
 // CreateDoer will return http request clients with specific timeout and retry
 // properties.
 func CreateDoer(timeout time.Duration, retries int) Doer {
-	tr := http.DefaultTransport
-	tr.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := http.DefaultClient
-	client.Transport = tr
-	client.Timeout = timeout
+	tr := sharedTransport()
+	client := &http.Client{Transport: tr, Timeout: timeout}
 	if timeout == 0 && retries == 0 {
 		return client
 	}
@@ -170,6 +186,11 @@ func Do(r *Request) (*Response, error) {
 	return DefaultClient.Do(r)
 }
 
+// DoContext is a shortcut for DefaultClient.DoContext.
+func DoContext(ctx context.Context, r *Request) (*Response, error) {
+	return DefaultClient.DoContext(ctx, r)
+}
+
 // maybeCompressed detects compressed content and decompresses it on the fly.
 func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	buf, err := io.ReadAll(r)
@@ -218,13 +239,20 @@ func (c *Client) wrapWithRateLimit(reader io.Reader, ctx context.Context) io.Rea
 // Do executes a single OAIRequest. ResumptionToken handling must happen in the
 // caller. Only Identify and GetRecord requests will return a complete response.
 func (c *Client) Do(r *Request) (*Response, error) {
+	return c.DoContext(context.Background(), r)
+}
+
+// DoContext is Do with cancellation: ctx aborts the request in flight and the
+// reading of its body, which is what lets a long-running harvester shut down
+// promptly instead of waiting out a stalled connection.
+func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 	link, err := r.URL()
 	if err != nil {
 		return nil, err
 	}
 	log.Println(link)
 
-	req, err := http.NewRequest("GET", link.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", link.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -234,9 +262,6 @@ func (c *Client) Do(r *Request) (*Response, error) {
 			req.Header.Add(name, value)
 		}
 	}
-
-	// Use request context for rate limiting
-	ctx := req.Context()
 
 	resp, err := c.Doer.Do(req)
 	if err != nil {

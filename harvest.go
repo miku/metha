@@ -166,9 +166,30 @@ func (h *Harvest) Run() error {
 	if err := h.mkdirAll(); err != nil {
 		return err
 	}
+	unlock, err := h.lock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
 	h.setupInterruptHandler()
 	h.Started = time.Now()
 	return h.run()
+}
+
+// lock takes the per-directory harvest lock, so that two processes cannot
+// harvest the same endpoint into the same directory at once - which would
+// interleave two sets of temporary files and finalize each other's data into
+// place, quietly duplicating records. Returns an error wrapping ErrLocked if
+// another harvest is already running here.
+func (h *Harvest) lock() (unlock func(), err error) {
+	f, err := TryFlock(filepath.Join(h.Dir(), LockName))
+	if err != nil {
+		return nil, err
+	}
+	if f == nil {
+		return func() {}, nil // no flock on this platform
+	}
+	return func() { f.Close() }, nil
 }
 
 // temporaryFiles lists all temporary files in the harvesting dir.
@@ -202,7 +223,7 @@ func (h *Harvest) cleanupTemporaryFiles() error {
 // setupInterruptHandler will cleanup, so we can CTRL-C or kill savely.
 func (h *Harvest) setupInterruptHandler() {
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt)
+	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM) // SIGTERM for systemd stop, etc.
 	go func() {
 		<-sigc
 		log.Println("waiting for any rename to finish...")
@@ -432,7 +453,7 @@ func (h *Harvest) run() (err error) {
 
 	for _, iv := range intervals {
 		if err := h.runInterval(iv); err != nil {
-			if h.Config.IgnoreUnexpectedEOF && err == io.ErrUnexpectedEOF {
+			if h.Config.IgnoreUnexpectedEOF && errors.Is(err, io.ErrUnexpectedEOF) {
 				log.Printf("ignoring unexpected EOF and moving to next interval")
 				continue
 			}

@@ -15,18 +15,17 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/miku/metha"
 )
 
 var (
-	baseDir      = flag.String("d", metha.GetBaseDir(), "base directory for harvested files")
-	minFiles     = flag.Int("m", 3, "minimum number of files before packing")
-	verbose      = flag.Bool("v", false, "verbose output")
-	dryRun       = flag.Bool("r", false, "show what would be done without actually doing it")
-	quietPeriod  = flag.Duration("quiet", 60*time.Second, "skip endpoint dirs whose newest compressed file was modified within this window (heuristic: avoid packing while a harvest may be writing)")
+	baseDir     = flag.String("d", metha.GetBaseDir(), "base directory for harvested files")
+	minFiles    = flag.Int("m", 3, "minimum number of files before packing")
+	verbose     = flag.Bool("v", false, "verbose output")
+	dryRun      = flag.Bool("r", false, "show what would be done without actually doing it")
+	quietPeriod = flag.Duration("quiet", 60*time.Second, "skip endpoint dirs whose newest compressed file was modified within this window")
 )
 
 type Stats struct {
@@ -53,12 +52,9 @@ func main() {
 	fmt.Fprintf(os.Stderr, "analyzing directory structure: %s\n", root)
 
 	// Guard against two metha-pack runs racing each other on the same tree.
-	// This does NOT coordinate with metha-sync — that would require the same
-	// lock to be taken on the harvest side. The -quiet flag is the heuristic
-	// safety net for harvest concurrency.
 	if !*dryRun {
 		lockPath := filepath.Join(root, ".metha-pack.lock")
-		lockFile, err := acquireLock(lockPath)
+		lockFile, err := metha.TryFlock(lockPath)
 		if err != nil {
 			log.Fatalf("could not acquire pack lock: %v", err)
 		}
@@ -125,24 +121,6 @@ const staleSuffix = ".stale"
 // quarantineMove records a successful rename so we can roll it back.
 type quarantineMove struct{ from, to string }
 
-// acquireLock takes a non-blocking exclusive flock on path, creating the file
-// if needed. The returned file must outlive the lock; it is released when the
-// file is closed or the process exits. Unix-only (matches the rest of metha).
-func acquireLock(path string) (*os.File, error) {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o644)
-	if err != nil {
-		return nil, fmt.Errorf("open lock file: %w", err)
-	}
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		f.Close()
-		if err == syscall.EWOULDBLOCK {
-			return nil, fmt.Errorf("another metha-pack is running (lock held on %s)", path)
-		}
-		return nil, fmt.Errorf("flock %s: %w", path, err)
-	}
-	return f, nil
-}
-
 // compressedExt returns the matching extension from packExts, or "" if the
 // file is not a packable compressed file.
 func compressedExt(filename string) string {
@@ -198,8 +176,27 @@ func processDirectory(path string, stats *Stats) {
 		return
 	}
 
-	// Pack each extension group independently. Iterate packExts (not the map)
-	// for deterministic processing order.
+	if len(groups) == 0 {
+		stats.SkippedDirs++
+		return
+	}
+
+	// Coordinate with a running harvest.
+	if !*dryRun {
+		lockFile, err := metha.TryFlock(filepath.Join(path, metha.LockName))
+		if err != nil {
+			if *verbose {
+				log.Printf("skipped %s: %v", filepath.Base(path), err)
+			}
+			stats.SkippedDirs++
+			return
+		}
+		if lockFile != nil {
+			defer lockFile.Close()
+		}
+	}
+
+	// Pack each extension group independently.
 	processed := false
 	for _, ext := range packExts {
 		files := groups[ext]

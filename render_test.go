@@ -311,3 +311,83 @@ func TestRenderEmptydir(t *testing.T) {
 		t.Errorf("Expected empty output with root tags, got: %s", output)
 	}
 }
+
+// createPackedFile writes several responses into one file as independent
+// compressed frames, which is what metha-pack produces when it concatenates a
+// directory's files into the newest one.
+func createPackedFile(t *testing.T, dir, filename string, createWriter writerCreator, resps ...Response) {
+	t.Helper()
+	file, err := os.Create(filepath.Join(dir, filename))
+	if err != nil {
+		t.Fatalf("failed to create packed file %s: %v", filename, err)
+	}
+	defer file.Close()
+	for _, resp := range resps {
+		writer := createWriter(file)
+		if err := xml.NewEncoder(writer).Encode(resp); err != nil {
+			t.Fatalf("failed to encode response for %s: %v", filename, err)
+		}
+		// Close per response, so each lands as its own frame/member.
+		if err := writer.Close(); err != nil {
+			t.Fatalf("failed to close writer for %s: %v", filename, err)
+		}
+	}
+}
+
+// respWithTitle is a single-record response, identified by its title.
+func respWithTitle(title string) Response {
+	return Response{
+		ListRecords: ListRecords{
+			Records: []Record{
+				{
+					Header:   Header{Identifier: title, DateStamp: "2023-01-01"},
+					Metadata: Metadata{Body: []byte("<dc:title>" + title + "</dc:title>")},
+				},
+			},
+		},
+	}
+}
+
+// TestRenderPackedFile guards against silently emitting only the first
+// response of a packed file: both the gzip and the zstd reader stream
+// concatenated frames, so the decoder has to keep going until EOF.
+func TestRenderPackedFile(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		filename string
+		writer   writerCreator
+	}{
+		{"gzip", "2023-01-01-00000001.xml.gz", createGzipWriter},
+		{"zstd", "2023-01-01-00000001.xml.zst", createZstdWriter},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			origBaseDir := BaseDir
+			BaseDir = t.TempDir()
+			defer func() { BaseDir = origBaseDir }()
+
+			harvest := Harvest{Config: &Config{BaseURL: "http://example.com", Format: "oai_dc"}}
+			if err := os.MkdirAll(harvest.Dir(), 0755); err != nil {
+				t.Fatalf("failed to create harvest directory: %v", err)
+			}
+			want := []string{"first", "second", "third"}
+			var resps []Response
+			for _, title := range want {
+				resps = append(resps, respWithTitle(title))
+			}
+			createPackedFile(t, harvest.Dir(), tt.filename, tt.writer, resps...)
+
+			var buf bytes.Buffer
+			if err := Render(&RenderOpts{Writer: &buf, Harvest: harvest}); err != nil {
+				t.Fatalf("Render failed: %v", err)
+			}
+			for _, title := range want {
+				if !strings.Contains(buf.String(), title) {
+					t.Errorf("packed %s: missing record %q, got: %s", tt.name, title, buf.String())
+				}
+			}
+			if got := strings.Count(buf.String(), "<record"); got != len(want) {
+				t.Errorf("packed %s: got %d records, want %d", tt.name, got, len(want))
+			}
+		})
+	}
+}
