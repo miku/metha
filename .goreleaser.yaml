@@ -13,71 +13,19 @@ before:
   hooks:
     - go mod tidy
 
-# One build per command, linux/amd64+arm64 only. These feed the nfpm packages
-# below. CGO disabled on purpose, see https://github.com/miku/metha/issues/31
+# One build, linux/amd64+arm64 only. It feeds the nfpm packages below, which
+# add the legacy names as symlinks to it. Before 0.5 this was one build per
+# command, and each one linked the whole program - the 11MB endpoint list
+# included - for about 186MB of binaries doing what 25MB does now.
+# CGO disabled on purpose, see https://github.com/miku/metha/issues/31
 builds:
-  - id: metha-sync
-    binary: metha-sync
-    main: ./cmd/metha-sync
+  - id: metha
+    binary: metha
+    main: ./cmd/metha
     env: [CGO_ENABLED=0]
     flags: [-trimpath]
     # Inject the version (from the git tag) into the shared metha package var,
-    # not main.version (a cmd also has a bool `version` flag). Local builds
-    # keep the "dev" default from version.go.
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-cat
-    binary: metha-cat
-    main: ./cmd/metha-cat
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-id
-    binary: metha-id
-    main: ./cmd/metha-id
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-ls
-    binary: metha-ls
-    main: ./cmd/metha-ls
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-files
-    binary: metha-files
-    main: ./cmd/metha-files
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-fortune
-    binary: metha-fortune
-    main: ./cmd/metha-fortune
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
-    ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux]
-    goarch: [amd64, arm64]
-  - id: metha-pack
-    binary: metha-pack
-    main: ./cmd/metha-pack
-    env: [CGO_ENABLED=0]
-    flags: [-trimpath]
+    # not main.version. Local builds keep the "dev" default from version.go.
     ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
@@ -108,6 +56,36 @@ nfpms:
         dst: /usr/lib/systemd/system/metha.service
         file_info:
           mode: 0644
+      # The names metha installed until 0.4, as symlinks to the one binary. It
+      # dispatches on the name it was invoked under, so these keep taking the
+      # flags they always did. Removed in metha 2.0.
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-sync
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-cat
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-id
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-ls
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-files
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-fortune
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-pack
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-stat
+        type: symlink
+      - src: /usr/local/bin/metha
+        dst: /usr/local/bin/metha-migrate
+        type: symlink
     deb:
       compression: zstd
     rpm:

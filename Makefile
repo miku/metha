@@ -1,28 +1,39 @@
 SHELL = /bin/bash
-TARGETS = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-pack metha-stat metha-migrate
+# One binary. The nine names metha used to install are symlinks to it: it reads
+# the name it was invoked under and runs the matching verb, which is what keeps
+# every existing script working. Nine separate binaries came to 186MB, because
+# each one linked the whole program including the 11MB endpoint list; this is
+# about 25MB, once.
+TARGET = metha
+LEGACY = metha-sync metha-cat metha-id metha-ls metha-files metha-fortune metha-pack metha-stat metha-migrate
 # https://github.com/miku/metha/issues/31
 CGO_ENABLED = 0
-GO_FILES := $(shell find . -name "*.go" -type f -not -path "./cmd/*")
+GO_FILES := $(shell find . -name "*.go" -type f)
 MAKEFLAGS := --jobs=$(shell nproc 2>/dev/null || sysctl -n hw.physicalcpu)
 
 PKGNAME = metha
 
 .PHONY: all
-all: $(TARGETS)
+all: $(TARGET) $(LEGACY)
 
 # Local, native builds for development. Cross-platform release artifacts
 # (linux/darwin/windows, amd64/arm64, deb/rpm) are built by goreleaser, see
 # the snapshot/release targets below and .goreleaser.yaml.
-$(TARGETS): %: cmd/%/main.go contrib/sites.tsv $(GO_FILES)
-	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ $<
+$(TARGET): contrib/sites.tsv $(GO_FILES)
+	CGO_ENABLED=$(CGO_ENABLED) go build -o $@ ./cmd/$(TARGET)
+
+# The same links the packages install, so that a working copy behaves like an
+# installed metha.
+$(LEGACY): $(TARGET)
+	ln -sf $(TARGET) $@
 
 .PHONY: test
 test:
-	CGO_ENABLED=$(CGO_ENABLED) go test -v .
+	CGO_ENABLED=$(CGO_ENABLED) go test ./...
 
 .PHONY: clean
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGET) $(LEGACY)
 	rm -rf dist
 
 .PHONY: imports

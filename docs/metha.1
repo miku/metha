@@ -4,6 +4,21 @@
 metha \- harvest OAI\-PMH conform endpoints
 .SH SYNOPSIS
 .PP
+\fB\fCmetha\fR \fIcommand\fP [\fIoptions\fP] [\fIendpoint\fP]
+.PP
+\fB\fCmetha\fR [\fB\fCsync\fR|\fB\fCcat\fR|\fB\fCls\fR|\fB\fCfiles\fR|\fB\fCid\fR|\fB\fCstat\fR|\fB\fCmigrate\fR|\fB\fCpack\fR|\fB\fCfortune\fR|\fB\fCshim\fR]
+.PP
+Since 0.5 metha is a single binary and each of the commands below is a
+subcommand of it: \fB\fCmetha sync\fR rather than \fB\fCmetha\-sync\fR\&. The old names remain,
+as symlinks to the one binary, and take the flags they always did; they print a
+deprecation notice on a terminal (silence it with \fB\fCMETHA_NO_DEPRECATION=1\fR) and
+go away in metha 2.0. Spelled as subcommands, long options take two dashes:
+\fB\fCmetha sync \-\-format oai_dc\fR\&. Spelled under an old name, one dash still works.
+.PP
+\fB\fCmetha shim install\fR writes the old names next to the binary, which a
+\fB\fCgo install\fR does not do for you. \fB\fCmetha help\fR \fIcommand\fP documents each one,
+including \fB\fCstat\fR and \fB\fCmigrate\fR, which are not described below.
+.PP
 \fB\fCmetha\-sync\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
 .PP
 \fB\fCmetha\-sync\fR [\fB\fC\-dir\fR] \fIendpoint\fP

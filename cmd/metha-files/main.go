@@ -1,44 +1,15 @@
+// Command metha-files is a compatibility stub for "metha files".
+//
+// metha ships as a single binary from 0.5 on. This package still builds, so
+// that "go install github.com/miku/metha/cmd/metha-files@latest" keeps
+// resolving through the 0.5.x line, but it links the same program the one
+// binary does: prefer "go install github.com/miku/metha/cmd/metha@latest"
+// followed by "metha shim install", which installs every name at a ninth of
+// the size.
+//
+// Deprecated: use "metha files". Removed in metha 2.0.
 package main
 
-import (
-	"flag"
-	"fmt"
-	"os"
+import "github.com/miku/metha/internal/cli"
 
-	"github.com/miku/metha"
-	"github.com/miku/metha/store"
-	log "github.com/sirupsen/logrus"
-)
-
-var (
-	baseDir = flag.String("base-dir", metha.GetBaseDir(), "base dir for harvested files")
-	format  = flag.String("format", "oai_dc", "metadata format")
-	set     = flag.String("set", "", "set name")
-	version = flag.Bool("v", false, "show version")
-)
-
-func main() {
-	flag.Parse()
-	if *version {
-		fmt.Println(metha.Version)
-		os.Exit(0)
-	}
-	if flag.NArg() == 0 {
-		log.Fatal("endpoint required")
-	}
-	st, err := store.Open(*baseDir, store.Identity{
-		BaseURL: metha.PrependSchema(flag.Arg(0)),
-		Format:  *format,
-		Set:     *set,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	files, err := st.Files()
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, fn := range files {
-		fmt.Println(fn)
-	}
-}
+func main() { cli.Main() }

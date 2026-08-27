@@ -9,6 +9,21 @@ metha - harvest OAI-PMH conform endpoints
 SYNOPSIS
 --------
 
+`metha` *command* [*options*] [*endpoint*]
+
+`metha` [`sync`|`cat`|`ls`|`files`|`id`|`stat`|`migrate`|`pack`|`fortune`|`shim`]
+
+Since 0.5 metha is a single binary and each of the commands below is a
+subcommand of it: `metha sync` rather than `metha-sync`. The old names remain,
+as symlinks to the one binary, and take the flags they always did; they print a
+deprecation notice on a terminal (silence it with `METHA_NO_DEPRECATION=1`) and
+go away in metha 2.0. Spelled as subcommands, long options take two dashes:
+`metha sync --format oai_dc`. Spelled under an old name, one dash still works.
+
+`metha shim install` writes the old names next to the binary, which a
+`go install` does not do for you. `metha help` *command* documents each one,
+including `stat` and `migrate`, which are not described below.
+
 `metha-sync` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
 `metha-sync` [`-dir`] *endpoint*
