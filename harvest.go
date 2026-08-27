@@ -41,10 +41,7 @@ type Harvester interface {
 	Dir() string
 }
 
-// Sink receives the responses of a harvest, one window at a time, in place of
-// the files metha has always written. It is the seam that lets a harvest target
-// a different storage layout without this package knowing anything about it:
-// store.Writer implements it.
+// Sink receives the responses of a harvest, one window at a time.
 //
 // A window opens with Begin, takes one Append per response and becomes durable
 // at Commit, or is discarded by Abort. HasWindow and LastWindow answer what has
