@@ -109,8 +109,27 @@ $ man metha
 Use a deb, rpm [release](https://github.com/miku/metha/releases), or the go tool:
 
 ```sh
-$ go install -v github.com/miku/metha/cmd/...@latest
+$ go install -v github.com/miku/metha/cmd/metha@latest
 ```
+
+Since 0.5 metha is a single binary with one subcommand per verb: `metha sync`,
+`metha cat`, `metha ls` and so on. See `metha help`.
+
+The nine commands metha used to install — `metha-sync`, `metha-cat`, … — are
+still there as symlinks to it. metha reads the name it was invoked under and
+runs the matching verb, so existing scripts keep working, flags included. The
+packages install those names for you; after a `go install` you can add them with
+
+```sh
+$ metha shim install
+```
+
+They print a one-line deprecation notice when run from a terminal (silence it
+with `METHA_NO_DEPRECATION=1`) and will be removed in metha 2.0.
+
+`go install github.com/miku/metha/cmd/metha-sync@latest` and friends still
+resolve throughout the 0.5.x line, but each one builds the whole program: nine
+of them come to about 186MB, where the single binary is about 25MB.
 
 ## Limitations
 
