@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/miku/metha"
 	"github.com/miku/metha/store"
@@ -122,11 +121,6 @@ func migrateOne(baseDir string, id store.Identity, remove, verbose bool) (bool, 
 	}
 	wrote := result.Windows > 0
 	if !result.Verified() {
-		if len(result.Diverged) > 0 {
-			return wrote, fmt.Errorf("verification failed: %d records in the v1 files, %d in the shard, differing in %d %s: %s",
-				result.Source, result.Present, len(result.Diverged),
-				plural(len(result.Diverged), "window"), strings.Join(result.Diverged, " "))
-		}
 		return wrote, fmt.Errorf("verification failed: %d records in the v1 files, %d in the shard",
 			result.Source, result.Present)
 	}

@@ -47,6 +47,19 @@ func resume(t *testing.T, w *Writer) time.Time {
 	return got
 }
 
+// records reports how many records the index holds for the whole group, which
+// is what a refetch has to replace rather than add to. Counting per window only
+// answers while the window still has a row of its own, and merging takes that
+// away as soon as the window becomes contiguous with its neighbour.
+func records(t *testing.T, w *Writer) int {
+	t.Helper()
+	n, err := w.CountRecords()
+	if err != nil {
+		t.Fatalf("CountRecords: %v", err)
+	}
+	return n
+}
+
 // indexed reports how many records the index holds for one window, which is
 // what a refetch has to replace rather than add to.
 func indexed(t *testing.T, w *Writer, from, until time.Time) int {
@@ -95,7 +108,11 @@ func TestResumeUnsettled(t *testing.T) {
 	if got, want := resume(t, w), day(t, "2023-02-02"); !got.Equal(want) {
 		t.Errorf("Resume after the window settled: got %v, want %v", got, want)
 	}
-	if got, want := indexed(t, w, day(t, "2023-02-01"), endOfDay(t, "2023-02-01")), 2; got != want {
+	// Counted over the group rather than the day, because the day no longer has
+	// a row to itself: settling it made it contiguous with January, and the two
+	// were merged. Three records, not four, is what says the morning's copy was
+	// replaced rather than added to.
+	if got, want := records(t, w), 3; got != want {
 		t.Errorf("indexed records after the refetch: got %d, want %d", got, want)
 	}
 }
@@ -155,4 +172,63 @@ func TestResumeAcrossIntervalSizes(t *testing.T) {
 	if got, want := resume(t, w), day(t, "2023-02-03"); !got.Equal(want) {
 		t.Errorf("Resume after switching interval size: got %v, want %v", got, want)
 	}
+}
+
+// TestSettledWindowsMerge is what keeps the index from growing with every run
+// rather than with the data. A settled window that begins where a settled
+// window ends is the same stretch of time fetched in two goes, and the index is
+// only ever asked which ranges are covered - so the two become one row. A year
+// of daily harvests costs one row, not three hundred and sixty five.
+func TestSettledWindowsMerge(t *testing.T) {
+	w := newWriter(t)
+	for _, d := range []string{"2023-01-01", "2023-01-02", "2023-01-03"} {
+		commit(t, w, day(t, d), endOfDay(t, d), true, "record "+d)
+	}
+	if got, want := windows(t, w), 1; got != want {
+		t.Errorf("three contiguous days: got %d windows, want %d", got, want)
+	}
+	// Merged, not lost: the range answers for every day it swallowed, and the
+	// counters are the sums over it.
+	for _, d := range []string{"2023-01-01", "2023-01-02", "2023-01-03"} {
+		has, err := w.HasWindow(day(t, d), endOfDay(t, d))
+		if err != nil || !has {
+			t.Errorf("HasWindow(%s) after merging: got %v, %v, want true", d, has, err)
+		}
+	}
+	if got, want := records(t, w), 3; got != want {
+		t.Errorf("records after merging: got %d, want %d", got, want)
+	}
+	if got, want := resume(t, w), day(t, "2023-01-04"); !got.Equal(want) {
+		t.Errorf("Resume after merging: got %v, want %v", got, want)
+	}
+
+	// A gap breaks the run: the shard cannot claim what it never fetched, so
+	// the window after the gap has to start a row of its own.
+	commit(t, w, day(t, "2023-01-05"), endOfDay(t, "2023-01-05"), true, "after the gap")
+	if got, want := windows(t, w), 2; got != want {
+		t.Errorf("after a gap: got %d windows, want %d", got, want)
+	}
+	if has, err := w.HasWindow(day(t, "2023-01-04"), endOfDay(t, "2023-01-04")); err != nil || has {
+		t.Errorf("HasWindow over the gap: got %v, %v, want false", has, err)
+	}
+
+	// An unsettled window keeps its own boundaries whatever it abuts, because
+	// those boundaries are where the next run resumes.
+	commit(t, w, day(t, "2023-01-06"), endOfDay(t, "2023-01-06"), false, "today")
+	if got, want := windows(t, w), 3; got != want {
+		t.Errorf("with an unsettled window: got %d windows, want %d", got, want)
+	}
+	if got, want := resume(t, w), day(t, "2023-01-06"); !got.Equal(want) {
+		t.Errorf("Resume with an unsettled window: got %v, want %v", got, want)
+	}
+}
+
+// windows reports how many rows the group's coverage takes.
+func windows(t *testing.T, w *Writer) int {
+	t.Helper()
+	var n int
+	if err := w.st.db.QueryRow(`SELECT COUNT(*) FROM windows WHERE group_id = ?`, w.groupID).Scan(&n); err != nil {
+		t.Fatalf("count windows: %v", err)
+	}
+	return n
 }

@@ -71,8 +71,8 @@ func TestMigrate(t *testing.T) {
 	// step after a plain "metha-migrate": it writes nothing, and comparing the
 	// shard against what this run happened to append would compare it to zero.
 	if !again.Verified() {
-		t.Errorf("second Migrate did not verify: %d in the source, %d in the shard, diverged %v",
-			again.Source, again.Present, again.Diverged)
+		t.Errorf("second Migrate did not verify: %d in the source, %d in the shard",
+			again.Source, again.Present)
 	}
 	if again.Source != result.Source {
 		t.Errorf("second Migrate: %d records in the source, want %d", again.Source, result.Source)
@@ -119,10 +119,11 @@ func TestMigrateVerifyDetectsLoss(t *testing.T) {
 		t.Fatalf("Migrate again: %v", err)
 	}
 	if again.Verified() {
-		t.Error("Verified after dropping a window's records: got true, want false")
+		t.Error("Verified after dropping records: got true, want false")
 	}
-	if !slices.Contains(again.Diverged, "2023-02-28") {
-		t.Errorf("Diverged: got %v, want it to name 2023-02-28", again.Diverged)
+	if again.Present >= again.Source {
+		t.Errorf("after dropping records the shard holds %d of the source's %d, want fewer",
+			again.Present, again.Source)
 	}
 }
 

@@ -23,22 +23,25 @@ type MigrateResult struct {
 	Bytes    int64    // uncompressed response bytes written
 	Records  int      // records the shard holds for this group afterwards
 	Source   int      // records the v1 directory holds
-	Present  int      // records the shard holds for the source's windows
-	Diverged []string // windows where the two disagree, by end date
+	Present  int      // records the shard holds over the range the source covers
 	Skipped  []string // files whose name carries no window date
 }
 
 // Verified reports whether the shard holds every record the v1 directory does.
-// It is checked window by window: the ones this run wrote match by
-// construction, and the ones that were already there are counted again from the
-// source and compared against the index, so a second run verifies exactly as
-// strictly as the first. Comparing per window rather than in total is what lets
-// a shard that has since been harvested further still verify - those windows
-// are not the source's, and are not counted here.
+// Both sides are counted the same way - the source by rereading it, the shard
+// by counting index rows - so a second run verifies exactly as strictly as the
+// first, rather than trusting that an earlier one got it right.
+//
+// The comparison spans the whole range the source covers, because that is the
+// shape the index has: settled windows are merged as they are committed, so a
+// migrated cache answers out of one row and there is no per-day count left to
+// compare. A shard that has been harvested past the source's range reports
+// short and so refuses to verify, which is the safe way round for something
+// whose only use is to gate removing the original.
 //
 // A migration that does not verify must not be followed by removing the source.
 func (r *MigrateResult) Verified() bool {
-	return len(r.Diverged) == 0 && r.Source == r.Present
+	return r.Source == r.Present
 }
 
 // Migrate builds a v2 shard from an endpoint's v1 directory, without touching
@@ -83,6 +86,9 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	}
 	defer w.Close()
 
+	// The range the source covers, accumulated as the windows are worked out,
+	// and what the shard is counted over at the end.
+	var spanFrom, spanUntil time.Time
 	for i, date := range dates {
 		// The date in a v1 filename stands for the whole of that day, which is
 		// how the endpoint read the request that produced it, and it is a local
@@ -105,27 +111,23 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 			}
 			from = prev.AddDate(0, 0, 1)
 		}
+		if spanFrom.IsZero() {
+			spanFrom = from
+		}
+		spanUntil = until
 		has, err := w.HasWindow(from, until)
 		if err != nil {
 			return nil, err
 		}
 		if has {
-			// Already migrated. Count the source again and check it against
-			// the index, rather than assume an earlier run got it right: this
-			// is the only evidence there is that the v1 files can go.
+			// Already migrated. Count the source again anyway, rather than
+			// assume an earlier run got it right: this is the only evidence
+			// there is that the v1 files can go.
 			source, err := countV1Records(byDate[date])
 			if err != nil {
 				return nil, err
 			}
-			present, err := w.WindowRecords(from, until)
-			if err != nil {
-				return nil, err
-			}
 			result.Source += source
-			result.Present += present
-			if source != present {
-				result.Diverged = append(result.Diverged, date)
-			}
 			continue
 		}
 		// Settled by construction: v1 harvests never reached past the end of
@@ -137,14 +139,18 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 			return nil, errors.Join(err, w.Abort(err))
 		}
 		// Written here, so the shard holds what the source did by
-		// construction; both counts move together.
+		// construction; the count is still taken from the index below.
 		result.Appended += w.Records()
 		result.Source += w.Records()
-		result.Present += w.Records()
 		if err := w.Commit(); err != nil {
 			return nil, err
 		}
 		result.Windows++
+	}
+	if !spanFrom.IsZero() {
+		if result.Present, err = w.WindowRecords(spanFrom, spanUntil); err != nil {
+			return nil, err
+		}
 	}
 	if result.Records, err = w.CountRecords(); err != nil {
 		return nil, err

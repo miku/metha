@@ -244,23 +244,35 @@ func (s *state) unsettledFrom(groupID int64) (string, error) {
 
 // hasWindow reports whether a range was already harvested successfully, which
 // is what makes a re-run skip work instead of refetching it.
+//
+// A range is covered when some settled window contains it, not when one matches
+// it exactly: settled windows are merged as they are committed, so the row that
+// answers for a range is usually wider than the range, and after a year of
+// daily harvests it is a great deal wider.
 func (s *state) hasWindow(groupID int64, from, until string) (bool, error) {
 	var n int
-	err := s.db.QueryRow(`SELECT COUNT(*) FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ? AND status NOT IN (?, ?)`,
+	err := s.db.QueryRow(`SELECT COUNT(*) FROM windows
+		WHERE group_id = ? AND from_ts <= ? AND until_ts >= ? AND status NOT IN (?, ?)`,
 		groupID, from, until, statusError, statusPartial).Scan(&n)
 	return n > 0, err
 }
 
-// windowRecords returns how many records the index holds for one range. A
-// migration checking a window it did not write this run compares this against
-// the source, so the answer comes from the records themselves rather than from
-// the count the window row was stamped with.
+// windowRecords returns how many records the index holds for the windows lying
+// inside a range. A migration compares this against its source, so the answer
+// comes from the records themselves rather than from the count a window row was
+// stamped with.
+//
+// Windows inside the range, rather than one matching it: merging means a
+// migrated cache answers out of a single row spanning everything it holds, and
+// asking about one day of it would find nothing. A window reaching past the
+// range is left out, so a shard that has been harvested further reports short
+// rather than counting records the range never claimed.
 func (s *state) windowRecords(groupID int64, from, until string) (int, error) {
 	var n int
 	err := s.db.QueryRow(`
 		SELECT COUNT(*) FROM records
 		JOIN windows ON records.window_id = windows.id
-		WHERE windows.group_id = ? AND windows.from_ts = ? AND windows.until_ts = ?`,
+		WHERE windows.group_id = ? AND windows.from_ts >= ? AND windows.until_ts <= ?`,
 		groupID, from, until).Scan(&n)
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, nil
@@ -336,21 +348,37 @@ func (s *state) commitWindow(win windowRow, segID, segSize int64, recs []recordR
 			return err
 		}
 	}
-	if _, err := tx.Exec(`
-		INSERT INTO windows (group_id, from_ts, until_ts, status, requests, records, bytes, started, finished, err)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(group_id, from_ts, until_ts) DO UPDATE SET
-			status = excluded.status, requests = excluded.requests, records = excluded.records,
-			bytes = excluded.bytes, started = excluded.started, finished = excluded.finished,
-			err = excluded.err`,
-		win.GroupID, win.From, win.Until, win.Status, win.Requests, win.Records, win.Bytes,
-		ts(win.Started), ts(win.Finished), win.Err); err != nil {
+	// A settled window that begins where a settled window ends is one stretch
+	// of time fetched in two goes, and the index is never asked how many goes
+	// it took - only which ranges are covered. Folding the new one into its
+	// neighbour is what keeps this table a map of coverage rather than a log of
+	// invocations: a group harvested daily for a decade holds one row instead of
+	// three and a half thousand, and one that is polled every minute holds one
+	// instead of half a million.
+	//
+	// What it costs is the per-window detail. Requests, bytes and duration
+	// become sums over the merged range, and the range itself stops recording
+	// where one run stopped and the next began.
+	windowID, err := extendSettled(tx, win)
+	if err != nil {
 		return err
 	}
-	var windowID int64
-	if err := tx.QueryRow(`SELECT id FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ?`,
-		win.GroupID, win.From, win.Until).Scan(&windowID); err != nil {
-		return err
+	if windowID == 0 {
+		if _, err := tx.Exec(`
+			INSERT INTO windows (group_id, from_ts, until_ts, status, requests, records, bytes, started, finished, err)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(group_id, from_ts, until_ts) DO UPDATE SET
+				status = excluded.status, requests = excluded.requests, records = excluded.records,
+				bytes = excluded.bytes, started = excluded.started, finished = excluded.finished,
+				err = excluded.err`,
+			win.GroupID, win.From, win.Until, win.Status, win.Requests, win.Records, win.Bytes,
+			ts(win.Started), ts(win.Finished), win.Err); err != nil {
+			return err
+		}
+		if err := tx.QueryRow(`SELECT id FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ?`,
+			win.GroupID, win.From, win.Until).Scan(&windowID); err != nil {
+			return err
+		}
 	}
 	if len(recs) > 0 {
 		stmt, err := tx.Prepare(`
@@ -369,6 +397,51 @@ func (s *state) commitWindow(win windowRow, segID, segSize int64, recs []recordR
 		}
 	}
 	return tx.Commit()
+}
+
+// settled reports whether a status describes a range that is final, and so one
+// that may be folded into its neighbour. A window that failed or that only
+// holds what existed at the moment of asking has to keep its own boundaries,
+// because those boundaries are where the next run resumes.
+func settled(status string) bool { return status == statusOK || status == statusEmpty }
+
+// extendSettled folds a settled window into the settled window that ends where
+// it begins, and returns that row's id. It returns zero when there is nothing
+// to fold into, which is the caller's cue to insert a row of its own.
+//
+// The window keeps the started of the earlier half, since that is when the
+// merged range was first reached for, and takes the finished of the later one.
+// It is empty only while nothing has been found anywhere in it.
+func extendSettled(tx *sql.Tx, win windowRow) (int64, error) {
+	// A window with no boundaries covers whatever the endpoint chose to send
+	// and abuts nothing; see unsettledFrom.
+	if !settled(win.Status) || win.From == "" {
+		return 0, nil
+	}
+	from, err := parseWindowTime(win.From)
+	if err != nil {
+		return 0, err
+	}
+	var id int64
+	var records int
+	err = tx.QueryRow(`SELECT id, records FROM windows
+		WHERE group_id = ? AND until_ts = ? AND status IN (?, ?)`,
+		win.GroupID, ts(from.Add(-time.Nanosecond)), statusOK, statusEmpty).Scan(&id, &records)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	status := statusOK
+	if records+win.Records == 0 {
+		status = statusEmpty
+	}
+	_, err = tx.Exec(`UPDATE windows SET
+		until_ts = ?, status = ?, requests = requests + ?, records = records + ?,
+		bytes = bytes + ?, finished = ? WHERE id = ?`,
+		win.Until, status, win.Requests, win.Records, win.Bytes, ts(win.Finished), id)
+	return id, err
 }
 
 // dropGroup forgets a group entirely: its records, its windows, its segments
