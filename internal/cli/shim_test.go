@@ -222,7 +222,7 @@ func TestLegacyNotice(t *testing.T) {
 // TestLegacyNamesComplete: the packaging lays down one symlink per name in this
 // list, so a verb added without one would ship a name that does not exist.
 func TestLegacyNamesComplete(t *testing.T) {
-	if got, want := len(LegacyNames()), 9; got != want {
+	if got, want := len(LegacyNames()), 8; got != want {
 		t.Errorf("LegacyNames: got %d names, want %d", got, want)
 	}
 	if !slices.IsSorted(LegacyNames()) {

@@ -39,14 +39,12 @@ install" lays them down again after a "go install".`,
 		newIDCmd(),
 		newStatCmd(),
 		newMigrateCmd(),
-		newPackCmd(),
 		newFortuneCmd(),
 		newShimCmd(),
 	)
-	// -v is the version flag, as it is in five of the seven commands that ever
-	// had one. Cobra adds it per command, and only takes the shorthand when it
-	// is free, so metha-pack keeps -v for "verbose" - which is what it has
-	// always meant there - and gets --version spelled out instead.
+	// -v is the version flag, as it was in every released command that had one.
+	// Cobra adds it per command, and only takes the shorthand when it is free,
+	// so a command that wants -v for something else can still claim it first.
 	//
 	// The flag has to belong to each command rather than be inherited from the
 	// root, because cobra answers it before it validates arguments: a

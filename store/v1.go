@@ -119,9 +119,9 @@ func recordsFromFile(path string, opts ReadOptions, yield func(metha.Record, err
 		return false
 	}
 	defer r.Close()
-	// A single file can hold more than one response: metha-pack concatenates
-	// compressed frames into one file, and both readers stream those members
-	// transparently.
+	// A single file can hold more than one response: the metha-pack command
+	// concatenated compressed frames into one file, and caches it ran on are
+	// still out there. Both readers stream those members transparently.
 	dec := xml.NewDecoder(r)
 	dec.Strict = false
 	for {

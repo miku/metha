@@ -36,8 +36,6 @@ including `stat` and `migrate`, which are not described below.
 
 `metha-files` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
-`metha-pack` [`-d` *DIR*, `-m` *N*, `-r`, `-v`]
-
 `metha-fortune` [`-1`, `-k` *N*, `-t` *DURATION*, `-d`]
 
 DESCRIPTION
@@ -197,20 +195,6 @@ List file paths of a local harvest.
         set name
 
 `-v`    show version
-
-### metha-pack
-
-Pack a harvest directory into larger files to reduce filesystem pressure.
-
-`-d` *string*
-        base directory for harvested files (default "$HOME/.cache/metha")
-
-`-m` *int*
-        minimum number of files before packing (default 3)
-
-`-r`    show what would be done without actually doing it
-
-`-v`    verbose output
 
 ### metha-fortune
 

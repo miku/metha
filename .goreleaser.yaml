@@ -78,9 +78,6 @@ nfpms:
         dst: /usr/local/bin/metha-fortune
         type: symlink
       - src: /usr/local/bin/metha
-        dst: /usr/local/bin/metha-pack
-        type: symlink
-      - src: /usr/local/bin/metha
         dst: /usr/local/bin/metha-stat
         type: symlink
       - src: /usr/local/bin/metha

@@ -1,11 +1,12 @@
 // Package cli implements metha's command line: one binary, one cobra command
 // per verb.
 //
-// metha used to install nine executables, each one linking the whole program -
-// including the 11MB endpoint list - for a distribution of about 186MB. One
-// binary is about 25MB. The old names survive as symlinks to it, so the saving
-// is in what gets shipped, not in what still works: a script written against
-// metha 0.4 keeps running unchanged.
+// metha used to install one executable per verb, each one linking the whole
+// program - including the 11MB endpoint list - for a distribution of about
+// 186MB. One binary is about 25MB. The old names survive as symlinks to it, so
+// the saving is in what gets shipped, not in what still works: a script written
+// against metha 0.4 keeps running unchanged, metha-pack aside, which is gone
+// because the sharded layout writes segments that are packed by construction.
 package cli
 
 import (
@@ -31,7 +32,6 @@ var legacyNames = map[string]string{
 	"metha-id":      "id",
 	"metha-ls":      "ls",
 	"metha-migrate": "migrate",
-	"metha-pack":    "pack",
 	"metha-stat":    "stat",
 	"metha-sync":    "sync",
 }

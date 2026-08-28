@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/miku/metha"
-	"github.com/spf13/cobra"
 )
 
 // TestVersionFlagBeforeArgs: cobra answers the version flag before it validates
@@ -30,36 +29,6 @@ func TestVersionFlagBeforeArgs(t *testing.T) {
 				t.Errorf("%s -v: got %q, want %q", verb, got, metha.Version)
 			}
 		})
-	}
-}
-
-// TestPackKeepsShorthandV: metha-pack reads -v as "verbose", and it is the one
-// released command that does. Cobra only claims the shorthand when it is free,
-// which is what lets both meanings coexist; if that ever changed, a pack run
-// would quietly turn into a version print.
-func TestPackKeepsShorthandV(t *testing.T) {
-	root := NewRoot()
-	pack, _, err := root.Find([]string{"pack"})
-	if err != nil {
-		t.Fatalf("Find: %v", err)
-	}
-	pack.RunE = func(*cobra.Command, []string) error { return nil }
-	var out bytes.Buffer
-	root.SetOut(&out)
-	root.SetErr(&out)
-	root.SetArgs([]string{"pack", "-v", "--dry-run"})
-	if err := root.Execute(); err != nil {
-		t.Fatalf("pack -v: %v", err)
-	}
-	if strings.TrimSpace(out.String()) == metha.Version {
-		t.Error("pack -v printed the version; it means verbose")
-	}
-	if v, err := pack.Flags().GetBool("verbose"); err != nil || !v {
-		t.Errorf("pack -v did not set verbose: %v, %v", v, err)
-	}
-	// --version still has to reach it, spelled out.
-	if pack.Flags().Lookup("version") == nil {
-		t.Error("pack has no --version flag")
 	}
 }
 

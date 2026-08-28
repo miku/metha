@@ -192,9 +192,9 @@ func countV1Records(files []string) (int, error) {
 }
 
 // rawResponses returns the response documents of a v1 file, as bytes. A file
-// may hold several: metha-pack concatenates them. The bytes are passed through
-// untouched rather than decoded and re-encoded, so a migrated shard holds
-// exactly what the endpoint sent.
+// may hold several, in a cache the old metha-pack command was run on. The bytes
+// are passed through untouched rather than decoded and re-encoded, so a migrated
+// shard holds exactly what the endpoint sent.
 func rawResponses(path string) ([][]byte, error) {
 	data, err := readWhole(path)
 	if err != nil {

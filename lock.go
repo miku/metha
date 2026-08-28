@@ -4,7 +4,7 @@ import "errors"
 
 // LockName is the name of the lock file kept inside a harvesting directory.
 // It deliberately does not match any pattern the readers glob for, so it stays
-// invisible to Files, Render and metha-pack.
+// invisible to Files and Render.
 const LockName = "LOCK"
 
 // ErrLocked signals that another process holds the lock. Callers that can
