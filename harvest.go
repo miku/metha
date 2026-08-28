@@ -120,8 +120,9 @@ type Harvest struct {
 	// XXX: Lazy via sync.Once?
 	Identify *Identify
 	Started  time.Time
-	// Protects the rare case, where we are in the process of renaming
-	// harvested files and get a termination signal at the same time.
+	// Protects the work a termination signal must not land in the middle of:
+	// renaming harvested files into place, and every call into the sink, which
+	// the signal handler closes. See sinkBegin.
 	sync.Mutex
 }
 
@@ -268,20 +269,66 @@ func (h *Harvest) setupInterruptHandler() {
 	go func() {
 		<-sigc
 		log.Println("waiting for any rename to finish...")
+		// Taken and never given back: the process is going away, and whatever
+		// is waiting on it must not wake up to a closed sink or a half-renamed
+		// directory. This is why the shutdown cannot be left to a defer.
 		h.Lock()
-		defer h.Unlock()
-		// Closing the sink drops the window in flight and releases its lock;
-		// nothing below this runs, so it cannot be left to a defer.
-		if c, ok := h.Sink.(io.Closer); ok {
-			if err := c.Close(); err != nil {
-				log.Printf("closing sink: %v", err)
-			}
-		}
-		if err := h.cleanupTemporaryFiles(); err != nil {
-			log.Fatal(err)
-		}
+		h.shutdown()
 		os.Exit(0)
 	}()
+}
+
+// shutdown closes the sink and clears the temporary files, with h already
+// locked. Split out of the handler so it can be exercised without a signal,
+// which would take the test binary with it.
+func (h *Harvest) shutdown() {
+	// Closing the sink drops the window in flight and releases its lock.
+	if c, ok := h.Sink.(io.Closer); ok {
+		if err := c.Close(); err != nil {
+			log.Printf("closing sink: %v", err)
+		}
+	}
+	if err := h.cleanupTemporaryFiles(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// sinkBegin and the calls below it hold the harvest mutex for the same reason
+// finalize does: the signal handler runs on its own goroutine and closes the
+// sink, and it can arrive at any point in a window. Going through the mutex
+// puts the close between two calls rather than inside one, where it would be
+// closing a writer with an open transaction. Between two calls it only drops
+// the window in flight, which is the crash-recovery path the writer already
+// has - the torn tail is truncated on the next open, so the cost is a window,
+// not a shard.
+func (h *Harvest) sinkBegin(from, until time.Time, settled bool) error {
+	h.Lock()
+	defer h.Unlock()
+	return h.Sink.Begin(from, until, settled)
+}
+
+func (h *Harvest) sinkAppend(raw []byte) error {
+	h.Lock()
+	defer h.Unlock()
+	return h.Sink.Append(raw)
+}
+
+func (h *Harvest) sinkCommit() error {
+	h.Lock()
+	defer h.Unlock()
+	return h.Sink.Commit()
+}
+
+func (h *Harvest) sinkAbort(cause error) error {
+	h.Lock()
+	defer h.Unlock()
+	return h.Sink.Abort(cause)
+}
+
+func (h *Harvest) sinkResume() (time.Time, error) {
+	h.Lock()
+	defer h.Unlock()
+	return h.Sink.Resume()
 }
 
 func (h *Harvest) compressedFileExt() string {
@@ -479,7 +526,7 @@ func (h *Harvest) granularity() string {
 // the dates in its filenames, where a date stands for the whole of that day.
 func (h *Harvest) resumeFrom() (time.Time, error) {
 	if h.Sink != nil {
-		return h.Sink.Resume()
+		return h.sinkResume()
 	}
 	laster := DirLaster{
 		Dir: h.Dir(),
@@ -637,14 +684,14 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 		// again on the next run. A harvest that cannot say what it covered -
 		// no range was requested - is never settled.
 		settled := !h.Config.DisableSelectiveHarvesting && until.Before(h.settledFrom())
-		if err := h.Sink.Begin(from, until, settled); err != nil {
+		if err := h.sinkBegin(from, until, settled); err != nil {
 			return err
 		}
 		defer func() {
 			// A window that did not reach Commit leaves nothing behind, the
 			// way an unrenamed temporary file did.
 			if err != nil {
-				err = errors.Join(err, h.Sink.Abort(err))
+				err = errors.Join(err, h.sinkAbort(err))
 			}
 		}()
 	}
@@ -723,7 +770,7 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 			return err
 		}
 		if h.Sink != nil {
-			if err := h.Sink.Append(b); err != nil {
+			if err := h.sinkAppend(b); err != nil {
 				return err
 			}
 		} else {
@@ -761,7 +808,7 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 		}
 	}
 	if h.Sink != nil {
-		return h.Sink.Commit()
+		return h.sinkCommit()
 	}
 	return h.finalize(suffix)
 }

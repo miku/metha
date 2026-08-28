@@ -246,6 +246,26 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       is how a migration gets inspected from a scratch copy, including the
       refusal above. Man page updated to match.
 
+- [x] **Signal-handler race on the sink closed.** `setupInterruptHandler` took
+      `h.Lock()` and closed the sink, but the mutex only guarded `finalize`, the
+      v1 rename path; `Begin`, `Append` and `Commit` ran outside it, so a Ctrl-C
+      could call `Writer.Close()` with a commit transaction open. Every call
+      into the sink now goes through that same mutex (`sinkBegin`, `sinkAppend`,
+      `sinkCommit`, `sinkAbort`, `sinkResume`), so a close falls *between* two
+      calls, never inside one — where it drops the window in flight, which is
+      the recovery path the writer already has.
+
+      The handler takes the lock and never gives it back: the process is going
+      away, and a call waiting on it must not wake up to a closed sink. That is
+      why the shutdown cannot be a `defer`, and why it moved into `shutdown()` —
+      a signal would take the test binary with it, so the handler's work has to
+      be reachable without one.
+
+      `TestSinkCallsExcludeShutdown` holds each call open inside a blocking sink
+      and asserts the handler's `TryLock` fails. It is a table over all five on
+      purpose: an unguarded call site *is* the bug, and dropping the lock from
+      `sinkAppend` alone fails exactly that row.
+
 ---
 
 ## open — settle before the move
@@ -256,15 +276,6 @@ made; what is left below does not.
 ---
 
 ## open — can wait
-
-- [ ] **Signal-handler race on the sink.** `setupInterruptHandler` takes
-      `h.Lock()` and closes the sink, but the mutex only guards `finalize`
-      (`harvest.go:318`), the v1 rename path. `Sink.Begin`, `Append` and
-      `Commit` (`harvest.go:640/726/764`) all run outside it, so a Ctrl-C can
-      call `Writer.Close()` while a commit transaction is open. The window is
-      small and the failure mode is the crash-recovery path that already
-      exists — the torn tail is truncated on next open — so this costs a
-      window, not a shard.
 
 - [ ] **`unsettledFrom` pins on old error windows.** `MIN(from_ts)` over
       `partial` and `error` means one long-ago failed window holds the resume
