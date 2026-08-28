@@ -53,6 +53,7 @@ type Writer struct {
 // openWindow accumulates what a window will commit.
 type openWindow struct {
 	from, until time.Time
+	settled     bool
 	started     time.Time
 	requests    int
 	bytes       int64
@@ -204,15 +205,28 @@ func (w *Writer) SetIdentify(identify *metha.Identify) error {
 // Identify returns the recorded identify response, if there is one.
 func (w *Writer) Identify() *metha.Identify { return w.meta.Identify }
 
-// LastWindow returns the end of the most recently harvested window as a date,
-// or the empty string. This is the resume point, the v2 answer to a readdir
-// over dated filenames.
-func (w *Writer) LastWindow() (string, error) {
-	last, err := w.st.lastWindow(w.groupID)
+// Resume returns the instant a harvest continues from, or the zero time if
+// this group holds nothing yet. It is the v2 answer to a readdir over dated
+// filenames, and a more exact one: a window that failed, or that could only
+// report what existed at the moment it was fetched, hands back its own start,
+// so the range is covered again rather than resumed past.
+func (w *Writer) Resume() (time.Time, error) {
+	unsettled, err := w.st.unsettledFrom(w.groupID)
 	if err != nil {
-		return "", err
+		return time.Time{}, err
 	}
-	return windowDate(last)
+	if unsettled != "" {
+		return parseWindowTime(unsettled)
+	}
+	last, err := w.st.lastWindow(w.groupID)
+	if err != nil || last == "" {
+		return time.Time{}, err
+	}
+	end, err := parseWindowTime(last)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return nextAfter(end), nil
 }
 
 // HasWindow reports whether a range has already been harvested, so that a
@@ -228,12 +242,14 @@ func (w *Writer) WindowRecords(from, until time.Time) (int, error) {
 	return w.st.windowRecords(w.groupID, ts(from), ts(until))
 }
 
-// Begin opens a window. Every Append until Commit belongs to it.
-func (w *Writer) Begin(from, until time.Time) error {
+// Begin opens a window. Every Append until Commit belongs to it. Pass settled
+// false when the range reaches into a stretch of time the endpoint can still
+// add records to, so that Resume comes back to it.
+func (w *Writer) Begin(from, until time.Time, settled bool) error {
 	if w.win != nil {
 		return ErrWindowOpen
 	}
-	w.win = &openWindow{from: from, until: until, started: time.Now().UTC()}
+	w.win = &openWindow{from: from, until: until, settled: settled, started: time.Now().UTC()}
 	return nil
 }
 
@@ -299,8 +315,13 @@ func (w *Writer) Commit() error {
 	if err := w.seg.sync(); err != nil {
 		return err
 	}
+	// Unsettled beats empty: a window that reached into the present has to be
+	// fetched again whether or not anything was there at the time.
 	status := statusOK
-	if len(w.win.records) == 0 {
+	switch {
+	case !w.win.settled:
+		status = statusPartial
+	case len(w.win.records) == 0:
 		status = statusEmpty
 	}
 	row := windowRow{

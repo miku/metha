@@ -24,6 +24,12 @@ import (
 // Day has 24 hours.
 const Day = 24 * time.Hour
 
+// SettleLag is how far back from the clock a harvest stops trusting an endpoint
+// that stamps records to the second. Endpoints index a record a moment after
+// they stamp it and their clocks do not agree with ours, so the last stretch
+// before now is refetched on the next run rather than assumed complete.
+const SettleLag = 5 * time.Minute
+
 var (
 	// BaseDir is where all data is stored.
 	BaseDir   = filepath.Join(UserHomeDir(), ".cache", "metha")
@@ -44,16 +50,16 @@ type Harvester interface {
 // Sink receives the responses of a harvest, one window at a time.
 //
 // A window opens with Begin, takes one Append per response and becomes durable
-// at Commit, or is discarded by Abort. HasWindow and LastWindow answer what has
+// at Commit, or is discarded by Abort. HasWindow and Resume answer what has
 // already been harvested - the questions the file layout answers with a readdir
 // over its filenames.
 type Sink interface {
-	Begin(from, until time.Time) error
+	Begin(from, until time.Time, settled bool) error
 	Append(raw []byte) error
 	Commit() error
 	Abort(cause error) error
 	HasWindow(from, until time.Time) (bool, error)
-	LastWindow() (string, error)
+	Resume() (time.Time, error)
 }
 
 type CompressionType int
@@ -342,65 +348,108 @@ func (h *Harvest) defaultInterval() (Interval, error) {
 	var err error
 
 	// refs #9100
+	// Dates given as dates are read in the local zone, the one the window
+	// boundaries below are computed in, so that the two can be compared.
 	if h.Config.From == "" {
 		earliestDate, err = h.earliestDate()
 	} else {
-		earliestDate, err = time.Parse("2006-01-02", h.Config.From)
+		earliestDate, err = time.ParseInLocation("2006-01-02", h.Config.From, time.Local)
 	}
 	if err != nil {
 		return Interval{}, err
 	}
 
-	defaultValue := earliestDate.Format("2006-01-02")
-	last, err := h.lastHarvested(defaultValue)
+	begin, err := h.resumeFrom()
 	if err != nil {
 		return Interval{}, err
 	}
-
-	begin, err := time.Parse("2006-01-02", last)
-	if err != nil {
-		return Interval{}, err
-	}
-
-	if last != defaultValue {
-		// Add a single day, only if we are not just starting.
-		begin = begin.AddDate(0, 0, 1)
+	if begin.IsZero() {
+		begin = earliestDate
 	}
 
 	var end time.Time
 	if h.Config.Until != "" {
-		end, err = time.Parse("2006-01-02", h.Config.Until)
+		until, err := time.ParseInLocation("2006-01-02", h.Config.Until, time.Local)
 		if err != nil {
 			return Interval{}, err
 		}
+		// A date-only bound means the whole of that day, which is how the
+		// endpoint reads it; spelling it out keeps the window that gets
+		// recorded honest, and stops a second granularity request from asking
+		// for midnight and so missing the day it was given.
+		end = now.New(until).EndOfDay()
 		log.Printf("using custom end date: %v", end)
 	} else {
-		end = now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
+		end = h.reachableEnd()
 	}
 
-	if last == end.Format("2006-01-02") {
+	if begin.After(end) {
 		return Interval{}, ErrAlreadySynced
 	}
 	return Interval{Begin: begin, End: end}, nil
 }
 
-// lastHarvested returns the end of the most recent harvested window, or
-// defaultValue if this endpoint was never harvested. In the file layout the
-// answer is the largest date over the filenames; a sink keeps it explicitly.
-func (h *Harvest) lastHarvested(defaultValue string) (string, error) {
+// reachableEnd returns how far into the present a harvest can ask, which is as
+// far as the endpoint's granularity lets a request reach. An endpoint that
+// speaks only dates cannot be asked for less than a whole day, so the harvest
+// takes the whole of today and records it as unsettled; see settledFrom.
+func (h *Harvest) reachableEnd() time.Time {
+	if h.Sink == nil {
+		// The file layout remembers a window by a date in a filename and has
+		// nowhere to note that the day was not over yet, so reaching into today
+		// would strand the rest of it. It stops where it always did.
+		return now.New(h.Started.AddDate(0, 0, -1)).EndOfDay()
+	}
+	if h.secondGranularity() {
+		return h.Started.Truncate(time.Second)
+	}
+	return now.New(h.Started).EndOfDay()
+}
+
+// settledFrom returns the instant from which an endpoint's datestamps can still
+// change, and so the point a harvest must come back to on its next run.
+//
+// The problem it answers: a window is remembered by the range it covered, and
+// with daily granularity "until today" is the only thing a request can say. Ask
+// it at noon and the answer holds the morning's records only - but the window
+// claims the whole day, so a run tomorrow would resume past it and lose the
+// afternoon for good. Anything at or after this point is therefore recorded as
+// unsettled and fetched again.
+//
+// Truncated to the second, the finest an OAI request can express, which also
+// keeps stored boundaries comparable as strings.
+func (h *Harvest) settledFrom() time.Time {
+	if h.secondGranularity() {
+		// Datestamps are exact here, so only the recent past is in doubt: a
+		// clock that runs behind ours, or a record indexed a moment after it
+		// was stamped, would otherwise land just before a boundary we have
+		// already passed.
+		return h.Started.Add(-SettleLag).Truncate(time.Second)
+	}
+	return now.New(h.Started).BeginningOfDay()
+}
+
+// secondGranularity reports whether the endpoint stamps records to the second.
+// An endpoint that says nothing intelligible about its granularity - or that
+// was never asked - is treated as the coarser of the two, which is the
+// assumption that cannot lose records.
+func (h *Harvest) secondGranularity() bool {
+	if h.Identify == nil {
+		return false
+	}
+	return strings.ToLower(h.Identify.Granularity) == "yyyy-mm-ddthh:mm:ssz"
+}
+
+// resumeFrom returns the instant this harvest continues from, or the zero time
+// if this endpoint was never harvested. A sink keeps the point explicitly and
+// can point back at a window that is not settled yet; the file layout has only
+// the dates in its filenames, where a date stands for the whole of that day.
+func (h *Harvest) resumeFrom() (time.Time, error) {
 	if h.Sink != nil {
-		last, err := h.Sink.LastWindow()
-		if err != nil {
-			return "", err
-		}
-		if last == "" {
-			return defaultValue, nil
-		}
-		return last, nil
+		return h.Sink.Resume()
 	}
 	laster := DirLaster{
-		Dir:          h.Dir(),
-		DefaultValue: defaultValue,
+		Dir: h.Dir(),
 		ExtractorFunc: func(dirent os.DirEntry) string {
 			groups := fnPattern.FindStringSubmatch(dirent.Name())
 			if len(groups) > 1 {
@@ -409,7 +458,23 @@ func (h *Harvest) lastHarvested(defaultValue string) (string, error) {
 			return ""
 		},
 	}
-	return laster.Last()
+	last, err := laster.Last()
+	if err != nil {
+		if os.IsNotExist(err) {
+			return time.Time{}, nil // Never harvested.
+		}
+		return time.Time{}, err
+	}
+	if last == "" {
+		return time.Time{}, nil
+	}
+	// The date in the filename is the local date the window ended on, since
+	// that is the zone its boundary was computed in.
+	t, err := time.ParseInLocation("2006-01-02", last, time.Local)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t.AddDate(0, 0, 1), nil
 }
 
 // retry attempts an operation with exponential backoff
@@ -486,15 +551,25 @@ func (h *Harvest) run() (err error) {
 		return fmt.Errorf("failed to get default interval: %w", err)
 	}
 
+	// The settled part is cut into windows as it always was. What is left
+	// reaches into the endpoint's still-changing present and stays one window,
+	// so that the next run repeats exactly that range instead of a growing tail
+	// of it: tomorrow the same split leaves today's window behind as a settled
+	// one, whose range matches to the nanosecond and so replaces it.
+	settled, unsettled := interval.SplitAt(h.settledFrom())
+
 	var intervals []Interval
 
 	switch {
 	case h.Config.HourlyInterval:
-		intervals = interval.HourlyIntervals()
+		intervals = settled.HourlyIntervals()
 	case h.Config.DailyInterval:
-		intervals = interval.DailyIntervals()
+		intervals = settled.DailyIntervals()
 	default:
-		intervals = interval.MonthlyIntervals()
+		intervals = settled.MonthlyIntervals()
+	}
+	if !unsettled.Empty() {
+		intervals = append(intervals, unsettled)
 	}
 
 	for _, iv := range intervals {
@@ -519,7 +594,12 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 			// same thing the file layout puts in the filename.
 			from, until = h.Started, h.Started
 		}
-		if err := h.Sink.Begin(from, until); err != nil {
+		// A window is settled when it ends before the point where the
+		// endpoint's datestamps can still change; anything else is fetched
+		// again on the next run. A harvest that cannot say what it covered -
+		// no range was requested - is never settled.
+		settled := !h.Config.DisableSelectiveHarvesting && until.Before(h.settledFrom())
+		if err := h.Sink.Begin(from, until, settled); err != nil {
 			return err
 		}
 		defer func() {

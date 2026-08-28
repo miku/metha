@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/jinzhu/now"
 )
 
 func TestPrependSchema(t *testing.T) {
@@ -254,11 +256,14 @@ func TestHarvestDefaultInterval(t *testing.T) {
 	if err != nil {
 		t.Errorf("defaultInterval() returned error: %v", err)
 	} else {
-		expectedBegin, _ := time.Parse("2006-01-02", "2020-01-16") // One day after the file date
+		expectedBegin, _ := time.ParseInLocation("2006-01-02", "2020-01-16", time.Local) // One day after the file date
 		if !interval.Begin.Equal(expectedBegin) {
 			t.Errorf("defaultInterval().Begin = %v; expected %v", interval.Begin, expectedBegin)
 		}
-		expectedEnd, _ := time.Parse("2006-01-02", "2020-01-31")
+		// A date-only -until covers the whole of that day, which is how the
+		// endpoint reads it.
+		lastDay, _ := time.ParseInLocation("2006-01-02", "2020-01-31", time.Local)
+		expectedEnd := now.New(lastDay).EndOfDay()
 		if !interval.End.Equal(expectedEnd) {
 			t.Errorf("defaultInterval().End = %v; expected %v", interval.End, expectedEnd)
 		}

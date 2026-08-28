@@ -84,17 +84,22 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	defer w.Close()
 
 	for i, date := range dates {
-		until, err := time.Parse("2006-01-02", date)
+		// The date in a v1 filename stands for the whole of that day, which is
+		// how the endpoint read the request that produced it, and it is a local
+		// date because that is the zone the harvester works in. Spelling both
+		// out here is what lets every window boundary in the shard be exact.
+		day, err := time.ParseInLocation("2006-01-02", date, time.Local)
 		if err != nil {
 			return nil, err
 		}
+		until := day.AddDate(0, 0, 1).Add(-time.Nanosecond)
 		// v1 harvests contiguous ranges and only records where each one
 		// ended, so a window starts the day after the previous one. The first
 		// window is the exception: how far back it reached is not recorded
 		// anywhere, so it claims only the day it ended on.
-		from := until
+		from := day
 		if i > 0 {
-			prev, err := time.Parse("2006-01-02", dates[i-1])
+			prev, err := time.ParseInLocation("2006-01-02", dates[i-1], time.Local)
 			if err != nil {
 				return nil, err
 			}
@@ -123,7 +128,9 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 			}
 			continue
 		}
-		if err := w.Begin(from, until); err != nil {
+		// Settled by construction: v1 harvests never reached past the end of
+		// the day before they ran, so every window they left behind is final.
+		if err := w.Begin(from, until, true); err != nil {
 			return nil, err
 		}
 		if err := migrateWindow(w, byDate[date], result); err != nil {

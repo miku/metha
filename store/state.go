@@ -87,6 +87,11 @@ const (
 	statusOK    = "ok"
 	statusEmpty = "empty"
 	statusError = "error"
+	// statusPartial marks a window that was fetched but is not final: it
+	// reaches into a stretch of time the endpoint can still add records to, so
+	// what came back is only what existed at the moment of asking. It is the
+	// row a harvest resumes at rather than past.
+	statusPartial = "partial"
 )
 
 // state is a shard's sqlite index.
@@ -192,12 +197,33 @@ func (s *state) lastWindow(groupID int64) (string, error) {
 	return until.String, nil
 }
 
+// unsettledFrom returns the start of the earliest window that is not final -
+// one that failed, or one that covered a range the endpoint could still add to
+// - or the empty string when every window is settled. It is the resume point
+// whenever there is one, ahead of lastWindow: resuming past a window that only
+// holds what existed at the time of asking is how updates go missing.
+//
+// This is also what retries a window that failed in the middle of a range,
+// which a high water mark alone can only do for the newest one.
+func (s *state) unsettledFrom(groupID int64) (string, error) {
+	var from sql.NullString
+	err := s.db.QueryRow(`SELECT MIN(from_ts) FROM windows WHERE group_id = ? AND status IN (?, ?)`,
+		groupID, statusPartial, statusError).Scan(&from)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return from.String, nil
+}
+
 // hasWindow reports whether a range was already harvested successfully, which
 // is what makes a re-run skip work instead of refetching it.
 func (s *state) hasWindow(groupID int64, from, until string) (bool, error) {
 	var n int
-	err := s.db.QueryRow(`SELECT COUNT(*) FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ? AND status != ?`,
-		groupID, from, until, statusError).Scan(&n)
+	err := s.db.QueryRow(`SELECT COUNT(*) FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ? AND status NOT IN (?, ?)`,
+		groupID, from, until, statusError, statusPartial).Scan(&n)
 	return n > 0, err
 }
 
@@ -270,6 +296,21 @@ func (s *state) commitWindow(win windowRow, segID, segSize int64, recs []recordR
 			SELECT id FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ?)`,
 		win.GroupID, win.From, win.Until); err != nil {
 		return err
+	}
+	// An unsettled window starting inside the range this one covers has just
+	// been fetched again, under whatever boundaries this run chose. Usually
+	// that is the same range and the upsert below is all it takes; it is not
+	// when the interval size changed between runs, and then the stale row would
+	// hold the resume point back forever. Settled windows are left alone: they
+	// are answers that still stand.
+	for _, q := range []string{
+		`DELETE FROM records WHERE window_id IN (
+			SELECT id FROM windows WHERE group_id = ? AND status IN (?, ?) AND from_ts >= ? AND from_ts <= ?)`,
+		`DELETE FROM windows WHERE group_id = ? AND status IN (?, ?) AND from_ts >= ? AND from_ts <= ?`,
+	} {
+		if _, err := tx.Exec(q, win.GroupID, statusPartial, statusError, win.From, win.Until); err != nil {
+			return err
+		}
 	}
 	if _, err := tx.Exec(`
 		INSERT INTO windows (group_id, from_ts, until_ts, status, requests, records, bytes, started, finished, err)
@@ -350,17 +391,36 @@ func ts(t time.Time) string {
 	return t.UTC().Format(time.RFC3339Nano)
 }
 
-// windowDate renders a stored boundary as the date a harvest resumes from.
-// Back into local time first: a window boundary is the end of a local day, and
-// in most of the world that instant belongs to a different UTC date, so
-// formatting the stored value directly would move the resume point by a day.
+// parseWindowTime reads a stored boundary back. Into local time: boundaries are
+// the edges of local days, and in most of the world such an instant belongs to
+// a different UTC date, so a caller that goes on to think in days would be off
+// by one.
+func parseWindowTime(stored string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, stored)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("window boundary %q: %w", stored, err)
+	}
+	return t.In(time.Local), nil
+}
+
+// windowDate renders a stored boundary as a date, which is what a listing shows
+// for how far an endpoint got.
 func windowDate(stored string) (string, error) {
 	if stored == "" {
 		return "", nil
 	}
-	t, err := time.Parse(time.RFC3339, stored)
+	t, err := parseWindowTime(stored)
 	if err != nil {
-		return "", fmt.Errorf("window boundary %q: %w", stored, err)
+		return "", err
 	}
-	return t.In(time.Local).Format("2006-01-02"), nil
+	return t.Format("2006-01-02"), nil
+}
+
+// nextAfter returns where a harvest picks up after a settled window ended at t.
+// Both OAI bounds are inclusive, so the next window starts just past this one,
+// or the boundary would be fetched twice. Every boundary a window is recorded
+// with is exact - a date-only bound is stored as the end of the day it stands
+// for - so a nanosecond is all it takes.
+func nextAfter(t time.Time) time.Time {
+	return t.Add(time.Nanosecond)
 }

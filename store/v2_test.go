@@ -23,10 +23,11 @@ func marshal(t *testing.T, resp metha.Response) []byte {
 	return b
 }
 
-// day parses a date, for window boundaries.
+// day parses a date, for window boundaries. In the local zone, which is where
+// the harvester computes them.
 func day(t *testing.T, s string) time.Time {
 	t.Helper()
-	ts, err := time.Parse("2006-01-02", s)
+	ts, err := time.ParseInLocation("2006-01-02", s, time.Local)
 	if err != nil {
 		t.Fatalf("parse %q: %v", s, err)
 	}
@@ -36,7 +37,7 @@ func day(t *testing.T, s string) time.Time {
 // writeWindow commits one window holding one response per title.
 func writeWindow(t *testing.T, w *Writer, from, until string, titles ...string) {
 	t.Helper()
-	if err := w.Begin(day(t, from), day(t, until)); err != nil {
+	if err := w.Begin(day(t, from), day(t, until), true); err != nil {
 		t.Fatalf("Begin: %v", err)
 	}
 	for _, title := range titles {
@@ -154,7 +155,7 @@ func TestV2AbortLeavesNoTrace(t *testing.T) {
 		t.Fatalf("OpenWriter: %v", err)
 	}
 	writeWindow(t, w, "2023-01-01", "2023-01-31", "kept")
-	if err := w.Begin(day(t, "2023-02-01"), day(t, "2023-02-28")); err != nil {
+	if err := w.Begin(day(t, "2023-02-01"), day(t, "2023-02-28"), true); err != nil {
 		t.Fatalf("Begin: %v", err)
 	}
 	if err := w.Append(marshal(t, respWithTitle("dropped"))); err != nil {
@@ -373,11 +374,11 @@ func TestGroupName(t *testing.T) {
 // errUnderTest stands in for whatever made a harvest give up on a window.
 var errUnderTest = errors.New("harvest failed under test")
 
-// TestWindowDateAcrossZones: a window ends at the close of a local day, and
-// that instant usually falls on a different UTC date. Resuming has to give the
-// local date back, or a harvest would skip or repeat a day depending on where
-// it runs.
-func TestWindowDateAcrossZones(t *testing.T) {
+// TestResumeAcrossZones: a window ends at the close of a local day, and that
+// instant usually falls on a different UTC date. Resuming has to land on the
+// start of the next local day, or a harvest would skip or repeat one depending
+// on where it runs.
+func TestResumeAcrossZones(t *testing.T) {
 	for _, name := range []string{"UTC", "Europe/Vienna", "America/Chicago", "Pacific/Auckland"} {
 		loc, err := time.LoadLocation(name)
 		if err != nil {
@@ -392,8 +393,8 @@ func TestWindowDateAcrossZones(t *testing.T) {
 			}
 			defer w.Close()
 			// The end of 2023-03-15, as the harvester computes it.
-			end := time.Date(2023, 3, 15, 23, 59, 59, 0, loc)
-			if err := w.Begin(time.Date(2023, 3, 1, 0, 0, 0, 0, loc), end); err != nil {
+			end := time.Date(2023, 3, 15, 23, 59, 59, int(time.Second-1), loc)
+			if err := w.Begin(time.Date(2023, 3, 1, 0, 0, 0, 0, loc), end, true); err != nil {
 				t.Fatalf("Begin: %v", err)
 			}
 			if err := w.Append(marshal(t, respWithTitle("x"))); err != nil {
@@ -402,12 +403,15 @@ func TestWindowDateAcrossZones(t *testing.T) {
 			if err := w.Commit(); err != nil {
 				t.Fatalf("Commit: %v", err)
 			}
-			last, err := w.LastWindow()
+			resume, err := w.Resume()
 			if err != nil {
-				t.Fatalf("LastWindow: %v", err)
+				t.Fatalf("Resume: %v", err)
 			}
-			if want := end.In(time.Local).Format("2006-01-02"); last != want {
-				t.Errorf("LastWindow: got %v, want %v", last, want)
+			if want := end.Add(time.Nanosecond); !resume.Equal(want) {
+				t.Errorf("Resume: got %v, want %v", resume, want)
+			}
+			if got, want := resume.In(loc).Format("2006-01-02"), "2023-03-16"; got != want {
+				t.Errorf("Resume date in %v: got %v, want %v", name, got, want)
 			}
 		})
 	}

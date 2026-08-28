@@ -47,7 +47,7 @@ func shardWithFrames(t *testing.T) (Store, string) {
 	for month := 1; month <= 6; month++ {
 		from := fmt.Sprintf("2023-%02d-01", month)
 		until := fmt.Sprintf("2023-%02d-28", month)
-		if err := w.Begin(day(t, from), day(t, until)); err != nil {
+		if err := w.Begin(day(t, from), day(t, until), true); err != nil {
 			t.Fatalf("Begin: %v", err)
 		}
 		status := ""
