@@ -226,6 +226,26 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       **Existing caches must be wiped** (`rm -rf ~/Library/Caches/metha/v2`).
       Last time that will be necessary.
 
+- [x] **`migrate --rm` no longer removes directories holding skipped files.**
+      `result.Skipped` collects v1 files whose name carries no window date;
+      `migrateOne` logged them and then, if verification passed, `RemoveAll`ed
+      the directory anyway — deleting them unmigrated, with nothing left to
+      migrate from. Verification cannot catch it: it compares what was
+      *counted*, and a skipped file is in neither count, so a migration that
+      drops one still verifies. `--rm` now refuses the endpoint and leaves the
+      whole directory in place; a plain `migrate` is unaffected and still just
+      logs. Confirmed the old path really did remove it — with the guard
+      stubbed out, the test that asserts the refusal fails by finding the
+      directory gone.
+
+      This is the only item on the list that could destroy data, and it sat in
+      the exact command the 200G migration will run.
+
+- [x] **`metha ls --base-dir`.** Every other command took one; `ls` hardcoded
+      `metha.GetBaseDir()`, so it could not be pointed at another cache — which
+      is how a migration gets inspected from a scratch copy, including the
+      refusal above. Man page updated to match.
+
 ---
 
 ## open — settle before the move
@@ -259,19 +279,6 @@ made; what is left below does not.
       window is refetched rather than skipped. Now that `hasWindow` is
       containment this would actually work; worth wiring or worth deleting from
       the `Sink` interface, but not both.
-
-- [ ] **`migrate --rm` removes directories holding skipped files.**
-      `result.Skipped` collects v1 files whose name carries no window date;
-      `migrateOne` logs them and then, if verification passed, `RemoveAll`s the
-      directory anyway. Those files were never read, so they are deleted
-      unmigrated. Verification cannot catch it — it compares what was
-      *counted*, and skipped files were never counted. Refusing `--rm` when
-      `len(Skipped) > 0` is the fix.
-
-- [ ] **`metha ls` has no `--base-dir`.** Every other command takes one; `ls`
-      hardcodes `metha.GetBaseDir()` (`internal/cli/ls.go:21`), so it cannot be
-      pointed at another cache. Pre-existing, and it makes a migration awkward
-      to inspect from a scratch copy.
 
 - [ ] **`Stats.First` and `Stats.Last` are strings, `Stats.LastSeen` is a
       `time.Time`,** in the same struct. Making all three times and formatting

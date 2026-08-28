@@ -131,6 +131,14 @@ func migrateOne(baseDir string, id store.Identity, remove, verbose bool) (bool, 
 	if !remove {
 		return wrote, nil
 	}
+	// Verification cannot see these. It compares what was counted, and a
+	// skipped file was never read, so its records are in neither number - a
+	// migration that drops one still verifies. Removing the directory would
+	// take those files with it, unmigrated, with nothing left to migrate from.
+	if len(result.Skipped) > 0 {
+		return wrote, fmt.Errorf("refusing to remove the v1 directory: %d file(s) carry no window date and were not migrated, first %s",
+			len(result.Skipped), result.Skipped[0])
+	}
 	// Only ever after the counts match, and only the directory this identity
 	// owns - a v1 directory holds exactly one format and set.
 	src, err := store.OpenLayout(baseDir, id, store.V1)

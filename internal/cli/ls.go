@@ -11,14 +11,17 @@ import (
 )
 
 func newLsCmd() *cobra.Command {
-	var showAll, bestEffort bool
+	var (
+		baseDir             string
+		showAll, bestEffort bool
+	)
 	cmd := &cobra.Command{
 		Use:     "ls",
 		Short:   "List the endpoints in the cache",
 		Args:    cobra.NoArgs,
 		Aliases: []string{"metha-ls"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			for entry, err := range store.List(metha.GetBaseDir()) {
+			for entry, err := range store.List(baseDir) {
 				if err != nil {
 					if bestEffort {
 						log.Println(err)
@@ -37,6 +40,7 @@ func newLsCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
+	f.StringVar(&baseDir, "base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	f.BoolVarP(&showAll, "all", "a", false, "show full path")
 	f.BoolVarP(&bestEffort, "best-effort", "b", false, "continue in the presence of errors")
 	return cmd

@@ -32,7 +32,7 @@ including `stat` and `migrate`, which are not described below.
 
 `metha-id` [`-s`] *endpoint*
 
-`metha-ls` [`-a`] [`-b`]
+`metha-ls` [`-a`] [`-b`] [`-base-dir` *DIR*]
 
 `metha-files` [`-format` *FORMAT*, `-set` *SET*] *endpoint*
 
@@ -180,6 +180,9 @@ List cached endpoints.
 `-a`    show full path
 
 `-b`    continue in the presence of errors
+
+`-base-dir` *string*
+        base dir for harvested files (default "$HOME/.cache/metha")
 
 ### metha-files
 
