@@ -232,3 +232,39 @@ func windows(t *testing.T, w *Writer) int {
 	}
 	return n
 }
+
+// TestElapsedSurvivesMerging: harvest time is added up as each window is
+// committed and kept in a column of its own, because merging takes away the
+// only other way to work it out. A merged row's started and finished are the
+// first time the range was reached for and the last time anything was written
+// into it, so the span between them is the age of the shard, not the work done
+// in it - and Rate, being bytes over that, would sink towards zero as a cache
+// got older rather than reporting how fast anything was fetched.
+func TestElapsedSurvivesMerging(t *testing.T) {
+	w := newWriter(t)
+	commit(t, w, day(t, "2023-01-01"), endOfDay(t, "2023-01-01"), true, "a")
+	idle := 250 * time.Millisecond
+	time.Sleep(idle)
+	commit(t, w, day(t, "2023-01-02"), endOfDay(t, "2023-01-02"), true, "b")
+
+	if got, want := windows(t, w), 1; got != want {
+		t.Fatalf("got %d windows, want %d", got, want)
+	}
+	var elapsed, span int64
+	if err := w.st.db.QueryRow(`SELECT elapsed_ns,
+		CAST((julianday(finished) - julianday(started)) * 86400000000000 AS INTEGER)
+		FROM windows WHERE group_id = ?`, w.groupID).Scan(&elapsed, &span); err != nil {
+		t.Fatalf("query: %v", err)
+	}
+	// The idle stretch is in the row's span and must not be in its elapsed.
+	if span < int64(idle) {
+		t.Fatalf("started..finished is %v, want it to cover the %v of idling", time.Duration(span), idle)
+	}
+	if time.Duration(elapsed) >= idle {
+		t.Errorf("elapsed %v counts the idle time between two runs, want less than %v",
+			time.Duration(elapsed), idle)
+	}
+	if elapsed <= 0 {
+		t.Errorf("elapsed %v, want the two commits to have taken some time", time.Duration(elapsed))
+	}
+}

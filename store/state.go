@@ -20,6 +20,13 @@ import (
 // truncated on the next open. A window row is what says a range has been
 // fetched, which in v1 was the mere existence of a file - and which is why a
 // window with no records needed a file there and needs none here.
+//
+// windows is a map of what is covered, not a log of what was run: settled rows
+// that touch are merged, so one row can stand for years and any number of
+// invocations. Its counters are therefore sums over the range - elapsed_ns
+// among them, which is kept as its own total because started and finished mean
+// first reached and last touched, and the span between them stopped being time
+// spent harvesting the moment two runs shared a row.
 const schema = `
 CREATE TABLE IF NOT EXISTS groups (
 	id      INTEGER PRIMARY KEY,
@@ -38,17 +45,18 @@ CREATE TABLE IF NOT EXISTS segments (
 );
 
 CREATE TABLE IF NOT EXISTS windows (
-	id       INTEGER PRIMARY KEY,
-	group_id INTEGER NOT NULL REFERENCES groups(id),
-	from_ts  TEXT NOT NULL,
-	until_ts TEXT NOT NULL,
-	status   TEXT NOT NULL,
-	requests INTEGER NOT NULL DEFAULT 0,
-	records  INTEGER NOT NULL DEFAULT 0,
-	bytes    INTEGER NOT NULL DEFAULT 0,
-	started  TEXT,
-	finished TEXT,
-	err      TEXT,
+	id         INTEGER PRIMARY KEY,
+	group_id   INTEGER NOT NULL REFERENCES groups(id),
+	from_ts    TEXT NOT NULL,
+	until_ts   TEXT NOT NULL,
+	status     TEXT NOT NULL,
+	requests   INTEGER NOT NULL DEFAULT 0,
+	records    INTEGER NOT NULL DEFAULT 0,
+	bytes      INTEGER NOT NULL DEFAULT 0,
+	elapsed_ns INTEGER NOT NULL DEFAULT 0,
+	started    TEXT,
+	finished   TEXT,
+	err        TEXT,
 	UNIQUE(group_id, from_ts, until_ts)
 );
 
@@ -69,16 +77,6 @@ CREATE TABLE IF NOT EXISTS records (
 
 CREATE INDEX IF NOT EXISTS records_datestamp ON records(datestamp);
 CREATE INDEX IF NOT EXISTS records_identifier ON records(identifier);
-
-CREATE TABLE IF NOT EXISTS runs (
-	id       INTEGER PRIMARY KEY,
-	started  TEXT NOT NULL,
-	finished TEXT,
-	requests INTEGER NOT NULL DEFAULT 0,
-	bytes    INTEGER NOT NULL DEFAULT 0,
-	records  INTEGER NOT NULL DEFAULT 0,
-	errors   TEXT
-);
 `
 
 // Window statuses. An empty window is a first class outcome: it costs a row
@@ -294,6 +292,18 @@ type windowRow struct {
 	Err      string
 }
 
+// elapsed returns how long the window took, which is stored rather than derived
+// so that it survives being merged: two runs that share a row are still two
+// spells of work with idle time between them, and the wall clock across both is
+// not what "time spent harvesting" means.
+func (w windowRow) elapsed() int64 {
+	d := w.Finished.Sub(w.Started)
+	if w.Started.IsZero() || w.Finished.IsZero() || d < 0 {
+		return 0
+	}
+	return int64(d)
+}
+
 // recordRow locates one record inside a segment, and carries the header fields
 // worth filtering on without decompressing anything.
 type recordRow struct {
@@ -365,14 +375,15 @@ func (s *state) commitWindow(win windowRow, segID, segSize int64, recs []recordR
 	}
 	if windowID == 0 {
 		if _, err := tx.Exec(`
-			INSERT INTO windows (group_id, from_ts, until_ts, status, requests, records, bytes, started, finished, err)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO windows (group_id, from_ts, until_ts, status, requests, records, bytes, elapsed_ns, started, finished, err)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(group_id, from_ts, until_ts) DO UPDATE SET
 				status = excluded.status, requests = excluded.requests, records = excluded.records,
-				bytes = excluded.bytes, started = excluded.started, finished = excluded.finished,
+				bytes = excluded.bytes, elapsed_ns = excluded.elapsed_ns,
+				started = excluded.started, finished = excluded.finished,
 				err = excluded.err`,
 			win.GroupID, win.From, win.Until, win.Status, win.Requests, win.Records, win.Bytes,
-			ts(win.Started), ts(win.Finished), win.Err); err != nil {
+			win.elapsed(), ts(win.Started), ts(win.Finished), win.Err); err != nil {
 			return err
 		}
 		if err := tx.QueryRow(`SELECT id FROM windows WHERE group_id = ? AND from_ts = ? AND until_ts = ?`,
@@ -439,8 +450,8 @@ func extendSettled(tx *sql.Tx, win windowRow) (int64, error) {
 	}
 	_, err = tx.Exec(`UPDATE windows SET
 		until_ts = ?, status = ?, requests = requests + ?, records = records + ?,
-		bytes = bytes + ?, finished = ? WHERE id = ?`,
-		win.Until, status, win.Requests, win.Records, win.Bytes, ts(win.Finished), id)
+		bytes = bytes + ?, elapsed_ns = elapsed_ns + ?, finished = ? WHERE id = ?`,
+		win.Until, status, win.Requests, win.Records, win.Bytes, win.elapsed(), ts(win.Finished), id)
 	return id, err
 }
 

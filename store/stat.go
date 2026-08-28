@@ -103,16 +103,16 @@ func statIndex(shard string, id Identity, stats *Stats) error {
 		return err
 	}
 	var (
-		first, last, started, finished sql.NullString
-		empty, failed                  sql.NullInt64
-		windows, requests, fetched     sql.NullInt64
+		first, last, finished      sql.NullString
+		empty, failed, elapsed     sql.NullInt64
+		windows, requests, fetched sql.NullInt64
 	)
 	err = st.db.QueryRow(`
 		SELECT COUNT(*), MIN(from_ts), MAX(until_ts), SUM(requests), SUM(bytes),
-		       SUM(status = ?), SUM(status = ?), MIN(started), MAX(finished)
+		       SUM(status = ?), SUM(status = ?), MAX(finished), SUM(elapsed_ns)
 		FROM windows WHERE group_id = ?`,
 		statusEmpty, statusError, groupID).
-		Scan(&windows, &first, &last, &requests, &fetched, &empty, &failed, &started, &finished)
+		Scan(&windows, &first, &last, &requests, &fetched, &empty, &failed, &finished, &elapsed)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
@@ -127,28 +127,11 @@ func statIndex(shard string, id Identity, stats *Stats) error {
 	if finished.Valid {
 		stats.LastSeen, _ = time.Parse(time.RFC3339, finished.String)
 	}
-	// Time spent harvesting, window by window, rather than the wall clock
-	// between the first and the last: a shard is usually filled in over many
-	// runs, days apart.
-	rows, err := st.db.Query(`SELECT started, finished FROM windows WHERE group_id = ? AND started != '' AND finished != ''`, groupID)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var from, to string
-		if err := rows.Scan(&from, &to); err != nil {
-			return err
-		}
-		start, err1 := time.Parse(time.RFC3339, from)
-		end, err2 := time.Parse(time.RFC3339, to)
-		if err1 == nil && err2 == nil && end.After(start) {
-			stats.Elapsed += end.Sub(start)
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return err
-	}
+	// Time spent harvesting, added up as each window was committed, rather than
+	// the wall clock between the first and the last: a shard is filled in over
+	// many runs, days apart, and settled windows merge, so a single row's
+	// started and finished can be a year apart with a minute's work between.
+	stats.Elapsed = time.Duration(elapsed.Int64)
 	var records, deleted sql.NullInt64
 	if err := st.db.QueryRow(`
 		SELECT COUNT(*), SUM(records.status = 'deleted')
