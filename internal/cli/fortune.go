@@ -172,7 +172,7 @@ func createSearcher(endpoint string, debug, oneSentence bool) search {
 			return fortuneResult{Err: fmt.Errorf("no identifiers found")}
 		}
 		if debug {
-			events := len(ids) * len(metha.Endpoints)
+			events := len(ids) * len(metha.Endpoints())
 			log.Printf("estimated probability of record: 1/%d", events)
 		}
 		rid := ids[rand.Intn(len(ids))]

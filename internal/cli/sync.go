@@ -60,7 +60,7 @@ func newSyncCmd() *cobra.Command {
 		Aliases: []string{"metha-sync"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if o.endpointList {
-				for _, u := range metha.Endpoints {
+				for _, u := range metha.Endpoints() {
 					fmt.Println(u)
 				}
 				os.Exit(0)
