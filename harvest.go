@@ -436,7 +436,15 @@ func (h *Harvest) settledFrom() time.Time {
 		// clock that runs behind ours, or a record indexed a moment after it
 		// was stamped, would otherwise land just before a boundary we have
 		// already passed.
-		return h.Started.Add(-SettleLag).Truncate(time.Second)
+		//
+		// Truncated to whole lags rather than to the second, so that the
+		// boundary stands still between runs the way BeginningOfDay does below.
+		// A boundary that moved with the clock made every re-run split off a
+		// settled window a few seconds wide - one request and one row each
+		// time, for a sliver of time nothing happened in. Quantised, a re-run
+		// inside the same lag asks the one question that is still open, and the
+		// window it commits replaces the one before it.
+		return h.Started.Add(-SettleLag).Truncate(SettleLag)
 	}
 	return now.New(h.Started).BeginningOfDay()
 }

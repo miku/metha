@@ -44,13 +44,20 @@ func TestSettledFrom(t *testing.T) {
 	}
 
 	second := harvestAt(started, "YYYY-MM-DDThh:mm:ssZ").settledFrom()
-	if want := started.Add(-SettleLag).Truncate(time.Second); !second.Equal(want) {
+	if want := started.Add(-SettleLag).Truncate(SettleLag); !second.Equal(want) {
 		t.Errorf("second granularity: settledFrom = %v, want %v", second, want)
 	}
-	// Stored boundaries are compared as strings, and a fractional second does
-	// not sort against a whole one.
 	if second.Nanosecond() != 0 {
 		t.Errorf("second granularity: settledFrom = %v, want a whole second", second)
+	}
+	// Quantised to whole lags rather than to the second, so that two runs a
+	// moment apart get the same answer - which is what BeginningOfDay gives the
+	// daily case for free. A boundary that followed the clock made every re-run
+	// settle a window a few seconds wide, costing a request and a row for a
+	// stretch of time nothing had happened in.
+	later := harvestAt(started.Add(3*time.Second), "YYYY-MM-DDThh:mm:ssZ").settledFrom()
+	if !later.Equal(second) {
+		t.Errorf("three seconds on: settledFrom = %v, want %v, the same boundary", later, second)
 	}
 }
 
