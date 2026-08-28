@@ -164,14 +164,26 @@ func (h *Harvest) mkdirAll() error {
 	return nil
 }
 
-// dateLayout converts the repository endpoints advertised granularity to Go
-// date format strings.
-func (h *Harvest) dateLayout() string {
-	switch h.Identify.Granularity {
-	case "YYYY-MM-DD":
-		return "2006-01-02"
-	case "YYYY-MM-DDThh:mm:ssZ":
-		return "2006-01-02T15:04:05Z"
+// utcSecond is the second granularity form of an OAI datestamp. The trailing Z
+// is a literal here, not a zone, which is why formatBound moves the instant to
+// UTC itself: the protocol defines this form as UTC, so anything else would
+// label a local wall clock as though it were.
+const utcSecond = "2006-01-02T15:04:05Z"
+
+// formatBound renders a window boundary as the endpoint's advertised
+// granularity spells it, or the empty string when the endpoint said nothing
+// intelligible - which is what leaves a request without bounds, as it always
+// has been.
+//
+// Second granularity is UTC by definition, so the instant moves there first. A
+// date is not an instant and must not: the boundary was computed in the local
+// zone, and shifting it would name the day before or after the one meant.
+func (h *Harvest) formatBound(t time.Time) string {
+	switch {
+	case h.secondGranularity():
+		return t.UTC().Format(utcSecond)
+	case h.dayGranularity():
+		return t.Format("2006-01-02")
 	}
 	return ""
 }
@@ -434,10 +446,23 @@ func (h *Harvest) settledFrom() time.Time {
 // was never asked - is treated as the coarser of the two, which is the
 // assumption that cannot lose records.
 func (h *Harvest) secondGranularity() bool {
+	return h.granularity() == "yyyy-mm-ddthh:mm:ssz"
+}
+
+// dayGranularity reports whether the endpoint stamps records to the day.
+func (h *Harvest) dayGranularity() bool {
+	return h.granularity() == "yyyy-mm-dd"
+}
+
+// granularity is the endpoint's advertised granularity, folded to lower case.
+// The spec gives the two forms in a fixed case, but enough endpoints get that
+// wrong that reading them literally would drop the bounds from every request;
+// earliestDate has always compared them this way.
+func (h *Harvest) granularity() string {
 	if h.Identify == nil {
-		return false
+		return ""
 	}
-	return strings.ToLower(h.Identify.Granularity) == "yyyy-mm-ddthh:mm:ssz"
+	return strings.ToLower(h.Identify.Granularity)
 }
 
 // resumeFrom returns the instant this harvest continues from, or the zero time
@@ -633,8 +658,8 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 			filedate = h.Started.Format("2006-01-02")
 		} else {
 			filedate = iv.End.Format("2006-01-02")
-			req.From = iv.Begin.Format(h.dateLayout())
-			req.Until = iv.End.Format(h.dateLayout())
+			req.From = h.formatBound(iv.Begin)
+			req.Until = h.formatBound(iv.End)
 		}
 
 		if h.Config.Delay > 0 {
@@ -732,7 +757,7 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 func (h *Harvest) earliestDate() (time.Time, error) {
 	// Different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
 	// First occurence of a non-standard granularity: https://t3.digizeitschriften.de/oai2/
-	switch strings.ToLower(h.Identify.Granularity) {
+	switch h.granularity() {
 	case "yyyy-mm-dd":
 		if len(h.Identify.EarliestDatestamp) <= 10 {
 			return time.Parse("2006-01-02", h.Identify.EarliestDatestamp)

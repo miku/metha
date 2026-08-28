@@ -139,24 +139,54 @@ func TestHarvestMkdirAll(t *testing.T) {
 	}
 }
 
-func TestHarvestDateLayout(t *testing.T) {
+// TestHarvestFormatBound: a second granularity bound names an instant, and the
+// form the protocol asks for is UTC. Formatting a local time into it would put
+// the local wall clock under a Z and move the boundary by the zone offset - two
+// hours into the future in Vienna, five hours into the past in Chicago. A date
+// is not an instant and must not be shifted at all, or it names the wrong day.
+func TestHarvestFormatBound(t *testing.T) {
+	chicago, err := time.LoadLocation("America/Chicago")
+	if err != nil {
+		t.Skipf("no zoneinfo: %v", err)
+	}
+	// 2026-08-28 19:33:20 UTC, which in Chicago is still the afternoon.
+	bound := time.Date(2026, 8, 28, 14, 33, 20, 0, chicago)
+
 	tests := []struct {
 		granularity string
 		expected    string
 	}{
-		{"YYYY-MM-DD", "2006-01-02"},
-		{"YYYY-MM-DDThh:mm:ssZ", "2006-01-02T15:04:05Z"},
+		{"YYYY-MM-DDThh:mm:ssZ", "2026-08-28T19:33:20Z"},
+		{"YYYY-MM-DD", "2026-08-28"},
+		// The spec fixes the case, but endpoints get it wrong; reading them
+		// literally would drop the bounds from every request.
+		{"yyyy-mm-ddThh:mm:ssZ", "2026-08-28T19:33:20Z"},
+		{"yyyy-mm-dd", "2026-08-28"},
+		// Nothing intelligible leaves the request unbounded, as it always has.
 		{"invalid", ""},
+		{"", ""},
 	}
 	for _, test := range tests {
-		h := &Harvest{
-			Identify: &Identify{
-				Granularity: test.granularity,
-			},
+		h := &Harvest{Identify: &Identify{Granularity: test.granularity}}
+		if got := h.formatBound(bound); got != test.expected {
+			t.Errorf("formatBound with granularity %q = %q; expected %q", test.granularity, got, test.expected)
 		}
-		result := h.dateLayout()
-		if result != test.expected {
-			t.Errorf("Harvest.dateLayout() with granularity %q = %q; expected %q", test.granularity, result, test.expected)
+	}
+}
+
+// TestHarvestFormatBoundDayIsLocal: the day a boundary names is the day it was
+// computed in. The end of a local day is already the next day in UTC across
+// half the world, so moving it there would ask for a day that has not come.
+func TestHarvestFormatBoundDayIsLocal(t *testing.T) {
+	for _, name := range []string{"UTC", "Europe/Vienna", "America/Chicago", "Pacific/Auckland"} {
+		loc, err := time.LoadLocation(name)
+		if err != nil {
+			t.Skipf("no zoneinfo for %v: %v", name, err)
+		}
+		h := &Harvest{Identify: &Identify{Granularity: "YYYY-MM-DD"}}
+		endOfDay := time.Date(2026, 8, 28, 23, 59, 59, int(time.Second-1), loc)
+		if got, want := h.formatBound(endOfDay), "2026-08-28"; got != want {
+			t.Errorf("formatBound in %v = %q; expected %q", name, got, want)
 		}
 	}
 }
