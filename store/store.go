@@ -85,9 +85,11 @@ const (
 )
 
 // ReadOptions filters a record stream. The zero value selects everything.
-// Bounds are compared against the record datestamp as strings, which works
-// because OAI datestamps are ISO 8601: a "2023-01-01" bound also matches the
-// "2023-01-01T12:00:00Z" form used by endpoints with finer granularity.
+//
+// Bounds and datestamps are ISO 8601, and both come in either of the two
+// granularities OAI-PMH allows: "2023-01-01" and "2023-01-01T12:00:00Z". They
+// are widened to the second before being compared, because as text the two
+// forms do not line up - see widen.
 type ReadOptions struct {
 	From    string // inclusive lower bound on the record datestamp
 	Until   string // inclusive upper bound on the record datestamp
@@ -97,10 +99,10 @@ type ReadOptions struct {
 
 // match reports whether a record passes the filter.
 func (opts ReadOptions) match(rec *metha.Record) bool {
-	if opts.From != "" && rec.Header.DateStamp < opts.From {
+	if opts.From != "" && widen(rec.Header.DateStamp, dayStart) < widen(opts.From, dayStart) {
 		return false
 	}
-	if opts.Until != "" && rec.Header.DateStamp > opts.Until {
+	if opts.Until != "" && widen(rec.Header.DateStamp, dayStart) > widen(opts.Until, dayEnd) {
 		return false
 	}
 	if opts.SetSpec != "" && !slices.Contains(rec.Header.SetSpec, opts.SetSpec) {
@@ -113,6 +115,36 @@ func (opts ReadOptions) match(rec *metha.Record) bool {
 		return rec.Deleted()
 	}
 	return true
+}
+
+// The two shapes an OAI-PMH datestamp is allowed to take, and the times of day
+// a date-only one stands for at each end of a range.
+const (
+	dayLen   = len("2006-01-02")
+	dayStart = "T00:00:00Z"
+	dayEnd   = "T23:59:59Z"
+)
+
+// widen pads a date-only datestamp out to a full second, tail supplying the
+// time of day. It is what lets the two granularities be compared as text at
+// all: "2023-05-01T14:23:00Z" sorts after "2023-05-01", because it is longer
+// and shares its prefix, so an -until of a bare date used to drop every
+// second-granularity record of the day it named - including the one stamped at
+// midnight, which is the same instant as the bound.
+//
+// Widening the bound rather than truncating the datestamp is also what the
+// protocol means by a date-only bound: the start of that day at the lower end,
+// the end of it at the upper one. Pass dayStart for a datestamp, which stands
+// for the day it names either way.
+//
+// Anything that is not a bare date is returned untouched. An endpoint that
+// stamps records in some third form is then compared exactly as before, rather
+// than pushed into a shape it does not have.
+func widen(stamp, tail string) string {
+	if len(stamp) != dayLen || stamp[4] != '-' || stamp[7] != '-' {
+		return stamp
+	}
+	return stamp + tail
 }
 
 // Store is the read side of a single harvested endpoint.

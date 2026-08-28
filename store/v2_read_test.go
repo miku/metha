@@ -256,3 +256,70 @@ func writePartial(t *testing.T, w *Writer, from, until string, titles ...string)
 		t.Fatalf("Commit: %v", err)
 	}
 }
+
+// TestDatestampGranularity: most endpoints stamp records to the second, and a
+// filter bound is usually written as a bare date. The two forms are both ISO
+// 8601 and both sort sensibly against their own kind, which is what made
+// comparing them as text look safe - but "2023-05-01T00:00:00Z" is longer than
+// "2023-05-01" and shares its prefix, so it sorts after the very day it falls
+// on. An -until of a bare date used to return nothing at all.
+func TestDatestampGranularity(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	if err := w.Begin(day(t, "2023-05-01"), day(t, "2023-05-31"), true); err != nil {
+		t.Fatalf("Begin: %v", err)
+	}
+	// Both granularities in one group, which is what a migrated cache holds:
+	// endpoints change what they advertise between harvests.
+	stamps := []string{
+		"2023-05-01",
+		"2023-05-01T00:00:00Z",
+		"2023-05-01T14:23:00Z",
+		"2023-05-01T23:59:59Z",
+		"2023-05-02T09:00:00Z",
+	}
+	for _, ds := range stamps {
+		resp := metha.Response{ListRecords: metha.ListRecords{Records: []metha.Record{
+			{Header: metha.Header{Identifier: ds, DateStamp: ds}},
+		}}}
+		if err := w.Append(marshal(t, resp)); err != nil {
+			t.Fatalf("Append: %v", err)
+		}
+	}
+	if err := w.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	firstDay := stamps[:4]
+	for _, tt := range []struct {
+		opts ReadOptions
+		want []string
+	}{
+		{ReadOptions{}, stamps},
+		// A date-only bound stands for the whole of that day: the start of it
+		// below, the end of it above.
+		{ReadOptions{Until: "2023-05-01"}, firstDay},
+		{ReadOptions{From: "2023-05-01", Until: "2023-05-01"}, firstDay},
+		{ReadOptions{From: "2023-05-02"}, []string{"2023-05-02T09:00:00Z"}},
+		{ReadOptions{Until: "2023-04-30"}, nil},
+		// A bound to the second cuts inside a day, and the day-resolution
+		// prune in the index must not get in the way of it.
+		{ReadOptions{From: "2023-05-01T14:00:00Z", Until: "2023-05-01T23:59:59Z"},
+			[]string{"2023-05-01T14:23:00Z", "2023-05-01T23:59:59Z"}},
+		{ReadOptions{Until: "2023-05-01T00:00:00Z"}, []string{"2023-05-01", "2023-05-01T00:00:00Z"}},
+	} {
+		if got := identifiers(t, s, tt.opts); !slices.Equal(got, tt.want) {
+			t.Errorf("From=%q Until=%q: got %v, want %v", tt.opts.From, tt.opts.Until, got, tt.want)
+		}
+	}
+}

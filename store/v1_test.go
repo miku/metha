@@ -240,3 +240,42 @@ func TestRecordsMatchIdentity(t *testing.T) {
 		t.Errorf("Identity: got %v", got)
 	}
 }
+
+// TestV1FromBoundPrune: the file prune reads a window's end date out of a
+// filename, and the bound it compares against may be written to the second.
+// Sorting one against the other put the serial that follows the date up against
+// the "T" that starts a time, and the file lost - so a bound inside the day a
+// file covers skipped that file whole.
+func TestV1FromBoundPrune(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	src := &v1Store{baseDir: base, id: id}
+	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	// A window that closed on the 15th, and a later one. The bound below falls
+	// inside the first, which is where the two spellings collide: after the
+	// date the name has a "-" and the bound has a "T".
+	createFile(t, src.Dir(), "2023-01-15-00000001.xml.zst", createZstdWriter,
+		recordWithHeader("early", "2023-01-15T08:00:00Z", "", ""),
+		recordWithHeader("noon", "2023-01-15T12:00:00Z", "", ""))
+	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter,
+		recordWithHeader("late", "2023-01-30T20:00:00Z", "", ""))
+	for _, tt := range []struct {
+		from string
+		want []string
+	}{
+		{"2023-01-01", []string{"early", "noon", "late"}},
+		{"2023-01-20", []string{"late"}},
+		// The bound lands on the day the first file's window ended. Its
+		// records are still the answer, so the file has to be opened.
+		{"2023-01-15T08:00:00Z", []string{"early", "noon", "late"}},
+		{"2023-01-15T10:00:00Z", []string{"noon", "late"}},
+		// Past every window's end, where skipping files is the point.
+		{"2023-02-01", nil},
+	} {
+		if got := identifiers(t, src, ReadOptions{From: tt.from}); !slices.Equal(got, tt.want) {
+			t.Errorf("From=%q: got %v, want %v", tt.from, got, tt.want)
+		}
+	}
+}

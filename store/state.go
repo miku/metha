@@ -403,16 +403,26 @@ func (s *state) countRecords(groupID int64) (int, error) {
 	return n, err
 }
 
-// ts renders a timestamp for storage, or the empty string for the zero time.
-// Boundaries are stored as UTC so that they sort lexically, which is what makes
-// MAX(until_ts) the resume point.
+// windowTime is how an instant is stored. Every field is fixed width, the zone
+// is always UTC and so always the same letter, and the nanoseconds are always
+// spelled out.
+//
+// That is what makes text order the same as time order, which the index relies
+// on everywhere: MIN(from_ts), MAX(until_ts), the overlap delete in
+// commitWindow, the equality in hasWindow. RFC3339Nano, the obvious choice,
+// trims trailing zeros - and "." sorts below "Z", so it puts 12:00:00.5 before
+// 12:00:00, which is backwards. Writing the zeros costs nine bytes a row and
+// leaves nothing for a call site to get right.
+const windowTime = "2006-01-02T15:04:05.000000000Z"
+
+// ts renders a timestamp for storage, or the empty string for the zero time,
+// which is how a window with no boundaries at all is spelled - see
+// unsettledFrom.
 func ts(t time.Time) string {
 	if t.IsZero() {
 		return ""
 	}
-	// Nanosecond precision, so that a window that took a fraction of a second
-	// still reports a duration and a rate.
-	return t.UTC().Format(time.RFC3339Nano)
+	return t.UTC().Format(windowTime)
 }
 
 // parseWindowTime reads a stored boundary back. Into local time: boundaries are

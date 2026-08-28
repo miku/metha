@@ -91,10 +91,16 @@ func (s *v1Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
 			return
 		}
 		for _, file := range files {
-			// The filename starts with the window's end date, so a file
-			// named before the lower bound cannot hold a matching record.
-			if opts.From != "" && filepath.Base(file) < opts.From {
-				continue
+			// The filename starts with the window's end date, so a file whose
+			// window closed before the lower bound's day cannot hold a
+			// matching record. Only the dates are compared: the name carries a
+			// serial after its date and the bound may carry a time, and
+			// neither of those sorts against the other. A name with no date is
+			// not pruned, since there is nothing to prune it by.
+			if day := dayOf(opts.From); day != "" {
+				if end := dayOf(filepath.Base(file)); end != "" && end < day {
+					continue
+				}
 			}
 			if !recordsFromFile(file, opts, yield) {
 				return

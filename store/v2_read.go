@@ -8,9 +8,37 @@ import (
 	"io"
 	"iter"
 	"path/filepath"
+	"time"
 
 	"github.com/miku/metha"
 )
+
+// dayOf returns the date a bound falls on, or the empty string if there is no
+// bound or it does not start with one. Every datestamp of that day, in either
+// granularity, sorts at or after it.
+func dayOf(bound string) string {
+	if len(bound) < dayLen {
+		return ""
+	}
+	return bound[:dayLen]
+}
+
+// dayAfter returns the day following a bound's, which is the first string every
+// datestamp of that day sorts before - the upper end of dayOf's half-open
+// range. An unparseable bound yields the empty string, and so prunes nothing:
+// a filter the index cannot help with is answered by reading more, never by
+// reading less.
+func dayAfter(bound string) string {
+	day := dayOf(bound)
+	if day == "" {
+		return ""
+	}
+	t, err := time.Parse("2006-01-02", day)
+	if err != nil {
+		return ""
+	}
+	return t.AddDate(0, 0, 1).Format("2006-01-02")
+}
 
 // segFrame is one frame of one segment, ready to be read.
 type segFrame struct {
@@ -112,13 +140,20 @@ func (s *v2Store) matchingFrames(opts ReadOptions) ([]segFrame, error) {
 		JOIN segments ON records.seg = segments.id
 		WHERE windows.group_id = ?`
 	args := []any{groupID}
-	if opts.From != "" {
+	// Pruned at day resolution, not at the bound's own. The column holds what
+	// the endpoint sent, in whichever granularity it uses, and the two forms do
+	// not compare cleanly as text - so the bounds are rounded outwards to whole
+	// days, where every form of a datestamp sorts where it should. That keeps
+	// the comparison sargable against records_datestamp, keeps the prune worth
+	// having, and cannot drop a frame that holds a match; opts.match still
+	// decides to the second.
+	if day := dayOf(opts.From); day != "" {
 		query += ` AND records.datestamp >= ?`
-		args = append(args, opts.From)
+		args = append(args, day)
 	}
-	if opts.Until != "" {
-		query += ` AND records.datestamp <= ?`
-		args = append(args, opts.Until)
+	if day := dayAfter(opts.Until); day != "" {
+		query += ` AND records.datestamp < ?`
+		args = append(args, day)
 	}
 	switch opts.Deleted {
 	case DeletedSkip:
