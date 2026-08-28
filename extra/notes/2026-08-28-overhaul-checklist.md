@@ -107,6 +107,72 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
 
 - [x] **`runs` table deleted.** It was in the schema and never written or read.
 
+- [x] **`groupName` no longer returns `.`, `..` or the empty name.** `sanitize`
+      keeps dots on purpose - formats and sets are full of them - and a name
+      that survived it unchanged skipped the digest suffix. Worse than first
+      described: `..` did not land in the shard root but a level above it.
+
+          groupName("..", "") = ".."  -> lands in /cache/aa/bb
+          groupName(".",  "") = "."   -> lands in /cache/aa/bb/hash
+          groupName("",   "") = ""    -> lands in seg/ itself
+
+      All three now fall through to the digest that every other unspellable
+      name already takes: `..-ef9ba28d`, `.-075d3ddf`, `-6e340b9c`. Ordinary
+      names are untouched. `TestGroupNameStaysInsideSeg` asserts the structural
+      property - `filepath.Dir(seg/<name>) == seg` - rather than the literal
+      strings.
+
+      No read-side change was needed: `segDir()` recomputes `groupName` from
+      the identity rather than trusting `meta.json`, and `Group.Dir` is never
+      joined into a path.
+
+- [x] **`records_identifier` dropped — nothing read by it.** Investigating the
+      empty-shard baseline turned up an index no query anywhere uses: no SELECT,
+      JOIN or ORDER BY touches `records.identifier`. Measured over 200k rows:
+
+      | | bytes/record | insert |
+      |---|---|---|
+      | with `records_identifier` | 232.5 | 1.533s |
+      | without | 184.8 | 1.136s |
+
+      **47.7 bytes per record and 26% of index insert time**, paid on every
+      shard, for a query no one makes — ~48 MB per million records. Bigger than
+      anything the page-size work could have saved, and it makes writes faster
+      rather than slower.
+
+      Dedupe on read will want an index when it arrives, but keyed on
+      `(identifier, datestamp)` per the plan, so this one would have been
+      replaced rather than reused. Adding an index to a table that already
+      exists is one additive line.
+
+- [x] **Empty-shard baseline: leave `page_size` alone.** The 45,056 B was 11
+      root pages of 4096 — one per b-tree (4 tables, 3 indexes, 3 UNIQUE
+      auto-indexes, header). Dropping `records_identifier` takes it to 40,960 B
+      in 10 pages. Smaller pages were measured and rejected:
+
+      | page_size | empty | 200k records | insert | 1k lookups |
+      |---|---|---|---|---|
+      | 512 | 8,192 | 41,758,720 | 3.838s | 22.451s |
+      | 1024 | 13,312 | 41,227,264 | 1.420s | 15.793s |
+      | 2048 | 22,528 | 41,048,064 | 1.275s | 14.605s |
+      | 4096 | 45,056 | 40,996,864 | 1.182s | 12.909s |
+
+      4096 wins on every axis but the empty case, and there it buys ~32 KB a
+      shard for 20% slower inserts and 22% slower lookups *forever, on every
+      shard*. Wrong trade: a few GB against the speed of the migration and of
+      every read after it. (`page_size` also cannot be set through the DSN once
+      the file exists — it needs `PRAGMA page_size` followed by `VACUUM` before
+      any table is created, which is why it is a create-time decision at all.)
+
+      Lazy `state.sqlite` creation was considered and does not pay: the cost is
+      root-page allocation that appears the moment the file exists, and any
+      harvest that commits a window - including one that found nothing, or one
+      that failed and recorded an error - needs the file. It would only help a
+      shard whose harvest died between `OpenWriter` and the first `Begin`.
+
+      Note the 11 GB figure was overstated: a shard is only created after
+      `Identify` succeeds, so dead endpoints in a 244k list cost nothing at all.
+
 - [x] **The `v2/` directory level is gone.** The notes proposed renaming it to
       `shards/`; going without it entirely is better, because a directory that
       does not exist can never become ambiguous. Shards now sit directly in the
@@ -164,24 +230,8 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
 
 ## open — settle before the move
 
-- [ ] **`groupName` does not reject `.` and `..`.** `sanitize` permits `.`, and
-      a name that survives unchanged skips the hash suffix:
-
-          "."          -> "."
-          ".."         -> ".."
-          "../../etc"  -> "..-..-etc-9f5ae52a"
-
-      So `--format ..` puts segments in `seg/../`, i.e. the shard root, beside
-      `meta.json` and `state.sqlite`. Traversal is one level only, but it is
-      user input reaching a path. One condition, and it is a path shape, so it
-      belongs with the layout decisions.
-
-- [ ] **Empty-shard baseline.** A shard with nothing in it is 45,280 bytes,
-      almost all `state.sqlite`. Across 244k endpoints that is ~11 GB before a
-      single record is harvested, and a large share of that list is dead or
-      tiny. Levers: create `state.sqlite` lazily, or drop `page_size` from the
-      4096 default. **Unmeasured** — the pragma may not help, and it has to be
-      set before any table is created, so it is a create-time decision.
+Nothing outstanding. Every decision that changes the on-disk shape has been
+made; what is left below does not.
 
 ---
 

@@ -76,7 +76,12 @@ CREATE TABLE IF NOT EXISTS records (
 );
 
 CREATE INDEX IF NOT EXISTS records_datestamp ON records(datestamp);
-CREATE INDEX IF NOT EXISTS records_identifier ON records(identifier);
+
+-- There is deliberately no index on identifier. Nothing reads by it, and an
+-- index on a column that long costs about 48 bytes a record and a quarter of
+-- the insert time - paid on every shard, for a query no one makes. Dedupe on
+-- read will want one when it arrives, but keyed on (identifier, datestamp), and
+-- adding an index to a table that already exists is one additive line.
 
 -- Every commit deletes the rows of the window it is about to replace, and both
 -- the record counts and the frame lookup join through this column. Without it
