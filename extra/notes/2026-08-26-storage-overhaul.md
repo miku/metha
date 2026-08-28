@@ -206,6 +206,25 @@ note footnote 3 of WOOC2025-Paper028.md: distinct records legitimately share an
 identifier, so the key must be identifier+datestamp+hash, never identifier
 alone, and it must never delete bytes at write time
 
+the first half of that reader policy is now free and unconditional: every read
+goes through the index, and a window that was fetched again has no rows there,
+so the bytes of the older attempt are never named by anything. this works
+because `Commit` flushes a frame before writing the row, so no frame straddles
+two windows. what is left for the flagged policy is the endpoint's own
+duplicates - the same record returned in two genuinely different windows -
+which needs the identifier+datestamp+hash key and belongs in `export`
+
+`-no-intervals` is the case where this carries the whole design. there is no
+incremental fetch, so every run stores the repository again. the window it
+writes has no boundaries (both stored as the empty string) rather than the run's
+clock, so each run replaces the last one's rows instead of stacking beside them:
+one window row, one live copy, N copies of bytes. that boundless row is also
+excluded from `unsettledFrom` and loses `lastWindow` to any real boundary, so it
+never becomes a resume point - it makes no claim about which ranges are covered
+and must not answer as if it did. the bytes are left alone; `metha-sync` warns
+past 10 GB and points at `-rm`, because an endpoint that has since gone away
+leaves the older copies as the only ones there are
+
 ## adaptive windows
 
 today the split is fixed monthly/daily/hourly (harvest.go:424); instead start

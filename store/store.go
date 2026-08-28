@@ -115,12 +115,6 @@ func (opts ReadOptions) match(rec *metha.Record) bool {
 	return true
 }
 
-// selective reports whether the filter can rule records out, and so whether
-// consulting an index before decompressing anything can pay off.
-func (opts ReadOptions) selective() bool {
-	return opts.From != "" || opts.Until != "" || opts.SetSpec != "" || opts.Deleted != DeletedKeep
-}
-
 // Store is the read side of a single harvested endpoint.
 type Store interface {
 	// Identity returns the triple this store holds data for.

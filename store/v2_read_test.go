@@ -196,3 +196,63 @@ func TestV1FiltersToo(t *testing.T) {
 		}
 	}
 }
+
+// TestRefetchedWindowReadsOnce: a window that reaches into the endpoint's
+// present is fetched again on the next run, and its bytes are appended a second
+// time - the blob layer never rewrites. What the shard says about itself is the
+// index, though, and the second commit replaced the first window's rows. So an
+// unfiltered read, which is the one that used to walk the segments whole, has to
+// return the newer copy and only that.
+func TestRefetchedWindowReadsOnce(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	// Two runs over the same unsettled range: the second saw a record the
+	// first could not, which is the whole reason for refetching it.
+	writePartial(t, w, "2023-06-01", "2023-06-30", "first")
+	before, err := w.SegmentBytes()
+	if err != nil {
+		t.Fatalf("SegmentBytes: %v", err)
+	}
+	writePartial(t, w, "2023-06-01", "2023-06-30", "first", "second")
+	after, err := w.SegmentBytes()
+	if err != nil {
+		t.Fatalf("SegmentBytes: %v", err)
+	}
+	if after <= before {
+		t.Errorf("segments hold %d bytes after the refetch, want more than %d", after, before)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	want := []string{"first", "second"}
+	if got := identifiers(t, s, ReadOptions{}); !slices.Equal(got, want) {
+		t.Errorf("unfiltered: got %v, want %v", got, want)
+	}
+	if got := identifiers(t, s, ReadOptions{From: "2023-01-01"}); !slices.Equal(got, want) {
+		t.Errorf("filtered: got %v, want %v", got, want)
+	}
+}
+
+// writePartial commits an unsettled window, the kind a run refetches.
+func writePartial(t *testing.T, w *Writer, from, until string, titles ...string) {
+	t.Helper()
+	if err := w.Begin(day(t, from), day(t, until), false); err != nil {
+		t.Fatalf("Begin: %v", err)
+	}
+	for _, title := range titles {
+		if err := w.Append(marshal(t, respWithTitle(title))); err != nil {
+			t.Fatalf("Append: %v", err)
+		}
+	}
+	if err := w.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+}

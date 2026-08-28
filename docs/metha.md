@@ -242,6 +242,14 @@ The options `-daily`, `-ignore-http-errors`, `-suppress-format-parameter`,
 `-no-intervals` and `-max` are used to work around non-standard server
 implementations.
 
+`-no-intervals` gives up on incremental harvesting: the endpoint cannot answer
+a date range, so every run fetches the whole repository again. In the v2 layout
+each run is stored beside the last one, and only the newest is read, so the
+cache keeps growing while the data stays right. `metha-sync` says so once the
+segments pass 10 GB. Reclaim the space with `-rm`, which starts the harvest from
+one copy again - metha will not drop the older ones on its own, since an
+endpoint that has gone away leaves them as the only copy there is.
+
 INTEGRATION
 -----------
 

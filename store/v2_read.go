@@ -20,20 +20,24 @@ type segFrame struct {
 
 // Records streams the group's records.
 //
-// Without a filter, that means walking the segments in order: the segments are
-// the source of truth and reading them whole is the right shape for "give me
-// everything". With a filter, the index is asked first which frames can hold a
-// matching record, and only those are decompressed - on a shard whose windows
-// span a decade, a query about last month then touches a handful of megabytes
-// instead of all of them.
+// The index is asked first which frames can hold a matching record, and only
+// those are decompressed: on a shard whose windows span a decade, a query about
+// last month touches a handful of megabytes instead of all of them.
+//
+// Going through the index even when nothing is filtered is what makes a read a
+// view rather than a dump. A window that was fetched again - because it reached
+// into the endpoint's present, or because it had no boundaries at all - leaves
+// its older bytes in the segment, since the blob layer is append-only, but its
+// older rows are gone from the index. Frames never span two windows, because
+// Commit always flushes one before writing the row, so a superseded window's
+// frames are named by nothing and never read.
 //
 // The index prunes; it never decides. Every record that comes out of a frame is
 // still checked against the filter, so an index that has fallen behind the
-// segments can cost time but cannot produce a wrong answer.
+// segments can cost time but cannot produce a wrong answer. An index that is
+// missing altogether falls back to reading the segments whole, duplicates and
+// all: the segments are the cache, and answering from them beats not answering.
 func (s *v2Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
-	if !opts.selective() {
-		return s.recordsByScan(opts)
-	}
 	return func(yield func(metha.Record, error) bool) {
 		frames, err := s.matchingFrames(opts)
 		if err != nil {

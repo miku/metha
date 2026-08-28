@@ -76,7 +76,7 @@ func newSyncCmd() *cobra.Command {
 	f.BoolVar(&o.hourly, "hourly", false, "use hourly intervals for harvesting")
 	f.BoolVar(&o.daily, "daily", false, "use daily intervals for harvesting")
 	f.DurationVar(&o.delay, "delay", 0, "sleep between each OAI-PMH request")
-	f.BoolVar(&o.disableSelectiveHarvesting, "no-intervals", false, "harvest in one go, for funny endpoints")
+	f.BoolVar(&o.disableSelectiveHarvesting, "no-intervals", false, "harvest in one go, for funny endpoints; refetches everything each run, so use -rm to reclaim the space")
 	f.BoolVar(&o.endpointList, "list", false, "list a selection of OAI endpoints (might be outdated)")
 	f.StringVar(&o.format, "format", "oai_dc", "metadata format")
 	f.StringVar(&o.from, "from", "", "set the start date, format: 2006-01-02, use only if you do not want the endpoints earliest date")
@@ -234,12 +234,13 @@ func (o *syncOpts) harvestLayout(id store.Identity) store.Layout {
 // disk, with the last committed window still in the log rather than in the
 // database.
 func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity, layout store.Layout) error {
+	var w *store.Writer
 	switch layout {
 	case store.V1:
 		o.noticeOnce(id)
 	case store.V2:
-		w, err := store.OpenWriter(o.baseDir, id)
-		if err != nil {
+		var err error
+		if w, err = store.OpenWriter(o.baseDir, id); err != nil {
 			return err
 		}
 		defer w.Close()
@@ -253,7 +254,36 @@ func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity, layout 
 		return fmt.Errorf("unknown layout: %v, use v1 or v2", layout)
 	}
 	log.Printf("harvest: %+v", harvest)
-	return harvest.Run()
+	if err := harvest.Run(); err != nil {
+		return err
+	}
+	if w != nil && o.disableSelectiveHarvesting {
+		warnUnbounded(w)
+	}
+	return nil
+}
+
+// unboundedWarnBytes is the size at which a -no-intervals cache is worth
+// mentioning. It is large enough that an endpoint harvested once or twice never
+// trips it, and small enough to arrive well before a disk fills.
+const unboundedWarnBytes = 10 << 30
+
+// warnUnbounded says what -no-intervals costs once it has cost enough to
+// notice. An endpoint that cannot answer a from and until has to be fetched
+// whole every time, so each run appends another copy of it. Reads show only the
+// newest, so the harvest stays correct; the disk does not.
+//
+// The older copies are not dropped here. Whether they are worth their bytes
+// depends on something metha cannot see: an endpoint that has gone away, or
+// that has quietly dropped records, leaves them as the only surviving copy.
+// Discarding them is a decision, and -rm is where the user makes it.
+func warnUnbounded(w *store.Writer) {
+	n, err := w.SegmentBytes()
+	if err != nil || n < unboundedWarnBytes {
+		return
+	}
+	log.Warnf("-no-intervals stores the whole endpoint again on every run, and %s holds %.1f GB of them by now; reads return only the newest, the rest is dead weight. Harvest with -rm to start from one copy again.",
+		w.Dir(), float64(n)/(1<<30))
 }
 
 // noticeName marks a cache whose owner has been told about v2 already.

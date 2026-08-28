@@ -615,9 +615,14 @@ func (h *Harvest) runInterval(iv Interval) (err error) {
 	if h.Sink != nil {
 		from, until := iv.Begin, iv.End
 		if h.Config.DisableSelectiveHarvesting {
-			// No range was requested, so the window is the run itself, the
-			// same thing the file layout puts in the filename.
-			from, until = h.Started, h.Started
+			// No range was requested, so the window claims none: it is the
+			// whole repository as of now, and the zero time is how that is
+			// spelled. Being the same claim on every run is the point - a
+			// re-harvest replaces the window it already has instead of
+			// stacking another copy of the endpoint beside it. The bytes do
+			// still accumulate, since the blob layer is append-only, but only
+			// the newest copy is indexed and so only that one is ever read.
+			from, until = time.Time{}, time.Time{}
 		}
 		// A window is settled when it ends before the point where the
 		// endpoint's datestamps can still change; anything else is fetched

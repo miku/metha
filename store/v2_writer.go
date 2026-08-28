@@ -418,6 +418,11 @@ func removeV2(baseDir string, id Identity) error {
 	return writeMeta(shard, meta)
 }
 
+// SegmentBytes returns how many bytes this group's segments occupy. Superseded
+// copies count: they are on disk, which is what a caller asking about size
+// wants to know.
+func (w *Writer) SegmentBytes() (int64, error) { return w.st.segmentBytes(w.groupID) }
+
 // Records returns how many records the open window has seen so far.
 func (w *Writer) Records() int {
 	if w.win == nil {

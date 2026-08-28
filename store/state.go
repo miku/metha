@@ -182,8 +182,27 @@ func (s *state) newSegment(groupID int64, name string) (int64, error) {
 	return res.LastInsertId()
 }
 
+// segmentBytes returns how many bytes of a group's segments the index vouches
+// for. That is the committed length rather than the file size, so the torn tail
+// of a crashed harvest, which the next open truncates, is not counted.
+func (s *state) segmentBytes(groupID int64) (int64, error) {
+	var n sql.NullInt64
+	err := s.db.QueryRow(`SELECT SUM(committed_size) FROM segments WHERE group_id = ?`, groupID).Scan(&n)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	return n.Int64, err
+}
+
 // lastWindow returns the largest window end of a group, or the empty string if
 // nothing was harvested into it yet. This is the resume point.
+//
+// The boundless window of a -no-intervals harvest stores the empty string,
+// which sorts below every real boundary and so loses the maximum to any of
+// them. A group that holds nothing else answers the empty string, and a harvest
+// that switches to intervals starts from the endpoint's earliest date - the
+// only honest answer, since an unbounded fetch says nothing about what it
+// covered.
 func (s *state) lastWindow(groupID int64) (string, error) {
 	var until sql.NullString
 	err := s.db.QueryRow(`SELECT MAX(until_ts) FROM windows WHERE group_id = ? AND status != ?`,
@@ -205,9 +224,14 @@ func (s *state) lastWindow(groupID int64) (string, error) {
 //
 // This is also what retries a window that failed in the middle of a range,
 // which a high water mark alone can only do for the newest one.
+//
+// A window with no boundaries - the one a -no-intervals harvest writes, which
+// covers whatever the endpoint chose to send - is skipped. It has no start to
+// resume from, and it makes no claim about which ranges are covered, so it must
+// not answer a question about them either.
 func (s *state) unsettledFrom(groupID int64) (string, error) {
 	var from sql.NullString
-	err := s.db.QueryRow(`SELECT MIN(from_ts) FROM windows WHERE group_id = ? AND status IN (?, ?)`,
+	err := s.db.QueryRow(`SELECT MIN(from_ts) FROM windows WHERE group_id = ? AND status IN (?, ?) AND from_ts <> ''`,
 		groupID, statusPartial, statusError).Scan(&from)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
