@@ -371,6 +371,49 @@ func TestGroupName(t *testing.T) {
 	}
 }
 
+// TestGroupNameStaysInsideSeg: a group name is one directory component built
+// from what the caller asked to harvest, so it must not be a name the
+// filesystem has already spoken for. A format of ".." used to come back as
+// "..", which put the group's segments in the shard root beside meta.json and
+// the index; the empty name joined to nothing and put them in seg/ itself.
+func TestGroupNameStaysInsideSeg(t *testing.T) {
+	shard := filepath.Join("/cache", "aa", "bb", "hash")
+	seg := filepath.Join(shard, segDirname)
+	for _, tt := range []struct{ format, set string }{
+		{".", ""},
+		{"..", ""},
+		{"", ""},
+		{"", ".."},
+		{"..", ".."},
+		{"../../etc", ""},
+		{".", "."},
+	} {
+		name := groupName(tt.format, tt.set)
+		dir := filepath.Join(seg, name)
+		if got := filepath.Dir(dir); got != seg {
+			t.Errorf("groupName(%q, %q) = %q, which lands in %s, want a directory of %s",
+				tt.format, tt.set, name, got, seg)
+		}
+		if !safeComponent(name) {
+			t.Errorf("groupName(%q, %q) = %q, which is not a usable directory name",
+				tt.format, tt.set, name)
+		}
+	}
+	// Different pathological inputs must still not collide.
+	seen := map[string]string{}
+	for _, format := range []string{".", "..", "", "...", "-"} {
+		name := groupName(format, "")
+		if was, dup := seen[name]; dup {
+			t.Errorf("groupName(%q) and groupName(%q) both map to %q", format, was, name)
+		}
+		seen[name] = format
+	}
+	// And the ordinary names are untouched.
+	if got := groupName("oai_dc", ""); got != "oai_dc" {
+		t.Errorf("groupName(oai_dc): got %q, want it left alone", got)
+	}
+}
+
 // errUnderTest stands in for whatever made a harvest give up on a window.
 var errUnderTest = errors.New("harvest failed under test")
 
@@ -438,6 +481,70 @@ func TestCloseLeavesNoSidecarFiles(t *testing.T) {
 		path := filepath.Join(shardDir(base, id.BaseURL), stateName+suffix)
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			t.Errorf("%s still exists after Close", filepath.Base(path))
+		}
+	}
+}
+
+// TestLayoutsShareTheCache: shards sit directly in the cache, with no directory
+// naming the layout above them, so during a migration a v1 endpoint directory
+// and a shard fan-out directory are siblings. Neither listing may claim the
+// other's entries. What keeps them apart is the shape of the name: a fan-out is
+// two hex digits, and base64 of "set#format#baseURL" is never that short.
+func TestLayoutsShareTheCache(t *testing.T) {
+	base := t.TempDir()
+	v1Only := Identity{BaseURL: "http://example.com/legacy", Format: "oai_dc"}
+	v2Only := Identity{BaseURL: "http://example.com/sharded", Format: "oai_dc"}
+
+	src := &v1Store{baseDir: base, id: v1Only}
+	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
+
+	w, err := OpenWriter(base, v2Only)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	writeWindow(t, w, "2023-01-01", "2023-01-31", "sharded")
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	// The shard is a sibling of the v1 directory, not inside a v2/ of its own.
+	if got, want := filepath.Dir(filepath.Dir(filepath.Dir(w.Dir()))), base; got != want {
+		t.Errorf("shard sits at %s, want three levels under %s", w.Dir(), base)
+	}
+
+	seen := map[Identity]Layout{}
+	for entry, err := range List(base) {
+		if err != nil {
+			t.Fatalf("List: %v", err)
+		}
+		if was, dup := seen[entry.Identity]; dup {
+			t.Errorf("%v listed twice, as %s and %s", entry.Identity, was, entry.Layout)
+		}
+		seen[entry.Identity] = entry.Layout
+	}
+	if got, want := seen[v1Only], V1; got != want {
+		t.Errorf("the v1 endpoint listed as %q, want %q", got, want)
+	}
+	if got, want := seen[v2Only], V2; got != want {
+		t.Errorf("the sharded endpoint listed as %q, want %q", got, want)
+	}
+	if len(seen) != 2 {
+		t.Errorf("listed %d entries, want 2: %v", len(seen), seen)
+	}
+}
+
+// TestIsShardPrefix: the whole of what tells a fan-out directory from an
+// endpoint directory.
+func TestIsShardPrefix(t *testing.T) {
+	for name, want := range map[string]bool{
+		"af": true, "00": true, "ff": true, "9c": true,
+		"AF": false, "g0": false, "a": false, "abc": false, "": false,
+		"aG9tZQ": false, // base64, the shape a v1 directory has
+	} {
+		if got := isShardPrefix(name); got != want {
+			t.Errorf("isShardPrefix(%q) = %v, want %v", name, got, want)
 		}
 	}
 }

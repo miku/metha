@@ -77,6 +77,12 @@ CREATE TABLE IF NOT EXISTS records (
 
 CREATE INDEX IF NOT EXISTS records_datestamp ON records(datestamp);
 CREATE INDEX IF NOT EXISTS records_identifier ON records(identifier);
+
+-- Every commit deletes the rows of the window it is about to replace, and both
+-- the record counts and the frame lookup join through this column. Without it
+-- each of those scans the whole table, which on a migration means rescanning
+-- everything harvested so far once per window.
+CREATE INDEX IF NOT EXISTS records_window ON records(window_id);
 `
 
 // Window statuses. An empty window is a first class outcome: it costs a row

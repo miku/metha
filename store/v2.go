@@ -22,9 +22,6 @@ import (
 const V2 Layout = "v2"
 
 const (
-	// v2Dirname separates v2 shards from v1 endpoint directories, so that both
-	// layouts can live in one cache while a migration is in progress.
-	v2Dirname = "v2"
 	// metaName describes a shard well enough to rebuild its index.
 	metaName = "meta.json"
 	// stateName is the per-shard sqlite index: windows, segments, records.
@@ -63,10 +60,34 @@ func (id Identity) group() Group {
 // two problems the v1 names had: a base64 endpoint name can exceed the length
 // a filesystem allows, and a cache of every known endpoint puts a quarter of a
 // million entries in a single directory.
+// Shards sit directly in the cache, with no directory naming the layout above
+// them. The two fan-out levels are two hex digits each, and a v1 endpoint
+// directory is base64 of "set#format#baseURL", which for any identity that can
+// actually be harvested is at least four characters - so the two cannot be
+// confused while a migration has both in the same cache. Not having a
+// directory to name is also the only way of never having to rename it: after
+// 1.0 the module itself gets a /v2 path, and there is no cache path left to
+// make "v2" ambiguous in.
 func shardDir(baseDir, baseURL string) string {
 	sum := sha256.Sum256([]byte(baseURL))
 	h := hex.EncodeToString(sum[:])
-	return filepath.Join(baseDir, v2Dirname, h[0:2], h[2:4], h[:16])
+	return filepath.Join(baseDir, h[0:2], h[2:4], h[:16])
+}
+
+// isShardPrefix reports whether a cache entry is one of the fan-out levels: two
+// lowercase hex digits, which is what keeps a listing from descending into
+// every v1 endpoint directory looking for shards.
+func isShardPrefix(name string) bool {
+	if len(name) != 2 {
+		return false
+	}
+	for i := range 2 {
+		c := name[i]
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 // groupName renders a (format, set) pair as one directory name. It stays
@@ -78,7 +99,7 @@ func groupName(format, set string) string {
 	if set != "" {
 		name += "+" + sanitize(set)
 	}
-	if name == plainGroupName(format, set) && len(name) <= 64 {
+	if safeComponent(name) && name == plainGroupName(format, set) && len(name) <= 64 {
 		return name
 	}
 	if len(name) > 64 {
@@ -89,6 +110,18 @@ func groupName(format, set string) string {
 }
 
 // plainGroupName is the group name as it would read if nothing needed escaping.
+// safeComponent reports whether a name can stand as a directory of its own.
+// sanitize keeps dots, because formats and sets are full of them, and three
+// names survive it that a filesystem has already spoken for: the empty string,
+// which joins to nothing and would put a group's segments in seg/ itself, and
+// "." and "..", which are directories that already exist - a format of ".."
+// would write segments into the shard root, beside meta.json and the index.
+// They fall through to the digest instead, which is where every other name
+// that cannot be spelled plainly already goes.
+func safeComponent(name string) bool {
+	return name != "" && name != "." && name != ".."
+}
+
 func plainGroupName(format, set string) string {
 	if set == "" {
 		return format
@@ -243,14 +276,17 @@ func (s *v2Store) Last() (string, error) {
 // never has to open an index.
 func listV2(baseDir string) iter.Seq2[Entry, error] {
 	return func(yield func(Entry, error) bool) {
-		root := filepath.Join(baseDir, v2Dirname)
-		// The tree is exactly $METHA_DIR/v2/<aa>/<bb>/<hash>, so a bounded
-		// walk beats filepath.WalkDir over a cache of a quarter million
-		// shards.
-		for _, aa := range subdirs(root) {
-			for _, bb := range subdirs(filepath.Join(root, aa)) {
-				for _, shard := range subdirs(filepath.Join(root, aa, bb)) {
-					dir := filepath.Join(root, aa, bb, shard)
+		// The tree is exactly $METHA_DIR/<aa>/<bb>/<hash>, so a bounded walk
+		// beats filepath.WalkDir over a cache of a quarter million shards.
+		// Only the fan-out names are descended into, which is what keeps a
+		// cache that still holds v1 directories from being walked twice.
+		for _, aa := range subdirs(baseDir) {
+			if !isShardPrefix(aa) {
+				continue
+			}
+			for _, bb := range subdirs(filepath.Join(baseDir, aa)) {
+				for _, shard := range subdirs(filepath.Join(baseDir, aa, bb)) {
+					dir := filepath.Join(baseDir, aa, bb, shard)
 					if !isShard(dir) {
 						continue
 					}
