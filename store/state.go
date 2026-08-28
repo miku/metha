@@ -117,11 +117,122 @@ func openState(path string) (*state, error) {
 		return nil, err
 	}
 	db.SetMaxOpenConns(1)
-	if _, err := db.Exec(schema); err != nil {
+	if err := prepareSchema(db); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("schema: %w", err)
+		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	return &state{db: db}, nil
+}
+
+// schemaVersion is the shape of the index this code writes. It is stamped into
+// the file, so a shard and the binary opening it can disagree out loud instead
+// of quietly. Raise it whenever schema changes, and add the step that gets a
+// shard there to migrations.
+const schemaVersion = 1
+
+// applicationID marks the file as a metha index: "MTHA", big endian. sqlite
+// keeps it in the header and never reads it, so it costs nothing and lets both
+// file(1) and metha tell a shard from some other database that happens to be
+// sitting at the same path.
+const applicationID = 0x4D544841
+
+// migrations upgrades a shard a version at a time: migrations[v] takes it from
+// v to v+1. There is no entry for 0, because a shard from before the version
+// stamp existed cannot be recognised - the same zero covers every shape the
+// index had while it was being designed - and guessing at one is what the stamp
+// is here to stop.
+var migrations = map[int][]string{}
+
+// errUnversioned marks a shard written before the index carried a version.
+// Only metha 0.5 development builds made those, and their segments were written
+// under boundary rules that have since changed, so re-harvesting is the honest
+// answer rather than reading them as if nothing had moved.
+var errUnversioned = errors.New("index predates the version stamp: remove the shard directory and harvest again")
+
+// prepareSchema brings a shard's index to the version this code writes, and
+// refuses anything it cannot account for. A fresh file gets the schema and the
+// stamp; a known older one is walked up through migrations; a newer one is left
+// alone, because a binary that does not know the shape of a file is in no
+// position to write into it.
+func prepareSchema(db *sql.DB) error {
+	return prepareSchemaTo(db, schemaVersion, migrations)
+}
+
+// prepareSchemaTo is prepareSchema with the target version and the steps to
+// reach it passed in, so that the ladder can be walked in a test. There is no
+// other reason for the seam: nothing but prepareSchema calls it in anger.
+func prepareSchemaTo(db *sql.DB, target int, steps map[int][]string) error {
+	var tables int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type = 'table'`).Scan(&tables); err != nil {
+		return err
+	}
+	if tables == 0 {
+		if _, err := db.Exec(schema); err != nil {
+			return fmt.Errorf("schema: %w", err)
+		}
+		return stamp(db, target)
+	}
+	var appID, version int
+	if err := db.QueryRow(`SELECT * FROM pragma_application_id`).Scan(&appID); err != nil {
+		return err
+	}
+	if err := db.QueryRow(`SELECT * FROM pragma_user_version`).Scan(&version); err != nil {
+		return err
+	}
+	switch {
+	case version == 0 || appID != applicationID:
+		return errUnversioned
+	case version > target:
+		return fmt.Errorf("index is version %d, this metha writes %d: upgrade metha", version, target)
+	}
+	for v := version; v < target; v++ {
+		up, ok := steps[v]
+		if !ok {
+			return fmt.Errorf("no way to upgrade an index from version %d to %d", v, v+1)
+		}
+		// One transaction per step, together with the stamp, so an upgrade that
+		// is interrupted leaves the shard at a version that describes it.
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		for _, step := range up {
+			if _, err := tx.Exec(step); err != nil {
+				tx.Rollback()
+				return fmt.Errorf("upgrading index from version %d: %w", v, err)
+			}
+		}
+		if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, v+1)); err != nil {
+			tx.Rollback()
+			return err
+		}
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	}
+	// Tables the running code added since this shard was made. Every statement
+	// in schema is IF NOT EXISTS, so this only ever creates what is missing -
+	// which is the whole of what it can do, and why it is not a substitute for
+	// the migrations above.
+	if _, err := db.Exec(schema); err != nil {
+		return fmt.Errorf("schema: %w", err)
+	}
+	return nil
+}
+
+// stamp writes the two header integers that say what this file is and which
+// shape it has. Neither takes a page of its own; they live in the header sqlite
+// writes anyway.
+func stamp(db *sql.DB, version int) error {
+	for _, q := range []string{
+		fmt.Sprintf(`PRAGMA application_id = %d`, applicationID),
+		fmt.Sprintf(`PRAGMA user_version = %d`, version),
+	} {
+		if _, err := db.Exec(q); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *state) close() error { return s.db.Close() }
