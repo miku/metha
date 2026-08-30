@@ -99,7 +99,9 @@ func CreateClientWithRateLimit(timeout time.Duration, retries int, bytesPerSec f
 
 // NewHarvest creates a new harvest, using a network connection for an initial
 // Identify request.
-func NewHarvest(baseURL string) (*Harvest, error) { return harvest.NewHarvest(baseURL) }
+func NewHarvest(ctx context.Context, baseURL string) (*Harvest, error) {
+	return harvest.NewHarvest(ctx, baseURL)
+}
 
 // PrependSchema prepends http, if it is missing.
 func PrependSchema(s string) string { return oai.PrependSchema(s) }

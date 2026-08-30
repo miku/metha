@@ -100,7 +100,7 @@ func TestSyncRefusesLegacyBeforeTheNetwork(t *testing.T) {
 	writeLegacyResponse(t, legacyDir(t, base, id), "2023-01-31-00000001.xml", "dated")
 
 	o := &syncOpts{baseDir: base, format: id.Format, maxRetries: 1, timeout: time.Second}
-	err := o.run(id.BaseURL)
+	err := o.run(t.Context(), id.BaseURL)
 	if !errors.Is(err, store.ErrLegacyLayout) {
 		t.Fatalf("sync on an unmigrated endpoint: got %v, want ErrLegacyLayout", err)
 	}

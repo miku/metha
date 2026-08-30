@@ -62,7 +62,7 @@ func TestHarvestIntoShard(t *testing.T) {
 		Client: &oai.Client{Doer: &fakeDoer{body: body}},
 		Writer: w,
 	}
-	if err := h.Run(); err != nil {
+	if err := h.Run(t.Context()); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 	if err := w.Close(); err != nil {
@@ -114,7 +114,7 @@ func TestUnboundedHarvestRepeats(t *testing.T) {
 			Client: &oai.Client{Doer: &fakeDoer{body: body}},
 			Writer: w,
 		}
-		if err := h.Run(); err != nil {
+		if err := h.Run(t.Context()); err != nil {
 			t.Fatalf("run %d: Run: %v", run, err)
 		}
 		// A run makes no claim about a range, so it leaves no resume point
@@ -192,7 +192,7 @@ func TestSettledBoundaryStandsStill(t *testing.T) {
 				Granularity: "YYYY-MM-DDThh:mm:ssZ", EarliestDatestamp: "2020-01-01",
 			},
 		}
-		if err := h.Run(); err != nil {
+		if err := h.Run(t.Context()); err != nil {
 			t.Fatalf("run %d: Run: %v", run, err)
 		}
 		if err := w.Close(); err != nil {

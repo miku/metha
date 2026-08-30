@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -66,7 +67,7 @@ func newSyncCmd() *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("an endpoint URL is required, maybe try: %s", metha.RandomEndpoint())
 			}
-			return o.run(args[0])
+			return o.run(cmd.Context(), args[0])
 		},
 	}
 	f := cmd.Flags()
@@ -98,7 +99,7 @@ func newSyncCmd() *cobra.Command {
 	return cmd
 }
 
-func (o *syncOpts) run(endpoint string) error {
+func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 	rateLimitBytesPerSec, err := parseRateLimit(o.rateLimit)
 	if err != nil {
 		return fmt.Errorf("invalid rate limit: %w", err)
@@ -156,7 +157,7 @@ func (o *syncOpts) run(endpoint string) error {
 		}
 		extra.Set(parts[0], parts[1])
 	}
-	h, err := harvest.NewHarvest(baseURL)
+	h, err := harvest.NewHarvest(ctx, baseURL)
 	if err != nil {
 		return err
 	}
@@ -194,10 +195,16 @@ func (o *syncOpts) run(endpoint string) error {
 			log.Println(err)
 		}
 	}
-	if err := o.runHarvest(h, identity); err != nil {
+	if err := o.runHarvest(ctx, h, identity); err != nil {
 		switch {
 		case errors.Is(err, harvest.ErrAlreadySynced):
 			log.Println("this repository is up-to-date")
+			return nil
+		case errors.Is(err, context.Canceled):
+			// An interrupt, and it did what it was asked: the window in flight
+			// was dropped and everything committed before it stands. The next
+			// run resumes from there, so this is not a failure to report.
+			log.Println("interrupted; the windows committed so far are kept")
 			return nil
 		case errors.Is(err, store.ErrLocked):
 			// Expected when the same endpoint is handed to two workers,
@@ -213,10 +220,10 @@ func (o *syncOpts) run(endpoint string) error {
 // runHarvest opens the shard a harvest writes into, and runs it.
 //
 // Every path out of here closes the writer, which is why it is a function of
-// its own: an index left open keeps its write-ahead log and shared-memory files
-// on disk, with the last committed window still in the log rather than in the
-// database.
-func (o *syncOpts) runHarvest(h *harvest.Harvest, id store.Identity) error {
+// its own: the writer holds the group's lock for its lifetime, and an interrupt
+// now arrives as a cancelled context rather than as a signal handler racing the
+// commit, so the deferred Close is what releases it.
+func (o *syncOpts) runHarvest(ctx context.Context, h *harvest.Harvest, id store.Identity) error {
 	w, err := store.OpenWriter(o.baseDir, id)
 	if err != nil {
 		return err
@@ -230,7 +237,7 @@ func (o *syncOpts) runHarvest(h *harvest.Harvest, id store.Identity) error {
 	}
 	h.Writer = w
 	log.Printf("harvest: %+v", h)
-	if err := h.Run(); err != nil {
+	if err := h.Run(ctx); err != nil {
 		return err
 	}
 	if o.disableSelectiveHarvesting {

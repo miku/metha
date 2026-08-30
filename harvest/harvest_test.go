@@ -3,7 +3,6 @@ package harvest
 import (
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -161,10 +160,7 @@ func TestHarvestPlannedInterval(t *testing.T) {
 		Writer:  writerResumingAt(t, resume),
 		Started: time.Now(),
 	}
-	cov, err := h.coverage()
-	if err != nil {
-		t.Fatalf("coverage: %v", err)
-	}
+	cov := h.coverage()
 	interval, err := plannedInterval(cov, h.Identify, h.Started, h.planConfig())
 	if err != nil {
 		t.Errorf("plannedInterval returned error: %v", err)
@@ -198,11 +194,8 @@ func TestPlanAlreadySynced(t *testing.T) {
 		Writer:   writerResumingAt(t, time.Now().AddDate(0, 0, 1)),
 		Started:  time.Now(),
 	}
-	cov, err := h.coverage()
-	if err != nil {
-		t.Fatalf("coverage: %v", err)
-	}
-	_, err = Plan(cov, h.Identify, h.Started, h.planConfig())
+	cov := h.coverage()
+	_, err := Plan(cov, h.Identify, h.Started, h.planConfig())
 	if err == nil {
 		t.Error("Plan should have returned an error for already synced repository")
 		return
@@ -229,7 +222,7 @@ func TestHarvestRetry(t *testing.T) {
 		return &oai.Response{}, nil
 	}
 
-	resp, err := h.retry(successOp)
+	resp, err := h.retry(t.Context(), successOp)
 	if err != nil {
 		t.Errorf("retry() with successful operation returned error: %v", err)
 	}
@@ -249,7 +242,7 @@ func TestHarvestRetry(t *testing.T) {
 	}
 
 	attemptCount = 1 // Reset count for new operation
-	resp, err = h.retry(failsOnceOp)
+	resp, err = h.retry(t.Context(), failsOnceOp)
 	if err != nil {
 		t.Errorf("retry() with initially failing operation returned error: %v", err)
 	}
@@ -266,7 +259,7 @@ func TestHarvestRetry(t *testing.T) {
 		return nil, oai.HTTPError{StatusCode: 500}
 	}
 
-	resp, err = h.retry(alwaysFailOp)
+	resp, err = h.retry(t.Context(), alwaysFailOp)
 	if err == nil {
 		t.Error("retry() with always failing operation should return error")
 	}
@@ -278,86 +271,11 @@ func TestHarvestRetry(t *testing.T) {
 	}
 }
 
-func TestHarvestShouldRetry(t *testing.T) {
-	h := &Harvest{
-		Config: &Config{
-			IgnoreHTTPErrors: true,
-		},
-	}
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			name:     "HTTP 408 timeout",
-			err:      oai.HTTPError{StatusCode: 408},
-			expected: true,
-		},
-		{
-			name:     "HTTP 429 too many requests",
-			err:      oai.HTTPError{StatusCode: 429},
-			expected: true,
-		},
-		{
-			name:     "HTTP 500 internal server error",
-			err:      oai.HTTPError{StatusCode: 500},
-			expected: true,
-		},
-		{
-			name:     "HTTP 503 service unavailable",
-			err:      oai.HTTPError{StatusCode: 503},
-			expected: true,
-		},
-		{
-			name:     "non-retryable HTTP error",
-			err:      oai.HTTPError{StatusCode: 404},
-			expected: false,
-		},
-		{
-			name:     "unexpected EOF",
-			err:      io.ErrUnexpectedEOF,
-			expected: true,
-		},
-		{
-			name:     "connection refused error",
-			err:      fmt.Errorf("connection refused"),
-			expected: true,
-		},
-		{
-			name:     "timeout error",
-			err:      fmt.Errorf("timeout"),
-			expected: true,
-		},
-		{
-			name:     "other error when ignoring HTTP errors is disabled",
-			err:      fmt.Errorf("some other error"),
-			expected: false,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			result := h.shouldRetry(test.err)
-			if result != test.expected {
-				t.Errorf("shouldRetry(%v) = %v; expected %v", test.err, result, test.expected)
-			}
-		})
-	}
-
-	// Test when IgnoreHTTPErrors is false
-	h.Config.IgnoreHTTPErrors = false
-	result := h.shouldRetry(oai.HTTPError{StatusCode: 500})
-	if result {
-		t.Error("shouldRetry() with IgnoreHTTPErrors disabled should return false")
-	}
-}
-
 func TestNewHarvest(t *testing.T) {
 	// This test will mock the Client to avoid actual network calls
 	// For now, test that the function properly initializes with default values
 	baseURL := "http://example.com/oai"
-	harvest, err := NewHarvest(baseURL)
+	harvest, err := NewHarvest(t.Context(), baseURL)
 	if err != nil {
 		// Since we don't have a real endpoint, this will likely fail,
 		// but we can still test the default configuration values
@@ -418,7 +336,7 @@ func TestHarvestIdentify(t *testing.T) {
 		},
 		Client: mockClient,
 	}
-	err := h.identify()
+	err := h.identify(t.Context())
 	if err != nil {
 		t.Errorf("identify: %v", err)
 	}
@@ -475,7 +393,7 @@ func TestHarvestRun(t *testing.T) {
 		Writer:  w,
 		Started: time.Now(),
 	}
-	if err := h.run(); err != nil {
+	if err := h.run(t.Context()); err != nil {
 		t.Errorf("run: %v", err)
 	}
 	if err := w.Close(); err != nil {
@@ -525,7 +443,7 @@ func TestHarvestRunInterval(t *testing.T) {
 		Begin: time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local),
 		End:   time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local),
 	}
-	if err := h.runWindow(Window{Interval: interval, Settled: true}); err != nil {
+	if err := h.runWindow(t.Context(), Window{Interval: interval, Settled: true}); err != nil {
 		t.Errorf("runWindow: %v", err)
 	}
 	if err := w.Close(); err != nil {

@@ -166,7 +166,7 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-	if err := h.runWindow(Window{}); err != nil {
+	if err := h.runWindow(t.Context(), Window{}); err != nil {
 		t.Fatalf("runWindow: %v", err)
 	}
 
@@ -215,7 +215,7 @@ func TestRunIntervalStopsOnMissingResumptionToken(t *testing.T) {
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-	if err := h.runWindow(Window{}); err != nil {
+	if err := h.runWindow(t.Context(), Window{}); err != nil {
 		t.Fatalf("runWindow: %v", err)
 	}
 
@@ -255,7 +255,7 @@ func TestRunIntervalStopsOnCursorEqualsCompleteListSize(t *testing.T) {
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-	if err := h.runWindow(Window{}); err != nil {
+	if err := h.runWindow(t.Context(), Window{}); err != nil {
 		t.Fatalf("runWindow: %v", err)
 	}
 

@@ -1,16 +1,11 @@
 package harvest
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"sync"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -74,20 +69,17 @@ type Harvest struct {
 	// XXX: Lazy via sync.Once?
 	Identify *oai.Identify
 	Started  time.Time
-	// Protects the work a termination signal must not land in the middle of:
-	// every call into the writer, which the signal handler closes. See write.
-	sync.Mutex
 }
 
 // NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
-func NewHarvest(baseURL string) (*Harvest, error) {
+func NewHarvest(ctx context.Context, baseURL string) (*Harvest, error) {
 	h := Harvest{Config: &Config{
 		BaseURL:      baseURL,
 		MaxRetries:   3,
 		RetryDelay:   10 * time.Second,
 		RetryBackoff: 2.0,
 	}}
-	if err := h.identify(); err != nil {
+	if err := h.identify(ctx); err != nil {
 		return nil, err
 	}
 	return &h, nil
@@ -118,57 +110,21 @@ func (h *Harvest) formatBound(t time.Time) string {
 }
 
 // Run starts the harvest. The writer owns the shard directory and its lock, so
-// there is nothing to prepare here beyond the clock and the signal handler.
-func (h *Harvest) Run() error {
+// there is nothing to prepare here beyond the clock.
+//
+// Cancelling ctx stops the harvest between two requests: the window in flight
+// is aborted, the caller's deferred Close releases the shard lock, and the run
+// returns ctx.Err(). There is no signal handler here any more and no mutex
+// guarding the writer - a cancellable loop leaves no second goroutine to race a
+// commit, so there is nothing left to exclude. That was move 5 of the
+// simplification note, and the mutex it deleted was only ever compensating for
+// the handler.
+func (h *Harvest) Run(ctx context.Context) error {
 	if h.Writer == nil {
 		return ErrNoWriter
 	}
-	h.setupInterruptHandler()
 	h.Started = time.Now()
-	return h.run()
-}
-
-// setupInterruptHandler will cleanup, so we can CTRL-C or kill savely.
-func (h *Harvest) setupInterruptHandler() {
-	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM) // SIGTERM for systemd stop, etc.
-	go func() {
-		<-sigc
-		log.Println("waiting for the window in flight to finish...")
-		// Taken and never given back: the process is going away, and whatever is
-		// waiting on it must not wake up to a closed writer. This is why the
-		// shutdown cannot be left to a defer.
-		h.Lock()
-		h.shutdown()
-		os.Exit(0)
-	}()
-}
-
-// shutdown closes the writer, with h already locked. Split out of the handler
-// so that it can be exercised without a signal, which would take the test
-// binary with it. Closing the writer drops the window in flight and releases
-// the shard lock.
-func (h *Harvest) shutdown() {
-	if err := h.Writer.Close(); err != nil {
-		log.Printf("closing writer: %v", err)
-	}
-}
-
-// write runs one call into the writer with the harvest locked. The signal
-// handler runs on its own goroutine and closes the writer, and it can arrive at
-// any point in a window; going through the mutex puts that close between two
-// calls rather than inside one, where it would be closing a writer with an open
-// transaction. Between two calls it only drops the window in flight, which is
-// the crash-recovery path the writer already has - the torn tail is truncated
-// on the next open, so the cost is a window, not a shard.
-//
-// This, the mutex and the handler all go with move 5 of the simplification
-// note: a cancellable loop leaves no goroutine racing a commit, so there is
-// nothing left to exclude.
-func (h *Harvest) write(call func(*store.Writer) error) error {
-	h.Lock()
-	defer h.Unlock()
-	return call(h.Writer)
+	return h.run(ctx)
 }
 
 // planConfig is the part of this harvest's configuration that decides what to
@@ -193,78 +149,70 @@ func (h *Harvest) planConfig() PlanConfig {
 // settled window from one holding only what existed at the moment of asking
 // hands back the start of the latter, so its range is covered again rather than
 // resumed past.
-func (h *Harvest) coverage() (cov Coverage, err error) {
-	err = h.write(func(w *store.Writer) error {
-		cov.Resume = w.Resume()
-		return nil
-	})
-	return cov, err
+func (h *Harvest) coverage() Coverage {
+	return Coverage{Resume: h.Writer.Resume()}
 }
 
-// retry attempts an operation with exponential backoff
-func (h *Harvest) retry(operation func() (*oai.Response, error)) (*oai.Response, error) {
+// retry runs one request, repeating it with exponential backoff for as long as
+// the outcome is one that repeating could change. What "could change" means is
+// retryable, and it is the whole of the retry policy; whether a failure that
+// survives the retries ends the harvest is a different question, answered by
+// classify.
+//
+// The waiting is cancellable, which is most of why a Ctrl-C is now prompt: the
+// old form slept through its backoff and could only notice a signal after it.
+func (h *Harvest) retry(ctx context.Context, operation func() (*oai.Response, error)) (*oai.Response, error) {
 	var lastErr error
 	delay := h.Config.RetryDelay
 	for attempt := 0; attempt <= h.Config.MaxRetries; attempt++ {
 		if attempt > 0 {
 			log.Printf("retry attempt %d/%d after %v", attempt, h.Config.MaxRetries, delay)
-			time.Sleep(delay)
+			if err := sleep(ctx, delay); err != nil {
+				return nil, err
+			}
 			// Apply backoff for next attempt
 			delay = time.Duration(float64(delay) * h.Config.RetryBackoff)
 		}
 		resp, err := operation()
-		if err == nil {
-			return resp, nil
+		if !retryable(err, resp) {
+			return resp, err
 		}
-		// Save the error for potential return
-		lastErr = err
-		// Check if we should retry based on the error
-		if !h.shouldRetry(err) {
-			return nil, err
+		if err != nil {
+			lastErr = err
+			log.Printf("request failed (attempt %d/%d): %v", attempt+1, h.Config.MaxRetries, err)
+		} else {
+			lastErr = resp.Error
+			log.Printf("endpoint returned %s (attempt %d/%d)", resp.Error.Code, attempt+1, h.Config.MaxRetries)
 		}
-		log.Printf("request failed (attempt %d/%d): %v", attempt+1, h.Config.MaxRetries, err)
 	}
 	return nil, fmt.Errorf("failed after %d retries: %w", h.Config.MaxRetries, lastErr)
 }
 
-// shouldRetry determines if an error should trigger a retry
-func (h *Harvest) shouldRetry(err error) bool {
-	// Don't retry if we're not configured to handle HTTP errors
-	if !h.Config.IgnoreHTTPErrors {
-		return false
+// sleep waits, or gives up early when the harvest is cancelled. Every wait in a
+// harvest goes through it, so there is no stretch of a run that a Ctrl-C has to
+// sit out.
+func sleep(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return ctx.Err()
 	}
-	// Check for specific HTTP errors that we want to retry
-	if httpErr, ok := err.(oai.HTTPError); ok {
-		switch httpErr.StatusCode {
-		case 408, // Request Timeout
-			429, // Too Many Requests
-			500, // Internal Server Error
-			502, // Bad Gateway
-			503, // Service Unavailable
-			504: // Gateway Timeout
-			return true
-		}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-	// Check for network-related errors
-	if errors.Is(err, io.ErrUnexpectedEOF) ||
-		strings.Contains(err.Error(), "connection refused") ||
-		strings.Contains(err.Error(), "no such host") ||
-		strings.Contains(err.Error(), "timeout") {
-		return true
-	}
-	return false
 }
 
 // run plans the harvest and works through it, one window at a time.
-func (h *Harvest) run() (err error) {
+func (h *Harvest) run(ctx context.Context) (err error) {
 	cfg := h.planConfig()
 	var cov Coverage
 	if !cfg.Unbounded {
 		// An unbounded harvest covers whatever the endpoint chooses to send and
 		// resumes from nothing, so it never asks.
-		if cov, err = h.coverage(); err != nil {
-			return err
-		}
+		cov = h.coverage()
 	}
 	windows, err := Plan(cov, h.Identify, h.Started, cfg)
 	if err != nil {
@@ -275,9 +223,15 @@ func (h *Harvest) run() (err error) {
 	}
 
 	for _, w := range windows {
-		if err := h.runWindow(w); err != nil {
-			if h.Config.IgnoreUnexpectedEOF && errors.Is(err, io.ErrUnexpectedEOF) {
-				log.Printf("ignoring unexpected EOF and moving to the next window")
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := h.runWindow(ctx, w); err != nil {
+			// A window the operator said to skip leaves the range uncovered, so
+			// the next run plans it again; the abort in runWindow already made
+			// sure it left nothing half-written behind.
+			if errors.Is(err, errSkipWindow) {
+				log.Printf("skipping the rest of this window: %v", errors.Unwrap(err))
 				continue
 			}
 			return err
@@ -288,24 +242,26 @@ func (h *Harvest) run() (err error) {
 
 // runWindow fetches one window of the plan: one request plus every resumption
 // token that follows from it.
-func (h *Harvest) runWindow(w Window) (err error) {
+func (h *Harvest) runWindow(ctx context.Context, w Window) (err error) {
 	// A boundless window claims no range at all. Its bytes still accumulate, the
 	// blob layer being append-only, but only the newest copy is indexed and so
 	// only that one is ever read.
-	if err := h.write(func(wr *store.Writer) error {
-		return wr.Begin(w.Begin, w.End, w.Settled)
-	}); err != nil {
+	if err := h.Writer.Begin(w.Begin, w.End, w.Settled); err != nil {
 		return err
 	}
 	defer func() {
 		// A window that did not reach Commit leaves nothing behind.
 		if err != nil {
-			err = errors.Join(err, h.write(func(wr *store.Writer) error { return wr.Abort(err) }))
+			err = errors.Join(err, h.Writer.Abort(err))
 		}
 	}()
 	var token string
 	var i, empty int
+requests:
 	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		if h.Config.MaxRequests == i {
 			log.Printf("max requests limit (%d) reached", h.Config.MaxRequests)
 			break
@@ -327,54 +283,40 @@ func (h *Harvest) runWindow(w Window) (err error) {
 			req.Until = h.formatBound(w.End)
 		}
 
-		if h.Config.Delay > 0 {
-			time.Sleep(h.Config.Delay)
+		if err := sleep(ctx, h.Config.Delay); err != nil {
+			return err
 		}
 
-		// Use retry mechanism for the request
-		resp, err := h.retry(func() (*oai.Response, error) {
-			return h.Client.Do(&req)
+		resp, err := h.retry(ctx, func() (*oai.Response, error) {
+			return h.Client.DoContext(ctx, &req)
 		})
-
-		if err != nil {
-			// If we've exhausted all retries and still have an error
-			if !h.Config.IgnoreHTTPErrors {
+		act, why := classify(h.Config, err, resp)
+		if why != "" {
+			log.Println(why)
+		}
+		switch act {
+		case keep:
+		case done:
+			// This response says the window holds nothing more, so it is not
+			// worth storing - but what the window already holds is. The range
+			// was reached for and answered, which is what a commit records; a
+			// window that answered with nothing at all commits as empty, which
+			// costs a row and no bytes.
+			break requests
+		case skipWindow:
+			return fmt.Errorf("%w: %w", errSkipWindow, err)
+		case fatal:
+			if err != nil {
 				return fmt.Errorf("failed to make request after retries: %w", err)
 			}
-			// If we're ignoring HTTP errors, continue to next iteration
-			i++
-			continue
+			return resp.Error
 		}
 
-		// Handle OAI specific errors. XXX: An badResumptionToken kind of error
-		// might be recoverable, by simply restarting the harvest.
-		if resp.Error.Code != "" {
-			// Rare case, where a resumptionToken is given, but it leads to
-			// noRecordsMatch - we still want to save, whatever we got up until
-			// this point, so we break here.
-			switch resp.Error.Code {
-			case "noRecordsMatch":
-				if !resp.HasResumptionToken() {
-					break
-				}
-				log.Println("resumptionToken set and noRecordsMatch, continuing")
-			case "badResumptionToken":
-				log.Println("badResumptionToken, might signal end-of-harvest")
-			case "InternalException":
-				// #9717, InternalException Could not send Message.
-				log.Println("InternalException: retrying request in a few instants...")
-				time.Sleep(30 * time.Second)
-				i++ // Count towards the total request limit.
-				continue
-			default:
-				return resp.Error
-			}
-		}
 		b, err := xml.Marshal(resp)
 		if err != nil {
 			return err
 		}
-		if err := h.write(func(wr *store.Writer) error { return wr.Append(b) }); err != nil {
+		if err := h.Writer.Append(b); err != nil {
 			return err
 		}
 		// Issue first observed at
@@ -396,16 +338,22 @@ func (h *Harvest) runWindow(w Window) (err error) {
 			empty++
 			log.Printf("warning: successive empty response: %d/%d", empty, h.Config.MaxEmptyResponses)
 		}
-		if empty == h.Config.MaxEmptyResponses {
+		// Only a run of empty responses ends a window, which is why the count
+		// has to be non-zero before the limit is consulted: the old form
+		// compared for equality, so an unset MaxEmptyResponses matched the
+		// empty == 0 that every response carrying records leaves behind, and a
+		// harvest configured in Go rather than through the flags stopped after
+		// one request.
+		if empty > 0 && empty >= h.Config.MaxEmptyResponses {
 			log.Printf("max number of empty responses reached")
 			break
 		}
 	}
-	return h.write(func(wr *store.Writer) error { return wr.Commit() })
+	return h.Writer.Commit()
 }
 
 // identify runs an OAI identify request and caches the result.
-func (h *Harvest) identify() error {
+func (h *Harvest) identify(ctx context.Context) error {
 	req := oai.Request{
 		Verb:         "Identify",
 		BaseURL:      h.Config.BaseURL,
@@ -414,7 +362,7 @@ func (h *Harvest) identify() error {
 	if h.Client == nil {
 		h.Client = oai.DefaultClient
 	}
-	resp, err := h.Client.Do(&req)
+	resp, err := h.Client.DoContext(ctx, &req)
 	if err != nil {
 		log.Printf("trying workaround: %v", err)
 		// try to workaround for the whole harvest
@@ -424,7 +372,7 @@ func (h *Harvest) identify() error {
 		h.Config.ExtraHeaders.Set("Accept-Encoding", "identity")
 		// also apply to this request
 		req.ExtraHeaders = h.Config.ExtraHeaders
-		resp, err = h.Client.Do(&req)
+		resp, err = h.Client.DoContext(ctx, &req)
 		if err != nil {
 			return err
 		}
