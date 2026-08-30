@@ -30,6 +30,11 @@ parameter (store.go:246), `harvestLayout` (cli/sync.go:220), `noticeOnce`
 note already argues this out and the argument holds: three of four phase-3 bugs
 were dual-layout bugs, and none were in either layout.
 
+*Gone.* All of it, plus the v1 writer in `harvest.go` and the v1 reader in
+`store`. What replaced it is a refusal: `Open` and `OpenWriter` fail on an
+identity that still has a pre-1.0 directory, `migrate` is the only reader left,
+and one function on the command line formats the advice. See the checklist.
+
 **2. The `records` table.** One row per record, eleven columns, ~190 bytes
 measured (state.go:63). It buys frame-level pruning on read and dedupe later. It
 costs, in order of how much they tangle the code:
@@ -109,6 +114,14 @@ granularity bug becomes a table row, and adaptive windows later become a change
 to one function rather than to the harvest loop.
 
 Do this first, before anything moves on disk.
+
+**Done.** `Coverage` is one field so far — the resume instant, which is all the
+plan asks of the disk today — rather than the interval list; the signature is
+the one above so that widening it later touches nothing else. The payoff
+arrived immediately: `TestPlanIsGapless` found that `--daily` and `--hourly`
+rounded their last window past the interval, which on a second-granularity
+endpoint meant claiming and double-fetching the rest of the day. See the
+checklist note.
 
 ### 2. Address bytes at window granularity; delete the `records` table
 
@@ -249,8 +262,8 @@ These are earned and the measurements back them:
 
 | step | content | on-disk change |
 |---|---|---|
-| 1 | extract the planner, pure | no |
-| 2 | delete v1 (the 1.0 note's plan) | no |
+| 1 | extract the planner, pure — **done**, `plan.go` | no |
+| 2 | delete v1 (the 1.0 note's plan) — **done** | no |
 | 3 | package split, `Sink` deleted | no |
 | 4 | window-granularity extents, `records` gone | **yes** |
 | 5 | sqlite gone, state as rename-atomic json | **yes** |

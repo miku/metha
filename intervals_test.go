@@ -110,9 +110,14 @@ func TestDailyIntervals(t *testing.T) {
 					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 00:00:00"),
 					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T23:59:59.999999999"),
 				},
+				// The last window stops where the interval does, rather than
+				// rounding out to the end of the day: a window is a claim about
+				// what has been covered, and nothing asked about the rest of
+				// this one. The planner cuts along an exact settle boundary,
+				// which is rarely a midnight.
 				Interval{
 					TimeMustParse("2006-01-02 15:04:05", "2016-01-03 00:00:00"),
-					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-03T23:59:59.999999999"),
+					TimeMustParse("2006-01-02 15:04:05", "2016-01-03 00:00:00"),
 				},
 			},
 		},
@@ -149,9 +154,10 @@ func TestHourlyIntervals(t *testing.T) {
 					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 18:00:00"),
 					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T18:59:59.999999999"),
 				},
+				// Clipped to the interval, as in TestDailyIntervals.
 				Interval{
 					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 19:00:00"),
-					TimeMustParse("2006-01-02T15:04:05.999999999", "2016-01-02T19:59:59.999999999"),
+					TimeMustParse("2006-01-02 15:04:05", "2016-01-02 19:00:00"),
 				},
 			},
 		},

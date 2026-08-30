@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/miku/metha"
@@ -36,6 +37,7 @@ func newLsCmd() *cobra.Command {
 				id := entry.Identity
 				fmt.Printf("%s\t%s\t%s\t%s\n", name, id.Set, id.Format, id.BaseURL)
 			}
+			legacyFooter(os.Stderr, baseDir)
 			return nil
 		},
 	}

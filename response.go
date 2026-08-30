@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/nytlabs/mxj"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +44,54 @@ type Identify struct {
 	DeletedRecord     string        `xml:"deletedRecord,omitempty" json:"deletedRecord,omitempty"`
 	Granularity       string        `xml:"granularity,omitempty" json:"granularity,omitempty"`
 	Description       []Description `xml:"description,omitempty" json:"description,omitempty"`
+}
+
+// granularity is the endpoint's advertised granularity, folded to lower case.
+// The spec gives the two forms in a fixed case, but enough endpoints get that
+// wrong that reading them literally would drop the bounds from every request;
+// EarliestDate has always compared them this way. An endpoint that was never
+// asked answers the empty string, which is neither form.
+func (id *Identify) granularity() string {
+	if id == nil {
+		return ""
+	}
+	return strings.ToLower(id.Granularity)
+}
+
+// SecondGranularity reports whether the endpoint stamps records to the second.
+// An endpoint that says nothing intelligible about its granularity - or that was
+// never asked - is treated as the coarser of the two, which is the assumption
+// that cannot lose records.
+func (id *Identify) SecondGranularity() bool {
+	return id.granularity() == "yyyy-mm-ddthh:mm:ssz"
+}
+
+// DayGranularity reports whether the endpoint stamps records to the day.
+func (id *Identify) DayGranularity() bool {
+	return id.granularity() == "yyyy-mm-dd"
+}
+
+// EarliestDate is the endpoint's earliest datestamp, parsed as the granularity
+// it advertises spells it. An endpoint that advertises neither form is refused:
+// nothing else it says about dates can be believed either.
+func (id *Identify) EarliestDate() (time.Time, error) {
+	// Different granularities are possible: https://eudml.org/oai/OAIHandler?verb=Identify
+	// First occurence of a non-standard granularity: https://t3.digizeitschriften.de/oai2/
+	switch id.granularity() {
+	case "yyyy-mm-dd":
+		if len(id.EarliestDatestamp) <= 10 {
+			return time.Parse("2006-01-02", id.EarliestDatestamp)
+		}
+		return time.Parse("2006-01-02", id.EarliestDatestamp[:10])
+	case "yyyy-mm-ddthh:mm:ssz":
+		// refs. #8825
+		if len(id.EarliestDatestamp) >= 10 && len(id.EarliestDatestamp) < 20 {
+			return time.Parse("2006-01-02", id.EarliestDatestamp[:10])
+		}
+		return time.Parse("2006-01-02T15:04:05Z", id.EarliestDatestamp)
+	default:
+		return time.Time{}, ErrInvalidEarliestDate
+	}
 }
 
 // ListSets lists available sets.

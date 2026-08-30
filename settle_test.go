@@ -7,24 +7,9 @@ import (
 	"github.com/jinzhu/now"
 )
 
-// nopSink is a sink that records nothing, so that a harvest counts as one and
-// takes the reach a store-backed harvest gets.
-type nopSink struct{ resume time.Time }
-
-func (s *nopSink) Begin(from, until time.Time, settled bool) error { return nil }
-func (s *nopSink) Append(raw []byte) error                         { return nil }
-func (s *nopSink) Commit() error                                   { return nil }
-func (s *nopSink) Abort(cause error) error                         { return nil }
-func (s *nopSink) HasWindow(from, until time.Time) (bool, error)   { return false, nil }
-func (s *nopSink) Resume() (time.Time, error)                      { return s.resume, nil }
-
-func harvestAt(started time.Time, granularity string) *Harvest {
-	return &Harvest{
-		Config:   &Config{BaseURL: "http://example.com"},
-		Identify: &Identify{Granularity: granularity},
-		Sink:     &nopSink{},
-		Started:  started,
-	}
+// identifyAt is an endpoint that advertises one granularity and nothing else.
+func identifyAt(granularity string) *Identify {
+	return &Identify{Granularity: granularity}
 }
 
 // TestSettledFrom: with daily granularity a request cannot exclude the rest of
@@ -33,17 +18,20 @@ func harvestAt(started time.Time, granularity string) *Harvest {
 func TestSettledFrom(t *testing.T) {
 	started := time.Date(2023, 6, 15, 14, 33, 20, 123456789, time.Local)
 
-	daily := harvestAt(started, "YYYY-MM-DD").settledFrom()
+	daily := settledFrom(identifyAt("YYYY-MM-DD"), started)
 	if want := now.New(started).BeginningOfDay(); !daily.Equal(want) {
 		t.Errorf("daily granularity: settledFrom = %v, want %v", daily, want)
 	}
 	// An endpoint that says nothing usable is treated as the coarser of the
-	// two, the assumption that cannot lose records.
-	if garbled := harvestAt(started, "").settledFrom(); !garbled.Equal(daily) {
+	// two, the assumption that cannot lose records. So is one never asked.
+	if garbled := settledFrom(identifyAt(""), started); !garbled.Equal(daily) {
 		t.Errorf("unknown granularity: settledFrom = %v, want %v", garbled, daily)
 	}
+	if none := settledFrom(nil, started); !none.Equal(daily) {
+		t.Errorf("no identify at all: settledFrom = %v, want %v", none, daily)
+	}
 
-	second := harvestAt(started, "YYYY-MM-DDThh:mm:ssZ").settledFrom()
+	second := settledFrom(identifyAt("YYYY-MM-DDThh:mm:ssZ"), started)
 	if want := started.Add(-SettleLag).Truncate(SettleLag); !second.Equal(want) {
 		t.Errorf("second granularity: settledFrom = %v, want %v", second, want)
 	}
@@ -55,7 +43,7 @@ func TestSettledFrom(t *testing.T) {
 	// daily case for free. A boundary that followed the clock made every re-run
 	// settle a window a few seconds wide, costing a request and a row for a
 	// stretch of time nothing had happened in.
-	later := harvestAt(started.Add(3*time.Second), "YYYY-MM-DDThh:mm:ssZ").settledFrom()
+	later := settledFrom(identifyAt("YYYY-MM-DDThh:mm:ssZ"), started.Add(3*time.Second))
 	if !later.Equal(second) {
 		t.Errorf("three seconds on: settledFrom = %v, want %v, the same boundary", later, second)
 	}
@@ -67,64 +55,65 @@ func TestSettledFrom(t *testing.T) {
 func TestReachableEndReachesToday(t *testing.T) {
 	started := time.Date(2023, 6, 15, 14, 33, 20, 0, time.Local)
 
-	daily := harvestAt(started, "YYYY-MM-DD").reachableEnd()
+	daily := reachableEnd(identifyAt("YYYY-MM-DD"), started)
 	if want := now.New(started).EndOfDay(); !daily.Equal(want) {
 		t.Errorf("daily granularity: reachableEnd = %v, want %v", daily, want)
 	}
-	second := harvestAt(started, "YYYY-MM-DDThh:mm:ssZ").reachableEnd()
+	second := reachableEnd(identifyAt("YYYY-MM-DDThh:mm:ssZ"), started)
 	if want := started.Truncate(time.Second); !second.Equal(want) {
 		t.Errorf("second granularity: reachableEnd = %v, want %v", second, want)
-	}
-	// The file layout has nowhere to note that a day was not over, so it keeps
-	// stopping where it always did.
-	h := harvestAt(started, "YYYY-MM-DD")
-	h.Sink = nil
-	if want := now.New(started.AddDate(0, 0, -1)).EndOfDay(); !h.reachableEnd().Equal(want) {
-		t.Errorf("file layout: reachableEnd = %v, want %v", h.reachableEnd(), want)
 	}
 }
 
 // TestTodayIsUnsettled walks the scenario end to end: a harvest reaching into
-// today splits off exactly one window for it, that window is not settled, and
-// the run after it resumes at the start of that same day instead of past it.
+// today plans exactly one window for it, that window is not settled, and the
+// run after it starts at that same window rather than past it.
 func TestTodayIsUnsettled(t *testing.T) {
 	started := time.Date(2023, 6, 15, 14, 33, 20, 0, time.Local)
-	h := harvestAt(started, "YYYY-MM-DD")
-	h.Config.From = "2023-06-01"
+	id := identifyAt("YYYY-MM-DD")
+	cfg := PlanConfig{From: "2023-06-01"}
 
-	iv, err := h.defaultInterval()
+	windows, err := Plan(Coverage{}, id, started, cfg)
 	if err != nil {
-		t.Fatalf("defaultInterval: %v", err)
+		t.Fatalf("Plan: %v", err)
 	}
-	if want := now.New(started).EndOfDay(); !iv.End.Equal(want) {
-		t.Fatalf("interval ends %v, want %v", iv.End, want)
+	if len(windows) == 0 {
+		t.Fatal("no windows planned")
 	}
-	settled, unsettled := iv.SplitAt(h.settledFrom())
-	if unsettled.Empty() {
-		t.Fatal("no unsettled window for today")
+	last := windows[len(windows)-1]
+	if want := now.New(started).EndOfDay(); !last.End.Equal(want) {
+		t.Fatalf("plan ends %v, want %v", last.End, want)
 	}
-	if want := now.New(started).BeginningOfDay(); !unsettled.Begin.Equal(want) {
-		t.Errorf("unsettled window begins %v, want %v", unsettled.Begin, want)
+	if last.Settled {
+		t.Fatal("the window covering today is settled")
 	}
-	if !unsettled.End.Equal(iv.End) {
-		t.Errorf("unsettled window ends %v, want %v", unsettled.End, iv.End)
+	if want := now.New(started).BeginningOfDay(); !last.Begin.Equal(want) {
+		t.Errorf("unsettled window begins %v, want %v", last.Begin, want)
 	}
-	// Every window the settled half produces ends before today, so runInterval
-	// marks them settled and only the trailing one is refetched.
-	for _, w := range settled.MonthlyIntervals() {
-		if !w.End.Before(h.settledFrom()) {
+	// Everything before it is settled and ends before today, so only the
+	// trailing window is refetched.
+	for _, w := range windows[:len(windows)-1] {
+		if !w.Settled {
+			t.Errorf("window %v is not settled", w)
+		}
+		if !w.End.Before(last.Begin) {
 			t.Errorf("settled window %v reaches into today", w)
 		}
 	}
 
 	// The store hands back the start of the unsettled window, and the next run
 	// covers the whole day again rather than resuming after it.
-	h.Sink = &nopSink{resume: unsettled.Begin}
-	next, err := h.defaultInterval()
+	next, err := Plan(Coverage{Resume: last.Begin}, id, started, cfg)
 	if err != nil {
-		t.Fatalf("defaultInterval on the next run: %v", err)
+		t.Fatalf("Plan on the next run: %v", err)
 	}
-	if !next.Begin.Equal(unsettled.Begin) {
-		t.Errorf("next run begins %v, want %v", next.Begin, unsettled.Begin)
+	if len(next) != 1 {
+		t.Fatalf("next run plans %d window(s), want 1: %v", len(next), next)
+	}
+	if !next[0].Begin.Equal(last.Begin) {
+		t.Errorf("next run begins %v, want %v", next[0].Begin, last.Begin)
+	}
+	if next[0].Settled {
+		t.Error("the refetched window is settled")
 	}
 }

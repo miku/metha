@@ -163,18 +163,3 @@ func (m *mockDoer) Do(req *http.Request) (*http.Response, error) {
 	}
 	return http.DefaultClient.Do(newReq)
 }
-
-func TestFindRepositoriesByString(t *testing.T) {
-	// This test requires a real file system setup, so we'll just test the error case
-	// where the directory doesn't exist or can't be read
-	urls, err := FindRepositoriesByString("test")
-	if err != nil {
-		// This is expected since we don't have the BaseDir set up
-		t.Logf("expected error when reading non-existent directory: %v", err)
-	} else {
-		// If no error, check that we got expected results
-		// Note: This test might pick up files from the .qwen directory in the repo
-		// which is normal behavior, so we just make sure it doesn't crash
-		t.Logf("found %d urls (this is normal in test environment)", len(urls))
-	}
-}

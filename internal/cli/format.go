@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/miku/metha/store"
 )
 
 // writeJSON emits one object per line, for piping onward.
@@ -17,14 +15,6 @@ func writeJSON(v any) error {
 	}
 	fmt.Printf("%s\n", b)
 	return nil
-}
-
-// count renders a number the layout may not know.
-func count(n int) string {
-	if n == store.Unknown {
-		return "-"
-	}
-	return fmt.Sprintf("%d", n)
 }
 
 // duration renders a span at a precision that keeps it meaningful: rounding a
@@ -62,9 +52,6 @@ func dash(s string) string {
 
 // humanBytes renders a byte count in units a person can read.
 func humanBytes(n int64) string {
-	if n == store.Unknown {
-		return "-"
-	}
 	const unit = 1024
 	if n < unit {
 		return fmt.Sprintf("%dB", n)

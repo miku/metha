@@ -3,9 +3,9 @@ package store
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
 	"slices"
 	"testing"
@@ -69,11 +69,6 @@ func TestHarvestIntoShard(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	// A harvest with a sink must not create the file layout's directory, or a
-	// listing would report an endpoint that holds nothing.
-	if _, err := os.Stat(v1Dir(base, id)); !os.IsNotExist(err) {
-		t.Errorf("harvest with a sink created %s, want no v1 directory", v1Dir(base, id))
-	}
 	s, err := Open(base, id)
 	if err != nil {
 		t.Fatalf("Open: %v", err)
@@ -189,7 +184,7 @@ func TestRemoveGroup(t *testing.T) {
 			t.Fatalf("Close: %v", err)
 		}
 	}
-	if err := Remove(base, dropped, V2); err != nil {
+	if err := Remove(base, dropped); err != nil {
 		t.Fatalf("Remove: %v", err)
 	}
 	s, err := Open(base, dropped)
@@ -327,4 +322,29 @@ func settledWindows(t *testing.T, base string, id Identity) []time.Duration {
 		widths = append(widths, u.Sub(f))
 	}
 	return widths
+}
+
+// TestWriterLocksTheShard: two harvests of one endpoint into one cache would
+// interleave their windows, so the second has to fail fast rather than start.
+// The lock is the shard's, which is why nothing above this layer takes one.
+func TestWriterLocksTheShard(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com/oai", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	defer w.Close()
+	if _, err := OpenWriter(base, id); !errors.Is(err, metha.ErrLocked) {
+		t.Errorf("second OpenWriter: got %v, want an error wrapping ErrLocked", err)
+	}
+	// Releasing it lets the next run in.
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	again, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter after Close: %v", err)
+	}
+	again.Close()
 }

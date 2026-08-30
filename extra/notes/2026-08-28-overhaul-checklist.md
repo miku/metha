@@ -266,6 +266,81 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       purpose: an unguarded call site *is* the bug, and dropping the lock from
       `sinkAppend` alone fails exactly that row.
 
+- [x] **The planner is a pure function.** `plan.go`: `Plan(cov, id, now, cfg)
+      -> []Window`, step 1 of `2026-08-28-simplification.md`. What moved into
+      it: `defaultInterval`, `reachableEnd`, `settledFrom`, `earliestDate`, the
+      granularity predicates, the settled/unsettled split, the choice of
+      segmentation, and the per-window `settled` flag that `runInterval`
+      computed for itself. `Harvest` keeps one question for the disk —
+      `coverage()`, which is `Resume()` or the v1 readdir — and `run()` is now
+      the plan plus a loop.
+
+      No on-disk change, and nothing about window boundaries moved, so it is
+      free of the migration gate.
+
+      `--hourly` and `--daily` had a real bug that only a tiling test finds.
+      `DailyIntervals` and `HourlyIntervals` rounded their last window *out* to
+      the end of the day or hour, past the interval they were handed;
+      `MonthlyIntervals` clipped. Harmless while every boundary was a midnight,
+      which is what `settledFrom` gives a day-granularity endpoint — but a
+      second-granularity one settles at a quantised `SettleLag`, mid-afternoon.
+      A `--daily` run then planned a window that claimed the whole of today,
+      fetched only the morning of it, and overlapped the unsettled window that
+      followed. The old code hid the first half by recomputing `settled` from
+      the bound, so the window was at least stored as partial; the double fetch
+      was live. All three now go through `Interval.cut`, which clips.
+
+      `TestPlanIsGapless` is the test that caught it: for every segmentation and
+      both granularities, the windows tile the interval nanosecond to
+      nanosecond, and exactly one — the last — is unsettled. A gap loses records
+      nothing ever comes back for; an overlap fetches them twice.
+
+- [x] **v1 deleted.** Step 2 of the simplification note, which is the 1.0 note's
+      "what gets deleted" list. Gone: `Layout`, `V1`, `V2`, `Detect`,
+      `OpenLayout`, `StatLayout`, `LayoutEnv`, `Remove`'s layout parameter,
+      `Stats.Layout`, `Stats.Superseded`, `Stats.StaleV1`, `Stats.Unknown` and
+      the `"-"` columns it fed, the `.metha-v2-notice` file and `noticeOnce`;
+      `Harvest.Dir`/`Files`/`mkdirAll`/`lock`/`finalize`, the `-tmp-<rand>`
+      dance and `cleanupTemporaryFiles`, `Harvester`, `metha.BaseDir`,
+      `FindRepositoriesByString`, `MustGlob`, `MoveCompressFile`,
+      `DetectCompression`, `CompressionType`, `laster.go` whole, and the
+      `--layout`, `METHA_LAYOUT`, `--no-compression` and `-k` flags. `Sink`
+      stays until the package split, but every `if h.Sink != nil` is gone and it
+      is required rather than optional (`ErrNoSink`).
+
+      `store/v1.go` became `store/legacy.go`, holding only what migrate reads
+      and what the refusal needs: `legacyDir`, `legacyFiles`, `decompress`,
+      `ListLegacy`, `parseLegacyDir`, `LegacyRemainder`, `RemoveLegacy`. The
+      `v1Store` reader is gone, and `recordsByScan`'s fallback now has a segment
+      reader of its own rather than borrowing v1's.
+
+      **The refusal is the whole compatibility surface.** `Open` and
+      `OpenWriter` return a `*LegacyLayoutError` for an identity that has a
+      pre-1.0 directory and no shard group; `internal/cli/legacy.go` is the one
+      place that formats it, as the 1.0 note asked. Two details worth keeping:
+
+      - `metha sync` checks *before* `NewHarvest`, or the refusal arrives after
+        an Identify request — and for an endpoint that has gone away, never.
+        `TestSyncRefusesLegacyBeforeTheNetwork` points at `example.invalid`, so
+        a run that reached the network would fail differently.
+      - `Migrate` uses an unexported `openWriter` that skips the refusal, since
+        converting is exactly what it is for. Every other caller takes the
+        checked one.
+
+      `ls` and `stat` report a half-migrated cache in a footer rather than
+      failing: listing one is a reasonable thing to do mid-migration.
+      `LegacyRemainder` is one readdir of the cache root, so the footer is
+      affordable on every run. It counts endpoints and not bytes — the 1.0
+      note's message had a byte total, and summing it means walking every
+      directory of a quarter-million-endpoint cache to decorate an error.
+
+      Verified against a real v1 cache of three months and 1783 records:
+      refusal, `migrate --verbose`, `cat | grep -c "<record"` at 1783, `--rm`,
+      and a clean listing after.
+
+      Not done here, and still open from the 1.0 note: migrate's `--jobs`
+      parallelism and its progress output. Neither is about deleting v1.
+
 ---
 
 ## open — settle before the move

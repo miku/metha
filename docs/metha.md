@@ -11,7 +11,7 @@ SYNOPSIS
 
 `metha` *command* [*options*] [*endpoint*]
 
-`metha` [`sync`|`cat`|`ls`|`files`|`id`|`stat`|`migrate`|`pack`|`fortune`|`shim`]
+`metha` [`sync`|`cat`|`ls`|`files`|`id`|`stat`|`migrate`|`fortune`|`shim`]
 
 Since 0.5 metha is a single binary and each of the commands below is a
 subcommand of it: `metha sync` rather than `metha-sync`. The old names remain,
@@ -91,8 +91,6 @@ Harvest an OAI-PMH endpoint into the local cache.
 `-ignore-unexpected-eof`
         ignore unexpected EOF
 
-`-k`    keep temporary files when interrupted
-
 `-list`
         list a selection of OAI endpoints (might be outdated)
 
@@ -107,9 +105,6 @@ Harvest an OAI-PMH endpoint into the local cache.
 
 `-max-empty-responses` *int*
         allow a number of empty responses before failing (default 10)
-
-`-no-compression`
-        store harvested files as plain XML instead of .xml.gz or .xml.zst
 
 `-no-intervals`
         harvest in one go, for funny endpoints
@@ -246,9 +241,9 @@ The options `-daily`, `-ignore-http-errors`, `-suppress-format-parameter`,
 implementations.
 
 `-no-intervals` gives up on incremental harvesting: the endpoint cannot answer
-a date range, so every run fetches the whole repository again. In the v2 layout
-each run is stored beside the last one, and only the newest is read, so the
-cache keeps growing while the data stays right. `metha-sync` says so once the
+a date range, so every run fetches the whole repository again. Each run is
+stored beside the last one, and only the newest is read, so the cache keeps
+growing while the data stays right. `metha-sync` says so once the
 segments pass 10 GB. Reclaim the space with `-rm`, which starts the harvest from
 one copy again - metha will not drop the older ones on its own, since an
 endpoint that has gone away leaves them as the only copy there is.
@@ -319,6 +314,35 @@ Curious about the contents of a random endpoint? Run a harvesting roulette with:
 Select a random record from a random endpoint and display its description:
 
   `metha-fortune`
+
+UPGRADE TO 1.0
+--------------
+
+Up to 0.5, metha kept each endpoint in its own directory, one compressed file
+per request, with the harvested window written into the filename. From 1.0 it
+keeps a shard per endpoint instead: append-only zstd segments plus an index
+that records what was fetched, so a window that returned nothing costs a row
+rather than a file, and a harvest that is interrupted leaves nothing behind.
+
+Only `metha migrate` still reads the old layout. Every other command refuses an
+unconverted endpoint and says so, rather than reporting it as unharvested.
+Nothing converts on its own, and nothing is removed without `--rm`:
+
+  `metha migrate --dry-run`  see what would be converted
+
+  `metha migrate`            convert in place, no re-harvest, nothing removed
+
+  `metha migrate --rm`       convert, verify, then remove the old directories
+
+The conversion reads the files rather than refetching them, keeps the response
+bytes verbatim, and re-runs as a no-op, so `--rm` is safe as a second
+invocation. It refuses to remove a directory holding a file whose name carries
+no window date, since such a file was never migrated. metha 0.5.x remains able
+to read both layouts, and is what to pin if a cache cannot be converted yet.
+
+`-layout`, `METHA_LAYOUT`, `-no-compression` and `-k` are gone with the old
+layout: there is nothing left to choose, segments are zstd frames by
+construction, and there are no temporary files to keep.
 
 UPGRADE TO 0.2.0
 ----------------

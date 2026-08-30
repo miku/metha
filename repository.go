@@ -1,10 +1,7 @@
 package metha
 
 import (
-	"encoding/base64"
-	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -63,28 +60,4 @@ func (r Repository) CompleteListSize() (int, error) {
 		return -1, err
 	}
 	return size, nil
-}
-
-// FindRepositoriesByString returns a list of already harvested base URLs given a
-// fragment of the base URL.
-func FindRepositoriesByString(s string) (urls []string, err error) {
-	files, err := os.ReadDir(BaseDir)
-	if err != nil {
-		return urls, err
-	}
-	for _, file := range files {
-		b, err := base64.RawURLEncoding.DecodeString(file.Name())
-		if err != nil {
-			return urls, err
-		}
-		parts := strings.SplitN(string(b), "#", 3)
-		if len(parts) < 3 {
-			continue
-		}
-		baseURL := parts[2]
-		if strings.Contains(baseURL, s) {
-			urls = append(urls, baseURL)
-		}
-	}
-	return urls, nil
 }

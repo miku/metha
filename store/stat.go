@@ -9,15 +9,12 @@ import (
 )
 
 // Stats is what a store can say about itself without decompressing anything.
-//
-// The counts come from the index, so they are v2 only: v1 keeps no record of
-// what it holds beyond the filenames, and answering "how many records" there
-// means reading every file. Fields a layout cannot answer are left at Unknown.
+// Every count comes from the index, which is why a shard can answer at all: the
+// pre-1.0 layout kept no account of what it held beyond its filenames.
 type Stats struct {
 	Identity Identity
-	Layout   Layout
 
-	Files int   // data files, or segments
+	Files int   // segments
 	Bytes int64 // bytes on disk
 
 	Windows  int // ranges harvested
@@ -32,34 +29,15 @@ type Stats struct {
 	Elapsed  time.Duration // time spent harvesting, summed over windows
 	Fetched  int64         // uncompressed response bytes, as harvested
 	LastSeen time.Time     // when the most recent window finished
-
-	// Superseded marks a v1 directory whose format and set now also live in a
-	// v2 shard: a leftover copy, since metha-migrate keeps the source unless
-	// -rm is given. Its bytes are still on disk and still counted here, but
-	// nothing reads them any more.
-	Superseded bool
-	// StaleV1 names that leftover directory when looking from the v2 side.
-	StaleV1 string
 }
 
-// Unknown marks a count the layout cannot answer.
-const Unknown = -1
-
-// Stat summarises one harvested identity, in whichever layout holds it.
+// Stat summarises one harvested identity.
 func Stat(baseDir string, id Identity) (*Stats, error) {
-	return StatLayout(baseDir, id, "")
-}
-
-// StatLayout is Stat with the layout forced. An empty layout means detect.
-// Callers walking List pass the layout of the entry they were handed: while a
-// migration is under way the same identity can exist in both layouts, and
-// detection deliberately reports only the one that would be read.
-func StatLayout(baseDir string, id Identity, layout Layout) (*Stats, error) {
-	s, err := OpenLayout(baseDir, id, layout)
+	s, err := Open(baseDir, id)
 	if err != nil {
 		return nil, err
 	}
-	stats := &Stats{Identity: id, Layout: s.Layout()}
+	stats := &Stats{Identity: id}
 	files, err := s.Files()
 	if err != nil {
 		return nil, err
@@ -74,16 +52,6 @@ func StatLayout(baseDir string, id Identity, layout Layout) (*Stats, error) {
 	}
 	if stats.Last, err = s.Last(); err != nil {
 		return nil, err
-	}
-	if s.Layout() != V2 {
-		stats.Windows, stats.Empty, stats.Failed = Unknown, Unknown, Unknown
-		stats.Requests, stats.Records, stats.Deleted = Unknown, Unknown, Unknown
-		stats.Fetched = Unknown
-		stats.Superseded = hasV2Group(baseDir, id)
-		return stats, nil
-	}
-	if v1 := v1Dir(baseDir, id); isDir(v1) {
-		stats.StaleV1 = v1
 	}
 	if err := statIndex(s.Dir(), id, stats); err != nil {
 		return nil, err

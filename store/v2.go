@@ -16,12 +16,12 @@ import (
 	"github.com/miku/metha"
 )
 
-// V2 is the sharded layout: one directory per base URL, holding an append-only
-// zstd segment file per (format, set) group, a sqlite index and a human
-// readable description of the whole shard.
-const V2 Layout = "v2"
-
 const (
+	// layoutName is what a shard calls itself in its meta.json. It is a label,
+	// not a choice: there is one layout, and the field is there so that a shard
+	// found on its own says what it is.
+	layoutName = "v2"
+
 	// metaName describes a shard well enough to rebuild its index.
 	metaName = "meta.json"
 	// stateName is the per-shard sqlite index: windows, segments, records.
@@ -35,7 +35,7 @@ const (
 // what it holds: the index and every export are derived from the segments and
 // can be rebuilt, but this file says which endpoint the bytes came from.
 type Meta struct {
-	Layout   Layout          `json:"layout"`
+	Layout   string          `json:"layout"`
 	BaseURL  string          `json:"base_url"`
 	Created  time.Time       `json:"created"`
 	Updated  time.Time       `json:"updated"`
@@ -194,7 +194,7 @@ func (m *Meta) removeGroup(g Group) {
 	m.Groups = kept
 }
 
-// isShard reports whether dir is a v2 shard.
+// isShard reports whether dir holds a shard.
 func isShard(dir string) bool {
 	_, err := os.Stat(filepath.Join(dir, metaName))
 	return err == nil
@@ -209,8 +209,6 @@ type v2Store struct {
 }
 
 func (s *v2Store) Identity() Identity { return s.id }
-
-func (s *v2Store) Layout() Layout { return V2 }
 
 // Dir returns the shard directory, which holds every group of this endpoint.
 // The files of this particular group are under seg/<group>.
@@ -300,7 +298,6 @@ func listV2(baseDir string) iter.Seq2[Entry, error] {
 					for _, g := range meta.Groups {
 						e := Entry{
 							Identity: Identity{BaseURL: meta.BaseURL, Format: g.Format, Set: g.Set},
-							Layout:   V2,
 							Dir:      dir,
 						}
 						if !yield(e, nil) {

@@ -20,7 +20,7 @@ var (
 	ErrNoWindow   = errors.New("store: no window is open")
 )
 
-// Writer appends harvested responses to one group of one v2 shard.
+// Writer appends harvested responses to one group of one shard.
 //
 // The unit of atomicity is the window, as it was in v1, where a window became
 // real when its files were renamed into place. Here it becomes real when one
@@ -65,10 +65,24 @@ type openWindow struct {
 
 // OpenWriter opens a shard for appending, creating it if necessary, and takes
 // the shard lock. Callers must Close.
-func OpenWriter(baseDir string, id Identity) (w *Writer, err error) {
+//
+// An identity still in the pre-1.0 layout is refused, so that a harvest does not
+// quietly start a second copy in a shard beside data it cannot see - which would
+// refetch the endpoint whole and leave the operator with two half caches.
+func OpenWriter(baseDir string, id Identity) (*Writer, error) {
 	if id.BaseURL == "" {
 		return nil, ErrNoBaseURL
 	}
+	if err := refuseLegacy(baseDir, id); err != nil {
+		return nil, err
+	}
+	return openWriter(baseDir, id)
+}
+
+// openWriter is OpenWriter without the refusal, for Migrate: the whole point
+// there is that the source is in the pre-1.0 layout and the shard is not written
+// yet.
+func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	shard := shardDir(baseDir, id.BaseURL)
 	if err := os.MkdirAll(shard, 0755); err != nil {
 		return nil, err
@@ -84,7 +98,7 @@ func OpenWriter(baseDir string, id Identity) (w *Writer, err error) {
 	}()
 	meta, err := readMeta(shard)
 	if errors.Is(err, os.ErrNotExist) {
-		meta = &Meta{Layout: V2, BaseURL: id.BaseURL, Created: time.Now().UTC()}
+		meta = &Meta{Layout: layoutName, BaseURL: id.BaseURL, Created: time.Now().UTC()}
 	} else if err != nil {
 		return nil, err
 	}

@@ -82,7 +82,7 @@ func TestSinkCallsExcludeShutdown(t *testing.T) {
 // the next run.
 func TestShutdownClosesSink(t *testing.T) {
 	s := newBlockingSink()
-	h := &Harvest{Config: &Config{KeepTemporaryFiles: true}, Sink: s}
+	h := &Harvest{Config: &Config{}, Sink: s}
 	h.Lock()
 	defer h.Unlock()
 	h.shutdown()

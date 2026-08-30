@@ -76,16 +76,9 @@ func TestV2RoundTrip(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	// A shard announces itself, so nothing has to be told which layout to use.
-	if got := Detect(base, id); got != V2 {
-		t.Errorf("Detect: got %v, want %v", got, V2)
-	}
 	s, err := Open(base, id)
 	if err != nil {
 		t.Fatalf("Open: %v", err)
-	}
-	if got := s.Layout(); got != V2 {
-		t.Errorf("Layout: got %v, want %v", got, V2)
 	}
 	want := []string{"first", "second", "third"}
 	if got := identifiers(t, s, ReadOptions{}); !slices.Equal(got, want) {
@@ -331,9 +324,6 @@ func TestV2Groups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("List: %v", err)
 		}
-		if entry.Layout != V2 {
-			t.Errorf("Layout: got %v, want %v", entry.Layout, V2)
-		}
 		found = append(found, entry.Identity)
 	}
 	for _, id := range ids {
@@ -486,22 +476,23 @@ func TestCloseLeavesNoSidecarFiles(t *testing.T) {
 }
 
 // TestLayoutsShareTheCache: shards sit directly in the cache, with no directory
-// naming the layout above them, so during a migration a v1 endpoint directory
-// and a shard fan-out directory are siblings. Neither listing may claim the
-// other's entries. What keeps them apart is the shape of the name: a fan-out is
-// two hex digits, and base64 of "set#format#baseURL" is never that short.
+// naming the layout above them, so during a migration a pre-1.0 endpoint
+// directory and a shard fan-out directory are siblings. A listing must not
+// claim the other's entries, and must not descend into them. What keeps them
+// apart is the shape of the name: a fan-out is two hex digits, and base64 of
+// "set#format#baseURL" is never that short.
 func TestLayoutsShareTheCache(t *testing.T) {
 	base := t.TempDir()
-	v1Only := Identity{BaseURL: "http://example.com/legacy", Format: "oai_dc"}
-	v2Only := Identity{BaseURL: "http://example.com/sharded", Format: "oai_dc"}
+	legacyOnly := Identity{BaseURL: "http://example.com/legacy", Format: "oai_dc"}
+	sharded := Identity{BaseURL: "http://example.com/sharded", Format: "oai_dc"}
 
-	src := &v1Store{baseDir: base, id: v1Only}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	dir := legacyDir(base, legacyOnly)
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
+	createFile(t, dir, "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
 
-	w, err := OpenWriter(base, v2Only)
+	w, err := OpenWriter(base, sharded)
 	if err != nil {
 		t.Fatalf("OpenWriter: %v", err)
 	}
@@ -509,29 +500,23 @@ func TestLayoutsShareTheCache(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	// The shard is a sibling of the v1 directory, not inside a v2/ of its own.
+	// The shard is a sibling of the old directory, not inside a v2/ of its own.
 	if got, want := filepath.Dir(filepath.Dir(filepath.Dir(w.Dir()))), base; got != want {
 		t.Errorf("shard sits at %s, want three levels under %s", w.Dir(), base)
 	}
 
-	seen := map[Identity]Layout{}
+	var seen []Identity
 	for entry, err := range List(base) {
 		if err != nil {
 			t.Fatalf("List: %v", err)
 		}
-		if was, dup := seen[entry.Identity]; dup {
-			t.Errorf("%v listed twice, as %s and %s", entry.Identity, was, entry.Layout)
-		}
-		seen[entry.Identity] = entry.Layout
+		seen = append(seen, entry.Identity)
 	}
-	if got, want := seen[v1Only], V1; got != want {
-		t.Errorf("the v1 endpoint listed as %q, want %q", got, want)
+	if want := []Identity{sharded}; !slices.Equal(seen, want) {
+		t.Errorf("List: got %v, want %v; the pre-1.0 directory is counted separately", seen, want)
 	}
-	if got, want := seen[v2Only], V2; got != want {
-		t.Errorf("the sharded endpoint listed as %q, want %q", got, want)
-	}
-	if len(seen) != 2 {
-		t.Errorf("listed %d entries, want 2: %v", len(seen), seen)
+	if got := LegacyRemainder(base); got != 1 {
+		t.Errorf("LegacyRemainder: got %d, want 1", got)
 	}
 }
 

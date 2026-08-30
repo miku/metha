@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -16,7 +15,7 @@ func Main() {
 	}
 	root.SetArgs(RewriteArgs(root, args, legacy != ""))
 	if err := root.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %v\n", rootName, err)
+		reportError(os.Stderr, err)
 		os.Exit(1)
 	}
 }

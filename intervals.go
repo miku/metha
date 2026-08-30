@@ -39,50 +39,56 @@ func (iv Interval) SplitAt(t time.Time) (before, after Interval) {
 	return before, after
 }
 
-// MonthlyIntervals segments a given interval into monthly intervals.
-func (iv Interval) MonthlyIntervals() []Interval {
+// period is one calendar unit an interval can be cut along.
+type period struct {
+	// end is the last instant of the unit t falls in.
+	end func(time.Time) time.Time
+	// next is the first instant of the unit after the one t falls in.
+	next func(time.Time) time.Time
+}
+
+var (
+	byMonth = period{
+		end:  func(t time.Time) time.Time { return now.New(t).EndOfMonth() },
+		next: func(t time.Time) time.Time { return now.New(t.AddDate(0, 1, 0)).BeginningOfMonth() },
+	}
+	byDay = period{
+		end:  func(t time.Time) time.Time { return now.New(t).EndOfDay() },
+		next: func(t time.Time) time.Time { return now.New(t.AddDate(0, 0, 1)).BeginningOfDay() },
+	}
+	byHour = period{
+		end:  func(t time.Time) time.Time { return now.New(t).EndOfHour() },
+		next: func(t time.Time) time.Time { return now.New(t.Add(time.Hour)).BeginningOfHour() },
+	}
+)
+
+// cut segments an interval along a calendar unit. The first window begins where
+// the interval begins and the last ends where it ends, both inclusive, so the
+// windows tile the interval exactly and nothing else: a gap would lose records
+// that nothing ever comes back for, and reaching past the end would claim to
+// have covered time that was never asked about. An empty interval yields no
+// windows at all.
+//
+// Only the interior boundaries fall on the unit, which is what makes the cut
+// useful: an interval starting mid-month gives a short first window and whole
+// months after it.
+func (iv Interval) cut(p period) []Interval {
 	var ivals []Interval
-	start := iv.Begin
-	for !start.After(iv.End) {
-		end := now.New(start).EndOfMonth()
-		if end.After(iv.End) {
-			ivals = append(ivals, Interval{Begin: start, End: iv.End})
-			break
+	for start := iv.Begin; !start.After(iv.End); start = p.next(start) {
+		end := p.end(start)
+		if !end.Before(iv.End) {
+			return append(ivals, Interval{Begin: start, End: iv.End})
 		}
 		ivals = append(ivals, Interval{Begin: start, End: end})
-		start = now.New(start.AddDate(0, 1, 0)).BeginningOfMonth()
 	}
 	return ivals
 }
+
+// MonthlyIntervals segments a given interval into monthly intervals.
+func (iv Interval) MonthlyIntervals() []Interval { return iv.cut(byMonth) }
 
 // DailyIntervals segments a given interval into daily intervals.
-func (iv Interval) DailyIntervals() []Interval {
-	var ivals []Interval
-	start := iv.Begin
-	for !start.After(iv.End) {
-		end := now.New(start).EndOfDay()
-		if end.After(iv.End) {
-			ivals = append(ivals, Interval{Begin: start, End: end})
-			break
-		}
-		ivals = append(ivals, Interval{Begin: start, End: end})
-		start = now.New(start.AddDate(0, 0, 1)).BeginningOfDay()
-	}
-	return ivals
-}
+func (iv Interval) DailyIntervals() []Interval { return iv.cut(byDay) }
 
 // HourlyIntervals segments a given interval into hourly intervals.
-func (iv Interval) HourlyIntervals() []Interval {
-	var ivals []Interval
-	start := iv.Begin
-	for !start.After(iv.End) {
-		end := now.New(start).EndOfHour()
-		if end.After(iv.End) {
-			ivals = append(ivals, Interval{Begin: start, End: end})
-			break
-		}
-		ivals = append(ivals, Interval{Begin: start, End: end})
-		start = now.New(start.Add(time.Hour * 1)).BeginningOfHour()
-	}
-	return ivals
-}
+func (iv Interval) HourlyIntervals() []Interval { return iv.cut(byHour) }

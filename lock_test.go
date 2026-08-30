@@ -4,7 +4,6 @@ package metha
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -33,25 +32,11 @@ func TestTryFlock(t *testing.T) {
 	g.Close()
 }
 
-// TestHarvestRunLocked checks that a harvest refuses to start when another
-// process is already harvesting into the same directory, rather than
-// interleaving temporary files with it.
-func TestHarvestRunLocked(t *testing.T) {
-	origBaseDir := BaseDir
-	BaseDir = t.TempDir()
-	defer func() { BaseDir = origBaseDir }()
-
+// TestHarvestRunNeedsSink: a harvest writes through a sink and nothing else, so
+// one without a sink has to say so rather than silently fetch and discard.
+func TestHarvestRunNeedsSink(t *testing.T) {
 	h := &Harvest{Config: &Config{BaseURL: "http://example.com", Format: "oai_dc"}}
-	if err := os.MkdirAll(h.Dir(), 0755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	held, err := TryFlock(filepath.Join(h.Dir(), LockName))
-	if err != nil {
-		t.Fatalf("could not take the lock for the test: %v", err)
-	}
-	defer held.Close()
-
-	if err := h.Run(); !errors.Is(err, ErrLocked) {
-		t.Errorf("Run on a locked dir: got %v, want an error wrapping ErrLocked", err)
+	if err := h.Run(); !errors.Is(err, ErrNoSink) {
+		t.Errorf("Run without a sink: got %v, want %v", err, ErrNoSink)
 	}
 }

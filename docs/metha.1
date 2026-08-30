@@ -6,7 +6,7 @@ metha \- harvest OAI\-PMH conform endpoints
 .PP
 \fB\fCmetha\fR \fIcommand\fP [\fIoptions\fP] [\fIendpoint\fP]
 .PP
-\fB\fCmetha\fR [\fB\fCsync\fR|\fB\fCcat\fR|\fB\fCls\fR|\fB\fCfiles\fR|\fB\fCid\fR|\fB\fCstat\fR|\fB\fCmigrate\fR|\fB\fCpack\fR|\fB\fCfortune\fR|\fB\fCshim\fR]
+\fB\fCmetha\fR [\fB\fCsync\fR|\fB\fCcat\fR|\fB\fCls\fR|\fB\fCfiles\fR|\fB\fCid\fR|\fB\fCstat\fR|\fB\fCmigrate\fR|\fB\fCfortune\fR|\fB\fCshim\fR]
 .PP
 Since 0.5 metha is a single binary and each of the commands below is a
 subcommand of it: \fB\fCmetha sync\fR rather than \fB\fCmetha\-sync\fR\&. The old names remain,
@@ -27,11 +27,9 @@ including \fB\fCstat\fR and \fB\fCmigrate\fR, which are not described below.
 .PP
 \fB\fCmetha\-id\fR [\fB\fC\-s\fR] \fIendpoint\fP
 .PP
-\fB\fCmetha\-ls\fR [\fB\fC\-a\fR] [\fB\fC\-b\fR]
+\fB\fCmetha\-ls\fR [\fB\fC\-a\fR] [\fB\fC\-b\fR] [\fB\fC\-base\-dir\fR \fIDIR\fP]
 .PP
 \fB\fCmetha\-files\fR [\fB\fC\-format\fR \fIFORMAT\fP, \fB\fC\-set\fR \fISET\fP] \fIendpoint\fP
-.PP
-\fB\fCmetha\-pack\fR [\fB\fC\-d\fR \fIDIR\fP, \fB\fC\-m\fR \fIN\fP, \fB\fC\-r\fR, \fB\fC\-v\fR]
 .PP
 \fB\fCmetha\-fortune\fR [\fB\fC\-1\fR, \fB\fC\-k\fR \fIN\fP, \fB\fC\-t\fR \fIDURATION\fP, \fB\fC\-d\fR]
 .SH DESCRIPTION
@@ -83,8 +81,6 @@ Harvest an OAI\-PMH endpoint into the local cache.
 \fB\fC\-ignore\-unexpected\-eof\fR
         ignore unexpected EOF
 .PP
-\fB\fC\-k\fR    keep temporary files when interrupted
-.PP
 \fB\fC\-list\fR
         list a selection of OAI endpoints (might be outdated)
 .PP
@@ -99,9 +95,6 @@ Harvest an OAI\-PMH endpoint into the local cache.
 .PP
 \fB\fC\-max\-empty\-responses\fR \fIint\fP
         allow a number of empty responses before failing (default 10)
-.PP
-\fB\fC\-no\-compression\fR
-        store harvested files as plain XML instead of .xml.gz or .xml.zst
 .PP
 \fB\fC\-no\-intervals\fR
         harvest in one go, for funny endpoints
@@ -169,6 +162,9 @@ List cached endpoints.
 \fB\fC\-a\fR    show full path
 .PP
 \fB\fC\-b\fR    continue in the presence of errors
+.PP
+\fB\fC\-base\-dir\fR \fIstring\fP
+        base dir for harvested files (default "$HOME/.cache/metha")
 .SS metha\-files
 .PP
 List file paths of a local harvest.
@@ -183,19 +179,6 @@ List file paths of a local harvest.
         set name
 .PP
 \fB\fC\-v\fR    show version
-.SS metha\-pack
-.PP
-Pack a harvest directory into larger files to reduce filesystem pressure.
-.PP
-\fB\fC\-d\fR \fIstring\fP
-        base directory for harvested files (default "$HOME/.cache/metha")
-.PP
-\fB\fC\-m\fR \fIint\fP
-        minimum number of files before packing (default 3)
-.PP
-\fB\fC\-r\fR    show what would be done without actually doing it
-.PP
-\fB\fC\-v\fR    verbose output
 .SS metha\-fortune
 .PP
 Display a random record description from a random endpoint.
@@ -238,6 +221,14 @@ Show harvested data for a given set and format:
 The options \fB\fC\-daily\fR, \fB\fC\-ignore\-http\-errors\fR, \fB\fC\-suppress\-format\-parameter\fR,
 \fB\fC\-no\-intervals\fR and \fB\fC\-max\fR are used to work around non\-standard server
 implementations.
+.PP
+\fB\fC\-no\-intervals\fR gives up on incremental harvesting: the endpoint cannot answer
+a date range, so every run fetches the whole repository again. Each run is
+stored beside the last one, and only the newest is read, so the cache keeps
+growing while the data stays right. \fB\fCmetha\-sync\fR says so once the
+segments pass 10 GB. Reclaim the space with \fB\fC\-rm\fR, which starts the harvest from
+one copy again \- metha will not drop the older ones on its own, since an
+endpoint that has gone away leaves them as the only copy there is.
 .SH INTEGRATION
 .PP
 The \fB\fCmetha\-cat\fR tool emits valid XML to stdout, which can be fed into XML
@@ -296,6 +287,33 @@ Curious about the contents of a random endpoint? Run a harvesting roulette with:
 Select a random record from a random endpoint and display its description:
 .IP
 \fB\fCmetha\-fortune\fR
+.SH UPGRADE TO 1.0
+.PP
+Up to 0.5, metha kept each endpoint in its own directory, one compressed file
+per request, with the harvested window written into the filename. From 1.0 it
+keeps a shard per endpoint instead: append\-only zstd segments plus an index
+that records what was fetched, so a window that returned nothing costs a row
+rather than a file, and a harvest that is interrupted leaves nothing behind.
+.PP
+Only \fB\fCmetha migrate\fR still reads the old layout. Every other command refuses an
+unconverted endpoint and says so, rather than reporting it as unharvested.
+Nothing converts on its own, and nothing is removed without \fB\fC\-\-rm\fR:
+.IP
+\fB\fCmetha migrate \-\-dry\-run\fR  see what would be converted
+.IP
+\fB\fCmetha migrate\fR            convert in place, no re\-harvest, nothing removed
+.IP
+\fB\fCmetha migrate \-\-rm\fR       convert, verify, then remove the old directories
+.PP
+The conversion reads the files rather than refetching them, keeps the response
+bytes verbatim, and re\-runs as a no\-op, so \fB\fC\-\-rm\fR is safe as a second
+invocation. It refuses to remove a directory holding a file whose name carries
+no window date, since such a file was never migrated. metha 0.5.x remains able
+to read both layouts, and is what to pin if a cache cannot be converted yet.
+.PP
+\fB\fC\-layout\fR, \fB\fCMETHA_LAYOUT\fR, \fB\fC\-no\-compression\fR and \fB\fC\-k\fR are gone with the old
+layout: there is nothing left to choose, segments are zstd frames by
+construction, and there are no temporary files to keep.
 .SH UPGRADE TO 0.2.0
 .PP
 To continue using data harvested with previous metha versions, just rename the

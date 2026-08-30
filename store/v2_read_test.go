@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"os"
 	"slices"
 	"testing"
 
@@ -168,32 +167,6 @@ func TestSetSpecFilterIsExact(t *testing.T) {
 	// A prefix of a real setSpec must not match it.
 	if got := identifiers(t, s, ReadOptions{SetSpec: "month"}); len(got) != 0 {
 		t.Errorf("SetSpec month: got %v, want none", got)
-	}
-}
-
-// TestV1FiltersToo: the same filters work against the old layout, by scanning.
-func TestV1FiltersToo(t *testing.T) {
-	base := t.TempDir()
-	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter,
-		recordWithHeader("live", "2023-01-15", "", "alpha"),
-		recordWithHeader("gone", "2023-01-20", "deleted", "beta"))
-	for _, tt := range []struct {
-		opts ReadOptions
-		want []string
-	}{
-		{ReadOptions{}, []string{"live", "gone"}},
-		{ReadOptions{Deleted: DeletedSkip}, []string{"live"}},
-		{ReadOptions{Deleted: DeletedOnly}, []string{"gone"}},
-		{ReadOptions{SetSpec: "beta"}, []string{"gone"}},
-	} {
-		if got := identifiers(t, src, tt.opts); !slices.Equal(got, tt.want) {
-			t.Errorf("%+v: got %v, want %v", tt.opts, got, tt.want)
-		}
 	}
 }
 

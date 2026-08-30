@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/miku/metha"
 	"github.com/miku/metha/store"
@@ -11,10 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newMigrateCmd converts harvested data from the v1 layout, a directory of
-// compressed responses per endpoint, into v2 shards.
+// newMigrateCmd converts harvested data from the pre-1.0 layout, a directory of
+// compressed responses per endpoint, into shards. It is the only command that
+// reads that layout at all; everything else refuses it and points here.
 //
-// No re-harvest is needed: a v1 file holds complete responses, so a shard can
+// No re-harvest is needed: those files hold complete responses, so a shard can
 // be built from the cache alone. The source is left in place unless --rm is
 // given, and only ever removed after the record counts have been checked.
 func newMigrateCmd() *cobra.Command {
@@ -28,11 +28,11 @@ func newMigrateCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "migrate [ENDPOINT...]",
-		Short: "Convert v1 directories into v2 shards",
+		Short: "Convert pre-1.0 directories into shards",
 		Example: `  metha migrate                          # every endpoint in the cache
   metha migrate http://export.arxiv.org/oai2
   metha migrate --dry-run --verbose      # what would happen
-  metha migrate --rm                     # convert, then drop the v1 dirs`,
+  metha migrate --rm                     # convert, then drop the old dirs`,
 		Aliases: []string{"metha-migrate"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			targets := migrateTargets(baseDir, format, set, args)
@@ -78,14 +78,14 @@ func newMigrateCmd() *cobra.Command {
 	f.StringVar(&baseDir, "base-dir", metha.GetBaseDir(), "base dir for harvested files")
 	f.StringVar(&format, "format", "oai_dc", "metadata format, when an endpoint is named")
 	f.StringVar(&set, "set", "", "set name, when an endpoint is named")
-	f.BoolVar(&remove, "rm", false, "remove the v1 directory after a verified migration")
+	f.BoolVar(&remove, "rm", false, "remove the old directory after a verified migration")
 	f.BoolVar(&dryRun, "dry-run", false, "only report what would be migrated")
 	f.BoolVar(&verbose, "verbose", false, "report every endpoint, not just failures")
 	return cmd
 }
 
 // migrateTargets returns the identities to migrate: the endpoints named on the
-// command line, or every v1 directory in the cache.
+// command line, or every pre-1.0 directory in the cache.
 func migrateTargets(baseDir, format, set string, args []string) []store.Identity {
 	var ids []store.Identity
 	if len(args) > 0 {
@@ -98,14 +98,12 @@ func migrateTargets(baseDir, format, set string, args []string) []store.Identity
 		}
 		return ids
 	}
-	for entry, err := range store.List(baseDir) {
+	for id, err := range store.ListLegacy(baseDir) {
 		if err != nil {
 			log.Printf("skipping: %v", err)
 			continue
 		}
-		if entry.Layout == store.V1 {
-			ids = append(ids, entry.Identity)
-		}
+		ids = append(ids, id)
 	}
 	return ids
 }
@@ -121,7 +119,7 @@ func migrateOne(baseDir string, id store.Identity, remove, verbose bool) (bool, 
 	}
 	wrote := result.Windows > 0
 	if !result.Verified() {
-		return wrote, fmt.Errorf("verification failed: %d records in the v1 files, %d in the shard",
+		return wrote, fmt.Errorf("verification failed: %d records in the source files, %d in the shard",
 			result.Source, result.Present)
 	}
 	if verbose {
@@ -136,17 +134,10 @@ func migrateOne(baseDir string, id store.Identity, remove, verbose bool) (bool, 
 	// migration that drops one still verifies. Removing the directory would
 	// take those files with it, unmigrated, with nothing left to migrate from.
 	if len(result.Skipped) > 0 {
-		return wrote, fmt.Errorf("refusing to remove the v1 directory: %d file(s) carry no window date and were not migrated, first %s",
+		return wrote, fmt.Errorf("refusing to remove the source directory: %d file(s) carry no window date and were not migrated, first %s",
 			len(result.Skipped), result.Skipped[0])
 	}
 	// Only ever after the counts match, and only the directory this identity
-	// owns - a v1 directory holds exactly one format and set.
-	src, err := store.OpenLayout(baseDir, id, store.V1)
-	if err != nil {
-		return wrote, err
-	}
-	if filepath.Dir(src.Dir()) != filepath.Clean(baseDir) {
-		return wrote, fmt.Errorf("refusing to remove %s: not directly under %s", src.Dir(), baseDir)
-	}
-	return wrote, os.RemoveAll(src.Dir())
+	// owns - a pre-1.0 directory holds exactly one format and set.
+	return wrote, store.RemoveLegacy(baseDir, id)
 }

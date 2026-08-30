@@ -44,20 +44,19 @@ func (r *MigrateResult) Verified() bool {
 	return r.Source == r.Present
 }
 
-// Migrate builds a v2 shard from an endpoint's v1 directory, without touching
-// the network: a v1 file holds complete responses, so everything v2 needs is
-// already on disk. It is safe to re-run - windows already present are skipped -
-// and it leaves the v1 directory alone; removing it is the caller's decision,
-// and only sensible once the result verifies.
+// Migrate builds a shard from an endpoint's pre-1.0 directory, without touching
+// the network: those files hold complete responses, so everything the shard
+// needs is already on disk. It is safe to re-run - windows already present are
+// skipped - and it leaves the source alone; removing it is the caller's
+// decision, and only sensible once the result verifies.
 func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
-	src := &v1Store{baseDir: baseDir, id: id}
-	files, err := src.dataFiles()
+	files, err := legacyFiles(baseDir, id)
 	if err != nil {
 		return nil, err
 	}
-	// Hold the v1 lock too, so a harvest cannot be finalizing files into the
-	// directory that is being read.
-	lock, err := metha.TryFlock(filepath.Join(src.Dir(), metha.LockName))
+	// Hold the source directory's lock too. No 1.0 harvest writes there, but a
+	// 0.5.x one still can, and a half-renamed file must not be read as data.
+	lock, err := metha.TryFlock(filepath.Join(legacyDir(baseDir, id), metha.LockName))
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +66,7 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	result := &MigrateResult{Identity: id}
 	byDate := map[string][]string{}
 	for _, file := range files {
-		groups := v1FilePattern.FindStringSubmatch(filepath.Base(file))
+		groups := legacyFilePattern.FindStringSubmatch(filepath.Base(file))
 		if len(groups) < 2 {
 			result.Skipped = append(result.Skipped, file)
 			continue
@@ -80,7 +79,10 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	}
 	sort.Strings(dates)
 
-	w, err := OpenWriter(baseDir, id)
+	// openWriter rather than OpenWriter: the refusal exists to keep every other
+	// command away from an unconverted endpoint, and this is the command that
+	// converts it.
+	w, err := openWriter(baseDir, id)
 	if err != nil {
 		return nil, err
 	}

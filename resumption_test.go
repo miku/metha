@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -142,6 +141,7 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 			minimalOAIListRecords("<resumptionToken/>"),
 		},
 	}
+	sink := &fakeSink{}
 	h := &Harvest{
 		Config: &Config{
 			BaseURL:           "http://example.com/oai",
@@ -157,32 +157,24 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 			DisableSelectiveHarvesting: true,
 		},
 		Client:  &Client{Doer: doer},
+		Sink:    sink,
 		Started: time.Now(),
 		Identify: &Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-
-	origBaseDir := BaseDir
-	BaseDir = t.TempDir()
-	defer func() { BaseDir = origBaseDir }()
-	if err := os.MkdirAll(h.Dir(), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := h.runInterval(Interval{}); err != nil {
-		t.Fatalf("runInterval: %v", err)
+	if err := h.runWindow(Window{}); err != nil {
+		t.Fatalf("runWindow: %v", err)
 	}
 
 	if doer.calls != 2 {
 		t.Fatalf("expected exactly 2 requests (page1 + last page), got %d", doer.calls)
 	}
 
-	// Two response files should have been written (one per page).
-	files := h.Files()
-	if len(files) != 2 {
-		t.Fatalf("expected 2 harvested files, got %d (%v)", len(files), files)
+	// Both responses should have been committed, one per page.
+	if got := len(sink.responses()); got != 2 {
+		t.Fatalf("expected 2 harvested responses, got %d", got)
 	}
 }
 
@@ -196,6 +188,7 @@ func TestRunIntervalStopsOnMissingResumptionToken(t *testing.T) {
 			minimalOAIListRecords(""), // no token element at all
 		},
 	}
+	sink := &fakeSink{}
 	h := &Harvest{
 		Config: &Config{
 			BaseURL:                    "http://example.com/oai",
@@ -209,22 +202,15 @@ func TestRunIntervalStopsOnMissingResumptionToken(t *testing.T) {
 			DisableSelectiveHarvesting: true,
 		},
 		Client:  &Client{Doer: doer},
+		Sink:    sink,
 		Started: time.Now(),
 		Identify: &Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-
-	origBaseDir := BaseDir
-	BaseDir = t.TempDir()
-	defer func() { BaseDir = origBaseDir }()
-	if err := os.MkdirAll(h.Dir(), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := h.runInterval(Interval{}); err != nil {
-		t.Fatalf("runInterval: %v", err)
+	if err := h.runWindow(Window{}); err != nil {
+		t.Fatalf("runWindow: %v", err)
 	}
 
 	if doer.calls != 2 {
@@ -242,6 +228,7 @@ func TestRunIntervalStopsOnCursorEqualsCompleteListSize(t *testing.T) {
 			minimalOAIListRecords(`<resumptionToken completeListSize="1" cursor="1">some-token</resumptionToken>`),
 		},
 	}
+	sink := &fakeSink{}
 	h := &Harvest{
 		Config: &Config{
 			BaseURL:                    "http://example.com/oai",
@@ -255,22 +242,15 @@ func TestRunIntervalStopsOnCursorEqualsCompleteListSize(t *testing.T) {
 			DisableSelectiveHarvesting: true,
 		},
 		Client:  &Client{Doer: doer},
+		Sink:    sink,
 		Started: time.Now(),
 		Identify: &Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
-
-	origBaseDir := BaseDir
-	BaseDir = t.TempDir()
-	defer func() { BaseDir = origBaseDir }()
-	if err := os.MkdirAll(h.Dir(), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := h.runInterval(Interval{}); err != nil {
-		t.Fatalf("runInterval: %v", err)
+	if err := h.runWindow(Window{}); err != nil {
+		t.Fatalf("runWindow: %v", err)
 	}
 
 	if doer.calls != 1 {

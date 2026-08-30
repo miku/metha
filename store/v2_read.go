@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"iter"
+	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/miku/metha"
 )
 
@@ -100,8 +102,49 @@ func (s *v2Store) recordsByScan(opts ReadOptions) iter.Seq2[metha.Record, error]
 			return
 		}
 		for _, file := range files {
-			if !recordsFromFile(file, opts, yield) {
+			if !recordsFromSegment(file, opts, yield) {
 				return
+			}
+		}
+	}
+}
+
+// recordsFromSegment yields the matching records of a whole segment file, frames
+// and all. It returns false when iteration should stop, either because the
+// consumer asked for it or because the file could not be read, in which case the
+// error was yielded.
+func recordsFromSegment(path string, opts ReadOptions, yield func(metha.Record, error) bool) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		yield(metha.Record{}, err)
+		return false
+	}
+	defer f.Close()
+	dec, err := zstd.NewReader(f)
+	if err != nil {
+		yield(metha.Record{}, fmt.Errorf("%s: %w", path, err))
+		return false
+	}
+	defer dec.Close()
+	// A segment is a run of independent frames, which zstd reads as one stream,
+	// and each frame holds several responses back to back.
+	xd := xml.NewDecoder(dec)
+	xd.Strict = false
+	for {
+		var resp metha.Response
+		if err := xd.Decode(&resp); err != nil {
+			if errors.Is(err, io.EOF) {
+				return true
+			}
+			yield(metha.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
+			return false
+		}
+		for _, rec := range resp.ListRecords.Records {
+			if !opts.match(&rec) {
+				continue
+			}
+			if !yield(rec, nil) {
+				return false
 			}
 		}
 	}

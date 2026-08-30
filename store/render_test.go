@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,16 +15,42 @@ import (
 	"github.com/miku/metha"
 )
 
-// testStore returns a store over a fresh temporary base directory, with its
-// endpoint directory created but empty.
+// testStore returns a store over a fresh, empty shard.
 func testStore(t *testing.T) Store {
 	t.Helper()
-	s, err := Open(t.TempDir(), Identity{BaseURL: "http://example.com", Format: "oai_dc"})
+	return storeWith(t)
+}
+
+// storeWith writes each response as its own window and returns the store over
+// them. Windows a month apart, dated after the records they hold, so that a
+// datestamp filter has something to cut and the coverage map stays honest.
+func storeWith(t *testing.T, resps ...metha.Response) Store {
+	t.Helper()
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	for i, resp := range resps {
+		from := day(t, fmt.Sprintf("2023-%02d-01", i+1))
+		until := day(t, fmt.Sprintf("2023-%02d-28", i+1))
+		if err := w.Begin(from, until, true); err != nil {
+			t.Fatalf("Begin: %v", err)
+		}
+		if err := w.Append(marshal(t, resp)); err != nil {
+			t.Fatalf("Append: %v", err)
+		}
+		if err := w.Commit(); err != nil {
+			t.Fatalf("Commit: %v", err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
 	if err != nil {
 		t.Fatalf("Open: %v", err)
-	}
-	if err := os.MkdirAll(s.Dir(), 0755); err != nil {
-		t.Fatalf("failed to create harvest directory: %v", err)
 	}
 	return s
 }
@@ -102,16 +129,8 @@ func respWithTitle(title string) metha.Response {
 	}
 }
 
-// setupTestFiles writes the same two records once as gzip and once as zstd.
-func setupTestFiles(t *testing.T, dir string) {
-	t.Helper()
-	createFile(t, dir, "2023-01-01-00000001.xml.gz", createGzipWriter, twoRecords())
-	createFile(t, dir, "2023-02-01-00000001.xml.zst", createZstdWriter, twoRecords())
-}
-
 func TestRenderBasic(t *testing.T) {
-	s := testStore(t)
-	setupTestFiles(t, s.Dir())
+	s := storeWith(t, twoRecords(), twoRecords())
 
 	var buf bytes.Buffer
 	if err := Render(s, RenderOpts{Writer: &buf, Root: "records"}); err != nil {
@@ -126,8 +145,7 @@ func TestRenderBasic(t *testing.T) {
 }
 
 func TestRenderWithDateFilters(t *testing.T) {
-	s := testStore(t)
-	setupTestFiles(t, s.Dir())
+	s := storeWith(t, twoRecords(), twoRecords())
 
 	var buf bytes.Buffer
 	opts := RenderOpts{
@@ -148,8 +166,7 @@ func TestRenderWithDateFilters(t *testing.T) {
 }
 
 func TestRenderJsonOutput(t *testing.T) {
-	s := testStore(t)
-	setupTestFiles(t, s.Dir())
+	s := storeWith(t, twoRecords(), twoRecords())
 
 	var buf bytes.Buffer
 	if err := Render(s, RenderOpts{Writer: &buf, UseJson: true}); err != nil {
@@ -160,19 +177,22 @@ func TestRenderJsonOutput(t *testing.T) {
 	}
 }
 
-func TestRenderErrorHandling(t *testing.T) {
-	s := testStore(t)
-	invalidPath := filepath.Join(s.Dir(), "invalid.xml.gz")
-	if err := os.WriteFile(invalidPath, []byte("not a gzip file"), 0644); err != nil {
-		t.Fatalf("failed to create invalid file: %v", err)
+// TestRenderCorruptSegment: a segment that is not zstd at all cannot be read
+// past, and saying so beats printing a truncated corpus as though it were
+// whole. The index still names the frame, so this is the read path failing, not
+// a missing file.
+func TestRenderCorruptSegment(t *testing.T) {
+	s := storeWith(t, twoRecords())
+	files, err := s.Files()
+	if err != nil || len(files) == 0 {
+		t.Fatalf("Files: %v, %v", files, err)
+	}
+	if err := os.WriteFile(files[0], []byte("not a zstd frame"), 0644); err != nil {
+		t.Fatalf("clobber segment: %v", err)
 	}
 	var buf bytes.Buffer
-	err := Render(s, RenderOpts{Writer: &buf})
-	if err == nil {
-		t.Fatalf("expected error for invalid file, got none")
-	}
-	if !strings.Contains(err.Error(), "gzip") {
-		t.Errorf("unexpected error message: %v", err)
+	if err := Render(s, RenderOpts{Writer: &buf}); err == nil {
+		t.Fatal("expected an error for a corrupt segment, got none")
 	}
 }
 
@@ -201,40 +221,45 @@ func TestRenderMissingDir(t *testing.T) {
 	}
 }
 
-// TestRenderPackedFile guards against silently emitting only the first
-// response of a packed file: both the gzip and the zstd reader stream
-// concatenated frames, so the decoder has to keep going until EOF.
-func TestRenderPackedFile(t *testing.T) {
-	for _, tt := range []struct {
-		name     string
-		filename string
-		writer   writerCreator
-	}{
-		{"gzip", "2023-01-01-00000001.xml.gz", createGzipWriter},
-		{"zstd", "2023-01-01-00000001.xml.zst", createZstdWriter},
-		{"plain", "2023-01-01-00000001.xml", createPlainWriter},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			s := testStore(t)
-			want := []string{"first", "second", "third"}
-			var resps []metha.Response
-			for _, title := range want {
-				resps = append(resps, respWithTitle(title))
-			}
-			createFile(t, s.Dir(), tt.filename, tt.writer, resps...)
-
-			var buf bytes.Buffer
-			if err := Render(s, RenderOpts{Writer: &buf}); err != nil {
-				t.Fatalf("Render failed: %v", err)
-			}
-			for _, title := range want {
-				if !strings.Contains(buf.String(), title) {
-					t.Errorf("packed %s: missing record %q, got: %s", tt.name, title, buf.String())
-				}
-			}
-			if got := strings.Count(buf.String(), "<record"); got != len(want) {
-				t.Errorf("packed %s: got %d records, want %d", tt.name, got, len(want))
-			}
-		})
+// TestRenderManyResponsesPerFrame guards against silently emitting only the
+// first response of a frame: a frame holds several responses back to back, so
+// the decoder has to keep going until EOF.
+func TestRenderManyResponsesPerFrame(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	want := []string{"first", "second", "third"}
+	if err := w.Begin(day(t, "2023-01-01"), day(t, "2023-01-31"), true); err != nil {
+		t.Fatalf("Begin: %v", err)
+	}
+	for _, title := range want {
+		if err := w.Append(marshal(t, respWithTitle(title))); err != nil {
+			t.Fatalf("Append: %v", err)
+		}
+	}
+	if err := w.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := Render(s, RenderOpts{Writer: &buf}); err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+	for _, title := range want {
+		if !strings.Contains(buf.String(), title) {
+			t.Errorf("missing record %q, got: %s", title, buf.String())
+		}
+	}
+	if got := strings.Count(buf.String(), "<record"); got != len(want) {
+		t.Errorf("got %d records, want %d", got, len(want))
 	}
 }

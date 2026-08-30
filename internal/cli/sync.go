@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,8 +18,8 @@ import (
 )
 
 // syncOpts holds what the sync flags are parsed into. It is a struct rather
-// than a run of closure variables only because there are twenty eight of them,
-// and the harvest wants most of them together.
+// than a run of closure variables only because there are two dozen of them, and
+// the harvest wants most of them together.
 type syncOpts struct {
 	baseDir                    string
 	hourly                     bool
@@ -44,11 +43,8 @@ type syncOpts struct {
 	basicAuthCreds             string
 	timeout                    time.Duration
 	maxRetries                 int
-	keepTemporaryFiles         bool
 	ignoreUnexpectedEOF        bool
 	rateLimit                  string
-	noCompression              bool
-	layout                     string
 	extraHeaders               []string
 }
 
@@ -94,11 +90,8 @@ func newSyncCmd() *cobra.Command {
 	f.StringVarP(&o.basicAuthCreds, "basic-auth", "u", "", "basic auth, like: user:password")
 	f.DurationVarP(&o.timeout, "timeout", "T", 30*time.Second, "http client timeout")
 	f.IntVarP(&o.maxRetries, "retries", "r", 10, "max number of retries")
-	f.BoolVarP(&o.keepTemporaryFiles, "keep-temporary-files", "k", false, "keep temporary files when interrupted")
 	f.BoolVar(&o.ignoreUnexpectedEOF, "ignore-unexpected-eof", false, "ignore unexpected EOF")
 	f.StringVar(&o.rateLimit, "rate-limit", "", "download rate limit (e.g., '1MB', '500KB', '2.5MB/s', '1024'); if no unit specified, bytes/sec assumed; set to 0 or empty to disable")
-	f.BoolVar(&o.noCompression, "no-compression", false, "store harvested files as plain XML instead of .xml.gz or .xml.zst")
-	f.StringVar(&o.layout, "layout", "", "storage layout: v1 (a directory of files) or v2 (a sharded, indexed store); default is the layout the endpoint already uses, or v2")
 	f.StringArrayVarP(&o.extraHeaders, "header", "H", nil, `extra HTTP header to pass to requests (repeatable); e.g. -H "token: 123"`)
 	return cmd
 }
@@ -112,11 +105,16 @@ func (o *syncOpts) run(endpoint string) error {
 		log.Printf("Rate limiting enabled: %.2f bytes/sec (%.2f KB/s)",
 			rateLimitBytesPerSec, rateLimitBytesPerSec/1024)
 	}
-	metha.BaseDir = o.baseDir
 	baseURL := metha.PrependSchema(endpoint)
 	identity := store.Identity{BaseURL: baseURL, Format: o.format, Set: o.set}
+	// Before anything else, and before the network: an endpoint still in the
+	// pre-1.0 layout has data this harvest cannot see, and harvesting it again
+	// into a shard beside it would leave two half caches.
+	if err := store.CheckLegacy(o.baseDir, identity); err != nil {
+		return err
+	}
 	if o.showDir {
-		st, err := store.OpenLayout(o.baseDir, identity, o.harvestLayout(identity))
+		st, err := store.Open(o.baseDir, identity)
 		if err != nil {
 			return err
 		}
@@ -187,17 +185,14 @@ func (o *syncOpts) run(endpoint string) error {
 	harvest.Config.DailyInterval = o.daily
 	harvest.Config.ExtraHeaders = extra
 	harvest.Config.Delay = o.delay
-	harvest.Config.KeepTemporaryFiles = o.keepTemporaryFiles
 	harvest.Config.IgnoreUnexpectedEOF = o.ignoreUnexpectedEOF
-	harvest.Config.NoCompression = o.noCompression
-	resolved := o.harvestLayout(identity)
 	if o.removeCached {
 		log.Printf("removing already cached data for %s", identity.BaseURL)
-		if err := store.Remove(o.baseDir, identity, resolved); err != nil {
+		if err := store.Remove(o.baseDir, identity); err != nil {
 			log.Println(err)
 		}
 	}
-	if err := o.runHarvest(harvest, identity, resolved); err != nil {
+	if err := o.runHarvest(harvest, identity); err != nil {
 		switch {
 		case errors.Is(err, metha.ErrAlreadySynced):
 			log.Println("this repository is up-to-date")
@@ -213,51 +208,30 @@ func (o *syncOpts) run(endpoint string) error {
 	return nil
 }
 
-// harvestLayout decides where a harvest writes. An endpoint that already has a
-// v2 shard keeps it, so a converted cache does not silently start writing files
-// beside it again; otherwise --layout, then METHA_LAYOUT, then v1, which is what
-// every existing installation has.
-func (o *syncOpts) harvestLayout(id store.Identity) store.Layout {
-	if o.layout != "" {
-		return store.Layout(o.layout)
-	}
-	if env := os.Getenv(store.LayoutEnv); env != "" {
-		return store.Layout(env)
-	}
-	return store.Detect(o.baseDir, id)
-}
-
-// runHarvest points a harvest at the layout it should write into, and runs it.
+// runHarvest opens the shard a harvest writes into, and runs it.
 //
-// Every path out of here closes the sink, which is why it is a function of its
-// own: an index left open keeps its write-ahead log and shared-memory files on
-// disk, with the last committed window still in the log rather than in the
+// Every path out of here closes the writer, which is why it is a function of
+// its own: an index left open keeps its write-ahead log and shared-memory files
+// on disk, with the last committed window still in the log rather than in the
 // database.
-func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity, layout store.Layout) error {
-	var w *store.Writer
-	switch layout {
-	case store.V1:
-		o.noticeOnce(id)
-	case store.V2:
-		var err error
-		if w, err = store.OpenWriter(o.baseDir, id); err != nil {
-			return err
-		}
-		defer w.Close()
-		// The identify response is what a shard needs to be self-describing,
-		// and v1 had nowhere to keep it.
-		if err := w.SetIdentify(harvest.Identify); err != nil {
-			return err
-		}
-		harvest.Sink = w
-	default:
-		return fmt.Errorf("unknown layout: %v, use v1 or v2", layout)
+func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity) error {
+	w, err := store.OpenWriter(o.baseDir, id)
+	if err != nil {
+		return err
 	}
+	defer w.Close()
+	// The identify response is what makes a shard self-describing: granularity
+	// and earliest datestamp are the two things a harvest needs, and the
+	// pre-1.0 layout had nowhere to keep them.
+	if err := w.SetIdentify(harvest.Identify); err != nil {
+		return err
+	}
+	harvest.Sink = w
 	log.Printf("harvest: %+v", harvest)
 	if err := harvest.Run(); err != nil {
 		return err
 	}
-	if w != nil && o.disableSelectiveHarvesting {
+	if o.disableSelectiveHarvesting {
 		warnUnbounded(w)
 	}
 	return nil
@@ -284,37 +258,6 @@ func warnUnbounded(w *store.Writer) {
 	}
 	log.Warnf("-no-intervals stores the whole endpoint again on every run, and %s holds %.1f GB of them by now; reads return only the newest, the rest is dead weight. Harvest with -rm to start from one copy again.",
 		w.Dir(), float64(n)/(1<<30))
-}
-
-// noticeName marks a cache whose owner has been told about v2 already.
-const noticeName = ".metha-v2-notice"
-
-// noticeOnce tells the user once per cache that their v1 data can be
-// converted, with the command that does it, and never mentions it again.
-func (o *syncOpts) noticeOnce(id store.Identity) {
-	marker := filepath.Join(o.baseDir, noticeName)
-	if _, err := os.Stat(marker); err == nil {
-		return
-	}
-	src, err := store.OpenLayout(o.baseDir, id, store.V1)
-	if err != nil {
-		return
-	}
-	if files, err := src.Files(); err != nil || len(files) == 0 {
-		return // Nothing harvested here yet, so nothing to convert.
-	}
-	fmt.Fprintf(os.Stderr, `
-A newer storage layout (v2) is available: one shard per endpoint, an index
-instead of a file per window, and no file at all for windows that returned
-nothing. Your harvested data can be converted in place, without refetching:
-
-    %s migrate --base-dir %s        # convert everything, keeping the originals
-    %s migrate --base-dir %s --rm   # and drop the originals once verified
-
-Harvests continue to work unchanged in v1. This notice is shown once.
-
-`, rootName, o.baseDir, rootName, o.baseDir)
-	os.WriteFile(marker, nil, 0644)
 }
 
 // parseRateLimit converts a human-readable rate limit string to bytes per second.

@@ -1,29 +1,33 @@
 package store
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
 	"testing"
 )
 
-// TestMigrate walks a v1 directory into a shard and checks that nothing is
-// lost, that a re-run is a no-op, and that reads now resolve to v2.
+// TestMigrate walks a pre-1.0 directory into a shard and checks that nothing is
+// lost, that a re-run is a no-op, and that reads now find the shard.
 func TestMigrate(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	srcDir := legacyDir(base, id)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
 	// One plain file, one gzip file and one packed zstd file of three
 	// responses, which is the shape metha-pack leaves behind.
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml", createPlainWriter, twoRecords())
-	createFile(t, src.Dir(), "2023-02-28-00000001.xml.gz", createGzipWriter, respWithTitle("february"))
-	createFile(t, src.Dir(), "2023-03-31-00000001.xml.zst", createZstdWriter,
+	createFile(t, srcDir, "2023-01-31-00000001.xml", createPlainWriter, twoRecords())
+	createFile(t, srcDir, "2023-02-28-00000001.xml.gz", createGzipWriter, respWithTitle("february"))
+	createFile(t, srcDir, "2023-03-31-00000001.xml.zst", createZstdWriter,
 		respWithTitle("march-a"), respWithTitle("march-b"), respWithTitle("march-c"))
 
-	before := identifiers(t, src, ReadOptions{})
+	// What the source holds, in the order a reader visits it: the files are
+	// read in name order, and each file's responses in the order they were
+	// written.
+	before := []string{"id1", "id2", "february", "march-a", "march-b", "march-c"}
 	result, err := Migrate(base, id)
 	if err != nil {
 		t.Fatalf("Migrate: %v", err)
@@ -41,10 +45,7 @@ func TestMigrate(t *testing.T) {
 		t.Errorf("Skipped: got %v, want none", result.Skipped)
 	}
 
-	// Reads now find the shard, and see exactly what v1 held.
-	if got := Detect(base, id); got != V2 {
-		t.Errorf("Detect after migrating: got %v, want %v", got, V2)
-	}
+	// Reads now find the shard, and see exactly what the source held.
 	s, err := Open(base, id)
 	if err != nil {
 		t.Fatalf("Open: %v", err)
@@ -88,12 +89,12 @@ func TestMigrate(t *testing.T) {
 func TestMigrateVerifyDetectsLoss(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	srcDir := legacyDir(base, id)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
-	createFile(t, src.Dir(), "2023-02-28-00000001.xml.zst", createZstdWriter, respWithTitle("february"))
+	createFile(t, srcDir, "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
+	createFile(t, srcDir, "2023-02-28-00000001.xml.zst", createZstdWriter, respWithTitle("february"))
 	first, err := Migrate(base, id)
 	if err != nil {
 		t.Fatalf("Migrate: %v", err)
@@ -101,14 +102,16 @@ func TestMigrateVerifyDetectsLoss(t *testing.T) {
 	if !first.Verified() {
 		t.Fatalf("first Migrate did not verify: %+v", first)
 	}
-	// Delete the index rows of one window, leaving the segments untouched: the
-	// shape a partial or interrupted index would have.
+	// Drop one record row, leaving the segments untouched: the shape a partial
+	// or interrupted index would have. By row id rather than by window boundary,
+	// because boundaries are stored in UTC and the windows were cut in local
+	// time, so west of Greenwich a window that ends on the 28th is stamped with
+	// the 29th.
 	st, err := openState(filepath.Join(shardDir(base, id.BaseURL), stateName))
 	if err != nil {
 		t.Fatalf("openState: %v", err)
 	}
-	if _, err := st.db.Exec(`DELETE FROM records WHERE window_id IN
-		(SELECT id FROM windows WHERE until_ts LIKE '2023-02-28%')`); err != nil {
+	if _, err := st.db.Exec(`DELETE FROM records WHERE id = (SELECT MAX(id) FROM records)`); err != nil {
 		t.Fatalf("delete: %v", err)
 	}
 	if err := st.close(); err != nil {
@@ -127,92 +130,76 @@ func TestMigrateVerifyDetectsLoss(t *testing.T) {
 	}
 }
 
-// TestDetectHalfMigrated: migrating one format of an endpoint must not hide
-// the formats still in v1. The shard exists, so a check that only asked "is
-// there a shard for this base URL" would answer v2 for every format and read
-// an empty group instead of the data on disk.
-func TestDetectHalfMigrated(t *testing.T) {
+// TestHalfMigratedRefusesTheRest: migrating one format of an endpoint must not
+// hide the formats still in the old layout. The shard exists, so a check that
+// only asked "is there a shard for this base URL" would answer yes for every
+// format and read an empty group instead of the data on disk.
+func TestHalfMigratedRefusesTheRest(t *testing.T) {
 	base := t.TempDir()
 	dc := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
 	marc := Identity{BaseURL: "http://example.com", Format: "marcxml"}
 	for _, id := range []Identity{dc, marc} {
-		src := &v1Store{baseDir: base, id: id}
-		if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+		dir := legacyDir(base, id)
+		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("mkdir: %v", err)
 		}
-		createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter, respWithTitle(id.Format))
+		createFile(t, dir, "2023-01-31-00000001.xml.zst", createZstdWriter, respWithTitle(id.Format))
 	}
 	if _, err := Migrate(base, dc); err != nil {
 		t.Fatalf("Migrate: %v", err)
 	}
-	if got := Detect(base, dc); got != V2 {
-		t.Errorf("Detect(oai_dc): got %v, want %v", got, V2)
-	}
-	if got := Detect(base, marc); got != V1 {
-		t.Errorf("Detect(marcxml): got %v, want %v", got, V1)
-	}
-	// The unmigrated format still reads, which is the point.
-	s, err := Open(base, marc)
+	s, err := Open(base, dc)
 	if err != nil {
-		t.Fatalf("Open: %v", err)
+		t.Fatalf("Open(oai_dc) after migrating: %v", err)
 	}
-	if got := identifiers(t, s, ReadOptions{}); len(got) != 1 {
-		t.Errorf("marcxml records: got %v, want one", got)
+	if got := identifiers(t, s, ReadOptions{}); !slices.Equal(got, []string{"oai_dc"}) {
+		t.Errorf("oai_dc records: got %v, want the migrated record", got)
 	}
-	// A format neither layout holds goes to the shard the endpoint already has,
-	// so a new harvest does not start a v1 directory next to it.
-	other := Identity{BaseURL: "http://example.com", Format: "mods"}
-	if got := Detect(base, other); got != V2 {
-		t.Errorf("Detect(mods): got %v, want %v", got, V2)
+	// The unmigrated format is refused rather than answered for, which is the
+	// point: its data is on disk and the shard has nothing to say about it.
+	if _, err := Open(base, marc); !errors.Is(err, ErrLegacyLayout) {
+		t.Errorf("Open(marcxml): got %v, want ErrLegacyLayout", err)
+	}
+	// A format neither holds is simply unharvested, and opens on the shard the
+	// endpoint already has.
+	if _, err := Open(base, Identity{BaseURL: "http://example.com", Format: "mods"}); err != nil {
+		t.Errorf("Open(mods): got %v, want no error", err)
 	}
 }
 
-// TestStatSupersededV1: after a migration that kept its source, both copies
-// are on disk and each must describe itself, or a listing reports the v1
-// directory as v2 and counts its records twice.
-func TestStatSupersededV1(t *testing.T) {
+// TestStatAfterMigration: a migration that kept its source leaves both copies
+// on disk, and Stat has to describe the shard - the one that is read - rather
+// than counting the leftover as well.
+func TestStatAfterMigration(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	srcDir := legacyDir(base, id)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
+	createFile(t, srcDir, "2023-01-31-00000001.xml.zst", createZstdWriter, twoRecords())
 	if _, err := Migrate(base, id); err != nil {
 		t.Fatalf("Migrate: %v", err)
 	}
-	v1Stats, err := StatLayout(base, id, V1)
+	stats, err := Stat(base, id)
 	if err != nil {
-		t.Fatalf("StatLayout v1: %v", err)
+		t.Fatalf("Stat: %v", err)
 	}
-	if v1Stats.Layout != V1 {
-		t.Errorf("forced layout: got %v, want %v", v1Stats.Layout, V1)
+	if stats.Records != 2 {
+		t.Errorf("Records: got %d, want 2", stats.Records)
 	}
-	if !v1Stats.Superseded {
-		t.Error("Superseded: got false, want true after migrating")
+	if stats.Files != 1 {
+		t.Errorf("Files: got %d, want 1 segment; the leftover directory is not counted", stats.Files)
 	}
-	if v1Stats.Records != Unknown {
-		t.Errorf("v1 Records: got %d, want Unknown, or a listing counts them twice", v1Stats.Records)
+	// The leftover is still there, and a listing says so in a footer.
+	if got := LegacyRemainder(base); got != 1 {
+		t.Errorf("LegacyRemainder: got %d, want 1", got)
 	}
-	v2Stats, err := StatLayout(base, id, V2)
-	if err != nil {
-		t.Fatalf("StatLayout v2: %v", err)
+	if err := RemoveLegacy(base, id); err != nil {
+		t.Fatalf("RemoveLegacy: %v", err)
 	}
-	if v2Stats.Superseded {
-		t.Error("Superseded: got true for the live copy")
-	}
-	if v2Stats.StaleV1 != src.Dir() {
-		t.Errorf("StaleV1: got %q, want %q", v2Stats.StaleV1, src.Dir())
-	}
-	if v2Stats.Records != 2 {
-		t.Errorf("v2 Records: got %d, want 2", v2Stats.Records)
-	}
-	// Removing the leftover leaves one copy and nothing to warn about.
-	if err := os.RemoveAll(src.Dir()); err != nil {
-		t.Fatalf("RemoveAll: %v", err)
-	}
-	if again, err := StatLayout(base, id, V2); err != nil || again.StaleV1 != "" {
-		t.Errorf("StaleV1 after removing: got %q, %v, want empty", again.StaleV1, err)
+	if got := LegacyRemainder(base); got != 0 {
+		t.Errorf("LegacyRemainder after removing: got %d, want 0", got)
 	}
 }
 
@@ -222,12 +209,12 @@ func TestStatSupersededV1(t *testing.T) {
 func TestMigrateKeepsBytesVerbatim(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	srcDir := legacyDir(base, id)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml", createPlainWriter, twoRecords())
-	want, err := readWhole(filepath.Join(src.Dir(), "2023-01-31-00000001.xml"))
+	createFile(t, srcDir, "2023-01-31-00000001.xml", createPlainWriter, twoRecords())
+	want, err := readWhole(filepath.Join(srcDir, "2023-01-31-00000001.xml"))
 	if err != nil {
 		t.Fatalf("read source: %v", err)
 	}
@@ -249,12 +236,12 @@ func TestMigrateKeepsBytesVerbatim(t *testing.T) {
 func TestMigrateSkipsUndatedFiles(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
-	src := &v1Store{baseDir: base, id: id}
-	if err := os.MkdirAll(src.Dir(), 0755); err != nil {
+	srcDir := legacyDir(base, id)
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	createFile(t, src.Dir(), "2023-01-31-00000001.xml.gz", createGzipWriter, respWithTitle("dated"))
-	createFile(t, src.Dir(), "handmade.xml.gz", createGzipWriter, respWithTitle("undated"))
+	createFile(t, srcDir, "2023-01-31-00000001.xml.gz", createGzipWriter, respWithTitle("dated"))
+	createFile(t, srcDir, "handmade.xml.gz", createGzipWriter, respWithTitle("undated"))
 	result, err := Migrate(base, id)
 	if err != nil {
 		t.Fatalf("Migrate: %v", err)
