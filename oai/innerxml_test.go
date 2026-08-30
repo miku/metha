@@ -2,6 +2,7 @@ package oai
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"reflect"
 	"strings"
 	"testing"
@@ -83,5 +84,43 @@ func TestInnerXMLSurvivesUnparseableBody(t *testing.T) {
 				t.Errorf("Marshal = %v, want %v", got, want)
 			}
 		})
+	}
+}
+
+// TestRecordJSONOmitsXMLName: XMLName carries the element a record was decoded
+// from, and store.Render sets it before writing XML so the output is
+// namespaced. In JSON it is an artefact of a different encoding - every line of
+// "metha cat --json" used to open with the name and namespace of the element it
+// is no longer in.
+//
+// Both halves are here because they share one field: dropping it outright would
+// take the namespace off the XML output, which is the reason it exists.
+func TestRecordJSONOmitsXMLName(t *testing.T) {
+	rec := Record{
+		XMLName: xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"},
+		Header:  Header{Identifier: "oai:example.org:1", DateStamp: "2023-01-01"},
+	}
+	b, err := json.Marshal(rec)
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if got := string(b); strings.Contains(got, "XMLName") || strings.Contains(got, "openarchives") {
+		t.Errorf("JSON carries the XML element name: %s", got)
+	}
+	var back map[string]any
+	if err := json.Unmarshal(b, &back); err != nil {
+		t.Fatalf("Unmarshal: %v", err)
+	}
+	if _, ok := back["header"]; !ok {
+		t.Errorf("the record lost its header along with XMLName: %s", b)
+	}
+
+	// And the XML side still names the element and its namespace.
+	x, err := xml.Marshal(rec)
+	if err != nil {
+		t.Fatalf("xml.Marshal: %v", err)
+	}
+	if want := `<record xmlns="http://www.openarchives.org/OAI/2.0/">`; !strings.HasPrefix(string(x), want) {
+		t.Errorf("xml.Marshal = %s, want it to start with %s", x, want)
 	}
 }

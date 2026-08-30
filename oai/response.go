@@ -221,7 +221,12 @@ func (ab About) GoString() string { return string(ab.Body) }
 
 // Record represents a single record.
 type Record struct {
-	XMLName  xml.Name
+	// XMLName carries the element a record was decoded from, and Render sets it
+	// before writing XML so the output is namespaced. It is an artefact of the
+	// encoding rather than anything the record says, so JSON leaves it out -
+	// otherwise every line of "metha cat --json" opens with the name and
+	// namespace of the element it is no longer in.
+	XMLName  xml.Name `json:"-"`
 	Header   Header   `xml:"header,omitempty" json:"header,omitempty"`
 	Metadata Metadata `xml:"metadata,omitempty" json:"metadata,omitempty"`
 	About    About    `xml:"about,omitempty" json:"about,omitempty"`
