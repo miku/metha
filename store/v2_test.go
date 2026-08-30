@@ -117,15 +117,11 @@ func TestV2EmptyWindowCostsNoBytes(t *testing.T) {
 	defer w.Close()
 
 	from, until := day(t, "2003-01-01"), day(t, "2003-12-31")
-	if has, err := w.HasWindow(from, until); err != nil || has {
-		t.Fatalf("HasWindow before harvesting: got %v, %v, want false", has, err)
+	if w.HasWindow(from, until) {
+		t.Fatalf("HasWindow before harvesting: got true, want false")
 	}
 	writeWindow(t, w, "2003-01-01", "2003-12-31")
-	has, err := w.HasWindow(from, until)
-	if err != nil {
-		t.Fatalf("HasWindow: %v", err)
-	}
-	if !has {
+	if !w.HasWindow(from, until) {
 		t.Errorf("HasWindow after an empty harvest: got false, want true")
 	}
 	seg := filepath.Join(w.Dir(), segDirname, "oai_dc", "000001.zst")
@@ -158,11 +154,7 @@ func TestV2AbortLeavesNoTrace(t *testing.T) {
 		t.Fatalf("Abort: %v", err)
 	}
 	// The failed range must not read as harvested, or a retry would skip it.
-	has, err := w.HasWindow(day(t, "2023-02-01"), day(t, "2023-02-28"))
-	if err != nil {
-		t.Fatalf("HasWindow: %v", err)
-	}
-	if has {
+	if w.HasWindow(day(t, "2023-02-01"), day(t, "2023-02-28")) {
 		t.Errorf("HasWindow on an aborted window: got true, want false")
 	}
 	if err := w.Close(); err != nil {
@@ -220,9 +212,17 @@ func TestV2TornTailTruncated(t *testing.T) {
 	}
 }
 
-// TestV2RecordOffsets checks the index can address a single record inside a
-// frame, which is what an export will seek with instead of scanning.
-func TestV2RecordOffsets(t *testing.T) {
+// TestExtentCoversTheWholeWindow: a window's bytes are one run in one segment,
+// from the length the index vouched for when it opened to the length it vouches
+// for when it commits. That is what replaced addressing records individually,
+// and it holds only because nothing else writes into a segment while a window is
+// open and a segment rotates only between windows.
+func TestExtentCoversTheWholeWindow(t *testing.T) {
+	// One frame per response, so a window of three spans several of them.
+	old := frameTarget
+	frameTarget = 1
+	t.Cleanup(func() { frameTarget = old })
+
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
 	w, err := OpenWriter(base, id)
@@ -230,47 +230,57 @@ func TestV2RecordOffsets(t *testing.T) {
 		t.Fatalf("OpenWriter: %v", err)
 	}
 	writeWindow(t, w, "2023-01-01", "2023-01-31", "alpha", "beta", "gamma")
+	writeWindow(t, w, "2023-03-01", "2023-03-31", "delta")
 	if err := w.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	st, err := openState(filepath.Join(shardDir(base, id.BaseURL), stateName))
+	shard := shardDir(base, id.BaseURL)
+	st, err := loadState(filepath.Join(shard, stateName))
 	if err != nil {
-		t.Fatalf("openState: %v", err)
+		t.Fatalf("loadState: %v", err)
 	}
-	defer st.close()
-	rows, err := st.db.Query(`SELECT identifier, frame_off, frame_len, rec_off, rec_len FROM records ORDER BY id`)
+	g := st.group("oai_dc", "")
+	if g == nil || len(g.Windows) != 2 {
+		t.Fatalf("index holds %v, want two windows", g)
+	}
+	seg := filepath.Join(shard, segDirname, "oai_dc", segFileName(1))
+	info, err := os.Stat(seg)
 	if err != nil {
-		t.Fatalf("query: %v", err)
+		t.Fatalf("stat segment: %v", err)
 	}
-	defer rows.Close()
-	seg := filepath.Join(shardDir(base, id.BaseURL), segDirname, "oai_dc", "000001.zst")
-	var seen int
-	for rows.Next() {
-		var (
-			identifier                      string
-			frameOff, frameLen, off, length int64
-		)
-		if err := rows.Scan(&identifier, &frameOff, &frameLen, &off, &length); err != nil {
-			t.Fatalf("scan: %v", err)
+	// One extent each, several frames wide for the first, and between them
+	// they account for every byte of the segment: nothing was appended outside
+	// a window, and nothing a window appended is left unnamed.
+	var covered int64
+	for _, win := range g.Windows {
+		if len(win.Extents) != 1 {
+			t.Fatalf("window %v holds %v, want one extent", win.From, win.Extents)
 		}
-		content, err := readFrame(seg, frame{Off: frameOff, Len: frameLen})
+		if win.Extents[0].Off != covered {
+			t.Errorf("extent %+v starts at %d, want it to follow the previous one at %d",
+				win.Extents[0], win.Extents[0].Off, covered)
+		}
+		covered += win.Extents[0].Len
+	}
+	if covered != info.Size() {
+		t.Errorf("extents cover %d bytes of a %d byte segment", covered, info.Size())
+	}
+	// And a run decodes on its own, without reading what precedes it, which is
+	// what makes it addressable at all.
+	var got []string
+	ok := recordsFromExtent(seg, g.Windows[0].Extents[0], ReadOptions{}, func(rec oai.Record, err error) bool {
 		if err != nil {
-			t.Fatalf("readFrame: %v", err)
+			t.Errorf("recordsFromExtent: %v", err)
+			return false
 		}
-		var rec oai.Record
-		if err := xml.Unmarshal(content[off:off+length], &rec); err != nil {
-			t.Fatalf("decode record at %d+%d: %v", off, length, err)
-		}
-		if rec.Header.Identifier != identifier {
-			t.Errorf("record at %d+%d: got %q, want %q", off, length, rec.Header.Identifier, identifier)
-		}
-		seen++
+		got = append(got, rec.Header.Identifier)
+		return true
+	})
+	if !ok {
+		t.Fatal("recordsFromExtent stopped early")
 	}
-	if err := rows.Err(); err != nil {
-		t.Fatalf("rows: %v", err)
-	}
-	if seen != 3 {
-		t.Errorf("indexed %d records, want 3", seen)
+	if want := []string{"alpha", "beta", "gamma"}; !slices.Equal(got, want) {
+		t.Errorf("decoding the first window's extent: got %v, want %v", got, want)
 	}
 }
 
@@ -436,10 +446,7 @@ func TestResumeAcrossZones(t *testing.T) {
 			if err := w.Commit(); err != nil {
 				t.Fatalf("Commit: %v", err)
 			}
-			resume, err := w.Resume()
-			if err != nil {
-				t.Fatalf("Resume: %v", err)
-			}
+			resume := w.Resume()
 			if want := end.Add(time.Nanosecond); !resume.Equal(want) {
 				t.Errorf("Resume: got %v, want %v", resume, want)
 			}
@@ -450,13 +457,11 @@ func TestResumeAcrossZones(t *testing.T) {
 	}
 }
 
-// TestCloseLeavesNoSidecarFiles: the index runs in WAL mode, so sqlite keeps a
-// write-ahead log and a shared-memory file next to the database while it is
-// open, and removes both when the last connection closes. Leaving them behind
-// means the last committed window is still in the log rather than in the
-// database, and a cache of a quarter million shards carries a sidecar pair per
-// shard - so closing the writer has to actually close the database.
-func TestCloseLeavesNoSidecarFiles(t *testing.T) {
+// TestShardHoldsOnlyWhatItNeeds: a harvested shard is four things - what it is,
+// what it holds, the lock, and the bytes. Anything else is a file a quarter
+// million shards each carry a copy of, which is how the write-ahead log and the
+// shared-memory sidecar of the sqlite index used to be paid for.
+func TestShardHoldsOnlyWhatItNeeds(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
 	w, err := OpenWriter(base, id)
@@ -467,11 +472,17 @@ func TestCloseLeavesNoSidecarFiles(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	for _, suffix := range []string{"-wal", "-shm"} {
-		path := filepath.Join(shardDir(base, id.BaseURL), stateName+suffix)
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			t.Errorf("%s still exists after Close", filepath.Base(path))
-		}
+	entries, err := os.ReadDir(shardDir(base, id.BaseURL))
+	if err != nil {
+		t.Fatalf("readdir: %v", err)
+	}
+	var names []string
+	for _, entry := range entries {
+		names = append(names, entry.Name())
+	}
+	slices.Sort(names)
+	if want := []string{LockName, metaName, segDirname, stateName}; !slices.Equal(names, want) {
+		t.Errorf("shard holds %v, want %v", names, want)
 	}
 }
 

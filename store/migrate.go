@@ -29,8 +29,9 @@ type MigrateResult struct {
 
 // Verified reports whether the shard holds every record the v1 directory does.
 // Both sides are counted the same way - the source by rereading it, the shard
-// by counting index rows - so a second run verifies exactly as strictly as the
-// first, rather than trusting that an earlier one got it right.
+// by the counts its windows were stamped with as those same bytes were written
+// - so a second run verifies exactly as strictly as the first, rather than
+// trusting that an earlier one got it right.
 //
 // The comparison spans the whole range the source covers, because that is the
 // shape the index has: settled windows are merged as they are committed, so a
@@ -117,11 +118,7 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 			spanFrom = from
 		}
 		spanUntil = until
-		has, err := w.HasWindow(from, until)
-		if err != nil {
-			return nil, err
-		}
-		if has {
+		if w.HasWindow(from, until) {
 			// Already migrated. Count the source again anyway, rather than
 			// assume an earlier run got it right: this is the only evidence
 			// there is that the v1 files can go.
@@ -150,13 +147,9 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 		result.Windows++
 	}
 	if !spanFrom.IsZero() {
-		if result.Present, err = w.WindowRecords(spanFrom, spanUntil); err != nil {
-			return nil, err
-		}
+		result.Present = w.WindowRecords(spanFrom, spanUntil)
 	}
-	if result.Records, err = w.CountRecords(); err != nil {
-		return nil, err
-	}
+	result.Records = w.CountRecords()
 	return result, nil
 }
 
@@ -179,7 +172,7 @@ func migrateWindow(w *Writer, files []string, result *MigrateResult) error {
 }
 
 // countV1Records counts the records in a window's v1 files, by the same scan
-// that indexes them on the way in, so that the two numbers being compared were
+// that counts them on the way in, so that the two numbers being compared were
 // produced the same way.
 func countV1Records(files []string) (int, error) {
 	var n int
@@ -189,11 +182,11 @@ func countV1Records(files []string) (int, error) {
 			return 0, fmt.Errorf("%s: %w", file, err)
 		}
 		for _, raw := range raws {
-			refs, err := scanRecords(raw)
+			sc, err := scanResponse(raw)
 			if err != nil {
 				return 0, fmt.Errorf("%s: %w", file, err)
 			}
-			n += len(refs)
+			n += sc.Records
 		}
 	}
 	return n, nil
@@ -241,6 +234,6 @@ func readWhole(path string) ([]byte, error) {
 	return io.ReadAll(r)
 }
 
-// CountRecords returns how many records the shard has indexed for this group,
-// which is what a migration checks its source against.
-func (w *Writer) CountRecords() (int, error) { return w.st.countRecords(w.groupID) }
+// CountRecords returns how many records the shard holds for this group, which
+// is what a migration checks its source against.
+func (w *Writer) CountRecords() int { return w.g.countRecords() }

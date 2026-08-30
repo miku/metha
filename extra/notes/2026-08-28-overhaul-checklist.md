@@ -394,6 +394,128 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       `metha.ErrLocked` moved to `store`. Everything else keeps working through
       the aliases.
 
+- [x] **Window-granularity extents; the `records` table and sqlite both gone.**
+      Steps 4 and 5 of the simplification note, done as one move. Doing 4 in
+      sqlite would have meant authoring an extents schema, bumping
+      `schemaVersion` and adding a ladder step, then deleting all three days
+      later; no shard on disk needed preserving, so the intermediate bought
+      nothing.
+
+      **A window's bytes are one run in one segment.** From the length the index
+      vouched for when `Begin` was called to the length it vouches for at
+      `Commit`. That holds because nothing else writes into a segment while a
+      window is open and a segment rotates only between windows - the same
+      invariant that made "reads always go through the index" sound, used one
+      layer up. So the extent replaces eleven columns per record with three per
+      commit, and `FrameOff` backpatching disappears rather than moving.
+
+      Extents join onto the run already there when they follow it directly,
+      which they do unless a superseded copy sits in between. Measured on a
+      shard of 90 consecutive daily windows plus three runs over an unsettled
+      day:
+
+          "windows": [
+            { "from": "2022-12-31T23:00:00Z", "until": "2023-03-31T21:59:59.999999999Z",
+              "status": "ok", "requests": 90, "records": 90, "deleted": 9,
+              "lo": "2023-01-01T00:00:00Z", "hi": "2023-03-31T23:59:59Z",
+              "extents": [{"seg": 1, "off": 0, "len": 28148}] },
+            { "from": "2023-03-31T22:00:00Z", "until": "2023-04-01T21:59:59.999999999Z",
+              "status": "partial", "requests": 3, "records": 3,
+              "extents": [{"seg": 1, "off": 28801, "len": 339}] }
+          ]
+
+      90 windows, one row, one extent. The partial window's extent starts at
+      28801 rather than 28148: the 653 bytes between are the two copies it
+      superseded, still in the segment because the blob layer is append-only,
+      named by nothing and so unreachable by any read. **1,403 bytes** for the
+      whole index of that shard, against 40,960 for an empty sqlite one.
+
+      | | before | after |
+      |---|---|---|
+      | binary | 34,209,650 | 27,974,866 |
+      | modules | 15 direct, 14 indirect | 14 direct, 7 indirect |
+      | `store` non-test lines | 2,859 | 2,515 |
+      | empty shard index | 40,960 B | no file at all |
+
+      **The index is one JSON file, written whole and renamed into place.** Which
+      is what v1 got for free from renaming a data file, made explicit rather
+      than implied by a filename. Writing it whole is affordable precisely
+      because windows merge and extents join. Recovery is unchanged: a torn tail
+      past `committed`, truncated on open. The directory is deliberately not
+      fsynced after the rename - a rename that does not survive a power cut
+      leaves the previous index, which is the last commit undone, which is the
+      torn tail the next open already truncates and the next run already
+      refetches.
+
+      A shard now holds exactly four things, and `TestShardHoldsOnlyWhatItNeeds`
+      pins that: `meta.json`, `state.json`, `LOCK`, `seg/`. No WAL, no shm, no
+      `.tmp`.
+
+      **Pruning is on the datestamps, not on the window bounds.** Each window
+      carries `lo`/`hi` bracketing the datestamps of the records it holds,
+      widened to whole seconds so the two granularities compare as text, plus a
+      `deleted` counter. Window bounds would have been the obvious thing to
+      prune on and would have been wrong: an endpoint that ignores `from` and
+      `until` returns records outside the range it was asked for - that is
+      literally the `selective=false` quirk - and pruning on the request would
+      drop them. A datestamp in any third shape (fractional seconds, a numeric
+      offset) brackets to nothing, which makes the window unprunable rather than
+      mis-pruned. `dayOf`/`dayAfter` and the day-rounding they existed for are
+      gone with the sargability they were protecting.
+
+      **Boundaries are `time.Time` again.** With comparison in Go rather than in
+      SQL, text order no longer has to be time order, so `windowTime`, `ts`,
+      `parseWindowTime` and `TestWindowTimeOrder` all go, and with them a whole
+      class of bug. JSON round-trips a nanosecond boundary exactly;
+      `TestWindowBoundsRoundTrip` is what stands in its place. This also fixes
+      half of the open `Stats` item below - `covered` no longer prints
+      `.000000000` on both ends.
+
+      **Reads have one path.** `matchingFrames`, `recordsByScan` and
+      `errNoIndex` are gone; there is no fallback to disagree with the index.
+      The scan survives as a *test* oracle, which is where it belongs:
+      `TestIndexAndScanAgree` reads every byte of every segment and checks the
+      pruned answer against it, so "the index prunes, it never decides" is
+      asserted rather than asserted-and-also-implemented-twice. Whether an
+      endpoint was harvested at all is now `meta.json`'s answer rather than the
+      index's, since the shard's account of its groups is written when a group
+      is opened and the index by the first commit - so an empty harvest reads as
+      empty and an absent one as `ErrNotHarvested`.
+
+      Also gone: `frame`, `readFrame`, `segNumber`, `recordRef`, `recordRow`,
+      `openWindow.unflushed`, `prepareSchema`/`prepareSchemaTo`, `migrations`,
+      `errUnversioned`, `stamp`, `application_id`/`user_version`, the pragma
+      DSN, the busy-timeout reasoning, `windowRecords`' join, and `sha256` on
+      every record. `scanRecords` became `scanResponse` and now learns only what
+      the index keeps - counts and a datestamp bracket - so a write parses
+      strictly less than it did. `Resume`, `HasWindow`, `WindowRecords`,
+      `CountRecords` and `SegmentBytes` lost their error returns: they are
+      in-memory reads now, and an error return nothing can produce is a branch
+      every caller has to write and no test can reach.
+
+      **What was paid.** Frame-granularity pruning: a `--from`/`--until` inside a
+      monthly window decompresses that window rather than an 8 MB frame. For most
+      repositories a month is well under 8 MB compressed; for the largest ones it
+      is worse. `duckdb ATTACH` per shard is gone, which was never the good
+      version of the analysis story - `metha export` over the whole corpus is.
+      Migration verification counts what the windows were stamped with as their
+      own bytes were written, rather than index rows; both sides are still
+      derived from the same scan, so a second run verifies as strictly as the
+      first.
+
+      **Existing v2 caches must be wiped** (`rm -rf ~/Library/Caches/metha`).
+      This is the wipe the `user_version` entry above promised would be the last;
+      it is that one, arriving in a different form. No refusal was written for a
+      leftover `state.sqlite`: a permanent guard against a file format that never
+      shipped is exactly the cruft this whole exercise is about.
+
+      Verified end to end against a shard built by the real writer: `ls`, `stat`
+      (`93 records (9 deleted)`, `covered 2023-01-01 .. 2023-04-01`), `cat` at
+      84, `cat --only-deleted` at 9, `cat --from --until` cutting to 27, and
+      `files | xargs cat | zstd -dc` still yielding 96 responses - the three
+      superseded copies included, because that is the raw cache and it stays
+      that way.
+
 ---
 
 ## open — settle before the move
@@ -412,12 +534,21 @@ made; what is left below does not.
       after which an error window is given up on) — a behaviour decision, not a
       layout one.
 
-- [ ] **`Sink.HasWindow` is never called by the harvester.** Only
-      `store/migrate.go:118` uses it. The harvester decides what to fetch from
-      `Resume()` alone, so a range already covered by a differently-shaped
-      window is refetched rather than skipped. Now that `hasWindow` is
-      containment this would actually work; worth wiring or worth deleting from
-      the `Sink` interface, but not both.
+- [ ] **`HasWindow` is never called by the harvester.** Only `store/migrate.go`
+      uses it. The harvester decides what to fetch from `Resume()` alone, so a
+      range already covered by a differently-shaped window is refetched rather
+      than skipped. Now that `hasWindow` is containment this would actually
+      work; worth wiring or worth deleting, but not both.
+
+      There is a hole on the other side of the same question: committing a
+      settled window whose range lies *inside* an already-merged settled row
+      adds a second row claiming it, and both rows have extents, so a read
+      returns those records twice. `supersede` only drops an exact match.
+      Unreachable from the driver, which plans from `Resume()` and so never
+      replans a covered range, and it predates the extents - the old code
+      inserted a second window row and a second set of record rows in exactly
+      the same shape. Wiring `HasWindow` closes it; so would making `supersede`
+      recognise containment.
 
 - [ ] **`Stats.First` and `Stats.Last` are strings, `Stats.LastSeen` is a
       `time.Time`,** in the same struct. Making all three times and formatting

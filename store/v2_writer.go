@@ -32,32 +32,45 @@ type Writer struct {
 	id      Identity
 	shard   string
 	group   Group
-	groupID int64
 
 	lock *os.File
 	st   *state
+	g    *groupState
 	meta *Meta
 	enc  *zstd.Encoder
 
 	seg          *segWriter
-	segID        int64
 	segNum       int
 	segCommitted int64 // the length the index vouches for
 
 	win *openWindow
 }
 
-// openWindow accumulates what a window will commit.
+// openWindow accumulates what a window will commit. What it does not accumulate
+// is where each record went: a window's bytes are one run in one segment, from
+// the length the index vouched for when it opened to the length it vouches for
+// when it commits.
 type openWindow struct {
 	from, until time.Time
 	settled     bool
 	started     time.Time
 	requests    int
 	bytes       int64
-	records     []recordRow
-	// unflushed is the index into records from which rows are still waiting
-	// for the frame they will land in.
-	unflushed int
+	records     int
+	deleted     int
+	lo, hi      string // the datestamp bracket over every record so far
+}
+
+// cover grows the window's datestamp bracket to hold a response's. A response
+// that carried no records says nothing about datestamps.
+func (o *openWindow) cover(sc scanned) {
+	switch {
+	case sc.Records == 0:
+	case o.records == sc.Records: // the first response with anything in it
+		o.lo, o.hi = sc.Lo, sc.Hi
+	default:
+		o.lo, o.hi = coverStamps(o.lo, o.hi, sc.Lo, sc.Hi)
+	}
 }
 
 // OpenWriter opens a shard for appending, creating it if necessary, and takes
@@ -106,16 +119,7 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	if err := writeMeta(shard, meta); err != nil {
 		return nil, err
 	}
-	st, err := openState(filepath.Join(shard, stateName))
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err != nil {
-			st.close()
-		}
-	}()
-	groupID, err := st.ensureGroup(group)
+	st, err := loadState(filepath.Join(shard, stateName))
 	if err != nil {
 		return nil, err
 	}
@@ -128,9 +132,9 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 		id:      id,
 		shard:   shard,
 		group:   group,
-		groupID: groupID,
 		lock:    lock,
 		st:      st,
+		g:       st.ensureGroup(group.Format, group.Set),
 		meta:    meta,
 		enc:     enc,
 	}
@@ -142,39 +146,33 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 
 // openSegment picks up the group's newest segment, or starts the first one,
 // and truncates whatever a previous crash left past the committed length.
+//
+// The new segment is only recorded in memory: the next commit writes the index
+// out whole, and a harvest that dies before then leaves a file the next open
+// truncates back to nothing. So a shard whose first harvest got nowhere costs no
+// index at all.
 func (w *Writer) openSegment() error {
-	segs, err := w.st.segments(w.groupID)
-	if err != nil {
-		return err
-	}
 	var (
 		num       = 1
 		committed int64
-		id        int64
 	)
-	if len(segs) > 0 {
-		last := segs[len(segs)-1]
-		n, err := segNumber(last.Name)
-		if err != nil {
-			return fmt.Errorf("segment name %q: %w", last.Name, err)
-		}
+	if n := len(w.g.Segments); n > 0 {
+		last := w.g.Segments[n-1]
 		if last.Committed >= segMaxSize {
-			num = n + 1 // Rotate; the old segment stays as it is.
+			num = last.Num + 1 // Rotate; the old segment stays as it is.
 		} else {
-			num, committed, id = n, last.Committed, last.ID
+			num, committed = last.Num, last.Committed
 		}
 	}
-	if id == 0 {
-		if id, err = w.st.newSegment(w.groupID, segFileName(num)); err != nil {
-			return err
-		}
+	if w.g.segment(num) == nil {
+		w.g.Segments = append(w.g.Segments, &segRow{Num: num})
 	}
 	path := filepath.Join(w.shard, segDirname, w.group.Dir, segFileName(num))
 	seg, err := openSegWriter(path, committed, w.enc)
 	if err != nil {
 		return err
 	}
-	w.seg, w.segID, w.segNum, w.segCommitted = seg, id, num, committed
+	w.seg, w.segNum, w.segCommitted = seg, num, committed
 	return nil
 }
 
@@ -186,9 +184,6 @@ func (w *Writer) Close() error {
 	}
 	if w.seg != nil {
 		errs = append(errs, w.seg.close())
-	}
-	if w.st != nil {
-		errs = append(errs, w.st.close())
 	}
 	if w.enc != nil {
 		w.enc.Close()
@@ -221,36 +216,30 @@ func (w *Writer) Identify() *oai.Identify { return w.meta.Identify }
 // filenames, and a more exact one: a window that failed, or that could only
 // report what existed at the moment it was fetched, hands back its own start,
 // so the range is covered again rather than resumed past.
-func (w *Writer) Resume() (time.Time, error) {
-	unsettled, err := w.st.unsettledFrom(w.groupID)
-	if err != nil {
-		return time.Time{}, err
+// Into local time: boundaries are the edges of local days, and in most of the
+// world such an instant belongs to a different UTC date, so a caller that goes
+// on to think in days would be off by one.
+func (w *Writer) Resume() time.Time {
+	if unsettled := w.g.unsettledFrom(); !unsettled.IsZero() {
+		return unsettled.In(time.Local)
 	}
-	if unsettled != "" {
-		return parseWindowTime(unsettled)
+	if last := w.g.lastWindow(); !last.IsZero() {
+		return nextAfter(last).In(time.Local)
 	}
-	last, err := w.st.lastWindow(w.groupID)
-	if err != nil || last == "" {
-		return time.Time{}, err
-	}
-	end, err := parseWindowTime(last)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return nextAfter(end), nil
+	return time.Time{}
 }
 
 // HasWindow reports whether a range has already been harvested, so that a
 // re-run can skip it - including a window that yielded no records at all,
 // which in v1 had to be remembered by writing an otherwise pointless file.
-func (w *Writer) HasWindow(from, until time.Time) (bool, error) {
-	return w.st.hasWindow(w.groupID, ts(from), ts(until))
+func (w *Writer) HasWindow(from, until time.Time) bool {
+	return w.g.hasWindow(from.UTC(), until.UTC())
 }
 
-// WindowRecords returns how many records the shard has indexed for one range,
-// which is what checking an already migrated window against its source needs.
-func (w *Writer) WindowRecords(from, until time.Time) (int, error) {
-	return w.st.windowRecords(w.groupID, ts(from), ts(until))
+// WindowRecords returns how many records the shard holds for one range, which
+// is what checking an already migrated window against its source needs.
+func (w *Writer) WindowRecords(from, until time.Time) int {
+	return w.g.windowRecords(from.UTC(), until.UTC())
 }
 
 // Begin opens a window. Every Append until Commit belongs to it. Pass settled
@@ -265,62 +254,36 @@ func (w *Writer) Begin(from, until time.Time, settled bool) error {
 }
 
 // Append adds one raw response to the open window. The bytes go to the segment
-// as they are; what is parsed out of them only feeds the index.
+// as they are; what is parsed out of them is only the count and the datestamp
+// bracket the index keeps.
 func (w *Writer) Append(raw []byte) error {
 	if w.win == nil {
 		return ErrNoWindow
 	}
-	refs, err := scanRecords(raw)
+	sc, err := scanResponse(raw)
 	if err != nil {
 		return fmt.Errorf("scan response: %w", err)
 	}
-	off := w.seg.append(raw)
-	for _, ref := range refs {
-		w.win.records = append(w.win.records, recordRow{
-			Seg:        w.segID,
-			Identifier: ref.Identifier,
-			Datestamp:  ref.Datestamp,
-			Status:     ref.Status,
-			SetSpec:    ref.SetSpec,
-			RecOff:     off + ref.Off,
-			RecLen:     ref.Len,
-			Sum:        ref.Sum,
-		})
-	}
+	w.seg.append(raw)
+	w.win.records += sc.Records
+	w.win.deleted += sc.Deleted
+	w.win.cover(sc)
 	w.win.requests++
 	w.win.bytes += int64(len(raw))
 	if w.seg.pending() >= frameTarget {
-		return w.flushFrame()
+		return w.seg.flush()
 	}
-	return nil
-}
-
-// flushFrame writes the buffered responses as one frame and points the records
-// that were in it at where it landed.
-func (w *Writer) flushFrame() error {
-	fr, ok, err := w.seg.flush()
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return nil
-	}
-	for i := w.win.unflushed; i < len(w.win.records); i++ {
-		w.win.records[i].FrameOff = fr.Off
-		w.win.records[i].FrameLen = fr.Len
-	}
-	w.win.unflushed = len(w.win.records)
 	return nil
 }
 
 // Commit makes the open window durable: the frames reach the disk first, then
-// one transaction records how far the segment is good for, what the window
-// cost and every record it carried.
+// the index is written out whole and renamed into place, recording how far the
+// segment is good for, what the window cost, and the run of bytes it appended.
 func (w *Writer) Commit() error {
 	if w.win == nil {
 		return ErrNoWindow
 	}
-	if err := w.flushFrame(); err != nil {
+	if err := w.seg.flush(); err != nil {
 		return err
 	}
 	if err := w.seg.sync(); err != nil {
@@ -332,21 +295,17 @@ func (w *Writer) Commit() error {
 	switch {
 	case !w.win.settled:
 		status = statusPartial
-	case len(w.win.records) == 0:
+	case w.win.records == 0:
 		status = statusEmpty
 	}
-	row := windowRow{
-		GroupID:  w.groupID,
-		From:     ts(w.win.from),
-		Until:    ts(w.win.until),
-		Status:   status,
-		Requests: w.win.requests,
-		Records:  len(w.win.records),
-		Bytes:    w.win.bytes,
-		Started:  w.win.started,
-		Finished: time.Now().UTC(),
+	row := w.win.row(status)
+	// Everything appended since the window opened, which is a whole number of
+	// frames: nothing else writes into a segment while a window is open, and a
+	// segment rotates only between windows.
+	if n := w.seg.size - w.segCommitted; n > 0 {
+		row.Extents = []extent{{Seg: w.segNum, Off: w.segCommitted, Len: n}}
 	}
-	if err := w.st.commitWindow(row, w.segID, w.seg.size, w.win.records); err != nil {
+	if err := w.st.commitWindow(w.g, row, w.segNum, w.seg.size); err != nil {
 		return err
 	}
 	w.segCommitted = w.seg.size
@@ -377,17 +336,46 @@ func (w *Writer) Abort(cause error) error {
 	if cause == nil {
 		return nil
 	}
-	return w.st.commitWindow(windowRow{
-		GroupID:  w.groupID,
-		From:     ts(win.from),
-		Until:    ts(win.until),
-		Status:   statusError,
-		Requests: win.requests,
-		Bytes:    win.bytes,
-		Started:  win.started,
+	row := win.row(statusError)
+	// A failed window claims no records, whatever it had appended before it gave
+	// up: those bytes have just been cut back off the segment. What it keeps is
+	// what it cost - the requests and the bytes fetched are spent either way.
+	row.Records, row.Deleted, row.Lo, row.Hi = 0, 0, "", ""
+	row.Err = cause.Error()
+	// The segment is back at the length the index already vouches for, so this
+	// records it unchanged rather than as a special case.
+	return w.st.commitWindow(w.g, row, w.segNum, w.segCommitted)
+}
+
+// row renders what a window accumulated as the index row for it.
+func (o *openWindow) row(status string) windowRow {
+	row := windowRow{
+		From:     o.from.UTC(),
+		Until:    o.until.UTC(),
+		Status:   status,
+		Requests: o.requests,
+		Records:  o.records,
+		Deleted:  o.deleted,
+		Bytes:    o.bytes,
+		Started:  o.started,
 		Finished: time.Now().UTC(),
-		Err:      cause.Error(),
-	}, 0, 0, nil)
+		Lo:       o.lo,
+		Hi:       o.hi,
+	}
+	row.Elapsed = elapsed(row.Started, row.Finished)
+	return row
+}
+
+// elapsed is how long a window took, which is stored rather than derived so
+// that it survives being merged: two runs that share a row are still two spells
+// of work with idle time between them, and the wall clock across both is not
+// what "time spent harvesting" means.
+func elapsed(started, finished time.Time) int64 {
+	d := finished.Sub(started)
+	if started.IsZero() || finished.IsZero() || d < 0 {
+		return 0
+	}
+	return int64(d)
 }
 
 // removeV2 forgets one group of a shard: its segments and its rows. The shard
@@ -404,17 +392,12 @@ func removeV2(baseDir string, id Identity) error {
 	if lock != nil {
 		defer lock.Close()
 	}
-	st, err := openState(filepath.Join(shard, stateName))
+	st, err := loadState(filepath.Join(shard, stateName))
 	if err != nil {
 		return err
 	}
-	defer st.close()
-	groupID, err := st.groupID(id.Format, id.Set)
-	if err != nil {
-		return err
-	}
-	if groupID != 0 {
-		if err := st.dropGroup(groupID); err != nil {
+	if g := st.group(id.Format, id.Set); g != nil {
+		if err := st.dropGroup(g); err != nil {
 			return err
 		}
 	}
@@ -432,12 +415,12 @@ func removeV2(baseDir string, id Identity) error {
 // SegmentBytes returns how many bytes this group's segments occupy. Superseded
 // copies count: they are on disk, which is what a caller asking about size
 // wants to know.
-func (w *Writer) SegmentBytes() (int64, error) { return w.st.segmentBytes(w.groupID) }
+func (w *Writer) SegmentBytes() int64 { return w.g.segmentBytes() }
 
 // Records returns how many records the open window has seen so far.
 func (w *Writer) Records() int {
 	if w.win == nil {
 		return 0
 	}
-	return len(w.win.records)
+	return w.win.records
 }

@@ -2,15 +2,12 @@ package store
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/miku/metha/oai"
@@ -38,56 +35,37 @@ func segFileName(n int) string {
 	return fmt.Sprintf("%06d%s", n, segExt)
 }
 
-// segNumber recovers the sequence number a segment file name encodes.
-func segNumber(name string) (int, error) {
-	var n int
-	_, err := fmt.Sscanf(name, "%06d"+segExt, &n)
-	return n, err
+// scanned is what one raw response contributes to the window it lands in: how
+// many records it carried, how many of those were tombstones, and the range of
+// datestamps they fall in.
+type scanned struct {
+	Records int
+	Deleted int
+	Lo, Hi  string // widened to whole seconds; empty when they cannot be bracketed
 }
 
-// frame is one zstd frame inside a segment file.
-type frame struct {
-	Off int64 // where the frame starts in the segment file
-	Len int64 // compressed length of the frame
-}
-
-// recordRef locates a record inside the uncompressed content of a frame, and
-// carries what an index needs in order to filter without decompressing.
-type recordRef struct {
-	Identifier string
-	Datestamp  string
-	Status     string
-	SetSpec    string
-	Off        int64 // offset within the frame's uncompressed content
-	Len        int64
-	Sum        string // sha256 of the record bytes, for dedupe
-}
-
-// scanRecords finds every record of a raw response and where it sits. The
-// offsets are relative to the start of raw; the caller shifts them to the frame
-// the response is being appended to.
+// scanResponse counts the records of a raw response and brackets their
+// datestamps. It is the only reason a write parses what it stores at all: the
+// counts are what a migration verifies against and what metha stat reports, and
+// the bracket is what lets a filtered read skip a window whole.
 //
-// Byte ranges rather than re-marshaled records, because the blob layer stores
-// what the endpoint sent: a range decodes back to exactly the bytes that were
-// harvested, which is what makes the index rebuildable and an export
-// verifiable.
-func scanRecords(raw []byte) ([]recordRef, error) {
+// It deliberately learns nothing else. Addressing individual records inside a
+// window was what the record index bought, and a window is the unit of
+// atomicity everywhere else, so it is the unit of addressing too.
+func scanResponse(raw []byte) (scanned, error) {
 	dec := xml.NewDecoder(bytes.NewReader(raw))
 	dec.Strict = false
 	var (
-		refs  []recordRef
+		out   scanned
 		stack []string
 	)
 	for {
-		// The offset before the token is the end of the previous one, so it
-		// can point at whitespace; the record starts at the next '<'.
-		prev := dec.InputOffset()
 		tok, err := dec.Token()
 		if errors.Is(err, io.EOF) {
-			return refs, nil
+			return out, nil
 		}
 		if err != nil {
-			return nil, err
+			return scanned{}, err
 		}
 		if _, ok := tok.(xml.EndElement); ok {
 			if len(stack) > 0 {
@@ -116,33 +94,44 @@ func scanRecords(raw []byte) ([]recordRef, error) {
 		// DecodeElement consumes the whole element, end tag included, so the
 		// stack is unchanged by a record.
 		if err := dec.DecodeElement(&rec, &se); err != nil {
-			return nil, err
+			return scanned{}, err
 		}
 		if rec.Header.Identifier == "" {
 			continue
 		}
-		end := dec.InputOffset()
-		start := prev + int64(bytes.IndexByte(raw[prev:end], '<'))
-		sum := sha256.Sum256(raw[start:end])
-		// A record can be in several sets. They are kept as one field,
-		// space separated, which a setSpec cannot contain: enough for an
-		// export to read back, though not for the index to filter on.
-		setSpec := strings.Join(rec.Header.SetSpec, " ")
-		refs = append(refs, recordRef{
-			Identifier: rec.Header.Identifier,
-			Datestamp:  rec.Header.DateStamp,
-			Status:     rec.Header.Status,
-			SetSpec:    setSpec,
-			Off:        start,
-			Len:        end - start,
-			Sum:        hex.EncodeToString(sum[:]),
-		})
+		out.Records++
+		if rec.Deleted() {
+			out.Deleted++
+		}
+		out.cover(stampBounds(rec.Header.DateStamp))
+	}
+}
+
+// cover grows the datestamp bracket to hold another record's. It is called once
+// per record, straight after the count, so a Records of one is the first. A pair
+// that could not be bracketed - a datestamp in some shape no bound can be
+// ordered against - makes the whole scan unbounded, and an unbounded window is
+// one a filtered read never skips.
+func (s *scanned) cover(lo, hi string) {
+	switch {
+	case s.Records == 1:
+		s.Lo, s.Hi = lo, hi
+	case lo == "" || s.Lo == "":
+		s.Lo, s.Hi = "", ""
+	default:
+		s.Lo, s.Hi = min(s.Lo, lo), max(s.Hi, hi)
 	}
 }
 
 // segWriter appends frames to one segment file. It buffers uncompressed
-// responses until a frame is worth writing, and reports where each frame
-// landed so the index can point into it.
+// responses until a frame is worth writing.
+//
+// Frames are still how a segment is written - one frame per response would
+// compress badly and one per segment would rule out reading anything without
+// decompressing everything before it - but nothing addresses one any more. A
+// window's frames are contiguous, because appends happen only inside a window
+// and segments rotate only between them, so the run of bytes a commit appended
+// is a valid zstd stream on its own.
 type segWriter struct {
 	path string
 	f    *os.File
@@ -182,29 +171,21 @@ func openSegWriter(path string, committed int64, enc *zstd.Encoder) (*segWriter,
 // pending returns the number of buffered bytes not yet in a frame.
 func (w *segWriter) pending() int64 { return int64(len(w.buf)) }
 
-// append buffers a response and returns its offset within the frame being
-// built.
-func (w *segWriter) append(raw []byte) int64 {
-	off := int64(len(w.buf))
-	w.buf = append(w.buf, raw...)
-	return off
-}
+// append buffers a response.
+func (w *segWriter) append(raw []byte) { w.buf = append(w.buf, raw...) }
 
-// flush compresses the buffered responses into one frame. It returns the frame
-// and whether anything was written.
-func (w *segWriter) flush() (frame, bool, error) {
+// flush compresses the buffered responses into one frame.
+func (w *segWriter) flush() error {
 	if len(w.buf) == 0 {
-		return frame{}, false, nil
+		return nil
 	}
-	compressed := w.enc.EncodeAll(w.buf, nil)
-	n, err := w.f.Write(compressed)
+	n, err := w.f.Write(w.enc.EncodeAll(w.buf, nil))
 	if err != nil {
-		return frame{}, false, err
+		return err
 	}
-	fr := frame{Off: w.size, Len: int64(n)}
 	w.size += int64(n)
 	w.buf = w.buf[:0]
-	return fr, true, nil
+	return nil
 }
 
 // truncate cuts the segment back to a length the index vouches for and drops
@@ -227,22 +208,3 @@ func (w *segWriter) truncate(size int64) error {
 func (w *segWriter) sync() error { return w.f.Sync() }
 
 func (w *segWriter) close() error { return w.f.Close() }
-
-// readFrame decompresses one frame of a segment file.
-func readFrame(path string, fr frame) ([]byte, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	compressed := make([]byte, fr.Len)
-	if _, err := f.ReadAt(compressed, fr.Off); err != nil {
-		return nil, err
-	}
-	dec, err := zstd.NewReader(nil)
-	if err != nil {
-		return nil, err
-	}
-	defer dec.Close()
-	return dec.DecodeAll(compressed, nil)
-}

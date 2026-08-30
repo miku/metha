@@ -120,13 +120,10 @@ func TestUnboundedHarvestRepeats(t *testing.T) {
 		// A run makes no claim about a range, so it leaves no resume point
 		// behind: a later harvest with intervals has to start from the
 		// beginning, since nothing here says what was covered.
-		if resume, err := w.Resume(); err != nil || !resume.IsZero() {
-			t.Errorf("run %d: Resume: got %v, %v, want the zero time", run, resume, err)
+		if resume := w.Resume(); !resume.IsZero() {
+			t.Errorf("run %d: Resume: got %v, want the zero time", run, resume)
 		}
-		bytes, err := w.SegmentBytes()
-		if err != nil {
-			t.Fatalf("run %d: SegmentBytes: %v", run, err)
-		}
+		bytes := w.SegmentBytes()
 		if bytes <= lastBytes {
 			t.Errorf("run %d: segments hold %d bytes, want more than %d", run, bytes, lastBytes)
 		}

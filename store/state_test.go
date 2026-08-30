@@ -1,156 +1,134 @@
 package store
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
+	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 )
 
-// TestWindowTimeOrder pins the one property the index depends on and cannot
-// check for itself: these strings are compared and ordered as text, by SQLite,
-// in every query that asks which window came first or last. If the encoding
-// ever stops being fixed width, text order stops being time order and the
-// resume point starts moving backwards - silently, and only for some pairs.
-func TestWindowTimeOrder(t *testing.T) {
+// TestWindowBoundsRoundTrip pins what the index depends on and cannot check for
+// itself. Boundaries are exact instants - a window ends one nanosecond before
+// the next begins, and Resume hands the parsed value straight to the next
+// harvest as a request bound - so a boundary that does not survive being written
+// and read back moves the resume point, silently and only for some values.
+func TestWindowBoundsRoundTrip(t *testing.T) {
 	base := time.Date(2023, 6, 1, 12, 0, 0, 0, time.UTC)
 	instants := []time.Time{
-		base.AddDate(0, -1, 0),
-		base.Add(-time.Second),
 		base,
-		base.Add(time.Nanosecond),             // the pair RFC3339Nano inverted:
+		base.Add(time.Nanosecond),
 		base.Add(999999999 * time.Nanosecond), // a fraction against a whole second
-		base.Add(time.Second),
-		base.AddDate(0, 0, 1),
+		base.AddDate(0, 0, 1).Add(-time.Nanosecond),
+		time.Date(2023, 3, 15, 23, 59, 59, int(time.Second-1), time.Local),
 	}
-	for i := 1; i < len(instants); i++ {
-		prev, cur := ts(instants[i-1]), ts(instants[i])
-		if !(prev < cur) {
-			t.Errorf("%s sorts at or after %s, but happens before it", prev, cur)
-		}
-		if len(prev) != len(cur) {
-			t.Errorf("width differs: %q is %d bytes, %q is %d", prev, len(prev), cur, len(cur))
-		}
-	}
-	// What is written has to come back as what went in, since Resume hands the
-	// parsed value straight to the next harvest as a request bound.
-	got, err := parseWindowTime(ts(instants[3]))
+	// The index sorts its windows by start when it is written, so the fixture
+	// has to be in that order to be compared row by row.
+	slices.SortFunc(instants, func(a, b time.Time) int { return a.Compare(b) })
+	path := filepath.Join(t.TempDir(), stateName)
+	st, err := loadState(path)
 	if err != nil {
-		t.Fatalf("parseWindowTime: %v", err)
+		t.Fatalf("loadState: %v", err)
 	}
-	if !got.Equal(instants[3]) {
-		t.Errorf("round trip: got %v, want %v", got, instants[3])
+	g := st.ensureGroup("oai_dc", "")
+	for _, at := range instants {
+		g.Windows = append(g.Windows, &windowRow{From: at.UTC(), Until: at.UTC(), Status: statusOK})
 	}
-}
-
-// openRaw opens a database without the version machinery, so a test can put a
-// file into a shape prepareSchemaTo has to have an opinion about.
-func openRaw(t *testing.T, path string) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite", path)
+	if err := st.save(); err != nil {
+		t.Fatalf("save: %v", err)
+	}
+	back, err := loadState(path)
 	if err != nil {
-		t.Fatalf("open %s: %v", path, err)
+		t.Fatalf("loadState: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
-	return db
+	got := back.group("oai_dc", "")
+	if got == nil || len(got.Windows) != len(instants) {
+		t.Fatalf("read back %v, want %d windows", got, len(instants))
+	}
+	for i, at := range instants {
+		if !got.Windows[i].From.Equal(at) {
+			t.Errorf("window %d: got %v, want %v", i, got.Windows[i].From, at)
+		}
+	}
 }
 
-// TestSchemaStamp: a shard says what it is and which shape it has, in the two
-// header integers sqlite keeps for the application and never reads itself.
-func TestSchemaStamp(t *testing.T) {
-	w, err := OpenWriter(t.TempDir(), Identity{BaseURL: "http://example.com", Format: "oai_dc"})
+// TestStateVersion: a shard and the binary opening it disagree out loud rather
+// than quietly. The number is in the file so that a metha which does not know
+// the shape of an index is in no position to write into it.
+func TestStateVersion(t *testing.T) {
+	path := filepath.Join(t.TempDir(), stateName)
+	if err := os.WriteFile(path, []byte(`{"version": 99, "groups": []}`), 0644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	_, err := loadState(path)
+	if err == nil || !strings.Contains(err.Error(), "version 99") {
+		t.Errorf("loading an index from the future: got %v, want it refused by version", err)
+	}
+}
+
+// TestSaveIsAtomic: the index is written whole and renamed into place, which is
+// the entirety of what makes a commit atomic. A temporary file left behind means
+// a shard carrying a second copy of its index, and a cache of a quarter million
+// shards carries a quarter million of them.
+func TestSaveIsAtomic(t *testing.T) {
+	dir := t.TempDir()
+	st, err := loadState(filepath.Join(dir, stateName))
 	if err != nil {
-		t.Fatalf("OpenWriter: %v", err)
+		t.Fatalf("loadState: %v", err)
 	}
-	defer w.Close()
-	var appID, version int
-	if err := w.st.db.QueryRow(`SELECT * FROM pragma_application_id`).Scan(&appID); err != nil {
-		t.Fatalf("application_id: %v", err)
+	st.ensureGroup("oai_dc", "")
+	if err := st.save(); err != nil {
+		t.Fatalf("save: %v", err)
 	}
-	if err := w.st.db.QueryRow(`SELECT * FROM pragma_user_version`).Scan(&version); err != nil {
-		t.Fatalf("user_version: %v", err)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("readdir: %v", err)
 	}
-	if appID != applicationID {
-		t.Errorf("application_id = %#x, want %#x", appID, applicationID)
-	}
-	if version != schemaVersion {
-		t.Errorf("user_version = %d, want %d", version, schemaVersion)
+	for _, entry := range entries {
+		if entry.Name() != stateName {
+			t.Errorf("save left %q behind, want only %q", entry.Name(), stateName)
+		}
 	}
 }
 
-// TestSchemaRefusesUnknown: the point of the stamp is the two files this code
-// must not write into - one from before the stamp existed, whose shape is
-// anybody's guess, and one from a metha that knows something this one does not.
-func TestSchemaRefusesUnknown(t *testing.T) {
-	t.Run("unversioned", func(t *testing.T) {
-		db := openRaw(t, filepath.Join(t.TempDir(), "state.sqlite"))
-		if _, err := db.Exec(schema); err != nil {
-			t.Fatalf("schema: %v", err)
+// TestStampBounds: the index prunes on the range a datestamp stands for, and a
+// bound it cannot order against has to widen that range rather than narrow it.
+func TestStampBounds(t *testing.T) {
+	for _, tt := range []struct{ stamp, lo, hi string }{
+		// A bare date covers its whole day; a timestamp covers only itself.
+		{"2023-05-01", "2023-05-01T00:00:00Z", "2023-05-01T23:59:59Z"},
+		{"2023-05-01T14:23:00Z", "2023-05-01T14:23:00Z", "2023-05-01T14:23:00Z"},
+		// Every other shape an endpoint might send prunes nothing.
+		{"", "", ""},
+		{"2023-05-01T14:23:00.500Z", "", ""},
+		{"2023-05-01T14:23:00+02:00", "", ""},
+		{"2023-05", "", ""},
+		{"not a date", "", ""},
+	} {
+		lo, hi := stampBounds(tt.stamp)
+		if lo != tt.lo || hi != tt.hi {
+			t.Errorf("stampBounds(%q) = %q, %q, want %q, %q", tt.stamp, lo, hi, tt.lo, tt.hi)
 		}
-		err := prepareSchemaTo(db, schemaVersion, migrations)
-		if !errors.Is(err, errUnversioned) {
-			t.Errorf("opening a shard with no stamp: got %v, want %v", err, errUnversioned)
-		}
-	})
-	t.Run("from the future", func(t *testing.T) {
-		db := openRaw(t, filepath.Join(t.TempDir(), "state.sqlite"))
-		if err := prepareSchemaTo(db, schemaVersion, migrations); err != nil {
-			t.Fatalf("first open: %v", err)
-		}
-		if _, err := db.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, schemaVersion+9)); err != nil {
-			t.Fatalf("stamp: %v", err)
-		}
-		err := prepareSchemaTo(db, schemaVersion, migrations)
-		if err == nil || !strings.Contains(err.Error(), "upgrade metha") {
-			t.Errorf("opening a newer shard: got %v, want it to say so", err)
-		}
-	})
+	}
 }
 
-// TestSchemaMigrates walks the ladder, which is the whole reason the stamp is
-// worth having: a shard written by an older metha is brought up to the shape
-// this one writes, in one transaction with the stamp that records it, and a gap
-// in the steps is refused rather than skipped over.
-func TestSchemaMigrates(t *testing.T) {
-	db := openRaw(t, filepath.Join(t.TempDir(), "state.sqlite"))
-	if err := prepareSchemaTo(db, schemaVersion, migrations); err != nil {
-		t.Fatalf("first open: %v", err)
+// TestExtentsJoin: a window harvested over several runs appends to the same
+// segment where the last commit stopped, so its bytes stay one run however many
+// goes it took. Only a superseded copy landing in between splits them, and that
+// is the whole of why a window can hold more than one extent.
+func TestExtentsJoin(t *testing.T) {
+	var w windowRow
+	w.addExtents([]extent{{Seg: 1, Off: 0, Len: 100}})
+	w.addExtents([]extent{{Seg: 1, Off: 100, Len: 50}})
+	if got := w.Extents; len(got) != 1 || got[0] != (extent{Seg: 1, Off: 0, Len: 150}) {
+		t.Errorf("contiguous appends: got %v, want one run of 150 bytes", got)
 	}
-	steps := map[int][]string{
-		schemaVersion:     {`ALTER TABLE windows ADD COLUMN probe INTEGER NOT NULL DEFAULT 0`},
-		schemaVersion + 1: {`CREATE TABLE probe_table (x INTEGER)`},
-	}
-	if err := prepareSchemaTo(db, schemaVersion+2, steps); err != nil {
-		t.Fatalf("upgrade: %v", err)
-	}
-	var version int
-	if err := db.QueryRow(`SELECT * FROM pragma_user_version`).Scan(&version); err != nil {
-		t.Fatalf("user_version: %v", err)
-	}
-	if version != schemaVersion+2 {
-		t.Errorf("after upgrading: user_version = %d, want %d", version, schemaVersion+2)
-	}
-	if _, err := db.Exec(`INSERT INTO probe_table (x) VALUES (1)`); err != nil {
-		t.Errorf("the second step did not run: %v", err)
-	}
-	var n int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('windows') WHERE name = 'probe'`).Scan(&n); err != nil {
-		t.Fatalf("table_info: %v", err)
-	}
-	if n != 1 {
-		t.Errorf("the first step did not run: windows has no probe column")
-	}
-	// Re-opening at the version it now carries is a no-op, so an upgrade is not
-	// something a shard can be walked through twice.
-	if err := prepareSchemaTo(db, schemaVersion+2, steps); err != nil {
-		t.Errorf("reopening an upgraded shard: %v", err)
-	}
-	// A version with no step to leave it stops the upgrade instead of pretending.
-	err := prepareSchemaTo(db, schemaVersion+4, steps)
-	if err == nil || !strings.Contains(err.Error(), "no way to upgrade") {
-		t.Errorf("upgrading across a missing step: got %v, want it refused", err)
+	// A gap is bytes belonging to a window this one superseded.
+	w.addExtents([]extent{{Seg: 1, Off: 200, Len: 25}})
+	// And a rotation puts the next run in a different file.
+	w.addExtents([]extent{{Seg: 2, Off: 0, Len: 10}})
+	if got := len(w.Extents); got != 3 {
+		t.Errorf("after a gap and a rotation: got %d extents, want 3", got)
 	}
 }

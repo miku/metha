@@ -254,8 +254,8 @@ const unboundedWarnBytes = 10 << 30
 // that has quietly dropped records, leaves them as the only surviving copy.
 // Discarding them is a decision, and -rm is where the user makes it.
 func warnUnbounded(w *store.Writer) {
-	n, err := w.SegmentBytes()
-	if err != nil || n < unboundedWarnBytes {
+	n := w.SegmentBytes()
+	if n < unboundedWarnBytes {
 		return
 	}
 	log.Warnf("-no-intervals stores the whole endpoint again on every run, and %s holds %.1f GB of them by now; reads return only the newest, the rest is dead weight. Harvest with -rm to start from one copy again.",

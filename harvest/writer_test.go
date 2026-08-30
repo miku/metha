@@ -47,8 +47,8 @@ func writerResumingAt(t *testing.T, at time.Time) *store.Writer {
 	if err := w.Commit(); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
-	if got, err := w.Resume(); err != nil || !got.Equal(at) {
-		t.Fatalf("Resume: got %v, %v, want %v", got, err, at)
+	if got := w.Resume(); !got.Equal(at) {
+		t.Fatalf("Resume: got %v, want %v", got, at)
 	}
 	return w
 }

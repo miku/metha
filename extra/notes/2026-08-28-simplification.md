@@ -52,6 +52,12 @@ costs, in order of how much they tangle the code:
   optional once the table exists;
 - and it is the *sole* remaining justification for sqlite.
 
+*Gone, and sqlite with it.* Every item on that list, plus `frame`, `readFrame`,
+`recordRef` and the sha256 of every record. What replaced it is one extent per
+commit and two datestamp strings per window. The invariant survives, one layer
+up and stated the same way: nothing writes into a segment while a window is
+open, and segments rotate only between windows, so a window's bytes are one run.
+
 **3. `Sink`.** (harvest.go:56) This interface does not express a domain
 boundary. It exists because root cannot import `store`, which is itself a
 consequence of the "root package unchanged" constraint from phase 1. What hangs
@@ -84,6 +90,10 @@ Every date bug on the checklist lives in that scatter — the UTC/local resume
 shift, `widen`, the unquantised settle boundary, the v1 filename prune. Each is
 a defect in a pure computation that today can only be reached through a network
 harvest and a sqlite file.
+
+*Gone.* `Plan(cov, id, now, cfg) -> []Window` in `plan.go`, and it paid on the
+first day: `TestPlanIsGapless` found `--daily` and `--hourly` claiming past the
+interval they were handed. The disk side shrank to `Resume()`.
 
 ---
 
@@ -160,6 +170,25 @@ a wash; for the largest ones it is worse. Migration verification stops counting
 index rows and counts what it parsed while writing, which it already does.
 Dedupe-by-identifier moves to `export`, which is where the plan already put it.
 
+**Done, together with move 3.** With one correction and one addition.
+
+The correction: a window's extent does not have to be *accumulated*, it is
+`[committed at Begin, committed at Commit)` — one extent per commit, computed
+at the end, because appends happen only inside a window and segments rotate only
+between them. So `unflushed` and the backpatching did not move anywhere, and
+neither did the per-record row: `openWindow` went from a slice of eleven-column
+structs to four integers and two strings.
+
+The addition: pruning is on `lo`/`hi`, the datestamps of the records the window
+actually holds, not on the window's own boundaries. Boundaries are a *request*,
+and an endpoint that ignores from and until answers outside it — the very quirk
+move 6 is about — so pruning on them would drop what such an endpoint sent. Two
+strings a window, exact, and it retires `dayOf`/`dayAfter` along with the
+sargability they were protecting.
+
+Extents join when they abut, which they do unless a superseded copy sits between
+them. 90 daily windows measured as one row and one extent; see the checklist.
+
 ### 3. sqlite falls out with it
 
 Not on its own merits. The reasoning in the design note was right at the time:
@@ -180,6 +209,21 @@ entirety. A shard becomes readable with `cat`.
 
 What is lost: `duckdb ATTACH` on a per-shard basis. That was never the good
 version of the analysis story anyway — see move 6's tail.
+
+**Done.** All of the above went, and one thing the note did not anticipate: with
+comparison happening in Go rather than in SQL, window boundaries went back to
+being `time.Time`. Text order no longer has to be time order, so `windowTime`,
+`ts`, `parseWindowTime` and the invariant they defended are gone as well — the
+fixed-width encoding existed only because SQLite was doing the comparing.
+
+Five methods lost their error returns (`Resume`, `HasWindow`, `WindowRecords`,
+`CountRecords`, `SegmentBytes`); they read a struct now, and an error nothing can
+produce is a branch every caller writes and no test reaches.
+
+The measured result: 34.2MB of binary to 28.0MB, fifteen direct dependencies to
+fourteen and fourteen indirect to seven, an empty shard from 40,960 bytes to no
+file at all, and the whole index of a 90-window shard at 1,403 bytes. A shard is
+`meta.json`, `state.json`, `LOCK`, `seg/` — and `cat` reads the index.
 
 ### 4. Kill `Sink` by fixing the package layout
 
@@ -285,17 +329,21 @@ These are earned and the measurements back them:
 | 1 | extract the planner, pure — **done**, `plan.go` | no |
 | 2 | delete v1 (the 1.0 note's plan) — **done** | no |
 | 3 | package split, `Sink` deleted — **done** | no |
-| 4 | window-granularity extents, `records` gone | **yes** |
-| 5 | sqlite gone, state as rename-atomic json | **yes** |
+| 4+5 | window-granularity extents, `records` and sqlite gone — **done**, `state.json` | **yes** |
 | 6 | migrate the 200G corpus | — |
 | 7 | context; quirks profile; classifier; per-group lock | no |
 
-Steps 4 and 5 are the ones the gate is about, and they are why this note exists
-now rather than after the migration. Step 1 is free and can start today.
+Steps 4 and 5 landed as one move: the intermediate — an extents table in sqlite,
+with a version bump and a ladder step — would have been authored and deleted in
+the same week, and no shard on disk needed preserving.
 
-Rough net, and it is a guess: on the order of 1,500 non-test lines and the
-heaviest dependency, against roughly a week on steps 4–5 and the loss of
-frame-granularity pruning.
+**The gate is open.** Nothing left on the list changes the on-disk shape, so the
+200G migration is now the next thing rather than the thing everything is racing.
+
+Net, measured rather than guessed: 414 lines across the module, 344 of them in
+`store`, eight modules, and 6.0MB of binary — against the loss of
+frame-granularity pruning, which is the one thing on this page that was paid for
+rather than found.
 
 ---
 

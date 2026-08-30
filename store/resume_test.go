@@ -40,11 +40,7 @@ func commit(t *testing.T, w *Writer, from, until time.Time, settled bool, titles
 
 func resume(t *testing.T, w *Writer) time.Time {
 	t.Helper()
-	got, err := w.Resume()
-	if err != nil {
-		t.Fatalf("Resume: %v", err)
-	}
-	return got
+	return w.Resume()
 }
 
 // records reports how many records the index holds for the whole group, which
@@ -53,22 +49,14 @@ func resume(t *testing.T, w *Writer) time.Time {
 // away as soon as the window becomes contiguous with its neighbour.
 func records(t *testing.T, w *Writer) int {
 	t.Helper()
-	n, err := w.CountRecords()
-	if err != nil {
-		t.Fatalf("CountRecords: %v", err)
-	}
-	return n
+	return w.CountRecords()
 }
 
 // indexed reports how many records the index holds for one window, which is
 // what a refetch has to replace rather than add to.
 func indexed(t *testing.T, w *Writer, from, until time.Time) int {
 	t.Helper()
-	n, err := w.WindowRecords(from, until)
-	if err != nil {
-		t.Fatalf("WindowRecords: %v", err)
-	}
-	return n
+	return w.WindowRecords(from, until)
 }
 
 // TestResumeEmpty: a group that holds nothing has no resume point, and the
@@ -190,9 +178,8 @@ func TestSettledWindowsMerge(t *testing.T) {
 	// Merged, not lost: the range answers for every day it swallowed, and the
 	// counters are the sums over it.
 	for _, d := range []string{"2023-01-01", "2023-01-02", "2023-01-03"} {
-		has, err := w.HasWindow(day(t, d), endOfDay(t, d))
-		if err != nil || !has {
-			t.Errorf("HasWindow(%s) after merging: got %v, %v, want true", d, has, err)
+		if !w.HasWindow(day(t, d), endOfDay(t, d)) {
+			t.Errorf("HasWindow(%s) after merging: got false, want true", d)
 		}
 	}
 	if got, want := records(t, w), 3; got != want {
@@ -208,8 +195,8 @@ func TestSettledWindowsMerge(t *testing.T) {
 	if got, want := windows(t, w), 2; got != want {
 		t.Errorf("after a gap: got %d windows, want %d", got, want)
 	}
-	if has, err := w.HasWindow(day(t, "2023-01-04"), endOfDay(t, "2023-01-04")); err != nil || has {
-		t.Errorf("HasWindow over the gap: got %v, %v, want false", has, err)
+	if w.HasWindow(day(t, "2023-01-04"), endOfDay(t, "2023-01-04")) {
+		t.Errorf("HasWindow over the gap: got true, want false")
 	}
 
 	// An unsettled window keeps its own boundaries whatever it abuts, because
@@ -226,11 +213,7 @@ func TestSettledWindowsMerge(t *testing.T) {
 // windows reports how many rows the group's coverage takes.
 func windows(t *testing.T, w *Writer) int {
 	t.Helper()
-	var n int
-	if err := w.st.db.QueryRow(`SELECT COUNT(*) FROM windows WHERE group_id = ?`, w.groupID).Scan(&n); err != nil {
-		t.Fatalf("count windows: %v", err)
-	}
-	return n
+	return len(w.g.Windows)
 }
 
 // TestElapsedSurvivesMerging: harvest time is added up as each window is
@@ -250,21 +233,17 @@ func TestElapsedSurvivesMerging(t *testing.T) {
 	if got, want := windows(t, w), 1; got != want {
 		t.Fatalf("got %d windows, want %d", got, want)
 	}
-	var elapsed, span int64
-	if err := w.st.db.QueryRow(`SELECT elapsed_ns,
-		CAST((julianday(finished) - julianday(started)) * 86400000000000 AS INTEGER)
-		FROM windows WHERE group_id = ?`, w.groupID).Scan(&elapsed, &span); err != nil {
-		t.Fatalf("query: %v", err)
-	}
+	row := w.g.Windows[0]
+	span := row.Finished.Sub(row.Started)
 	// The idle stretch is in the row's span and must not be in its elapsed.
-	if span < int64(idle) {
-		t.Fatalf("started..finished is %v, want it to cover the %v of idling", time.Duration(span), idle)
+	if span < idle {
+		t.Fatalf("started..finished is %v, want it to cover the %v of idling", span, idle)
 	}
-	if time.Duration(elapsed) >= idle {
+	if time.Duration(row.Elapsed) >= idle {
 		t.Errorf("elapsed %v counts the idle time between two runs, want less than %v",
-			time.Duration(elapsed), idle)
+			time.Duration(row.Elapsed), idle)
 	}
-	if elapsed <= 0 {
-		t.Errorf("elapsed %v, want the two commits to have taken some time", time.Duration(elapsed))
+	if row.Elapsed <= 0 {
+		t.Errorf("elapsed %v, want the two commits to have taken some time", time.Duration(row.Elapsed))
 	}
 }

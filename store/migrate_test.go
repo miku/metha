@@ -102,20 +102,22 @@ func TestMigrateVerifyDetectsLoss(t *testing.T) {
 	if !first.Verified() {
 		t.Fatalf("first Migrate did not verify: %+v", first)
 	}
-	// Drop one record row, leaving the segments untouched: the shape a partial
-	// or interrupted index would have. By row id rather than by window boundary,
-	// because boundaries are stored in UTC and the windows were cut in local
-	// time, so west of Greenwich a window that ends on the 28th is stamped with
-	// the 29th.
-	st, err := openState(filepath.Join(shardDir(base, id.BaseURL), stateName))
+	// Lose one record from the index, leaving the segments untouched: the shape
+	// a partial or interrupted migration would have. Verification has to notice,
+	// because counting the source again is the only evidence there is that the
+	// v1 files can go.
+	path := filepath.Join(shardDir(base, id.BaseURL), stateName)
+	st, err := loadState(path)
 	if err != nil {
-		t.Fatalf("openState: %v", err)
+		t.Fatalf("loadState: %v", err)
 	}
-	if _, err := st.db.Exec(`DELETE FROM records WHERE id = (SELECT MAX(id) FROM records)`); err != nil {
-		t.Fatalf("delete: %v", err)
+	g := st.group(id.Format, id.Set)
+	if g == nil || len(g.Windows) == 0 {
+		t.Fatalf("no windows in %s", path)
 	}
-	if err := st.close(); err != nil {
-		t.Fatalf("close: %v", err)
+	g.Windows[0].Records--
+	if err := st.save(); err != nil {
+		t.Fatalf("save: %v", err)
 	}
 	again, err := Migrate(base, id)
 	if err != nil {

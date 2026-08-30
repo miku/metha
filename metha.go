@@ -11,8 +11,8 @@
 //
 // The aliases below cost nothing and keep "github.com/miku/metha" meaning what
 // it meant, but new code is better off importing the package it actually wants:
-// a tool that only parses responses has no reason to link a sqlite driver, and
-// nothing that imports this package can avoid it.
+// a tool that only parses responses has no reason to link the cache, and nothing
+// that imports this package can avoid it.
 package metha
 
 import (

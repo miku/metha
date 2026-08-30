@@ -8,11 +8,16 @@
 // A shard is one base URL, named by a hash so that a cache of every known
 // endpoint is not one enormous directory, and the formats and sets harvested
 // from it are groups inside it, each with its own run of append-only zstd
-// segments. What was harvested is recorded in a sqlite index rather than
-// implied by a filename, so a window that returned nothing costs a row instead
-// of a file, and a window becomes real in one transaction rather than by a
-// rename. The segments are the source of truth; the index is derived and can be
-// rebuilt from them.
+// segments. What was harvested is recorded in an index rather than implied by a
+// filename, so a window that returned nothing costs a row instead of a file. The
+// segments are the source of truth; the index is derived and can be rebuilt from
+// them.
+//
+// The window is the unit of atomicity - commit, abort, supersede and segment
+// rotation all happen at its boundaries - and so it is the unit of addressing
+// too: the index names the run of bytes each commit appended, not each record.
+// That leaves it small enough to be one JSON file written whole and renamed into
+// place, which is the same trick v1 got for free from renaming a data file.
 //
 // The pre-1.0 layout - one directory per triple, named by the base64 encoding
 // of "set#format#baseURL", the filename carrying the window it held - is not
@@ -113,9 +118,34 @@ func (opts ReadOptions) match(rec *oai.Record) bool {
 // a date-only one stands for at each end of a range.
 const (
 	dayLen   = len("2006-01-02")
+	stampLen = len("2006-01-02T15:04:05Z")
 	dayStart = "T00:00:00Z"
 	dayEnd   = "T23:59:59Z"
 )
+
+// stampBounds returns the closed interval of instants a datestamp stands for,
+// as whole-second strings that compare against a widened bound as text. A bare
+// date covers the whole of its day; a timestamp covers only itself.
+//
+// A datestamp in any other shape yields the empty pair, which the index reads as
+// "no bound can prune this". Endpoints do send third forms - fractional seconds,
+// numeric offsets - and pushing one into a shape it does not have would exclude
+// records that match. Widening the window instead only costs a decompression;
+// opts.match still decides, exactly, on the record itself.
+func stampBounds(stamp string) (lo, hi string) {
+	switch {
+	case isDate(stamp):
+		return stamp + dayStart, stamp + dayEnd
+	case len(stamp) == stampLen && stamp[dayLen] == 'T' && stamp[stampLen-1] == 'Z':
+		return stamp, stamp
+	}
+	return "", ""
+}
+
+// isDate reports whether a datestamp is in the date-only form.
+func isDate(s string) bool {
+	return len(s) == dayLen && s[4] == '-' && s[7] == '-'
+}
 
 // widen pads a date-only datestamp out to a full second, tail supplying the
 // time of day. It is what lets the two granularities be compared as text at
@@ -133,7 +163,7 @@ const (
 // stamps records in some third form is then compared exactly as before, rather
 // than pushed into a shape it does not have.
 func widen(stamp, tail string) string {
-	if len(stamp) != dayLen || stamp[4] != '-' || stamp[7] != '-' {
+	if !isDate(stamp) {
 		return stamp
 	}
 	return stamp + tail

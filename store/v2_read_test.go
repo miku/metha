@@ -2,6 +2,8 @@ package store
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"testing"
 
@@ -28,15 +30,11 @@ func recordWithHeader(id, datestamp, status string, sets ...string) oai.Response
 	}
 }
 
-// shardWithFrames writes one window per month of 2023, each in its own frame,
-// and returns the store over it. Lowering the frame target is what keeps the
-// fixture small enough to be a test.
-func shardWithFrames(t *testing.T) (Store, string) {
+// shardWithWindows writes one window per month of 2023, each holding one
+// record, and returns the store over it. Every window is its own extent, since
+// a commit flushes what it buffered, and none of them abut, so none merge.
+func shardWithWindows(t *testing.T) (Store, string) {
 	t.Helper()
-	old := frameTarget
-	frameTarget = 1 // Every response gets its own frame.
-	t.Cleanup(func() { frameTarget = old })
-
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
 	w, err := OpenWriter(base, id)
@@ -72,47 +70,50 @@ func shardWithFrames(t *testing.T) (Store, string) {
 	return s, base
 }
 
-// TestIndexPrunesFrames: a filtered read must not decompress frames that
-// cannot hold a match. This is the whole reason the index carries record
-// offsets.
-func TestIndexPrunesFrames(t *testing.T) {
-	s, _ := shardWithFrames(t)
-	v2, ok := s.(*v2Store)
-	if !ok {
-		t.Fatalf("expected a v2 store, got %T", s)
-	}
-	all, err := v2.matchingFrames(ReadOptions{From: "2000-01-01"})
+// TestIndexPrunesWindows: a filtered read must not decompress the bytes of a
+// window that cannot hold a match. Window granularity is coarser than the frame
+// granularity the record index bought - a bound inside a monthly window now
+// decompresses the month - but the pruning it does is exact, because it is over
+// the datestamps the records actually carry rather than the range that was
+// asked for. An endpoint that ignores from and until answers outside the range,
+// and pruning on the request would drop what it sent.
+func TestIndexPrunesWindows(t *testing.T) {
+	s, base := shardWithWindows(t)
+	st, err := loadState(filepath.Join(s.Dir(), stateName))
 	if err != nil {
-		t.Fatalf("matchingFrames: %v", err)
+		t.Fatalf("loadState: %v", err)
 	}
-	if len(all) != 6 {
-		t.Fatalf("got %d frames for everything, want 6 - the fixture is not one frame per window", len(all))
+	_ = base
+	g := st.group("oai_dc", "")
+	if g == nil {
+		t.Fatal("no group in the index")
 	}
-	narrow, err := v2.matchingFrames(ReadOptions{From: "2023-04-01", Until: "2023-05-31"})
-	if err != nil {
-		t.Fatalf("matchingFrames: %v", err)
-	}
-	if len(narrow) != 2 {
-		t.Errorf("got %d frames for a two month window, want 2", len(narrow))
-	}
-	deleted, err := v2.matchingFrames(ReadOptions{Deleted: DeletedOnly})
-	if err != nil {
-		t.Fatalf("matchingFrames: %v", err)
-	}
-	if len(deleted) != 2 {
-		t.Errorf("got %d frames holding tombstones, want 2", len(deleted))
+	for _, tt := range []struct {
+		opts ReadOptions
+		want int
+	}{
+		{ReadOptions{From: "2000-01-01"}, 6},
+		{ReadOptions{From: "2023-04-01", Until: "2023-05-31"}, 2},
+		{ReadOptions{Deleted: DeletedOnly}, 2},
+		{ReadOptions{Deleted: DeletedSkip}, 4},
+		{ReadOptions{From: "2030-01-01"}, 0},
+	} {
+		if got := len(g.liveExtents(tt.opts)); got != tt.want {
+			t.Errorf("%+v: reads %d extents, want %d", tt.opts, got, tt.want)
+		}
 	}
 }
 
 // TestIndexAndScanAgree: whatever the index prunes, the answer has to be the
-// one a full scan would have given.
+// one reading every byte would have given. The index prunes; it never decides.
 func TestIndexAndScanAgree(t *testing.T) {
-	s, _ := shardWithFrames(t)
-	v2 := s.(*v2Store)
+	s, _ := shardWithWindows(t)
 	for _, opts := range []ReadOptions{
+		{},
 		{From: "2023-03-01"},
 		{Until: "2023-02-28"},
 		{From: "2023-02-01", Until: "2023-04-30"},
+		{From: "2023-03-15T00:00:00Z", Until: "2023-03-15T23:59:59Z"},
 		{Deleted: DeletedSkip},
 		{Deleted: DeletedOnly},
 		{SetSpec: "month-02"},
@@ -121,23 +122,45 @@ func TestIndexAndScanAgree(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("%+v", opts), func(t *testing.T) {
 			viaIndex := identifiers(t, s, opts)
-			// The scan path applies the same filter without the index.
-			var viaScan []string
-			for rec, err := range v2.recordsByScan(opts) {
-				if err != nil {
-					t.Fatalf("recordsByScan: %v", err)
-				}
-				viaScan = append(viaScan, rec.Header.Identifier)
-			}
-			if !slices.Equal(viaIndex, viaScan) {
-				t.Errorf("index gave %v, a scan gives %v", viaIndex, viaScan)
+			if viaScan := scanSegments(t, s, opts); !slices.Equal(viaIndex, viaScan) {
+				t.Errorf("index gave %v, reading everything gives %v", viaIndex, viaScan)
 			}
 		})
 	}
 }
 
+// scanSegments applies a filter to every byte the group holds, index and all.
+// It is the oracle the pruned read is checked against, and it lives here rather
+// than in the store because a second read path in the store is a second answer
+// the two can disagree about - which is exactly the bug it is here to catch.
+func scanSegments(t *testing.T, s Store, opts ReadOptions) []string {
+	t.Helper()
+	files, err := s.Files()
+	if err != nil {
+		t.Fatalf("Files: %v", err)
+	}
+	var ids []string
+	for _, file := range files {
+		info, err := os.Stat(file)
+		if err != nil {
+			t.Fatalf("stat: %v", err)
+		}
+		whole := extent{Off: 0, Len: info.Size()}
+		if !recordsFromExtent(file, whole, opts, func(rec oai.Record, err error) bool {
+			if err != nil {
+				t.Fatalf("scan %s: %v", file, err)
+			}
+			ids = append(ids, rec.Header.Identifier)
+			return true
+		}) {
+			t.Fatalf("scan %s stopped early", file)
+		}
+	}
+	return ids
+}
+
 func TestDeletedPolicies(t *testing.T) {
-	s, _ := shardWithFrames(t)
+	s, _ := shardWithWindows(t)
 	// Months 3 and 6 are tombstones.
 	for _, tt := range []struct {
 		policy ReadOptions
@@ -157,7 +180,7 @@ func TestDeletedPolicies(t *testing.T) {
 // keeps them as one field, so the filter has to be applied to the record
 // itself - matching the field would find records that are not in the set.
 func TestSetSpecFilterIsExact(t *testing.T) {
-	s, _ := shardWithFrames(t)
+	s, _ := shardWithWindows(t)
 	if got := identifiers(t, s, ReadOptions{SetSpec: "alpha"}); len(got) != 6 {
 		t.Errorf("SetSpec alpha: got %v, want all six records", got)
 	}
@@ -186,15 +209,9 @@ func TestRefetchedWindowReadsOnce(t *testing.T) {
 	// Two runs over the same unsettled range: the second saw a record the
 	// first could not, which is the whole reason for refetching it.
 	writePartial(t, w, "2023-06-01", "2023-06-30", "first")
-	before, err := w.SegmentBytes()
-	if err != nil {
-		t.Fatalf("SegmentBytes: %v", err)
-	}
+	before := w.SegmentBytes()
 	writePartial(t, w, "2023-06-01", "2023-06-30", "first", "second")
-	after, err := w.SegmentBytes()
-	if err != nil {
-		t.Fatalf("SegmentBytes: %v", err)
-	}
+	after := w.SegmentBytes()
 	if after <= before {
 		t.Errorf("segments hold %d bytes after the refetch, want more than %d", after, before)
 	}

@@ -194,9 +194,9 @@ func (h *Harvest) planConfig() PlanConfig {
 // hands back the start of the latter, so its range is covered again rather than
 // resumed past.
 func (h *Harvest) coverage() (cov Coverage, err error) {
-	err = h.write(func(w *store.Writer) (err error) {
-		cov.Resume, err = w.Resume()
-		return err
+	err = h.write(func(w *store.Writer) error {
+		cov.Resume = w.Resume()
+		return nil
 	})
 	return cov, err
 }

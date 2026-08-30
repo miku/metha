@@ -22,10 +22,13 @@ const (
 	// found on its own says what it is.
 	layoutName = "v2"
 
-	// metaName describes a shard well enough to rebuild its index.
+	// metaName describes a shard well enough to rebuild its index. It is kept
+	// apart from the index so that a listing over a cache of a quarter million
+	// shards reads one small file each, rather than every window of every one.
 	metaName = "meta.json"
-	// stateName is the per-shard sqlite index: windows, segments, records.
-	stateName = "state.sqlite"
+	// stateName is the per-shard index: segments, and the windows naming their
+	// bytes.
+	stateName = "state.json"
 	// segDirname holds one subdirectory of segments per group, so that
 	// "cat seg/<group>/*.zst | zstd -dc" is a complete, valid stream.
 	segDirname = "seg"
@@ -164,12 +167,38 @@ func writeMeta(shard string, m *Meta) error {
 	if err != nil {
 		return err
 	}
-	b = append(b, '\n')
-	tmp := filepath.Join(shard, metaName+".tmp")
-	if err := os.WriteFile(tmp, b, 0644); err != nil {
+	return writeFileAtomic(filepath.Join(shard, metaName), append(b, '\n'))
+}
+
+// writeFileAtomic writes a file whole and renames it into place: a reader sees
+// the previous version or this one, never half of one. The bytes are synced
+// before the rename, or a crash could leave a file that names segment bytes
+// nobody wrote.
+//
+// The directory is deliberately not synced after it. A rename that does not
+// survive a power cut leaves the previous index, which is the last commit
+// undone - and the window it recorded then has bytes past a segment's committed
+// length, which is the torn tail the next open truncates and the next run
+// refetches. That is the same recovery the layer already has, so buying
+// durability for the rename separately would only make it happen less often.
+func writeFileAtomic(path string, b []byte) error {
+	tmp := path + ".tmp"
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, filepath.Join(shard, metaName))
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 // hasGroup reports whether the meta already knows this group.
@@ -248,25 +277,17 @@ func (s *v2Store) segments() ([]string, error) {
 
 // Last returns the end of the most recent harvested window, from the index.
 func (s *v2Store) Last() (string, error) {
-	if !isShard(s.Dir()) {
+	st, err := loadState(filepath.Join(s.Dir(), stateName))
+	if err != nil {
+		return "", err
+	}
+	g := st.group(s.id.Format, s.id.Set)
+	if g == nil {
 		return "", nil
 	}
-	st, err := openState(filepath.Join(s.Dir(), stateName))
-	if err != nil {
-		return "", err
-	}
-	defer st.close()
-	groupID, err := st.groupID(s.id.Format, s.id.Set)
-	if err != nil || groupID == 0 {
-		return "", err
-	}
-	last, err := st.lastWindow(groupID)
-	if err != nil {
-		return "", err
-	}
-	// Windows are stored as timestamps; callers resuming a harvest speak
-	// dates, as they did in v1.
-	return windowDate(last)
+	// Windows are stored as instants; callers resuming a harvest speak dates,
+	// as they did in v1.
+	return windowDate(g.lastWindow()), nil
 }
 
 // listV2 enumerates the shards under baseDir, one entry per group. A shard is
