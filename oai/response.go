@@ -172,19 +172,38 @@ type Metadata struct {
 	Body []byte `xml:",innerxml"`
 }
 
-// MarshalJSON marshals the metadata body.
-func (md Metadata) MarshalJSON() ([]byte, error) {
-	if len(md.Body) == 0 {
+// innerXMLToJSON renders a chunk of inner XML as JSON. It is what the three
+// fields holding raw XML - a record's metadata, its about block, and the
+// descriptions of a repository and its sets - all marshal through, so that JSON
+// output is JSON all the way down rather than a document with XML hidden inside
+// it.
+//
+// Without it those fields are []byte, and encoding/json renders []byte as
+// base64. Metadata had a marshaller and the other two did not, so "metha id"
+// answered with a wall of base64 where the oai-identifier and toolkit
+// descriptions should have been.
+//
+// A body that will not parse comes back as a JSON string of the XML itself
+// rather than as an error. That is the difference between one odd record and a
+// failed export: json.Marshal gives up on the whole document when a field's
+// marshaller returns an error, so a single malformed metadata block used to take
+// "metha cat --json" down with it, and over a corpus this size there will be
+// malformed blocks.
+func innerXMLToJSON(body []byte) ([]byte, error) {
+	if len(bytes.TrimSpace(body)) == 0 {
 		return []byte("{}"), nil
 	}
 	// TODO: Is there a more uniform way to create JSON, e.g. one that has some
 	// listify option, like xmltodict?
-	m, err := mxj.NewMapXmlReader(bytes.NewReader(md.Body))
+	m, err := mxj.NewMapXmlReader(bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return json.Marshal(string(body))
 	}
 	return json.Marshal(m)
 }
+
+// MarshalJSON marshals the metadata body.
+func (md Metadata) MarshalJSON() ([]byte, error) { return innerXMLToJSON(md.Body) }
 
 // GoString is a formatter for Metadata content.
 func (md Metadata) GoString() string { return string(md.Body) }
@@ -193,6 +212,9 @@ func (md Metadata) GoString() string { return string(md.Body) }
 type About struct {
 	Body []byte `xml:",innerxml" json:"body,omitempty"`
 }
+
+// MarshalJSON renders the about block as JSON rather than as base64.
+func (ab About) MarshalJSON() ([]byte, error) { return innerXMLToJSON(ab.Body) }
 
 // GoString is a formatter for About content.
 func (ab About) GoString() string { return string(ab.Body) }
@@ -261,6 +283,11 @@ type ListMetadataFormats struct {
 type Description struct {
 	Body []byte `xml:",innerxml"`
 }
+
+// MarshalJSON renders the description as JSON rather than as base64. This is
+// the one that shows in "metha id": a repository's oai-identifier and toolkit
+// blocks, and the description of every set.
+func (desc Description) MarshalJSON() ([]byte, error) { return innerXMLToJSON(desc.Body) }
 
 // GoString is a formatter for Description content.
 func (desc Description) GoString() string { return string(desc.Body) }
