@@ -38,11 +38,16 @@ func newIDCmd() *cobra.Command {
 				return err
 			}
 			m["identify"] = resp.Identify
-			size, err := repo.CompleteListSize()
-			if err != nil {
-				return err
+			// Reported like the formats and the sets below, rather than ending
+			// the command. The size is one optional attribute of one optional
+			// element, and an endpoint that declines to give it has still told
+			// us everything else this command asks for - failing the whole
+			// report over it threw away an Identify that had already arrived.
+			if size, err := repo.CompleteListSize(); err == nil {
+				m["size"] = size
+			} else {
+				log.Println(err)
 			}
-			m["size"] = size
 			if formats, err := repo.Formats(); err == nil {
 				m["formats"] = formats
 			} else {
