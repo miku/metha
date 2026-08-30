@@ -69,6 +69,35 @@ type Identify struct {
 	Description       []Description `xml:"description,omitempty" json:"description,omitempty"`
 }
 
+// IsEmpty reports whether an Identify carries nothing at all, which is what a
+// URL that is not an OAI-PMH endpoint answers with.
+//
+// The decoder is deliberately lenient - endpoints send a great deal that is not
+// quite XML, and refusing it would lose the responses most worth keeping - so a
+// home page, a 200-with-an-error-page, or any other document without an
+// <Identify> element decodes without complaint into the zero value of this
+// struct rather than failing. Nothing distinguishes that from a reply, except
+// that a reply says something.
+//
+// Every field is checked rather than one, because endpoints omit things the
+// protocol requires. An endpoint that answers with a repository name and
+// nothing else is broken but real, and can still be harvested whole with
+// -no-intervals; one that answers with no field at all was not asked a question
+// it understood.
+func (id *Identify) IsEmpty() bool {
+	if id == nil {
+		return true
+	}
+	return id.RepositoryName == "" &&
+		id.BaseURL == "" &&
+		id.ProtocolVersion == "" &&
+		len(id.AdminEmail) == 0 &&
+		id.EarliestDatestamp == "" &&
+		id.DeletedRecord == "" &&
+		id.Granularity == "" &&
+		len(id.Description) == 0
+}
+
 // granularity is the endpoint's advertised granularity, folded to lower case.
 // The spec gives the two forms in a fixed case, but enough endpoints get that
 // wrong that reading them literally would drop the bounds from every request;

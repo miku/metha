@@ -697,6 +697,74 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       one, and it compressed well in any case. Fidelity was the reason; size is a
       rounding error.
 
+- [x] **A harvest that harvested nothing leaves nothing.** Reported from the
+      command line: `metha sync https://htwk-leipzig.qucosa.de` — a host where
+      the base URL should have been `.../oai` — failed with `invalid earliest
+      date`, and then showed up in `metha stat` forever after:
+
+          SIZE     WINDOWS  RECORDS  DELETED  FAILED  LAST        ENDPOINT
+          0B       0        0        0        0       -           https://htwk-leipzig.qucosa.de
+          694.6KB  2        702      2        0       2026-08-30  https://htwk-leipzig.qucosa.de/oai
+
+      Two independent causes, and both are worth fixing separately because
+      either one alone still leaves the other.
+
+      **A URL that is not an endpoint is now refused before a writer is
+      opened.** The decoder is lenient on purpose — endpoints send a great deal
+      that is not quite XML, and refusing it would lose the responses most worth
+      keeping — so a home page decodes without complaint into an `Identify` with
+      nothing in it. `Identify.IsEmpty` is that condition and `identify()`
+      refuses it with `ErrNotAnEndpoint`, which happens inside `NewHarvest`,
+      before `OpenWriter`. `sync` adds the line worth adding, since the reply to
+      a wrong URL is a perfectly good web page and hints at nothing:
+
+          metha: not an OAI-PMH endpoint: http://example.com/website
+          an OAI-PMH base URL is usually a path rather than a host, as in http://example.com/website/oai
+
+      Every field is checked rather than one. An endpoint that answers with a
+      repository name and nothing else is broken but real and can still be
+      harvested whole with `-no-intervals`, which plans a boundless window
+      without asking about dates at all — so refusing on a missing granularity
+      would take working endpoints away. `TestIdentifyRejectsNonEndpoints` is a
+      table over the broken-but-real shapes for exactly that reason.
+
+      **And the shard is created lazily, so the general case is covered too.**
+      The check above does not help an endpoint that identifies and then cannot
+      be planned, or one whose first request fails; `OpenWriter` created the
+      shard directory, `meta.json`, the group directory and an empty segment
+      before anything had been fetched. Now it creates the group directory and
+      the lock — the lock needs somewhere to live — and nothing else. `meta.json`
+      is written by `announce` on the first commit, the segment file by the first
+      `Append`, and `Close` calls `discardEmpty`, which walks up from the group
+      directory removing what is empty.
+
+      The safety of that walk is `os.Remove` and nothing else: it refuses a
+      directory with anything in it, so a group holding an index or segments, or
+      a shard holding `meta.json` or another group, stops it on its own. No flag
+      records whether this run created them and none is needed.
+      `TestExistingShardSurvivesAWriterThatWroteNothing` is the test that
+      matters — a re-run that finds nothing new opens a writer and commits
+      nothing, and must not take the previous harvest with it.
+
+      One thing that had to be added for it: an aborted window leaves a
+      zero-length segment, because the first response creates the file and the
+      abort truncates it back to nothing. A zero-length file is not a segment, it
+      is the shape of one, and it would keep the directory from being tidied —
+      so `discardIfEmpty` removes it on close.
+
+      **What still gets recorded, deliberately.** A window aborted *with* a cause
+      commits an error row and makes the shard real. Reaching an endpoint and
+      being refused is something learned, and a later run needs it to come back
+      to the range; not being able to plan at all is not. Verified against a
+      server built for it: a plain web site leaves an empty cache, an endpoint
+      with an unreadable granularity leaves an empty cache, and the same endpoint
+      under `-no-intervals` reaches `badArgument` and is recorded as one failed
+      window.
+
+      Also true of an interrupt now: `TestCancelDropsTheWindowInFlight` asserts
+      the cache is empty afterwards, where before it asserted only that no
+      records were readable.
+
 ---
 
 ## open — settle before the move

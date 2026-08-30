@@ -224,3 +224,20 @@ func (w *segWriter) truncate(size int64) error {
 func (w *segWriter) sync() error { return w.f.Sync() }
 
 func (w *segWriter) close() error { return w.f.Close() }
+
+// discardIfEmpty removes the file when it ends up holding nothing. A segment is
+// created by the first append, so an empty one means every window that appended
+// to it was aborted - a harvest interrupted or failed before its first commit -
+// and a zero-length file is not a segment, it is the shape of one. Leaving it
+// would also keep the group directory from being tidied away, which is the
+// difference between an endpoint that reads as never harvested and one that
+// reads as harvested and empty.
+//
+// Called after close, so the descriptor is gone and only the name is being
+// removed. Errors are ignored: the file is already unreachable through the
+// index, so failing to unlink it is untidy rather than wrong.
+func (w *segWriter) discardIfEmpty() {
+	if w.size == 0 {
+		os.Remove(w.path)
+	}
+}

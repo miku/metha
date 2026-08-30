@@ -40,6 +40,11 @@ type Writer struct {
 	meta *Meta
 	enc  *zstd.Encoder
 
+	// announced records whether meta.json has been written for this run. It is
+	// what makes the shard visible to a listing, and it waits for the first
+	// commit; see announce.
+	announced bool
+
 	seg          *segWriter
 	segNum       int
 	segCommitted int64 // the length the index vouches for
@@ -112,8 +117,10 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 			lock.Close()
 		}
 	}()
-	meta, err := addGroup(shard, id)
-	if err != nil {
+	meta, err := readMeta(shard)
+	if errors.Is(err, os.ErrNotExist) {
+		meta = &Meta{Layout: layoutName, BaseURL: id.BaseURL, Created: time.Now().UTC()}
+	} else if err != nil {
 		return nil, err
 	}
 	st, err := loadState(statePath(shard, group.Format, group.Set), group.Format, group.Set)
@@ -124,6 +131,11 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	if err != nil {
 		return nil, err
 	}
+	// The segment file and meta.json are not opened or written here. Nothing a
+	// listing can see exists until a window commits, so a harvest that got
+	// nowhere - a URL that was not an endpoint, a plan that could not be made,
+	// a first request that failed - leaves no shard for metha stat to report as
+	// zero of everything. See Close, which takes the directory back too.
 	w = &Writer{
 		baseDir: baseDir,
 		id:      id,
@@ -134,10 +146,37 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 		meta:    meta,
 		enc:     enc,
 	}
-	if err := w.openSegment(); err != nil {
+	if err := w.dropTornTail(); err != nil {
 		return nil, err
 	}
 	return w, nil
+}
+
+// dropTornTail cuts the newest segment back to the length the index vouches for,
+// which is the whole of crash recovery: bytes past it are what a harvest that
+// died mid-window appended, named by no extent and reachable by no read.
+//
+// It happens on open, as it always has, but by truncating a file rather than by
+// opening one - opening the segment is now the first append's job, and a writer
+// that appends nothing must leave no file behind. A segment that does not exist
+// has no tail, so this is a stat and usually nothing else.
+func (w *Writer) dropTornTail() error {
+	if len(w.st.Segments) == 0 {
+		return nil
+	}
+	last := w.st.Segments[len(w.st.Segments)-1]
+	path := filepath.Join(groupDir(w.shard, w.group.Format, w.group.Set), segFileName(last.Num))
+	info, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if info.Size() <= last.Committed {
+		return nil
+	}
+	return os.Truncate(path, last.Committed)
 }
 
 // updateMeta applies a change to the shard's meta and writes it back, creating
@@ -173,25 +212,47 @@ func updateMeta(shard string, id Identity, fn func(*Meta) bool) (*Meta, error) {
 	return meta, nil
 }
 
-// addGroup records the group in the shard's meta, so that a listing names it.
-func addGroup(shard string, id Identity) (*Meta, error) {
-	group := id.group()
-	return updateMeta(shard, id, func(m *Meta) bool {
-		if m.hasGroup(group) {
-			return false
+// announce writes the shard's meta: the endpoint, what it said about itself,
+// and this group among the ones the shard holds. It is what makes the shard
+// visible to a listing, so it happens on the first commit rather than on open -
+// the first moment there is something to list.
+//
+// Once per writer: the group list and the identify only change when a run
+// starts, so a harvest of a thousand windows writes meta.json once, as it did
+// when this happened at open.
+func (w *Writer) announce() error {
+	if w.announced {
+		return nil
+	}
+	group, identify := w.group, w.meta.Identify
+	meta, err := updateMeta(w.shard, w.id, func(m *Meta) bool {
+		if !m.hasGroup(group) {
+			m.Groups = append(m.Groups, group)
 		}
-		m.Groups = append(m.Groups, group)
+		// The identify this run was given, if it was given one. Held in memory
+		// until now for the same reason as everything else here: a harvest that
+		// commits nothing should not leave a shard describing an endpoint it
+		// never read a record from.
+		if identify != nil {
+			m.Identify = identify
+		}
 		return true
 	})
+	if err != nil {
+		return err
+	}
+	w.meta, w.announced = meta, true
+	return nil
 }
 
 // openSegment picks up the group's newest segment, or starts the first one,
 // and truncates whatever a previous crash left past the committed length.
 //
-// The new segment is only recorded in memory: the next commit writes the index
-// out whole, and a harvest that dies before then leaves a file the next open
-// truncates back to nothing. So a shard whose first harvest got nowhere costs no
-// index at all.
+// It runs on the first append rather than on open, so that a writer nothing was
+// ever written through creates no file. The new segment is only recorded in
+// memory: the next commit writes the index out whole, and a harvest that dies
+// before then leaves a file the next open truncates back to nothing. So a shard
+// whose first harvest got nowhere costs no index at all.
 func (w *Writer) openSegment() error {
 	var (
 		num       = 1
@@ -217,7 +278,8 @@ func (w *Writer) openSegment() error {
 	return nil
 }
 
-// Close drops any open window and releases the shard lock.
+// Close drops any open window, releases the group lock, and takes back the
+// directories if this writer never wrote anything into them.
 func (w *Writer) Close() error {
 	var errs []error
 	if w.win != nil {
@@ -225,6 +287,7 @@ func (w *Writer) Close() error {
 	}
 	if w.seg != nil {
 		errs = append(errs, w.seg.close())
+		w.seg.discardIfEmpty()
 	}
 	if w.enc != nil {
 		w.enc.Close()
@@ -232,7 +295,44 @@ func (w *Writer) Close() error {
 	if w.lock != nil {
 		errs = append(errs, w.lock.Close())
 	}
+	discardEmpty(w.baseDir, w.shard, groupDir(w.shard, w.group.Format, w.group.Set))
 	return errors.Join(errs...)
+}
+
+// discardEmpty removes the directories a writer had to create to hold its lock,
+// when nothing was ever written into them - a harvest that could not plan, or
+// whose first request failed. Without this an endpoint that has never yielded a
+// record still leaves a directory behind, and over a sweep of a quarter million
+// URLs that is a quarter million of them.
+//
+// It removes only what is empty, which is the whole of the safety argument:
+// os.Remove refuses a directory with anything in it, so a group that holds an
+// index or segments, or a shard that holds meta.json or another group, stops the
+// walk on its own. No flag says whether this run created them, and none is
+// needed.
+//
+// Unlinking the lock file while still holding the lock is safe here because the
+// work is over. A second harvest that opens the path between the unlink and the
+// removal gets a new file and a lock on it, which is correct: this writer is not
+// going to write anything either way. What that costs is one ENOTEMPTY on the
+// next line, ignored along with every other error - failing to tidy up is not a
+// reason to fail a harvest that otherwise worked.
+func discardEmpty(baseDir, shard, group string) {
+	entries, err := os.ReadDir(group)
+	if err != nil || len(entries) != 1 || entries[0].Name() != LockName {
+		return
+	}
+	if err := os.Remove(filepath.Join(group, LockName)); err != nil {
+		return
+	}
+	// Up through the group, the shard and its two fan-out levels, stopping at
+	// the first directory that still holds something - or at the cache root,
+	// which is the user's and not ours to remove.
+	for dir := group; dir != baseDir && dir != filepath.Dir(dir); dir = filepath.Dir(dir) {
+		if os.Remove(dir) != nil {
+			return
+		}
+	}
 }
 
 // Identity returns what this writer harvests into.
@@ -245,19 +345,17 @@ func (w *Writer) Dir() string { return w.shard }
 // shard self-describing: granularity and earliest datestamp are the two things
 // a harvest needs and v1 had nowhere to keep.
 //
-// It goes through updateMeta rather than writing the copy this writer opened
-// with, which would be a lost update with teeth: a harvest of another format
-// that started later is in the group list on disk and not in that copy, so
-// writing it back would drop a group that has segments.
+// Recorded in memory and written by the first commit, along with everything
+// else that makes the shard visible. A harvest that never commits a window has
+// nothing to describe, and a shard describing an endpoint no record was ever
+// read from is exactly the empty row this laziness exists to prevent.
+//
+// The write, when it comes, goes through updateMeta rather than putting back the
+// copy this writer opened with - that would be a lost update with teeth, since a
+// harvest of another format that started later is in the group list on disk and
+// not in that copy, so writing it back would drop a group that has segments.
 func (w *Writer) SetIdentify(identify *oai.Identify) error {
-	meta, err := updateMeta(w.shard, w.id, func(m *Meta) bool {
-		m.Identify = identify
-		return true
-	})
-	if err != nil {
-		return err
-	}
-	w.meta = meta
+	w.meta.Identify = identify
 	return nil
 }
 
@@ -317,6 +415,14 @@ func (w *Writer) Append(raw []byte) error {
 	if err != nil {
 		return fmt.Errorf("scan response: %w", err)
 	}
+	// The first response of the writer's life is what brings the segment into
+	// existence. Scanning first is deliberate: a response that cannot be read is
+	// not worth creating a file for.
+	if w.seg == nil {
+		if err := w.openSegment(); err != nil {
+			return err
+		}
+	}
 	w.seg.append(raw)
 	w.win.records += sc.Records
 	w.win.deleted += sc.Deleted
@@ -336,11 +442,22 @@ func (w *Writer) Commit() error {
 	if w.win == nil {
 		return ErrNoWindow
 	}
-	if err := w.seg.flush(); err != nil {
+	// This is the moment the shard becomes a thing that exists: a window is
+	// about to be recorded, so there is something for a listing to report.
+	// Before it, nothing has been written at all.
+	if err := w.announce(); err != nil {
 		return err
 	}
-	if err := w.seg.sync(); err != nil {
-		return err
+	// A window that appended nothing has no segment to flush - an empty range
+	// costs a row and no bytes, and the first response of the harvest is what
+	// opens the file.
+	if w.seg != nil {
+		if err := w.seg.flush(); err != nil {
+			return err
+		}
+		if err := w.seg.sync(); err != nil {
+			return err
+		}
 	}
 	// Unsettled beats empty: a window that reached into the present has to be
 	// fetched again whether or not anything was there at the time.
@@ -352,6 +469,13 @@ func (w *Writer) Commit() error {
 		status = statusEmpty
 	}
 	row := w.win.row(status)
+	if w.seg == nil {
+		if err := w.st.commitWindow(row, 0, 0); err != nil {
+			return err
+		}
+		w.win = nil
+		return nil
+	}
 	// Everything appended since the window opened, which is a whole number of
 	// frames: nothing else writes into a segment while a window is open, and a
 	// segment rotates only between windows.
@@ -383,11 +507,20 @@ func (w *Writer) Abort(cause error) error {
 	}
 	win := w.win
 	w.win = nil
-	if err := w.seg.truncate(w.segCommitted); err != nil {
-		return err
+	// Nothing was appended, so there is nothing to cut back off.
+	if w.seg != nil {
+		if err := w.seg.truncate(w.segCommitted); err != nil {
+			return err
+		}
 	}
 	if cause == nil {
 		return nil
+	}
+	// A failure is a thing worth recording, so it makes the shard visible the
+	// same way a commit does - a run that reached an endpoint and was refused
+	// has learned something, where one that never got a plan together has not.
+	if err := w.announce(); err != nil {
+		return err
 	}
 	row := win.row(statusError)
 	// A failed window claims no records, whatever it had appended before it gave

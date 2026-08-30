@@ -124,13 +124,13 @@ func TestV2EmptyWindowCostsNoBytes(t *testing.T) {
 	if !w.HasWindow(from, until) {
 		t.Errorf("HasWindow after an empty harvest: got false, want true")
 	}
+	// Not a zero-length file: no file. The segment is opened by the first
+	// append, so a window that found nothing never brings one into existence,
+	// and the range is remembered by a row in the index alone. v1 had to write
+	// a file to remember the same thing.
 	seg := filepath.Join(w.Dir(), "oai_dc", "000001.zst")
-	info, err := os.Stat(seg)
-	if err != nil {
-		t.Fatalf("stat segment: %v", err)
-	}
-	if info.Size() != 0 {
-		t.Errorf("empty window wrote %d bytes, want 0", info.Size())
+	if _, err := os.Stat(seg); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("stat %s: %v, want the empty window to have written no file at all", seg, err)
 	}
 }
 

@@ -122,3 +122,43 @@ func TestClassify(t *testing.T) {
 		})
 	}
 }
+
+// TestIdentifyRejectsNonEndpoints: a URL that is not an OAI-PMH endpoint still
+// answers - a home page, a login form, a 200 carrying an error page - and the
+// decoder is lenient by design, so all of them come back as an Identify with
+// nothing in it rather than as a failure. Catching that is what keeps a mistyped
+// URL from reaching the disk: NewHarvest runs before a writer is opened.
+//
+// The test is a table over what endpoints actually send, because the check has
+// to be permissive in one direction only. An endpoint that answers with a
+// repository name and nothing else is broken but real, and -no-intervals can
+// still harvest it whole; refusing that would take working endpoints away.
+func TestIdentifyRejectsNonEndpoints(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		id     oai.Identify
+		reject bool
+	}{
+		{"a home page, decoded into nothing", oai.Identify{}, true},
+		{"a full identify", oai.Identify{
+			RepositoryName:    "Test",
+			ProtocolVersion:   "2.0",
+			Granularity:       "YYYY-MM-DD",
+			EarliestDatestamp: "2020-01-01",
+		}, false},
+		// Each of these is broken in some way, and each is still an endpoint
+		// that said something. -no-intervals plans one boundless window without
+		// asking about dates at all, so none of them may be refused here.
+		{"a name and nothing else", oai.Identify{RepositoryName: "Test"}, false},
+		{"no granularity", oai.Identify{RepositoryName: "Test", ProtocolVersion: "2.0"}, false},
+		{"granularity only", oai.Identify{Granularity: "YYYY-MM-DD"}, false},
+		{"an admin address only", oai.Identify{AdminEmail: []string{"a@example.com"}}, false},
+		{"a base URL only", oai.Identify{BaseURL: "http://example.com/oai"}, false},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.id.IsEmpty(); got != tt.reject {
+				t.Errorf("IsEmpty() = %v, want %v", got, tt.reject)
+			}
+		})
+	}
+}

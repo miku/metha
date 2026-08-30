@@ -159,6 +159,12 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 	}
 	h, err := harvest.NewHarvest(ctx, baseURL)
 	if err != nil {
+		if errors.Is(err, harvest.ErrNotAnEndpoint) {
+			// Almost always a host where a path was meant. Worth saying,
+			// because the reply to a wrong URL is a perfectly good web page and
+			// gives no hint that anything is off.
+			return fmt.Errorf("%w\nan OAI-PMH base URL is usually a path rather than a host, as in %s/oai", err, strings.TrimRight(baseURL, "/"))
+		}
 		return err
 	}
 	// if the harvest resulted in any extra header set, add them here

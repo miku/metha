@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -84,15 +85,23 @@ func TestCancelDropsTheWindowInFlight(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	// Nothing committed, so nothing is readable: the responses that did arrive
-	// are the torn tail of an aborted window, past the length the index vouches
-	// for, and the next open truncates them.
+	// Nothing committed, so nothing is on disk at all: the responses that did
+	// arrive were the torn tail of an aborted window, and a writer that never
+	// committed takes its directories back on Close. An interrupted first
+	// harvest reads as an endpoint that was never harvested, which is what it
+	// is - not as one holding zero of everything.
 	s, err := store.Open(base, testIdentity)
 	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
-	if got := recordIDs(t, s); len(got) != 0 {
-		t.Errorf("records after a cancelled harvest: got %v, want none", got)
+	for _, err := range s.Records(store.ReadOptions{}) {
+		if !errors.Is(err, store.ErrNotHarvested) {
+			t.Errorf("reading after a cancelled first harvest: got %v, want ErrNotHarvested", err)
+		}
+		break
+	}
+	if entries, err := os.ReadDir(base); err == nil && len(entries) != 0 {
+		t.Errorf("a cancelled first harvest left %v in the cache, want nothing", entries)
 	}
 }
 

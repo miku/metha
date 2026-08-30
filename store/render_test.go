@@ -16,9 +16,33 @@ import (
 )
 
 // testStore returns a store over a fresh, empty shard.
+// testStore is an endpoint that was harvested and holds nothing: one window
+// committed, no records in it. That is a different thing from an endpoint that
+// was never harvested, and since a writer stopped creating a shard merely by
+// being opened, it has to be built rather than implied - opening a writer and
+// closing it again now leaves no trace at all, which is the point.
 func testStore(t *testing.T) Store {
 	t.Helper()
-	return storeWith(t)
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	if err := w.Begin(day(t, "2023-01-01"), day(t, "2023-01-28"), true); err != nil {
+		t.Fatalf("Begin: %v", err)
+	}
+	if err := w.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	return s
 }
 
 // storeWith writes each response as its own window and returns the store over

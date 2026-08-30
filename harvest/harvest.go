@@ -33,6 +33,11 @@ var (
 	// and writing a re-marshalled stand-in for it would put a document in the
 	// cache that is not what any endpoint said.
 	errNoRawResponse = errors.New("response carries no raw document")
+	// ErrNotAnEndpoint marks a URL that answered, but not as an OAI-PMH
+	// endpoint. It is a distinct error because it is almost always a typo in a
+	// URL rather than anything wrong with the cache, and because it has to be
+	// known before a shard is opened - see identify.
+	ErrNotAnEndpoint = errors.New("not an OAI-PMH endpoint")
 )
 
 type Config struct {
@@ -401,6 +406,14 @@ func (h *Harvest) identify(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+	}
+	// A URL that is not an endpoint answers something - a home page, a login
+	// form, a 200 carrying an error - and the lenient decoder turns all of them
+	// into an Identify with nothing in it. Catching that here is what keeps the
+	// mistake off the disk: NewHarvest runs before a writer is opened, so a
+	// mistyped URL leaves no shard for metha stat to list afterwards.
+	if resp.Identify.IsEmpty() {
+		return fmt.Errorf("%w: %s", ErrNotAnEndpoint, h.Config.BaseURL)
 	}
 	h.Identify = &resp.Identify
 	return nil
