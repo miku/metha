@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"testing"
 
@@ -79,15 +78,11 @@ func shardWithWindows(t *testing.T) (Store, string) {
 // and pruning on the request would drop what it sent.
 func TestIndexPrunesWindows(t *testing.T) {
 	s, base := shardWithWindows(t)
-	st, err := loadState(filepath.Join(s.Dir(), stateName))
+	st, err := loadState(statePath(s.Dir(), "oai_dc", ""), "oai_dc", "")
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
 	_ = base
-	g := st.group("oai_dc", "")
-	if g == nil {
-		t.Fatal("no group in the index")
-	}
 	for _, tt := range []struct {
 		opts ReadOptions
 		want int
@@ -98,7 +93,7 @@ func TestIndexPrunesWindows(t *testing.T) {
 		{ReadOptions{Deleted: DeletedSkip}, 4},
 		{ReadOptions{From: "2030-01-01"}, 0},
 	} {
-		if got := len(g.liveExtents(tt.opts)); got != tt.want {
+		if got := len(st.liveExtents(tt.opts)); got != tt.want {
 			t.Errorf("%+v: reads %d extents, want %d", tt.opts, got, tt.want)
 		}
 	}

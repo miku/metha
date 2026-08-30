@@ -25,8 +25,10 @@ var (
 // window and its records. Bytes appended before a crash are still in the
 // segment file, past that length, and the next open drops them.
 //
-// A writer holds the shard's lock for its lifetime, so a second harvest of the
-// same endpoint - any group of it - fails fast instead of interleaving.
+// A writer holds the group's lock for its lifetime, so a second harvest of the
+// same format and set of the same endpoint fails fast instead of interleaving.
+// Another format of the same endpoint is another directory holding another index
+// and other segments, and runs alongside it.
 type Writer struct {
 	baseDir string
 	id      Identity
@@ -35,7 +37,6 @@ type Writer struct {
 
 	lock *os.File
 	st   *state
-	g    *groupState
 	meta *Meta
 	enc  *zstd.Encoder
 
@@ -94,10 +95,15 @@ func OpenWriter(baseDir string, id Identity) (*Writer, error) {
 // yet.
 func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	shard := shardDir(baseDir, id.BaseURL)
-	if err := os.MkdirAll(shard, 0755); err != nil {
+	group := id.group()
+	if err := os.MkdirAll(groupDir(shard, group.Format, group.Set), 0755); err != nil {
 		return nil, err
 	}
-	lock, err := TryFlock(filepath.Join(shard, LockName))
+	// The group's lock, not the shard's: two formats of one endpoint write
+	// different segments and different indexes, and there was never a reason for
+	// one to wait on the other. It is held for the writer's lifetime, so a second
+	// harvest of the same group still fails fast instead of interleaving.
+	lock, err := TryFlock(lockPath(shard, group.Format, group.Set))
 	if err != nil {
 		return nil, err
 	}
@@ -106,20 +112,11 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 			lock.Close()
 		}
 	}()
-	meta, err := readMeta(shard)
-	if errors.Is(err, os.ErrNotExist) {
-		meta = &Meta{Layout: layoutName, BaseURL: id.BaseURL, Created: time.Now().UTC()}
-	} else if err != nil {
+	meta, err := addGroup(shard, id)
+	if err != nil {
 		return nil, err
 	}
-	group := id.group()
-	if !meta.hasGroup(group) {
-		meta.Groups = append(meta.Groups, group)
-	}
-	if err := writeMeta(shard, meta); err != nil {
-		return nil, err
-	}
-	st, err := loadState(filepath.Join(shard, stateName))
+	st, err := loadState(statePath(shard, group.Format, group.Set), group.Format, group.Set)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +131,6 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 		group:   group,
 		lock:    lock,
 		st:      st,
-		g:       st.ensureGroup(group.Format, group.Set),
 		meta:    meta,
 		enc:     enc,
 	}
@@ -142,6 +138,51 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 		return nil, err
 	}
 	return w, nil
+}
+
+// updateMeta applies a change to the shard's meta and writes it back, creating
+// it if this is the first harvest of the endpoint. It returns the meta as
+// written, whether or not fn changed anything.
+//
+// meta.json is the one file the groups of an endpoint share, and every change to
+// it is a read, a change and a write. Two harvests of different formats starting
+// at the same moment would otherwise each read the group list without the
+// other's entry and each write it back without it, and a group missing from that
+// list is data a listing does not mention and a read reports as unharvested.
+// Which is why this, and only this, happens under the shard lock: it is held
+// across one small read-modify-write and nothing else, and always after the
+// group lock, so the two can never wait on each other.
+func updateMeta(shard string, id Identity, fn func(*Meta) bool) (*Meta, error) {
+	unlock, err := lockShard(shard)
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
+	meta, err := readMeta(shard)
+	if errors.Is(err, os.ErrNotExist) {
+		meta = &Meta{Layout: layoutName, BaseURL: id.BaseURL, Created: time.Now().UTC()}
+	} else if err != nil {
+		return nil, err
+	}
+	if !fn(meta) {
+		return meta, nil
+	}
+	if err := writeMeta(shard, meta); err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+// addGroup records the group in the shard's meta, so that a listing names it.
+func addGroup(shard string, id Identity) (*Meta, error) {
+	group := id.group()
+	return updateMeta(shard, id, func(m *Meta) bool {
+		if m.hasGroup(group) {
+			return false
+		}
+		m.Groups = append(m.Groups, group)
+		return true
+	})
 }
 
 // openSegment picks up the group's newest segment, or starts the first one,
@@ -156,18 +197,18 @@ func (w *Writer) openSegment() error {
 		num       = 1
 		committed int64
 	)
-	if n := len(w.g.Segments); n > 0 {
-		last := w.g.Segments[n-1]
+	if n := len(w.st.Segments); n > 0 {
+		last := w.st.Segments[n-1]
 		if last.Committed >= segMaxSize {
 			num = last.Num + 1 // Rotate; the old segment stays as it is.
 		} else {
 			num, committed = last.Num, last.Committed
 		}
 	}
-	if w.g.segment(num) == nil {
-		w.g.Segments = append(w.g.Segments, &segRow{Num: num})
+	if w.st.segment(num) == nil {
+		w.st.Segments = append(w.st.Segments, &segRow{Num: num})
 	}
-	path := filepath.Join(w.shard, segDirname, w.group.Dir, segFileName(num))
+	path := filepath.Join(groupDir(w.shard, w.group.Format, w.group.Set), segFileName(num))
 	seg, err := openSegWriter(path, committed, w.enc)
 	if err != nil {
 		return err
@@ -203,9 +244,21 @@ func (w *Writer) Dir() string { return w.shard }
 // SetIdentify records the endpoint's identify response, which is what makes a
 // shard self-describing: granularity and earliest datestamp are the two things
 // a harvest needs and v1 had nowhere to keep.
+//
+// It goes through updateMeta rather than writing the copy this writer opened
+// with, which would be a lost update with teeth: a harvest of another format
+// that started later is in the group list on disk and not in that copy, so
+// writing it back would drop a group that has segments.
 func (w *Writer) SetIdentify(identify *oai.Identify) error {
-	w.meta.Identify = identify
-	return writeMeta(w.shard, w.meta)
+	meta, err := updateMeta(w.shard, w.id, func(m *Meta) bool {
+		m.Identify = identify
+		return true
+	})
+	if err != nil {
+		return err
+	}
+	w.meta = meta
+	return nil
 }
 
 // Identify returns the recorded identify response, if there is one.
@@ -220,10 +273,10 @@ func (w *Writer) Identify() *oai.Identify { return w.meta.Identify }
 // world such an instant belongs to a different UTC date, so a caller that goes
 // on to think in days would be off by one.
 func (w *Writer) Resume() time.Time {
-	if unsettled := w.g.unsettledFrom(); !unsettled.IsZero() {
+	if unsettled := w.st.unsettledFrom(); !unsettled.IsZero() {
 		return unsettled.In(time.Local)
 	}
-	if last := w.g.lastWindow(); !last.IsZero() {
+	if last := w.st.lastWindow(); !last.IsZero() {
 		return nextAfter(last).In(time.Local)
 	}
 	return time.Time{}
@@ -233,13 +286,13 @@ func (w *Writer) Resume() time.Time {
 // re-run can skip it - including a window that yielded no records at all,
 // which in v1 had to be remembered by writing an otherwise pointless file.
 func (w *Writer) HasWindow(from, until time.Time) bool {
-	return w.g.hasWindow(from.UTC(), until.UTC())
+	return w.st.hasWindow(from.UTC(), until.UTC())
 }
 
 // WindowRecords returns how many records the shard holds for one range, which
 // is what checking an already migrated window against its source needs.
 func (w *Writer) WindowRecords(from, until time.Time) int {
-	return w.g.windowRecords(from.UTC(), until.UTC())
+	return w.st.windowRecords(from.UTC(), until.UTC())
 }
 
 // Begin opens a window. Every Append until Commit belongs to it. Pass settled
@@ -305,7 +358,7 @@ func (w *Writer) Commit() error {
 	if n := w.seg.size - w.segCommitted; n > 0 {
 		row.Extents = []extent{{Seg: w.segNum, Off: w.segCommitted, Len: n}}
 	}
-	if err := w.st.commitWindow(w.g, row, w.segNum, w.seg.size); err != nil {
+	if err := w.st.commitWindow(row, w.segNum, w.seg.size); err != nil {
 		return err
 	}
 	w.segCommitted = w.seg.size
@@ -344,7 +397,7 @@ func (w *Writer) Abort(cause error) error {
 	row.Err = cause.Error()
 	// The segment is back at the length the index already vouches for, so this
 	// records it unchanged rather than as a special case.
-	return w.st.commitWindow(w.g, row, w.segNum, w.segCommitted)
+	return w.st.commitWindow(row, w.segNum, w.segCommitted)
 }
 
 // row renders what a window accumulated as the index row for it.
@@ -378,44 +431,42 @@ func elapsed(started, finished time.Time) int64 {
 	return int64(d)
 }
 
-// removeV2 forgets one group of a shard: its segments and its rows. The shard
-// stays, since other formats and sets of the same endpoint live in it.
+// removeV2 forgets one group of a shard: its segments, its index and its lock,
+// which are now one directory. The shard stays, since other formats and sets of
+// the same endpoint live beside it.
 func removeV2(baseDir string, id Identity) error {
 	shard := shardDir(baseDir, id.BaseURL)
 	if !isShard(shard) {
 		return nil
 	}
-	lock, err := TryFlock(filepath.Join(shard, LockName))
-	if err != nil {
+	dir := groupDir(shard, id.Format, id.Set)
+	// Taken and released rather than held: the lock file is inside what is about
+	// to be deleted, so holding it across the removal would mean holding a lock
+	// on a file that no longer exists. Taking it first is still what keeps this
+	// from running while a harvest of the same group does.
+	lock, err := TryFlock(lockPath(shard, id.Format, id.Set))
+	if errors.Is(err, os.ErrNotExist) {
+		// Nothing of this group is on disk, so there is nothing to lock and
+		// nothing to remove but the meta entry.
+	} else if err != nil {
+		return err
+	} else if lock != nil {
+		lock.Close()
+	}
+	if err := os.RemoveAll(dir); err != nil {
 		return err
 	}
-	if lock != nil {
-		defer lock.Close()
-	}
-	st, err := loadState(filepath.Join(shard, stateName))
-	if err != nil {
-		return err
-	}
-	if g := st.group(id.Format, id.Set); g != nil {
-		if err := st.dropGroup(g); err != nil {
-			return err
-		}
-	}
-	if err := os.RemoveAll(filepath.Join(shard, segDirname, groupName(id.Format, id.Set))); err != nil {
-		return err
-	}
-	meta, err := readMeta(shard)
-	if err != nil {
-		return err
-	}
-	meta.removeGroup(id.group())
-	return writeMeta(shard, meta)
+	_, err = updateMeta(shard, id, func(m *Meta) bool {
+		m.removeGroup(id.group())
+		return true
+	})
+	return err
 }
 
 // SegmentBytes returns how many bytes this group's segments occupy. Superseded
 // copies count: they are on disk, which is what a caller asking about size
 // wants to know.
-func (w *Writer) SegmentBytes() int64 { return w.g.segmentBytes() }
+func (w *Writer) SegmentBytes() int64 { return w.st.segmentBytes() }
 
 // Records returns how many records the open window has seen so far.
 func (w *Writer) Records() int {

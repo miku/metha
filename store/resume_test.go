@@ -213,7 +213,7 @@ func TestSettledWindowsMerge(t *testing.T) {
 // windows reports how many rows the group's coverage takes.
 func windows(t *testing.T, w *Writer) int {
 	t.Helper()
-	return len(w.g.Windows)
+	return len(w.st.Windows)
 }
 
 // TestElapsedSurvivesMerging: harvest time is added up as each window is
@@ -233,7 +233,7 @@ func TestElapsedSurvivesMerging(t *testing.T) {
 	if got, want := windows(t, w), 1; got != want {
 		t.Fatalf("got %d windows, want %d", got, want)
 	}
-	row := w.g.Windows[0]
+	row := w.st.Windows[0]
 	span := row.Finished.Sub(row.Started)
 	// The idle stretch is in the row's span and must not be in its elapsed.
 	if span < idle {

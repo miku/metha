@@ -27,24 +27,22 @@ func TestWindowBoundsRoundTrip(t *testing.T) {
 	// has to be in that order to be compared row by row.
 	slices.SortFunc(instants, func(a, b time.Time) int { return a.Compare(b) })
 	path := filepath.Join(t.TempDir(), stateName)
-	st, err := loadState(path)
+	st, err := loadState(path, "oai_dc", "")
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
-	g := st.ensureGroup("oai_dc", "")
 	for _, at := range instants {
-		g.Windows = append(g.Windows, &windowRow{From: at.UTC(), Until: at.UTC(), Status: statusOK})
+		st.Windows = append(st.Windows, &windowRow{From: at.UTC(), Until: at.UTC(), Status: statusOK})
 	}
 	if err := st.save(); err != nil {
 		t.Fatalf("save: %v", err)
 	}
-	back, err := loadState(path)
+	got, err := loadState(path, "oai_dc", "")
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
-	got := back.group("oai_dc", "")
-	if got == nil || len(got.Windows) != len(instants) {
-		t.Fatalf("read back %v, want %d windows", got, len(instants))
+	if len(got.Windows) != len(instants) {
+		t.Fatalf("read back %d windows, want %d", len(got.Windows), len(instants))
 	}
 	for i, at := range instants {
 		if !got.Windows[i].From.Equal(at) {
@@ -58,10 +56,10 @@ func TestWindowBoundsRoundTrip(t *testing.T) {
 // the shape of an index is in no position to write into it.
 func TestStateVersion(t *testing.T) {
 	path := filepath.Join(t.TempDir(), stateName)
-	if err := os.WriteFile(path, []byte(`{"version": 99, "groups": []}`), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(`{"version": 99}`), 0644); err != nil {
 		t.Fatalf("write: %v", err)
 	}
-	_, err := loadState(path)
+	_, err := loadState(path, "oai_dc", "")
 	if err == nil || !strings.Contains(err.Error(), "version 99") {
 		t.Errorf("loading an index from the future: got %v, want it refused by version", err)
 	}
@@ -73,11 +71,10 @@ func TestStateVersion(t *testing.T) {
 // shards carries a quarter million of them.
 func TestSaveIsAtomic(t *testing.T) {
 	dir := t.TempDir()
-	st, err := loadState(filepath.Join(dir, stateName))
+	st, err := loadState(filepath.Join(dir, stateName), "oai_dc", "")
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
-	st.ensureGroup("oai_dc", "")
 	if err := st.save(); err != nil {
 		t.Fatalf("save: %v", err)
 	}

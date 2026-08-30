@@ -209,7 +209,10 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 		case errors.Is(err, store.ErrLocked):
 			// Expected when the same endpoint is handed to two workers,
 			// e.g. by the shuf | parallel loop in the README. Not a failure.
-			log.Printf("another harvest holds this endpoint, skipping: %v", err)
+			// The lock is the group's, so this is the same format and set
+			// already being harvested; another format of the same endpoint
+			// runs alongside.
+			log.Printf("another harvest holds this format of this endpoint, skipping: %v", err)
 			return nil
 		}
 		return err

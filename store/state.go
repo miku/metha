@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// state is a shard's index: which ranges have been harvested, and which bytes
+// state is one group's index: which ranges have been harvested, and which bytes
 // of which segments hold what came back. It is derived data - every field can
 // be rebuilt by rereading the segments - which is what keeps "metha is a cache"
 // true and recovery down to a rebuild.
@@ -28,27 +28,29 @@ import (
 // level is deliberately not here: a window is the unit of atomicity everywhere
 // else, so it is the unit of addressing too, and a read decodes whole extents
 // rather than seeking to individual records.
+//
+// One file per group rather than one per shard, and it sits in the group's own
+// directory beside the segments it names. Two formats of one endpoint are
+// different data in different files and have no reason to wait for each other;
+// while the index was shared they had to, because the lock that keeps two
+// harvests from interleaving is the lock over whatever they both write. Format
+// and set are repeated here so that a group directory says what it holds
+// without its name having to be parsed back - groupName does not round-trip,
+// since a name that cannot be spelled plainly ends in a digest.
 type state struct {
 	path string
 
-	Version int           `json:"version"`
-	Groups  []*groupState `json:"groups"`
+	Version  int          `json:"version"`
+	Format   string       `json:"format"`
+	Set      string       `json:"set,omitempty"`
+	Segments []*segRow    `json:"segments,omitempty"`
+	Windows  []*windowRow `json:"windows,omitempty"`
 }
 
 // stateVersion is the shape of the index this code writes. It is in the file so
 // that a shard and the binary opening it can disagree out loud instead of
 // quietly.
 const stateVersion = 1
-
-// groupState is what a shard holds for one format and set. The directory the
-// segments live in is not repeated here: it is derived from the format and set
-// by groupName, and meta.json is the shard's account of which groups exist.
-type groupState struct {
-	Format   string       `json:"format"`
-	Set      string       `json:"set,omitempty"`
-	Segments []*segRow    `json:"segments,omitempty"`
-	Windows  []*windowRow `json:"windows,omitempty"`
-}
 
 // segRow is a segment file and the prefix of it the index vouches for. The name
 // is not stored because it is segFileName(Num), and a number that has to agree
@@ -125,14 +127,14 @@ const (
 // because those boundaries are where the next run resumes.
 func settled(status string) bool { return status == statusOK || status == statusEmpty }
 
-// loadState reads a shard's index. A shard that has never committed a window
+// loadState reads a group's index. A group that has never committed a window
 // has no file yet, and that is the empty index rather than an error: the first
 // commit writes one, so an endpoint whose harvest died before it got anywhere
 // costs nothing at all.
-func loadState(path string) (*state, error) {
+func loadState(path, format, set string) (*state, error) {
 	b, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) {
-		return &state{path: path, Version: stateVersion}, nil
+		return &state{path: path, Version: stateVersion, Format: format, Set: set}, nil
 	}
 	if err != nil {
 		return nil, err
@@ -158,9 +160,7 @@ func loadState(path string) (*state, error) {
 // than an invariant the mutations have to maintain.
 func (s *state) save() error {
 	s.Version = stateVersion
-	for _, g := range s.Groups {
-		slices.SortFunc(g.Windows, func(a, b *windowRow) int { return a.From.Compare(b.From) })
-	}
+	slices.SortFunc(s.Windows, func(a, b *windowRow) int { return a.From.Compare(b.From) })
 	b, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
@@ -168,37 +168,8 @@ func (s *state) save() error {
 	return writeFileAtomic(s.path, append(b, '\n'))
 }
 
-// group returns the state of one format and set, or nil if the shard holds
-// none.
-func (s *state) group(format, set string) *groupState {
-	for _, g := range s.Groups {
-		if g.Format == format && g.Set == set {
-			return g
-		}
-	}
-	return nil
-}
-
-// ensureGroup returns the state of one format and set, creating it if this is
-// the first time it is harvested into the shard.
-func (s *state) ensureGroup(format, set string) *groupState {
-	if g := s.group(format, set); g != nil {
-		return g
-	}
-	g := &groupState{Format: format, Set: set}
-	s.Groups = append(s.Groups, g)
-	return g
-}
-
-// dropGroup forgets a group entirely: its windows and its segments. The segment
-// files are the caller's to delete.
-func (s *state) dropGroup(g *groupState) error {
-	s.Groups = slices.DeleteFunc(s.Groups, func(have *groupState) bool { return have == g })
-	return s.save()
-}
-
 // segment returns a group's record of one segment file, or nil.
-func (g *groupState) segment(num int) *segRow {
+func (g *state) segment(num int) *segRow {
 	for _, seg := range g.Segments {
 		if seg.Num == num {
 			return seg
@@ -210,7 +181,7 @@ func (g *groupState) segment(num int) *segRow {
 // segmentBytes returns how many bytes of a group's segments the index vouches
 // for. That is the committed length rather than the file size, so the torn tail
 // of a crashed harvest, which the next open truncates, is not counted.
-func (g *groupState) segmentBytes() int64 {
+func (g *state) segmentBytes() int64 {
 	var n int64
 	for _, seg := range g.Segments {
 		n += seg.Committed
@@ -227,7 +198,7 @@ func (g *groupState) segmentBytes() int64 {
 // answers the zero time, and a harvest that switches to intervals starts from
 // the endpoint's earliest date - the only honest answer, since an unbounded
 // fetch says nothing about what it covered.
-func (g *groupState) lastWindow() time.Time {
+func (g *state) lastWindow() time.Time {
 	var last time.Time
 	for _, w := range g.Windows {
 		if w.Status != statusError && w.Until.After(last) {
@@ -249,7 +220,7 @@ func (g *groupState) lastWindow() time.Time {
 // A window with no boundaries is skipped. It has no start to resume from, and
 // it makes no claim about which ranges are covered, so it must not answer a
 // question about them either.
-func (g *groupState) unsettledFrom() time.Time {
+func (g *state) unsettledFrom() time.Time {
 	var first time.Time
 	for _, w := range g.Windows {
 		if settled(w.Status) || w.From.IsZero() {
@@ -269,7 +240,7 @@ func (g *groupState) unsettledFrom() time.Time {
 // it exactly: settled windows are merged as they are committed, so the row that
 // answers for a range is usually wider than the range, and after a year of
 // daily harvests it is a great deal wider.
-func (g *groupState) hasWindow(from, until time.Time) bool {
+func (g *state) hasWindow(from, until time.Time) bool {
 	for _, w := range g.Windows {
 		if settled(w.Status) && !w.From.After(from) && !w.Until.Before(until) {
 			return true
@@ -280,7 +251,7 @@ func (g *groupState) hasWindow(from, until time.Time) bool {
 
 // countRecords returns how many records the group holds, summed over the
 // windows that claim them. A migration compares this against its source.
-func (g *groupState) countRecords() int {
+func (g *state) countRecords() int {
 	var n int
 	for _, w := range g.Windows {
 		n += w.Records
@@ -295,7 +266,7 @@ func (g *groupState) countRecords() int {
 // asking about one day of it would find nothing. A window reaching past the
 // range is left out, so a shard that has been harvested further reports short
 // rather than counting records the range never claimed.
-func (g *groupState) windowRecords(from, until time.Time) int {
+func (g *state) windowRecords(from, until time.Time) int {
 	var n int
 	for _, w := range g.Windows {
 		if !w.From.Before(from) && !w.Until.After(until) {
@@ -309,13 +280,13 @@ func (g *groupState) windowRecords(from, until time.Time) int {
 // the window and the extent naming its bytes reach the disk in one rename or
 // not at all. Bytes appended past that length are the torn tail of a crash and
 // are dropped on the next open.
-func (s *state) commitWindow(g *groupState, win windowRow, segNum int, segSize int64) error {
-	if seg := g.segment(segNum); seg != nil {
+func (s *state) commitWindow(win windowRow, segNum int, segSize int64) error {
+	if seg := s.segment(segNum); seg != nil {
 		seg.Committed = segSize
 	}
-	g.supersede(win)
-	if !g.extendSettled(win) {
-		g.Windows = append(g.Windows, &win)
+	s.supersede(win)
+	if !s.extendSettled(win) {
+		s.Windows = append(s.Windows, &win)
 	}
 	return s.save()
 }
@@ -333,7 +304,7 @@ func (s *state) commitWindow(g *groupState, win windowRow, segNum int, segSize i
 // Their bytes stay in the segment, since the blob layer is append-only and
 // dedupe is a reader's decision. What goes is the extent naming them, and a run
 // of bytes no extent names is one no read can reach.
-func (g *groupState) supersede(win windowRow) {
+func (g *state) supersede(win windowRow) {
 	g.Windows = slices.DeleteFunc(g.Windows, func(w *windowRow) bool {
 		if w.From.Equal(win.From) && w.Until.Equal(win.Until) {
 			return true
@@ -356,7 +327,7 @@ func (g *groupState) supersede(win windowRow) {
 // stopped and the next began. The row keeps the started of the earlier half,
 // since that is when the merged range was first reached for, and takes the
 // finished of the later one.
-func (g *groupState) extendSettled(win windowRow) bool {
+func (g *state) extendSettled(win windowRow) bool {
 	// A window with no boundaries covers whatever the endpoint chose to send
 	// and abuts nothing; see unsettledFrom.
 	if !settled(win.Status) || win.From.IsZero() {
@@ -457,7 +428,7 @@ func (w *windowRow) canMatch(opts ReadOptions) bool {
 // liveExtents returns the byte runs a read has to visit, in the order they were
 // written. Superseded copies are named by no window and so appear nowhere here,
 // which is what makes a read a view of the cache rather than a dump of it.
-func (g *groupState) liveExtents(opts ReadOptions) []extent {
+func (g *state) liveExtents(opts ReadOptions) []extent {
 	var exts []extent
 	for _, w := range g.Windows {
 		if w.canMatch(opts) {

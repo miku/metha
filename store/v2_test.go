@@ -98,9 +98,9 @@ func TestV2RoundTrip(t *testing.T) {
 	if len(files) != 1 || filepath.Base(files[0]) != "000001.zst" {
 		t.Errorf("Files: got %v, want one segment named 000001.zst", files)
 	}
-	// The segments live under a directory named for the group, so that all of
+	// The segments live in a directory named for the group, so that all of
 	// one format and set can be concatenated on their own.
-	if want := filepath.Join(s.Dir(), segDirname, "oai_dc"); filepath.Dir(files[0]) != want {
+	if want := filepath.Join(s.Dir(), "oai_dc"); filepath.Dir(files[0]) != want {
 		t.Errorf("segment directory: got %v, want %v", filepath.Dir(files[0]), want)
 	}
 }
@@ -124,7 +124,7 @@ func TestV2EmptyWindowCostsNoBytes(t *testing.T) {
 	if !w.HasWindow(from, until) {
 		t.Errorf("HasWindow after an empty harvest: got false, want true")
 	}
-	seg := filepath.Join(w.Dir(), segDirname, "oai_dc", "000001.zst")
+	seg := filepath.Join(w.Dir(), "oai_dc", "000001.zst")
 	info, err := os.Stat(seg)
 	if err != nil {
 		t.Fatalf("stat segment: %v", err)
@@ -183,7 +183,7 @@ func TestV2TornTailTruncated(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	seg := filepath.Join(shardDir(base, id.BaseURL), segDirname, "oai_dc", "000001.zst")
+	seg := filepath.Join(shardDir(base, id.BaseURL), "oai_dc", "000001.zst")
 	good, err := os.Stat(seg)
 	if err != nil {
 		t.Fatalf("stat: %v", err)
@@ -235,15 +235,14 @@ func TestExtentCoversTheWholeWindow(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 	shard := shardDir(base, id.BaseURL)
-	st, err := loadState(filepath.Join(shard, stateName))
+	st, err := loadState(statePath(shard, "oai_dc", ""), "oai_dc", "")
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
-	g := st.group("oai_dc", "")
-	if g == nil || len(g.Windows) != 2 {
-		t.Fatalf("index holds %v, want two windows", g)
+	if len(st.Windows) != 2 {
+		t.Fatalf("index holds %d windows, want two", len(st.Windows))
 	}
-	seg := filepath.Join(shard, segDirname, "oai_dc", segFileName(1))
+	seg := filepath.Join(shard, "oai_dc", segFileName(1))
 	info, err := os.Stat(seg)
 	if err != nil {
 		t.Fatalf("stat segment: %v", err)
@@ -252,7 +251,7 @@ func TestExtentCoversTheWholeWindow(t *testing.T) {
 	// they account for every byte of the segment: nothing was appended outside
 	// a window, and nothing a window appended is left unnamed.
 	var covered int64
-	for _, win := range g.Windows {
+	for _, win := range st.Windows {
 		if len(win.Extents) != 1 {
 			t.Fatalf("window %v holds %v, want one extent", win.From, win.Extents)
 		}
@@ -268,7 +267,7 @@ func TestExtentCoversTheWholeWindow(t *testing.T) {
 	// And a run decodes on its own, without reading what precedes it, which is
 	// what makes it addressable at all.
 	var got []string
-	ok := recordsFromExtent(seg, g.Windows[0].Extents[0], ReadOptions{}, func(rec oai.Record, err error) bool {
+	ok := recordsFromExtent(seg, st.Windows[0].Extents[0], ReadOptions{}, func(rec oai.Record, err error) bool {
 		if err != nil {
 			t.Errorf("recordsFromExtent: %v", err)
 			return false
@@ -284,8 +283,8 @@ func TestExtentCoversTheWholeWindow(t *testing.T) {
 	}
 }
 
-// TestV2SecondWriterBlocked: one shard, one writer, so two harvests of the same
-// endpoint cannot interleave their windows.
+// TestV2SecondWriterBlocked: one group, one writer, so two harvests of the same
+// format and set cannot interleave their windows into one index.
 func TestV2SecondWriterBlocked(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
@@ -294,10 +293,47 @@ func TestV2SecondWriterBlocked(t *testing.T) {
 		t.Fatalf("OpenWriter: %v", err)
 	}
 	defer w.Close()
-	// A different group of the same endpoint still shares the shard lock.
-	other := Identity{BaseURL: "http://example.com", Format: "marcxml"}
-	if _, err := OpenWriter(base, other); err == nil {
-		t.Errorf("second OpenWriter on the same shard: got no error, want one")
+	if _, err := OpenWriter(base, id); !errors.Is(err, ErrLocked) {
+		t.Errorf("second OpenWriter on the same group: got %v, want ErrLocked", err)
+	}
+}
+
+// TestV2GroupsDoNotBlockEachOther is the point of moving the lock and the index
+// down a level. Two formats of one endpoint are different bytes in different
+// files with different indexes, and the only thing they share is meta.json -
+// which is written under a lock held for one read-modify-write and released.
+// While the lock was the shard's, harvesting an endpoint's oai_dc made its
+// marcxml unharvestable for as long as it ran, which for a large repository is
+// hours.
+func TestV2GroupsDoNotBlockEachOther(t *testing.T) {
+	base := t.TempDir()
+	dc := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	marc := Identity{BaseURL: "http://example.com", Format: "marcxml"}
+
+	a, err := OpenWriter(base, dc)
+	if err != nil {
+		t.Fatalf("OpenWriter oai_dc: %v", err)
+	}
+	defer a.Close()
+	b, err := OpenWriter(base, marc)
+	if err != nil {
+		t.Fatalf("OpenWriter marcxml while oai_dc is open: %v, want both to run", err)
+	}
+	defer b.Close()
+
+	// Both write, at the same time, into their own segments and their own
+	// indexes.
+	writeWindow(t, a, "2023-01-01", "2023-01-31", "from-oai-dc")
+	writeWindow(t, b, "2023-01-01", "2023-01-31", "from-marcxml")
+
+	// And the shard names both, which is what a listing reads: the group each
+	// added under the shard lock survived the other adding theirs.
+	meta, err := readMeta(shardDir(base, dc.BaseURL))
+	if err != nil {
+		t.Fatalf("readMeta: %v", err)
+	}
+	if len(meta.Groups) != 2 {
+		t.Errorf("meta names %v, want both groups", meta.Groups)
 	}
 }
 
@@ -371,14 +407,17 @@ func TestGroupName(t *testing.T) {
 	}
 }
 
-// TestGroupNameStaysInsideSeg: a group name is one directory component built
-// from what the caller asked to harvest, so it must not be a name the
+// TestGroupNameStaysInsideTheShard: a group name is one directory component
+// built from what the caller asked to harvest, so it must not be a name the
 // filesystem has already spoken for. A format of ".." used to come back as
-// "..", which put the group's segments in the shard root beside meta.json and
-// the index; the empty name joined to nothing and put them in seg/ itself.
-func TestGroupNameStaysInsideSeg(t *testing.T) {
+// "..", which landed a level above where it belongs; the empty name joined to
+// nothing and put the group's files in the directory above it.
+//
+// It matters more now than it did, because a group directory holds the group's
+// index and lock as well as its segments: a name that escapes would put them
+// beside another group's, or beside the shard's own meta.json.
+func TestGroupNameStaysInsideTheShard(t *testing.T) {
 	shard := filepath.Join("/cache", "aa", "bb", "hash")
-	seg := filepath.Join(shard, segDirname)
 	for _, tt := range []struct{ format, set string }{
 		{".", ""},
 		{"..", ""},
@@ -389,10 +428,10 @@ func TestGroupNameStaysInsideSeg(t *testing.T) {
 		{".", "."},
 	} {
 		name := groupName(tt.format, tt.set)
-		dir := filepath.Join(seg, name)
-		if got := filepath.Dir(dir); got != seg {
+		dir := groupDir(shard, tt.format, tt.set)
+		if got := filepath.Dir(dir); got != shard {
 			t.Errorf("groupName(%q, %q) = %q, which lands in %s, want a directory of %s",
-				tt.format, tt.set, name, got, seg)
+				tt.format, tt.set, name, got, shard)
 		}
 		if !safeComponent(name) {
 			t.Errorf("groupName(%q, %q) = %q, which is not a usable directory name",
@@ -457,10 +496,11 @@ func TestResumeAcrossZones(t *testing.T) {
 	}
 }
 
-// TestShardHoldsOnlyWhatItNeeds: a harvested shard is four things - what it is,
-// what it holds, the lock, and the bytes. Anything else is a file a quarter
-// million shards each carry a copy of, which is how the write-ahead log and the
-// shared-memory sidecar of the sqlite index used to be paid for.
+// TestShardHoldsOnlyWhatItNeeds: a harvested shard is what the endpoint is, the
+// lock over that, and one directory per group; a group is its index, its lock,
+// and the bytes. Anything else is a file a quarter million shards each carry a
+// copy of, which is how the write-ahead log and the shared-memory sidecar of the
+// sqlite index used to be paid for.
 func TestShardHoldsOnlyWhatItNeeds(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
@@ -472,7 +512,23 @@ func TestShardHoldsOnlyWhatItNeeds(t *testing.T) {
 	if err := w.Close(); err != nil {
 		t.Fatalf("Close: %v", err)
 	}
-	entries, err := os.ReadDir(shardDir(base, id.BaseURL))
+	shard := shardDir(base, id.BaseURL)
+	// The shard itself: what the endpoint is, the lock that guards that, and the
+	// group. Nothing about any one format lives at this level any more.
+	if want := []string{LockName, metaName, "oai_dc"}; !slices.Equal(dirNames(t, shard), want) {
+		t.Errorf("shard holds %v, want %v", dirNames(t, shard), want)
+	}
+	// The group: its own lock, its own index, its own bytes.
+	group := groupDir(shard, id.Format, id.Set)
+	if want := []string{segFileName(1), LockName, stateName}; !slices.Equal(dirNames(t, group), want) {
+		t.Errorf("group holds %v, want %v", dirNames(t, group), want)
+	}
+}
+
+// dirNames lists what a directory holds, sorted.
+func dirNames(t *testing.T, dir string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("readdir: %v", err)
 	}
@@ -481,9 +537,7 @@ func TestShardHoldsOnlyWhatItNeeds(t *testing.T) {
 		names = append(names, entry.Name())
 	}
 	slices.Sort(names)
-	if want := []string{LockName, metaName, segDirname, stateName}; !slices.Equal(names, want) {
-		t.Errorf("shard holds %v, want %v", names, want)
-	}
+	return names
 }
 
 // TestLayoutsShareTheCache: shards sit directly in the cache, with no directory

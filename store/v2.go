@@ -22,16 +22,15 @@ const (
 	// found on its own says what it is.
 	layoutName = "v2"
 
-	// metaName describes a shard well enough to rebuild its index. It is kept
-	// apart from the index so that a listing over a cache of a quarter million
-	// shards reads one small file each, rather than every window of every one.
+	// metaName describes a shard well enough to rebuild its index: which
+	// endpoint the bytes came from, what it said about itself, and which groups
+	// it holds. It is kept apart from the indexes so that a listing over a cache
+	// of a quarter million shards reads one small file each, rather than every
+	// window of every group of every one.
 	metaName = "meta.json"
-	// stateName is the per-shard index: segments, and the windows naming their
-	// bytes.
+	// stateName is a group's index: its segments, and the windows naming their
+	// bytes. It lives in the group's own directory, beside them.
 	stateName = "state.json"
-	// segDirname holds one subdirectory of segments per group, so that
-	// "cat seg/<group>/*.zst | zstd -dc" is a complete, valid stream.
-	segDirname = "seg"
 )
 
 // Meta is the content of a shard's meta.json. It is the shard's own account of
@@ -77,6 +76,30 @@ func shardDir(baseDir, baseURL string) string {
 	return filepath.Join(baseDir, h[0:2], h[2:4], h[:16])
 }
 
+// groupDir is where everything belonging to one format and set lives: its
+// segments, its index, and the lock that keeps two harvests of it from
+// interleaving. A group is one self-contained directory under the shard, so
+// "cat <group>/*.zst | zstd -dc" is still a complete, valid stream, and two
+// groups of one endpoint share nothing but meta.json.
+//
+// There is no "seg" level above it any more. It bought a directory whose
+// contents were exactly the group directories, and it kept the segments a level
+// away from the index that names them.
+func groupDir(shard, format, set string) string {
+	return filepath.Join(shard, groupName(format, set))
+}
+
+// statePath is a group's index, and lockPath the lock over everything in the
+// group directory. Both are named here rather than joined at the call sites, so
+// that where a group keeps its things is one fact in one place.
+func statePath(shard, format, set string) string {
+	return filepath.Join(groupDir(shard, format, set), stateName)
+}
+
+func lockPath(shard, format, set string) string {
+	return filepath.Join(groupDir(shard, format, set), LockName)
+}
+
 // isShardPrefix reports whether a cache entry is one of the fan-out levels: two
 // lowercase hex digits, which is what keeps a listing from descending into
 // every v1 endpoint directory looking for shards.
@@ -116,11 +139,11 @@ func groupName(format, set string) string {
 // safeComponent reports whether a name can stand as a directory of its own.
 // sanitize keeps dots, because formats and sets are full of them, and three
 // names survive it that a filesystem has already spoken for: the empty string,
-// which joins to nothing and would put a group's segments in seg/ itself, and
-// "." and "..", which are directories that already exist - a format of ".."
-// would write segments into the shard root, beside meta.json and the index.
-// They fall through to the digest instead, which is where every other name
-// that cannot be spelled plainly already goes.
+// which joins to nothing and would put a group's files in the shard root beside
+// meta.json, and "." and ".." , which are directories that already exist - a
+// format of ".." would land a level above the shard entirely. They fall through
+// to the digest instead, which is where every other name that cannot be spelled
+// plainly already goes.
 func safeComponent(name string) bool {
 	return name != "" && name != "." && name != ".."
 }
@@ -240,12 +263,14 @@ type v2Store struct {
 func (s *v2Store) Identity() Identity { return s.id }
 
 // Dir returns the shard directory, which holds every group of this endpoint.
-// The files of this particular group are under seg/<group>.
+// The files of this particular group are under <group>/.
 func (s *v2Store) Dir() string { return shardDir(s.baseDir, s.id.BaseURL) }
 
-// segDir is where this group's segments live.
+// segDir is where this group's segments live, which is the group directory
+// itself: the index that names them and the lock over them are its only
+// company.
 func (s *v2Store) segDir() string {
-	return filepath.Join(s.Dir(), segDirname, groupName(s.id.Format, s.id.Set))
+	return groupDir(s.Dir(), s.id.Format, s.id.Set)
 }
 
 // Files returns the group's segments in write order. Concatenating them yields
@@ -277,17 +302,13 @@ func (s *v2Store) segments() ([]string, error) {
 
 // Last returns the end of the most recent harvested window, from the index.
 func (s *v2Store) Last() (string, error) {
-	st, err := loadState(filepath.Join(s.Dir(), stateName))
+	st, err := loadState(statePath(s.Dir(), s.id.Format, s.id.Set), s.id.Format, s.id.Set)
 	if err != nil {
 		return "", err
 	}
-	g := st.group(s.id.Format, s.id.Set)
-	if g == nil {
-		return "", nil
-	}
 	// Windows are stored as instants; callers resuming a harvest speak dates,
 	// as they did in v1.
-	return windowDate(g.lastWindow()), nil
+	return windowDate(st.lastWindow()), nil
 }
 
 // listV2 enumerates the shards under baseDir, one entry per group. A shard is

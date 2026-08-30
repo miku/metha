@@ -516,12 +516,134 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       superseded copies included, because that is the raw cache and it stays
       that way.
 
+- [x] **`context.Context` through the client and the driver.** Step 5 of the
+      simplification note. `signal.NotifyContext` in `Main`, the context on
+      every cobra command, `ctx` checked between windows and between requests,
+      and `h.Client.DoContext` rather than `Do`.
+
+      **The mutex is gone, and so is what it was for.** `setupInterruptHandler`,
+      `shutdown`, the `write` seam and the `os.Exit(0)` that ended a run without
+      unwinding anything all went with it. The handler was the only other
+      goroutine touching the writer, so with it gone there is nothing left to
+      exclude - which is exactly what move 4 predicted and could not do on its
+      own.
+
+      What an interrupt does now: the run stops between two requests, the window
+      in flight is aborted, the caller's deferred `Close` releases the lock, and
+      `sync` reports it rather than failing. The second Ctrl-C is deliberately
+      left to the default action - `signal.NotifyContext` alone would swallow
+      it, and an operator holding it down is asking to stop *now*, not to be told
+      that a shutdown is already in progress. What that costs is a torn tail,
+      which the next open truncates.
+
+      Every wait is cancellable (`sleep(ctx, d)`): the `-delay` between requests
+      and the backoff between retries. The old form slept through a 40 second
+      backoff before it could notice anything, which is the difference between a
+      prompt Ctrl-C and one that looks ignored.
+
+      **An aborted window records nothing when the cause is cancellation.**
+      `Abort(err)` writes a row saying the range was tried and failed, which is
+      what a later run needs to know about an endpoint that would not answer -
+      but an operator stopping is not the endpoint failing. Recording it left a
+      permanent failure in the shard for something that never went wrong, and
+      `metha stat` reported it for the life of the cache. Verified against a
+      real harvest: interrupt at day 7, `1 failed` before, `0 failed` after, and
+      in both cases the next run resumes at day 8 and the days tile without a
+      gap or a duplicate.
+
+- [x] **One error classifier.** The other half of that step, and the smaller of
+      the two items the simplification note folds in. `classify.go` is two pure
+      functions and two table tests.
+
+      `shouldRetry` conflated two independent policies: it would not retry
+      *anything* unless `-ignore-http-errors` was given, so an operator who
+      wanted a harvest to survive a dead window had to ask for it by asking for
+      something else. Now `retryable(err, resp)` decides whether repeating a
+      request could change its outcome, asked always and asking nothing about
+      configuration; `-ignore-http-errors` decides only whether a failure that
+      outlived the retries ends the harvest or costs one window - which is what
+      its own help text has always said it does.
+
+      Transport failures are matched with `errors.As` on `net.Error` instead of
+      `strings.Contains(err.Error(), "timeout")` and two more like it, which
+      missed every phrasing they were not written for and matched any error that
+      happened to contain the word. `TestRetryable` pins the real shapes -
+      `*net.OpError`, `*net.DNSError`, a `*url.Error` wrapping one - against
+      `errors.New("timeout")`, which is not a network failure and no longer
+      reads as one.
+
+      Two behaviour fixes fell out of writing the table:
+
+      - a `noRecordsMatch` or `badResumptionToken` response is no longer appended
+        to the segment. The old code's `break` was inside a `switch` inside the
+        request loop, so it broke the switch and fell through to store the error
+        response - the comment above it said it meant to end the window. The
+        window now commits with what it has, and one that found nothing at all
+        commits as `empty`, which is already a first-class row costing no bytes;
+      - `MaxEmptyResponses` was compared for equality, so its zero value matched
+        the `empty == 0` that every response carrying records leaves behind. A
+        harvest configured in Go rather than through the flags stopped after one
+        request. The CLI always passes 10, which is why it was never seen.
+
+- [x] **Lock and state per group.** The second folded-in item, and the one thing
+      left on the list that changes the on-disk shape - so it went before the
+      migration rather than after it, which is the whole reason to do it now.
+
+      A group is one self-contained directory:
+
+          <shard>/meta.json              the endpoint, its identify, its groups
+          <shard>/LOCK                   guards meta.json, and nothing else
+          <shard>/<group>/LOCK           guards this group, held for a harvest
+          <shard>/<group>/state.json     this group's index
+          <shard>/<group>/000001.zst     this group's bytes
+
+      The `seg/` level is gone with it. It bought a directory whose contents were
+      exactly the group directories, and it kept the segments a level away from
+      the index naming them; `cat <group>/*.zst | zstd -dc` is still a complete,
+      valid stream, which is the property `seg/` existed to protect.
+
+      `state` and `groupState` collapsed into one type, since a file that holds
+      one group has no group list to search: `group`, `ensureGroup` and
+      `dropGroup` went, and `commitWindow` lost the parameter that said which
+      group it meant.
+
+      **meta.json is the one file two groups share, and it needs a lock of its
+      own.** Appending to its group list is a read, a change and a write, so two
+      harvests of different formats starting together would each read the list
+      without the other's entry and each write it back without it - and a group
+      missing from that list is data `ls` does not mention and a read reports as
+      `ErrNotHarvested`. `lockShard` is blocking where the group lock is not: an
+      already-running harvest of the same group is a reason to skip the endpoint,
+      but a group list being appended to by another format is a wait of
+      microseconds, and failing on it would turn the thing this layout is *for*
+      back into an error. It is taken after the group lock, always in that order,
+      and held across one read-modify-write and nothing else.
+
+      `SetIdentify` goes through the same path rather than writing the copy the
+      writer opened with. That would have been a lost update with teeth: a
+      harvest of another format that started later is in the group list on disk
+      and not in that copy, so writing it back would drop a group that has
+      segments.
+
+      Verified end to end against a real endpoint: `oai_dc` and `marcxml` and
+      `dim` harvested concurrently into one shard, all three in `meta.json`
+      afterwards, all three in `ls`; a second harvest of the same group refused
+      with `ErrLocked`; `--rm` of one group leaving the others; and `stat`,
+      `cat`, `cat --from/--until` and `files` all agreeing with the index.
+
+      **No refusal was written for the old shape**, on the same reasoning the
+      leftover `state.sqlite` got: a shard with `<shard>/state.json` and
+      `<shard>/seg/` is a format that never shipped, and a permanent guard
+      against one is exactly the cruft this exercise is about. Existing v2 caches
+      must be wiped; the corpus to migrate is still in the pre-1.0 layout, which
+      is the reason this was cheap today.
+
 ---
 
 ## open — settle before the move
 
 Nothing outstanding. Every decision that changes the on-disk shape has been
-made; what is left below does not.
+made, the per-group move included, and the gate is open for real this time.
 
 ---
 
@@ -533,6 +655,32 @@ made; what is left below does not.
       the cause is permanent. Needs a retry policy (attempt count, or an age
       after which an error window is given up on) — a behaviour decision, not a
       layout one.
+
+      Narrower than it was: a cancelled window no longer writes an `error` row
+      at all, so the commonest way to acquire one — Ctrl-C — is gone. What
+      remains is a window the endpoint really did fail, which is the case the
+      policy is actually about.
+
+- [ ] **A stored response is `xml.Marshal(resp)`, not the bytes that arrived.**
+      Found while checking the segment stream by hand. Marshalling the whole
+      `oai.Response` writes an empty skeleton for every verb the response is
+      not: a one-record `ListRecords` reaches the segment carrying an empty
+      `GetRecord`, `Identify`, `ListIdentifiers`, `ListMetadataFormats` and
+      `ListSets`, which on a small response is most of its bytes.
+
+      It compresses away to almost nothing — the skeleton is identical in every
+      frame, which is what a zstd window is good at — so the cost on disk is
+      small and the cost in the reframing is not: "an append-only log of raw
+      HTTP responses" is what the design note says metha is, and this is a
+      re-serialisation of a parse. Anything the decoder drops is gone from the
+      cache for good, which is the property an archive is supposed not to have.
+
+      Not a one-line fix: `Client.DoContext` decodes into a `Response` and does
+      not keep the bytes it decoded, so this is a field on `Response`, filled
+      where the body is read, and `Append(resp.Raw)` in `runWindow`. It changes
+      what every future segment holds, so it belongs with a decision about
+      whether the corpus should be uniform — and that decision is cheapest
+      before the 200G migration writes 200G of the old shape.
 
 - [ ] **`HasWindow` is never called by the harvester.** Only `store/migrate.go`
       uses it. The harvester decides what to fetch from `Resume()` alone, so a

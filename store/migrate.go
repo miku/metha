@@ -236,4 +236,4 @@ func readWhole(path string) ([]byte, error) {
 
 // CountRecords returns how many records the shard holds for this group, which
 // is what a migration checks its source against.
-func (w *Writer) CountRecords() int { return w.g.countRecords() }
+func (w *Writer) CountRecords() int { return w.st.countRecords() }

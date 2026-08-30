@@ -251,9 +251,22 @@ func (h *Harvest) runWindow(ctx context.Context, w Window) (err error) {
 	}
 	defer func() {
 		// A window that did not reach Commit leaves nothing behind.
-		if err != nil {
-			err = errors.Join(err, h.Writer.Abort(err))
+		if err == nil {
+			return
 		}
+		// With one exception to what it records. An abort with a cause writes a
+		// row saying the range was tried and failed, which is what a later run
+		// needs to know about an endpoint that would not answer - but a
+		// cancelled harvest is the operator stopping, not the endpoint failing.
+		// Recording that would leave a permanent failure in the shard for
+		// something that never went wrong, and metha stat would report it for
+		// the life of the cache. Dropped without a row, the range is simply not
+		// covered, which is what brings the next run back to it.
+		cause := err
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			cause = nil
+		}
+		err = errors.Join(err, h.Writer.Abort(cause))
 	}()
 	var token string
 	var i, empty int

@@ -46,16 +46,12 @@ func (s *v2Store) Records(opts ReadOptions) iter.Seq2[oai.Record, error] {
 			yield(oai.Record{}, fmt.Errorf("%v: %w", s.id, ErrNotHarvested))
 			return
 		}
-		st, err := loadState(filepath.Join(s.Dir(), stateName))
+		st, err := loadState(statePath(s.Dir(), s.id.Format, s.id.Set), s.id.Format, s.id.Set)
 		if err != nil {
 			yield(oai.Record{}, err)
 			return
 		}
-		g := st.group(s.id.Format, s.id.Set)
-		if g == nil {
-			return
-		}
-		for _, e := range g.liveExtents(opts) {
+		for _, e := range st.liveExtents(opts) {
 			path := filepath.Join(s.segDir(), segFileName(e.Seg))
 			if !recordsFromExtent(path, e, opts, yield) {
 				return

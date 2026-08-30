@@ -106,16 +106,15 @@ func TestMigrateVerifyDetectsLoss(t *testing.T) {
 	// a partial or interrupted migration would have. Verification has to notice,
 	// because counting the source again is the only evidence there is that the
 	// v1 files can go.
-	path := filepath.Join(shardDir(base, id.BaseURL), stateName)
-	st, err := loadState(path)
+	path := statePath(shardDir(base, id.BaseURL), id.Format, id.Set)
+	st, err := loadState(path, id.Format, id.Set)
 	if err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
-	g := st.group(id.Format, id.Set)
-	if g == nil || len(g.Windows) == 0 {
+	if len(st.Windows) == 0 {
 		t.Fatalf("no windows in %s", path)
 	}
-	g.Windows[0].Records--
+	st.Windows[0].Records--
 	if err := st.save(); err != nil {
 		t.Fatalf("save: %v", err)
 	}
@@ -223,7 +222,7 @@ func TestMigrateKeepsBytesVerbatim(t *testing.T) {
 	if _, err := Migrate(base, id); err != nil {
 		t.Fatalf("Migrate: %v", err)
 	}
-	seg := filepath.Join(shardDir(base, id.BaseURL), segDirname, "oai_dc", "000001.zst")
+	seg := filepath.Join(groupDir(shardDir(base, id.BaseURL), "oai_dc", ""), "000001.zst")
 	got, err := readWhole(seg)
 	if err != nil {
 		t.Fatalf("read segment: %v", err)

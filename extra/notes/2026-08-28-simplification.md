@@ -260,6 +260,27 @@ for: with a cancellable loop there is no goroutine racing a commit, so
 all go. Already on the phase 0 list as the daemon prerequisite; it is also the
 correctness fix.
 
+**Done**, and it collected the debt move 4 had to leave. The mutex, the handler,
+`shutdown`, the `write` seam and the `os.Exit(0)` all went together, because
+each of them existed only for the others. Two things the note did not say:
+
+*Every wait has to be cancellable, not just the loop.* `retry` slept through its
+backoff and `-delay` slept between requests, so a Ctrl-C during a 40 second wait
+was noticed 40 seconds later — cancellable in principle and ignored in practice.
+One `sleep(ctx, d)` and every wait in a harvest goes through it.
+
+*And the abort must not record a failure.* `Abort(cause)` writes a row saying the
+range was tried and failed, which is exactly what a later run needs to know about
+an endpoint that would not answer. An operator stopping is not that, and writing
+it left a permanent failure in the shard for something that never went wrong.
+Cancellation aborts with no cause: the range is simply uncovered, which is what
+brings the next run back to it. Measured on a real harvest interrupted at day 7 —
+`1 failed` before the fix, `0 failed` after, and either way the next run picks up
+at day 8 with the days tiling gaplessly.
+
+The second Ctrl-C is left to the default action, which `signal.NotifyContext`
+would otherwise swallow. Someone holding it down is asking to stop now.
+
 ### 6. Per-endpoint quirks live in the shard, not in flags
 
 This is the direct answer to "these APIs sometimes behave a bit oddly."
@@ -284,6 +305,13 @@ become overrides rather than the only channel.
 This is also the only way a daemon over 244k endpoints can work at all: a
 scheduler cannot be handed per-endpoint flags.
 
+**Not done, and the only move still open.** Deliberately left for after the
+migration rather than before it: it is behaviour rather than layout, and the
+`meta.json` it would write is a file the migration writes anyway. Two things it
+now inherits that were not true when it was written — `updateMeta` is the guarded
+read-modify-write a probe would record through, and `classify` is where a quirk
+learned from a response would be consulted.
+
 **And the analysis story gets better, not worse.** With no per-shard sqlite, the
 ad-hoc query path is an offline `metha export` producing one parquet or duckdb
 file over the whole corpus. That is strictly better than `ATTACH`ing a quarter
@@ -300,11 +328,46 @@ network failures with `strings.Contains(err.Error(), "timeout")`
 (harvest.go:605) where `errors.As` on `net.Error` is available. The
 `resp.Error.Code` switch inside the request loop belongs in the same place.
 
+**Done**, as two functions rather than one, which is the shape the split
+insists on. `retryable(err, resp)` is the whole retry policy and asks nothing
+about configuration — a timeout is a timeout whether or not the operator is
+willing to lose the window it belongs to. `classify(cfg, err, resp)` is the
+terminal decision, and the only place `-ignore-http-errors` is consulted. So
+`Retry` is not one of `classify`'s answers: it is the question asked first, and
+by the time `classify` runs the retries are spent.
+
+Writing the table found two bugs the branches had been hiding. The `break` that
+meant to end a window on `noRecordsMatch` was inside a `switch` inside the loop,
+so it broke the switch and fell through to *store the error response* — the
+comment above it says what it meant. And `MaxEmptyResponses` was compared for
+equality, so its zero value matched the `empty == 0` that every response
+carrying records leaves behind: a harvest driven from Go rather than from the
+flags stopped after one request.
+
 **Lock and state per group, not per shard.** `OpenWriter` takes the shard flock
 for its lifetime (v2_writer.go:76), so two formats of one endpoint block each
 other for no reason — they are different data in different files. Move
 `state.json` and the lock down to `<shard>/<group>/`, leaving only `identify` at
 shard level, written idempotently.
+
+**Done**, and it went before the migration rather than after it: this is the one
+item on the page that changes the on-disk shape, so the sequencing table below
+was wrong to say step 7 changes nothing. Cheap this week, a re-shuffle of 200G
+next.
+
+The `seg/` level went with it, so a group is one self-contained directory —
+`LOCK`, `state.json` and the segments together. `cat <group>/*.zst | zstd -dc`
+is still a valid stream, which is the property `seg/` existed to protect, and
+`state` and `groupState` collapsed into one type, since a file holding one group
+has no group list to search.
+
+"Written idempotently" turned out not to be enough for `meta.json`. Appending to
+its group list is a read, a change and a write, so two formats starting together
+each write back a list without the other's entry — and a group missing from that
+list is data `ls` does not mention and a read calls `ErrNotHarvested`. It needs a
+lock, so the shard keeps one: blocking, taken after the group lock, and held
+across that one read-modify-write and nothing else. A lock that is never held
+while anything slow happens is a different thing from the one this move deleted.
 
 ---
 
@@ -330,20 +393,45 @@ These are earned and the measurements back them:
 | 2 | delete v1 (the 1.0 note's plan) — **done** | no |
 | 3 | package split, `Sink` deleted — **done** | no |
 | 4+5 | window-granularity extents, `records` and sqlite gone — **done**, `state.json` | **yes** |
-| 6 | migrate the 200G corpus | — |
-| 7 | context; quirks profile; classifier; per-group lock | no |
+| 6 | context; classifier — **done** | no |
+| 7 | per-group lock and state — **done**, `<shard>/<group>/` | **yes** |
+| 8 | migrate the 200G corpus | — |
+| 9 | quirks profile | no |
 
 Steps 4 and 5 landed as one move: the intermediate — an extents table in sqlite,
 with a version bump and a ladder step — would have been authored and deleted in
 the same week, and no shard on disk needed preserving.
 
-**The gate is open.** Nothing left on the list changes the on-disk shape, so the
-200G migration is now the next thing rather than the thing everything is racing.
+The table as first written had the migration at step 6 and everything left after
+it, on the claim that nothing left changed the on-disk shape. That claim was
+wrong by one item: the per-group lock moves `state.json` down a level, which is
+free while the corpus is still in the pre-1.0 layout and a re-shuffle of 200G
+once it is not. It moved ahead of the migration for that reason alone.
 
-Net, measured rather than guessed: 414 lines across the module, 344 of them in
-`store`, eight modules, and 6.0MB of binary — against the loss of
-frame-granularity pruning, which is the one thing on this page that was paid for
-rather than found.
+**The gate is open**, and this time nothing outstanding argues with it. The
+quirks profile is the only move left, it is behaviour rather than layout, and it
+reads and writes `meta.json`, which the migration already writes.
+
+Net over moves 1 through 5, measured rather than guessed: 414 lines across the
+module, 344 of them in `store`, eight modules, and 6.0MB of binary — against the
+loss of frame-granularity pruning, which is the one thing on this page that was
+paid for rather than found.
+
+**Moves 6 and 7 did not shrink anything, and it is worth saying so.** Counting
+code rather than comments, the module went from 4,258 lines to 4,309: `store`
+gained 3, `harvest` gained 30, the CLI the rest. The classifier is longer than
+the branches it replaced, because a table of the outcomes and two named policies
+take more room than the same decisions scattered through a request loop; the
+per-group move added the path helpers and a second lock and took back only what
+the group list in `state` had cost.
+
+That is the honest shape of the result and not a disappointment. What these two
+bought is not fewer lines but fewer places a decision is made — one answer to
+"is this worth retrying", one answer to "does this end the harvest", one place
+that knows where a group keeps its files — and one thing that was not possible
+at all before: harvesting two formats of an endpoint at the same time. The
+earlier moves were removing code that should not have existed. These two are
+paying for something.
 
 ---
 

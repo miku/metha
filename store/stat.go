@@ -2,7 +2,6 @@ package store
 
 import (
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -59,16 +58,12 @@ func Stat(baseDir string, id Identity) (*Stats, error) {
 
 // statIndex fills in what only the index knows.
 func statIndex(shard string, id Identity, stats *Stats) error {
-	st, err := loadState(filepath.Join(shard, stateName))
+	st, err := loadState(statePath(shard, id.Format, id.Set), id.Format, id.Set)
 	if err != nil {
 		return err
 	}
-	g := st.group(id.Format, id.Set)
-	if g == nil {
-		return nil
-	}
 	var first time.Time
-	for i, w := range g.Windows {
+	for i, w := range st.Windows {
 		stats.Windows++
 		switch w.Status {
 		case statusEmpty:
