@@ -638,12 +638,72 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       must be wiped; the corpus to migrate is still in the pre-1.0 layout, which
       is the reason this was cheap today.
 
+- [x] **A stored response is the document that arrived.** Found while reading a
+      segment by hand, and settled before the migration rather than after it,
+      because it changes what every future segment holds and the migration is
+      about to write 200G of them.
+
+      `runWindow` stored `xml.Marshal(resp)` — a re-serialisation of what the
+      decoder managed to make of the response, not the response. Two things
+      wrong with that, one cosmetic and one not:
+
+      - marshalling the whole `oai.Response` writes an empty skeleton for each of
+        the five verbs the response is *not*, so a one-record `ListRecords`
+        reached the segment carrying a phantom `GetRecord`. `scanResponse`
+        already had to know about it, and says so in a comment: it requires a
+        record to have an identifier precisely to drop those;
+      - **everything `oai.Response` does not model was dropped on the way in.**
+        Extension elements, attributes nothing here has a field for, the
+        response's own namespace declarations. Unrecoverable afterwards, since
+        the only copy was the one being written. For a cache whose whole claim is
+        "an append-only log of raw HTTP responses", that is the wrong direction
+        to lose data in — a reader can always ignore what it does not understand,
+        but nothing can recover what was never written.
+
+      `Response.Raw` holds the document, filled by `DoContext` at the point the
+      decode succeeded, `xml:"-" json:"-"` so a marshalled `Response` never
+      carries a copy of its own source. `runWindow` appends it, and refuses to
+      append a response that has none rather than falling back to a stand-in.
+
+      **The bytes are the ones that decoded, not the ones off the socket.** A
+      gzip or zstd body has been decompressed, control characters replaced if the
+      caller asked, and a misdeclared encoding corrected — the client already
+      tries five declarations to parse at all, and storing a form that only
+      *that* workaround could read would put documents in the cache the cache
+      cannot read back.
+
+      **What it cost, and it is not nothing.** A cache used to be uniformly UTF-8
+      whatever the endpoint sent, because marshalling made it so. Keeping the
+      document keeps its encoding, and a Go XML decoder refuses an honestly
+      declared ISO-8859-1 document outright — so `newDecoder` now carries
+      `charset.NewReaderLabel` and every decode in `store` goes through it: the
+      write-side scan, the read, and migrate's. Checked by removing it: both
+      tests fail with `encoding "ISO-8859-1" declared but Decoder.CharsetReader
+      is nil`, and the first failure is at `Append`, so a cache without it fails
+      closed rather than storing what it cannot return.
+
+      Verified against an endpoint serving ISO-8859-1 with an extension element
+      in a header: the `0xFC` reaches the segment as itself, the index counts the
+      record, `cat` renders `Grün`, and `custom:provenance` — which no field of
+      `oai.Record` can reach — is in the cache for a later reader.
+
+      It also makes the corpus uniform. `migrate` already wrote v1 bytes
+      verbatim (`TestMigrateKeepsBytesVerbatim`), so a shard that was migrated
+      and then harvested held two shapes; now there is one.
+
+      Smaller, incidentally: 800 bytes against 1,537 for the same five synthetic
+      responses. Do not read much into that — the skeleton is a fixed few hundred
+      bytes, so it dominates a one-record response and disappears against a real
+      one, and it compressed well in any case. Fidelity was the reason; size is a
+      rounding error.
+
 ---
 
 ## open — settle before the move
 
-Nothing outstanding. Every decision that changes the on-disk shape has been
-made, the per-group move included, and the gate is open for real this time.
+Nothing outstanding. Every decision that changes what is on disk has been made —
+the per-group move and the raw-response change included — and the gate is open
+for real this time.
 
 ---
 
@@ -660,27 +720,6 @@ made, the per-group move included, and the gate is open for real this time.
       at all, so the commonest way to acquire one — Ctrl-C — is gone. What
       remains is a window the endpoint really did fail, which is the case the
       policy is actually about.
-
-- [ ] **A stored response is `xml.Marshal(resp)`, not the bytes that arrived.**
-      Found while checking the segment stream by hand. Marshalling the whole
-      `oai.Response` writes an empty skeleton for every verb the response is
-      not: a one-record `ListRecords` reaches the segment carrying an empty
-      `GetRecord`, `Identify`, `ListIdentifiers`, `ListMetadataFormats` and
-      `ListSets`, which on a small response is most of its bytes.
-
-      It compresses away to almost nothing — the skeleton is identical in every
-      frame, which is what a zstd window is good at — so the cost on disk is
-      small and the cost in the reframing is not: "an append-only log of raw
-      HTTP responses" is what the design note says metha is, and this is a
-      re-serialisation of a parse. Anything the decoder drops is gone from the
-      cache for good, which is the property an archive is supposed not to have.
-
-      Not a one-line fix: `Client.DoContext` decodes into a `Response` and does
-      not keep the bytes it decoded, so this is a field on `Response`, filled
-      where the body is read, and `Append(resp.Raw)` in `runWindow`. It changes
-      what every future segment holds, so it belongs with a decision about
-      whether the corpus should be uniform — and that decision is cheapest
-      before the 200G migration writes 200G of the old shape.
 
 - [ ] **`HasWindow` is never called by the harvester.** Only `store/migrate.go`
       uses it. The harvester decides what to fetch from `Resume()` alone, so a

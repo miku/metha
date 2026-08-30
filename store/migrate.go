@@ -2,7 +2,6 @@ package store
 
 import (
 	"bytes"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -201,8 +200,7 @@ func rawResponses(path string) ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	dec := xml.NewDecoder(bytes.NewReader(data))
-	dec.Strict = false
+	dec := newDecoder(bytes.NewReader(data))
 	var out [][]byte
 	for {
 		prev := dec.InputOffset()

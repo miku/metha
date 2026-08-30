@@ -1,7 +1,6 @@
 package store
 
 import (
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -82,8 +81,7 @@ func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.R
 	// Each frame holds several responses back to back, and zstd reads a run of
 	// frames as one stream, so the whole extent decodes as a sequence of
 	// documents.
-	xd := xml.NewDecoder(dec)
-	xd.Strict = false
+	xd := newDecoder(dec)
 	for {
 		var resp oai.Response
 		if err := xd.Decode(&resp); err != nil {

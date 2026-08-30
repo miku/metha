@@ -11,6 +11,7 @@ import (
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/miku/metha/oai"
+	"golang.org/x/net/html/charset"
 )
 
 const (
@@ -35,6 +36,22 @@ func segFileName(n int) string {
 	return fmt.Sprintf("%06d%s", n, segExt)
 }
 
+// newDecoder reads XML the way everything in the cache has to be read.
+//
+// Lenient, because a cache holds what endpoints actually sent and refusing to
+// read it back would make the cache useless for exactly the responses it is
+// most worth having kept. And with a charset reader, because a segment holds
+// the documents as they arrived: since responses stopped being re-marshalled
+// through oai.Response, a cache is no longer uniformly UTF-8, and an
+// ISO-8859-1 document with an honest declaration is one a decoder without this
+// refuses outright.
+func newDecoder(r io.Reader) *xml.Decoder {
+	dec := xml.NewDecoder(r)
+	dec.Strict = false
+	dec.CharsetReader = charset.NewReaderLabel
+	return dec
+}
+
 // scanned is what one raw response contributes to the window it lands in: how
 // many records it carried, how many of those were tombstones, and the range of
 // datestamps they fall in.
@@ -53,8 +70,7 @@ type scanned struct {
 // window was what the record index bought, and a window is the unit of
 // atomicity everywhere else, so it is the unit of addressing too.
 func scanResponse(raw []byte) (scanned, error) {
-	dec := xml.NewDecoder(bytes.NewReader(raw))
-	dec.Strict = false
+	dec := newDecoder(bytes.NewReader(raw))
 	var (
 		out   scanned
 		stack []string

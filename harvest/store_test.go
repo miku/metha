@@ -5,9 +5,13 @@ import (
 	"encoding/xml"
 	"io"
 	"net/http"
+	"os"
 	"slices"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/klauspost/compress/zstd"
 
 	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
@@ -215,4 +219,89 @@ func TestSettledBoundaryStandsStill(t *testing.T) {
 		}
 		settled = got
 	}
+}
+
+// TestHarvestStoresWhatArrived: the driver appends the document the endpoint
+// sent, not a re-marshalling of what could be decoded from it. The old form
+// wrote back oai.Response, which meant the cache held only the fields this
+// module models - and an empty skeleton for each of the five verbs a response is
+// not, so a one-record ListRecords reached the disk carrying a phantom
+// GetRecord.
+func TestHarvestStoresWhatArrived(t *testing.T) {
+	base := t.TempDir()
+	id := store.Identity{BaseURL: "http://example.com/oai", Format: "oai_dc"}
+	// Deliberately not what xml.Marshal(oai.Response{...}) produces: a
+	// declaration, a namespace, and an element inside the header that oai.Record
+	// has no field for.
+	body := `<?xml version="1.0" encoding="UTF-8"?>` +
+		`<OAI-PMH xmlns:custom="http://example.com/x"><ListRecords>` +
+		`<record><header><identifier>arrived-1</identifier><datestamp>2023-05-01</datestamp>` +
+		`<custom:provenance>kept</custom:provenance></header>` +
+		`<metadata><dc><title>T</title></dc></metadata></record>` +
+		`</ListRecords></OAI-PMH>`
+
+	w, err := store.OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	h := &Harvest{
+		Config: &Config{
+			BaseURL:                    id.BaseURL,
+			Format:                     id.Format,
+			MaxRequests:                1,
+			MaxRetries:                 1,
+			RetryDelay:                 time.Millisecond,
+			RetryBackoff:               1.0,
+			DisableSelectiveHarvesting: true,
+		},
+		Client: &oai.Client{Doer: &fakeDoer{body: []byte(body)}},
+		Writer: w,
+	}
+	if err := h.Run(t.Context()); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	s, err := store.Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	files, err := s.Files()
+	if err != nil || len(files) != 1 {
+		t.Fatalf("Files: %v, %v", files, err)
+	}
+	stored := readSegment(t, files[0])
+	if stored != body {
+		t.Errorf("the segment does not hold what arrived:\ngot  %s\nwant %s", stored, body)
+	}
+	// The two things a round trip through oai.Response used to lose.
+	if !strings.Contains(stored, "custom:provenance") {
+		t.Error("an element oai.Record does not model did not reach the disk")
+	}
+	if strings.Contains(stored, "<GetRecord>") {
+		t.Error("the segment carries a phantom GetRecord: this is a re-marshalled response, not what arrived")
+	}
+}
+
+// readSegment decompresses a whole segment, which is what
+// "cat *.zst | zstd -dc" gets.
+func readSegment(t *testing.T, path string) string {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer f.Close()
+	dec, err := zstd.NewReader(f)
+	if err != nil {
+		t.Fatalf("zstd: %v", err)
+	}
+	defer dec.Close()
+	b, err := io.ReadAll(dec)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	return string(b)
 }

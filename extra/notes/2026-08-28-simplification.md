@@ -104,6 +104,15 @@ time.** Everything OAI-specific is two things: how a time window becomes a chain
 of requests, and how a response parses. Three concerns, currently interleaved
 inside `runInterval`:
 
+*Written before checking, and it was not true.* The log held
+`xml.Marshal(resp)` — what `oai.Response` could be decoded into and then written
+back out, so everything the struct had no field for was dropped at the moment of
+harvesting and gone for good. A sentence in a note is not an audit; this one had
+been the premise of the whole design for two days before anyone read a segment.
+Fixed: `Response.Raw` carries the document the decode succeeded on and that is
+what the writer appends. What it cost is that a cache is no longer uniformly
+UTF-8, so every decoder in `store` needs a charset reader — see the checklist.
+
 ```
 plan   pure   (coverage, identify, now, config) -> []Window     no I/O
 fetch  net    Window -> iter.Seq2[[]byte, error]                no disk
@@ -395,8 +404,9 @@ These are earned and the measurements back them:
 | 4+5 | window-granularity extents, `records` and sqlite gone — **done**, `state.json` | **yes** |
 | 6 | context; classifier — **done** | no |
 | 7 | per-group lock and state — **done**, `<shard>/<group>/` | **yes** |
-| 8 | migrate the 200G corpus | — |
-| 9 | quirks profile | no |
+| 8 | store the response, not a re-marshal of it — **done** | **yes** |
+| 9 | migrate the 200G corpus | — |
+| 10 | quirks profile | no |
 
 Steps 4 and 5 landed as one move: the intermediate — an extents table in sqlite,
 with a version bump and a ladder step — would have been authored and deleted in
@@ -404,9 +414,15 @@ the same week, and no shard on disk needed preserving.
 
 The table as first written had the migration at step 6 and everything left after
 it, on the claim that nothing left changed the on-disk shape. That claim was
-wrong by one item: the per-group lock moves `state.json` down a level, which is
-free while the corpus is still in the pre-1.0 layout and a re-shuffle of 200G
-once it is not. It moved ahead of the migration for that reason alone.
+wrong twice. The per-group lock moves `state.json` down a level; storing the
+document that arrived changes what every segment holds. Both are free while the
+corpus is still in the pre-1.0 layout and expensive once 200G has been written in
+the other shape, so both moved ahead of the migration for that reason alone.
+
+Which is the argument for reading the disk before writing a sequencing table. Two
+of the last three items on this page were found by looking at bytes — one at a
+directory listing, one at a decompressed segment — and neither was visible from
+the code that produced them.
 
 **The gate is open**, and this time nothing outstanding argues with it. The
 quirks profile is the only move left, it is behaviour rather than layout, and it

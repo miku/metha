@@ -33,6 +33,23 @@ type Response struct {
 	ListMetadataFormats ListMetadataFormats `xml:"ListMetadataFormats,omitempty" json:"ListMetadataFormats,omitempty"`
 	ListRecords         ListRecords         `xml:"ListRecords,omitempty" json:"ListRecords,omitempty"`
 	ListSets            ListSets            `xml:"ListSets,omitempty" json:"ListSets,omitempty"`
+
+	// Raw is the document this response was decoded from, and it is what the
+	// cache stores. A struct is what the decoder could make of a response;
+	// the document is what the endpoint actually said, and the difference is
+	// everything the decoder had no field for - which is gone for good once
+	// only the struct is kept. metha is a cache of responses, so it keeps the
+	// responses.
+	//
+	// These are the bytes the decode succeeded on, not the bytes off the
+	// socket: an on-the-fly gzip or zstd body is decompressed first, control
+	// characters are replaced when the caller asked for that, and a misdeclared
+	// encoding has been corrected. Storing anything earlier would put documents
+	// in the cache that the cache's own reader cannot parse.
+	//
+	// Excluded from both encodings. It is what a response was, not a field of
+	// one, and marshalling a Response back out must not carry it.
+	Raw []byte `xml:"-" json:"-"`
 }
 
 // ErrInvalidEarliestDate marks an endpoint whose advertised granularity is

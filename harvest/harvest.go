@@ -2,7 +2,6 @@ package harvest
 
 import (
 	"context"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"net/http"
@@ -28,6 +27,12 @@ var (
 	ErrAlreadySynced = errors.New("already synced")
 	// ErrNoWriter is returned by Run when there is nowhere to write.
 	ErrNoWriter = errors.New("harvest needs a writer")
+	// errNoRawResponse guards the one thing a harvest must never do quietly:
+	// store a response it does not have the bytes of. oai.Client fills Raw on
+	// every successful decode, so this can only be a Response built by hand -
+	// and writing a re-marshalled stand-in for it would put a document in the
+	// cache that is not what any endpoint said.
+	errNoRawResponse = errors.New("response carries no raw document")
 )
 
 type Config struct {
@@ -325,11 +330,18 @@ requests:
 			return resp.Error
 		}
 
-		b, err := xml.Marshal(resp)
-		if err != nil {
-			return err
+		// What the endpoint sent, not what could be decoded from it. metha is a
+		// cache of responses, and re-marshalling oai.Response wrote back only
+		// the fields the decoder happened to have - every extension element,
+		// every attribute nothing models, the response's own namespaces and
+		// declaration, all dropped on the way in and unrecoverable afterwards.
+		// It also wrote an empty skeleton for each of the five verbs a response
+		// is not, so a one-record ListRecords reached the segment carrying a
+		// phantom GetRecord.
+		if len(resp.Raw) == 0 {
+			return errNoRawResponse
 		}
-		if err := h.Writer.Append(b); err != nil {
+		if err := h.Writer.Append(resp.Raw); err != nil {
 			return err
 		}
 		// Issue first observed at

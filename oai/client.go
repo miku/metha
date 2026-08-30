@@ -334,6 +334,11 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		if i > 0 {
 			log.Printf("decode worked with adjusted declaration: %v", string(decl))
 		}
+		// The document this decode succeeded on, which is what a cache of
+		// responses stores. It is body rather than respBody on purpose: when a
+		// misdeclared encoding had to be corrected to parse at all, the
+		// corrected form is the one that will parse again on the way back out.
+		response.Raw = body
 		return &response, nil
 	}
 	return nil, fmt.Errorf("failed to parse response")
