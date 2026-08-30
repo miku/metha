@@ -8,11 +8,8 @@ import (
 	"time"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
-
-// Writer is what a harvest writes through when it targets this layout.
-var _ metha.Sink = (*Writer)(nil)
 
 // ErrWindowOpen and ErrNoWindow report a writer used out of order.
 var (
@@ -87,7 +84,7 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	if err := os.MkdirAll(shard, 0755); err != nil {
 		return nil, err
 	}
-	lock, err := metha.TryFlock(filepath.Join(shard, metha.LockName))
+	lock, err := TryFlock(filepath.Join(shard, LockName))
 	if err != nil {
 		return nil, err
 	}
@@ -211,13 +208,13 @@ func (w *Writer) Dir() string { return w.shard }
 // SetIdentify records the endpoint's identify response, which is what makes a
 // shard self-describing: granularity and earliest datestamp are the two things
 // a harvest needs and v1 had nowhere to keep.
-func (w *Writer) SetIdentify(identify *metha.Identify) error {
+func (w *Writer) SetIdentify(identify *oai.Identify) error {
 	w.meta.Identify = identify
 	return writeMeta(w.shard, w.meta)
 }
 
 // Identify returns the recorded identify response, if there is one.
-func (w *Writer) Identify() *metha.Identify { return w.meta.Identify }
+func (w *Writer) Identify() *oai.Identify { return w.meta.Identify }
 
 // Resume returns the instant a harvest continues from, or the zero time if
 // this group holds nothing yet. It is the v2 answer to a readdir over dated
@@ -400,7 +397,7 @@ func removeV2(baseDir string, id Identity) error {
 	if !isShard(shard) {
 		return nil
 	}
-	lock, err := metha.TryFlock(filepath.Join(shard, metha.LockName))
+	lock, err := TryFlock(filepath.Join(shard, LockName))
 	if err != nil {
 		return err
 	}

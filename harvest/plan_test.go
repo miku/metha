@@ -1,4 +1,4 @@
-package metha
+package harvest
 
 import (
 	"errors"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/now"
+	"github.com/miku/metha/oai"
 )
 
 // The planner is a pure function, so every date rule metha has is a row here
@@ -32,9 +33,9 @@ func window(begin, end time.Time, settled bool) Window {
 
 var (
 	// idDay stamps records to the day, so nothing about today is final.
-	idDay = &Identify{Granularity: "YYYY-MM-DD", EarliestDatestamp: "2020-01-01"}
+	idDay = &oai.Identify{Granularity: "YYYY-MM-DD", EarliestDatestamp: "2020-01-01"}
 	// idSecond stamps to the second, so only the last few minutes are.
-	idSecond = &Identify{Granularity: "YYYY-MM-DDThh:mm:ssZ", EarliestDatestamp: "2020-01-01T10:00:00Z"}
+	idSecond = &oai.Identify{Granularity: "YYYY-MM-DDThh:mm:ssZ", EarliestDatestamp: "2020-01-01T10:00:00Z"}
 )
 
 func TestPlan(t *testing.T) {
@@ -50,7 +51,7 @@ func TestPlan(t *testing.T) {
 	tests := []struct {
 		name string
 		cov  Coverage
-		id   *Identify
+		id   *oai.Identify
 		now  time.Time
 		cfg  PlanConfig
 		want []Window
@@ -114,16 +115,16 @@ func TestPlan(t *testing.T) {
 			// says about dates can be believed, and formatBound would drop the
 			// bounds from every request. Refused here instead.
 			name: "unreadable granularity",
-			id:   &Identify{Granularity: "every other tuesday", EarliestDatestamp: "2020-01-01"},
+			id:   &oai.Identify{Granularity: "every other tuesday", EarliestDatestamp: "2020-01-01"},
 			now:  march,
 			cfg:  PlanConfig{},
-			err:  ErrInvalidEarliestDate,
+			err:  oai.ErrInvalidEarliestDate,
 		},
 		{
 			// ... unless the caller said where to start, in which case the
 			// endpoint is never asked.
 			name: "unreadable granularity, but -from given",
-			id:   &Identify{Granularity: "every other tuesday"},
+			id:   &oai.Identify{Granularity: "every other tuesday"},
 			now:  fifth,
 			cfg:  PlanConfig{From: "2020-01-01"},
 			want: []Window{
@@ -200,7 +201,7 @@ func TestPlan(t *testing.T) {
 // back to it - and an overlap fetches the same records twice.
 func TestPlanIsGapless(t *testing.T) {
 	for _, seg := range []Segmentation{Monthly, Daily, Hourly} {
-		for _, id := range []*Identify{idDay, idSecond} {
+		for _, id := range []*oai.Identify{idDay, idSecond} {
 			cfg := PlanConfig{From: "2020-01-01", Segmentation: seg}
 			started := local(2020, 3, 15, 14, 33, 20)
 			windows, err := Plan(Coverage{}, id, started, cfg)

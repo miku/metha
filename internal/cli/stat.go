@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -35,7 +36,7 @@ func newStatCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
 				for _, arg := range args {
-					id := store.Identity{BaseURL: metha.PrependSchema(arg), Format: format, Set: set}
+					id := store.Identity{BaseURL: oai.PrependSchema(arg), Format: format, Set: set}
 					stats, err := store.Stat(baseDir, id)
 					if err != nil {
 						return err

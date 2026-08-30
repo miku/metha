@@ -5,23 +5,23 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // recordWithHeader is a response holding one record with a chosen datestamp,
 // status and sets.
-func recordWithHeader(id, datestamp, status string, sets ...string) metha.Response {
-	return metha.Response{
-		ListRecords: metha.ListRecords{
-			Records: []metha.Record{
+func recordWithHeader(id, datestamp, status string, sets ...string) oai.Response {
+	return oai.Response{
+		ListRecords: oai.ListRecords{
+			Records: []oai.Record{
 				{
-					Header: metha.Header{
+					Header: oai.Header{
 						Identifier: id,
 						DateStamp:  datestamp,
 						Status:     status,
 						SetSpec:    sets,
 					},
-					Metadata: metha.Metadata{Body: []byte("<dc:title>" + id + "</dc:title>")},
+					Metadata: oai.Metadata{Body: []byte("<dc:title>" + id + "</dc:title>")},
 				},
 			},
 		},
@@ -256,8 +256,8 @@ func TestDatestampGranularity(t *testing.T) {
 		"2023-05-02T09:00:00Z",
 	}
 	for _, ds := range stamps {
-		resp := metha.Response{ListRecords: metha.ListRecords{Records: []metha.Record{
-			{Header: metha.Header{Identifier: ds, DateStamp: ds}},
+		resp := oai.Response{ListRecords: oai.ListRecords{Records: []oai.Record{
+			{Header: oai.Header{Identifier: ds, DateStamp: ds}},
 		}}}
 		if err := w.Append(marshal(t, resp)); err != nil {
 			t.Fatalf("Append: %v", err)

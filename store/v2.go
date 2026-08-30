@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 const (
@@ -35,12 +35,12 @@ const (
 // what it holds: the index and every export are derived from the segments and
 // can be rebuilt, but this file says which endpoint the bytes came from.
 type Meta struct {
-	Layout   string          `json:"layout"`
-	BaseURL  string          `json:"base_url"`
-	Created  time.Time       `json:"created"`
-	Updated  time.Time       `json:"updated"`
-	Identify *metha.Identify `json:"identify,omitempty"`
-	Groups   []Group         `json:"groups"`
+	Layout   string        `json:"layout"`
+	BaseURL  string        `json:"base_url"`
+	Created  time.Time     `json:"created"`
+	Updated  time.Time     `json:"updated"`
+	Identify *oai.Identify `json:"identify,omitempty"`
+	Groups   []Group       `json:"groups"`
 }
 
 // Group is one (format, set) pair harvested from an endpoint, and the

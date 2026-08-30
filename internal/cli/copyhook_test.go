@@ -1,4 +1,4 @@
-package metha
+package cli
 
 import (
 	"bytes"

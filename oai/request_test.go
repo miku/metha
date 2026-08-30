@@ -1,4 +1,4 @@
-package metha
+package oai
 
 import (
 	"net/url"
@@ -71,6 +71,25 @@ func TestURL(t *testing.T) {
 			if u.String() != test.u.String() {
 				t.Errorf("req.URL(%+v), got %v, want %v", test.req, u, test.u)
 			}
+		}
+	}
+}
+
+func TestPrependSchema(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"example.com", "http://example.com"},
+		{"http://example.com", "http://example.com"},
+		{"https://example.com", "https://example.com"},
+		{"ftp://example.com", "http://ftp://example.com"}, // Note: "ftp://" doesn't start with "http", so gets http:// prepended
+		{"localhost:8080", "http://localhost:8080"},
+	}
+	for _, test := range tests {
+		result := PrependSchema(test.input)
+		if result != test.expected {
+			t.Errorf("PrependSchema(%q) = %q; expected %q", test.input, result, test.expected)
 		}
 	}
 }

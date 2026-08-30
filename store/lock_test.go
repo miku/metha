@@ -1,6 +1,6 @@
 //go:build unix
 
-package metha
+package store
 
 import (
 	"errors"
@@ -30,13 +30,4 @@ func TestTryFlock(t *testing.T) {
 		t.Fatalf("TryFlock after release: %v", err)
 	}
 	g.Close()
-}
-
-// TestHarvestRunNeedsSink: a harvest writes through a sink and nothing else, so
-// one without a sink has to say so rather than silently fetch and discard.
-func TestHarvestRunNeedsSink(t *testing.T) {
-	h := &Harvest{Config: &Config{BaseURL: "http://example.com", Format: "oai_dc"}}
-	if err := h.Run(); !errors.Is(err, ErrNoSink) {
-		t.Errorf("Run without a sink: got %v, want %v", err, ErrNoSink)
-	}
 }

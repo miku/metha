@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -91,7 +92,7 @@ func migrateTargets(baseDir, format, set string, args []string) []store.Identity
 	if len(args) > 0 {
 		for _, arg := range args {
 			ids = append(ids, store.Identity{
-				BaseURL: metha.PrependSchema(arg),
+				BaseURL: oai.PrependSchema(arg),
 				Format:  format,
 				Set:     set,
 			})

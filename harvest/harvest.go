@@ -1,4 +1,4 @@
-package metha
+package harvest
 
 import (
 	"encoding/xml"
@@ -14,6 +14,9 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/miku/metha/oai"
+	"github.com/miku/metha/store"
 )
 
 // Day has 24 hours.
@@ -28,35 +31,9 @@ const SettleLag = 5 * time.Minute
 var (
 	// ErrAlreadySynced signals completion.
 	ErrAlreadySynced = errors.New("already synced")
-	// ErrInvalidEarliestDate for unparsable earliest date.
-	ErrInvalidEarliestDate = errors.New("invalid earliest date")
-	// ErrNoSink is returned by Run when there is nowhere to write.
-	ErrNoSink = errors.New("harvest needs a sink")
+	// ErrNoWriter is returned by Run when there is nowhere to write.
+	ErrNoWriter = errors.New("harvest needs a writer")
 )
-
-// Sink receives the responses of a harvest, one window at a time, and is the
-// only way a harvest writes anything.
-//
-// A window opens with Begin, takes one Append per response and becomes durable
-// at Commit, or is discarded by Abort. HasWindow and Resume answer what has
-// already been harvested. The interface exists because this package cannot
-// import store, whose Writer is the only implementation outside a test.
-type Sink interface {
-	Begin(from, until time.Time, settled bool) error
-	Append(raw []byte) error
-	Commit() error
-	Abort(cause error) error
-	HasWindow(from, until time.Time) (bool, error)
-	Resume() (time.Time, error)
-}
-
-// PrependSchema prepends http, if its missing.
-func PrependSchema(s string) string {
-	if !strings.HasPrefix(s, "http") {
-		return fmt.Sprintf("http://%s", s)
-	}
-	return s
-}
 
 type Config struct {
 	BaseURL                    string
@@ -88,17 +65,17 @@ type Config struct {
 // 2006-01-02 layout. TODO(miku): make zero type work (lazily run identify).
 type Harvest struct {
 	Config *Config
-	Client *Client
+	Client *oai.Client
 
-	// Sink is where the harvested responses go. The caller owns it, and closes
-	// it.
-	Sink Sink
+	// Writer is the shard the harvested responses go into. The caller owns it,
+	// and closes it.
+	Writer *store.Writer
 
 	// XXX: Lazy via sync.Once?
-	Identify *Identify
+	Identify *oai.Identify
 	Started  time.Time
 	// Protects the work a termination signal must not land in the middle of:
-	// every call into the sink, which the signal handler closes. See sinkBegin.
+	// every call into the writer, which the signal handler closes. See write.
 	sync.Mutex
 }
 
@@ -140,11 +117,11 @@ func (h *Harvest) formatBound(t time.Time) string {
 	return ""
 }
 
-// Run starts the harvest. The sink owns the directory and the lock, so there is
-// nothing to prepare here beyond the clock and the signal handler.
+// Run starts the harvest. The writer owns the shard directory and its lock, so
+// there is nothing to prepare here beyond the clock and the signal handler.
 func (h *Harvest) Run() error {
-	if h.Sink == nil {
-		return ErrNoSink
+	if h.Writer == nil {
+		return ErrNoWriter
 	}
 	h.setupInterruptHandler()
 	h.Started = time.Now()
@@ -159,7 +136,7 @@ func (h *Harvest) setupInterruptHandler() {
 		<-sigc
 		log.Println("waiting for the window in flight to finish...")
 		// Taken and never given back: the process is going away, and whatever is
-		// waiting on it must not wake up to a closed sink. This is why the
+		// waiting on it must not wake up to a closed writer. This is why the
 		// shutdown cannot be left to a defer.
 		h.Lock()
 		h.shutdown()
@@ -167,53 +144,31 @@ func (h *Harvest) setupInterruptHandler() {
 	}()
 }
 
-// shutdown closes the sink, with h already locked. Split out of the handler so
-// that it can be exercised without a signal, which would take the test binary
-// with it. Closing the sink drops the window in flight and releases its lock.
+// shutdown closes the writer, with h already locked. Split out of the handler
+// so that it can be exercised without a signal, which would take the test
+// binary with it. Closing the writer drops the window in flight and releases
+// the shard lock.
 func (h *Harvest) shutdown() {
-	if c, ok := h.Sink.(io.Closer); ok {
-		if err := c.Close(); err != nil {
-			log.Printf("closing sink: %v", err)
-		}
+	if err := h.Writer.Close(); err != nil {
+		log.Printf("closing writer: %v", err)
 	}
 }
 
-// sinkBegin and the calls below it hold the harvest mutex because the signal
-// handler runs on its own goroutine and closes the sink, and it can arrive at
-// any point in a window. Going through the mutex
-// puts the close between two calls rather than inside one, where it would be
-// closing a writer with an open transaction. Between two calls it only drops
-// the window in flight, which is the crash-recovery path the writer already
-// has - the torn tail is truncated on the next open, so the cost is a window,
-// not a shard.
-func (h *Harvest) sinkBegin(from, until time.Time, settled bool) error {
+// write runs one call into the writer with the harvest locked. The signal
+// handler runs on its own goroutine and closes the writer, and it can arrive at
+// any point in a window; going through the mutex puts that close between two
+// calls rather than inside one, where it would be closing a writer with an open
+// transaction. Between two calls it only drops the window in flight, which is
+// the crash-recovery path the writer already has - the torn tail is truncated
+// on the next open, so the cost is a window, not a shard.
+//
+// This, the mutex and the handler all go with move 5 of the simplification
+// note: a cancellable loop leaves no goroutine racing a commit, so there is
+// nothing left to exclude.
+func (h *Harvest) write(call func(*store.Writer) error) error {
 	h.Lock()
 	defer h.Unlock()
-	return h.Sink.Begin(from, until, settled)
-}
-
-func (h *Harvest) sinkAppend(raw []byte) error {
-	h.Lock()
-	defer h.Unlock()
-	return h.Sink.Append(raw)
-}
-
-func (h *Harvest) sinkCommit() error {
-	h.Lock()
-	defer h.Unlock()
-	return h.Sink.Commit()
-}
-
-func (h *Harvest) sinkAbort(cause error) error {
-	h.Lock()
-	defer h.Unlock()
-	return h.Sink.Abort(cause)
-}
-
-func (h *Harvest) sinkResume() (time.Time, error) {
-	h.Lock()
-	defer h.Unlock()
-	return h.Sink.Resume()
+	return call(h.Writer)
 }
 
 // planConfig is the part of this harvest's configuration that decides what to
@@ -233,18 +188,21 @@ func (h *Harvest) planConfig() PlanConfig {
 	return cfg
 }
 
-// coverage asks the sink how far it got. It is the one question the plan puts to
+// coverage asks the writer how far it got. It is the one question the plan puts to
 // the disk, and the reason the plan itself needs none: a store that can tell a
 // settled window from one holding only what existed at the moment of asking
 // hands back the start of the latter, so its range is covered again rather than
 // resumed past.
-func (h *Harvest) coverage() (Coverage, error) {
-	resume, err := h.sinkResume()
-	return Coverage{Resume: resume}, err
+func (h *Harvest) coverage() (cov Coverage, err error) {
+	err = h.write(func(w *store.Writer) (err error) {
+		cov.Resume, err = w.Resume()
+		return err
+	})
+	return cov, err
 }
 
 // retry attempts an operation with exponential backoff
-func (h *Harvest) retry(operation func() (*Response, error)) (*Response, error) {
+func (h *Harvest) retry(operation func() (*oai.Response, error)) (*oai.Response, error) {
 	var lastErr error
 	delay := h.Config.RetryDelay
 	for attempt := 0; attempt <= h.Config.MaxRetries; attempt++ {
@@ -276,7 +234,7 @@ func (h *Harvest) shouldRetry(err error) bool {
 		return false
 	}
 	// Check for specific HTTP errors that we want to retry
-	if httpErr, ok := err.(HTTPError); ok {
+	if httpErr, ok := err.(oai.HTTPError); ok {
 		switch httpErr.StatusCode {
 		case 408, // Request Timeout
 			429, // Too Many Requests
@@ -334,13 +292,15 @@ func (h *Harvest) runWindow(w Window) (err error) {
 	// A boundless window claims no range at all. Its bytes still accumulate, the
 	// blob layer being append-only, but only the newest copy is indexed and so
 	// only that one is ever read.
-	if err := h.sinkBegin(w.Begin, w.End, w.Settled); err != nil {
+	if err := h.write(func(wr *store.Writer) error {
+		return wr.Begin(w.Begin, w.End, w.Settled)
+	}); err != nil {
 		return err
 	}
 	defer func() {
 		// A window that did not reach Commit leaves nothing behind.
 		if err != nil {
-			err = errors.Join(err, h.sinkAbort(err))
+			err = errors.Join(err, h.write(func(wr *store.Writer) error { return wr.Abort(err) }))
 		}
 	}()
 	var token string
@@ -350,7 +310,7 @@ func (h *Harvest) runWindow(w Window) (err error) {
 			log.Printf("max requests limit (%d) reached", h.Config.MaxRequests)
 			break
 		}
-		req := Request{
+		req := oai.Request{
 			BaseURL:                 h.Config.BaseURL,
 			MetadataPrefix:          h.Config.Format,
 			Verb:                    "ListRecords",
@@ -372,7 +332,7 @@ func (h *Harvest) runWindow(w Window) (err error) {
 		}
 
 		// Use retry mechanism for the request
-		resp, err := h.retry(func() (*Response, error) {
+		resp, err := h.retry(func() (*oai.Response, error) {
 			return h.Client.Do(&req)
 		})
 
@@ -414,7 +374,7 @@ func (h *Harvest) runWindow(w Window) (err error) {
 		if err != nil {
 			return err
 		}
-		if err := h.sinkAppend(b); err != nil {
+		if err := h.write(func(wr *store.Writer) error { return wr.Append(b) }); err != nil {
 			return err
 		}
 		// Issue first observed at
@@ -441,18 +401,18 @@ func (h *Harvest) runWindow(w Window) (err error) {
 			break
 		}
 	}
-	return h.sinkCommit()
+	return h.write(func(wr *store.Writer) error { return wr.Commit() })
 }
 
 // identify runs an OAI identify request and caches the result.
 func (h *Harvest) identify() error {
-	req := Request{
+	req := oai.Request{
 		Verb:         "Identify",
 		BaseURL:      h.Config.BaseURL,
 		ExtraHeaders: h.Config.ExtraHeaders,
 	}
 	if h.Client == nil {
-		h.Client = DefaultClient
+		h.Client = oai.DefaultClient
 	}
 	resp, err := h.Client.Do(&req)
 	if err != nil {

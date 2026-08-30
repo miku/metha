@@ -1,10 +1,10 @@
-package metha
+package store
 
 import "errors"
 
-// LockName is the name of the lock file kept inside a harvesting directory.
-// It deliberately does not match any pattern the readers glob for, so it stays
-// invisible to Files and Render.
+// LockName is the name of the lock file a shard keeps, so that two harvests of
+// one endpoint cannot interleave. It deliberately does not match any pattern
+// the readers look for, so it stays invisible to Files and Render.
 const LockName = "LOCK"
 
 // ErrLocked signals that another process holds the lock. Callers that can

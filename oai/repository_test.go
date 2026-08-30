@@ -1,4 +1,4 @@
-package metha
+package oai
 
 import (
 	"encoding/xml"

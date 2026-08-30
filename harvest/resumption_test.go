@@ -2,7 +2,7 @@
 // https://github.com/miku/metha/issues/43 — a server signaling the last page
 // with an empty <resumptionToken/> element must stop the harvest rather than
 // loop or restart from zero.
-package metha
+package harvest
 
 import (
 	"encoding/xml"
@@ -13,6 +13,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/miku/metha/oai"
 )
 
 // minimalOAIListRecords wraps a body fragment into a valid OAI-PMH
@@ -37,9 +39,9 @@ func minimalOAIListRecords(resumptionTokenFragment string) string {
 }
 
 // parseXML is a small helper decoding raw OAI-PMH XML into a Response.
-func parseXML(t *testing.T, s string) *Response {
+func parseXML(t *testing.T, s string) *oai.Response {
 	t.Helper()
-	var resp Response
+	var resp oai.Response
 	dec := xml.NewDecoder(strings.NewReader(s))
 	dec.Strict = false
 	if err := dec.Decode(&resp); err != nil {
@@ -141,12 +143,12 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 			minimalOAIListRecords("<resumptionToken/>"),
 		},
 	}
-	sink := &fakeSink{}
+	base := t.TempDir()
+	w := writerIn(t, base)
 	h := &Harvest{
 		Config: &Config{
-			BaseURL:           "http://example.com/oai",
-			Set:               "testSet",
-			Format:            "oai_dc",
+			BaseURL:           testIdentity.BaseURL,
+			Format:            testIdentity.Format,
 			MaxRequests:       100, // high enough that it never triggers; the token must stop us
 			MaxRetries:        0,
 			RetryDelay:        time.Millisecond,
@@ -156,10 +158,10 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 			// splitting does not mask an over-fetch.
 			DisableSelectiveHarvesting: true,
 		},
-		Client:  &Client{Doer: doer},
-		Sink:    sink,
+		Client:  &oai.Client{Doer: doer},
+		Writer:  w,
 		Started: time.Now(),
-		Identify: &Identify{
+		Identify: &oai.Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
@@ -172,9 +174,13 @@ func TestRunIntervalStopsOnEmptyResumptionToken(t *testing.T) {
 		t.Fatalf("expected exactly 2 requests (page1 + last page), got %d", doer.calls)
 	}
 
-	// Both responses should have been committed, one per page.
-	if got := len(sink.responses()); got != 2 {
-		t.Fatalf("expected 2 harvested responses, got %d", got)
+	// Both responses should have been committed, one per page, so the shard
+	// holds the record each of them carried.
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	if got := len(committed(t, base)); got != 2 {
+		t.Fatalf("expected 2 harvested records, got %d", got)
 	}
 }
 
@@ -188,12 +194,12 @@ func TestRunIntervalStopsOnMissingResumptionToken(t *testing.T) {
 			minimalOAIListRecords(""), // no token element at all
 		},
 	}
-	sink := &fakeSink{}
+	base := t.TempDir()
+	w := writerIn(t, base)
 	h := &Harvest{
 		Config: &Config{
-			BaseURL:                    "http://example.com/oai",
-			Set:                        "testSet",
-			Format:                     "oai_dc",
+			BaseURL:                    testIdentity.BaseURL,
+			Format:                     testIdentity.Format,
 			MaxRequests:                100,
 			MaxRetries:                 0,
 			RetryDelay:                 time.Millisecond,
@@ -201,10 +207,10 @@ func TestRunIntervalStopsOnMissingResumptionToken(t *testing.T) {
 			MaxEmptyResponses:          10, // same default as metha-sync
 			DisableSelectiveHarvesting: true,
 		},
-		Client:  &Client{Doer: doer},
-		Sink:    sink,
+		Client:  &oai.Client{Doer: doer},
+		Writer:  w,
 		Started: time.Now(),
-		Identify: &Identify{
+		Identify: &oai.Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
@@ -228,12 +234,12 @@ func TestRunIntervalStopsOnCursorEqualsCompleteListSize(t *testing.T) {
 			minimalOAIListRecords(`<resumptionToken completeListSize="1" cursor="1">some-token</resumptionToken>`),
 		},
 	}
-	sink := &fakeSink{}
+	base := t.TempDir()
+	w := writerIn(t, base)
 	h := &Harvest{
 		Config: &Config{
-			BaseURL:                    "http://example.com/oai",
-			Set:                        "testSet",
-			Format:                     "oai_dc",
+			BaseURL:                    testIdentity.BaseURL,
+			Format:                     testIdentity.Format,
 			MaxRequests:                100,
 			MaxRetries:                 0,
 			RetryDelay:                 time.Millisecond,
@@ -241,10 +247,10 @@ func TestRunIntervalStopsOnCursorEqualsCompleteListSize(t *testing.T) {
 			MaxEmptyResponses:          10, // same default as metha-sync
 			DisableSelectiveHarvesting: true,
 		},
-		Client:  &Client{Doer: doer},
-		Sink:    sink,
+		Client:  &oai.Client{Doer: doer},
+		Writer:  w,
 		Started: time.Now(),
-		Identify: &Identify{
+		Identify: &oai.Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},

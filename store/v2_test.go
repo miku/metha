@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // marshal renders a response the way the harvester writes it to disk.
-func marshal(t *testing.T, resp metha.Response) []byte {
+func marshal(t *testing.T, resp oai.Response) []byte {
 	t.Helper()
 	b, err := xml.Marshal(resp)
 	if err != nil {
@@ -257,7 +257,7 @@ func TestV2RecordOffsets(t *testing.T) {
 		if err != nil {
 			t.Fatalf("readFrame: %v", err)
 		}
-		var rec metha.Record
+		var rec oai.Record
 		if err := xml.Unmarshal(content[off:off+length], &rec); err != nil {
 			t.Fatalf("decode record at %d+%d: %v", off, length, err)
 		}

@@ -32,7 +32,7 @@ import (
 	"os"
 	"slices"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // ErrNoBaseURL is returned by Open for an identity without a base URL, which
@@ -90,7 +90,7 @@ type ReadOptions struct {
 }
 
 // match reports whether a record passes the filter.
-func (opts ReadOptions) match(rec *metha.Record) bool {
+func (opts ReadOptions) match(rec *oai.Record) bool {
 	if opts.From != "" && widen(rec.Header.DateStamp, dayStart) < widen(opts.From, dayStart) {
 		return false
 	}
@@ -153,7 +153,7 @@ type Store interface {
 	Files() ([]string, error)
 
 	// Records streams every stored record matching opts.
-	Records(opts ReadOptions) iter.Seq2[metha.Record, error]
+	Records(opts ReadOptions) iter.Seq2[oai.Record, error]
 
 	// Last returns the end of the most recently harvested window, in
 	// "2006-01-02" form, or the empty string if nothing was harvested yet.

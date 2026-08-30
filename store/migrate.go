@@ -11,7 +11,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // MigrateResult reports what a migration moved, and what it could not.
@@ -56,7 +56,7 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	}
 	// Hold the source directory's lock too. No 1.0 harvest writes there, but a
 	// 0.5.x one still can, and a half-renamed file must not be read as data.
-	lock, err := metha.TryFlock(filepath.Join(legacyDir(baseDir, id), metha.LockName))
+	lock, err := TryFlock(filepath.Join(legacyDir(baseDir, id), LockName))
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func rawResponses(path string) ([][]byte, error) {
 	var out [][]byte
 	for {
 		prev := dec.InputOffset()
-		var resp metha.Response
+		var resp oai.Response
 		if err := dec.Decode(&resp); err != nil {
 			if errors.Is(err, io.EOF) {
 				return out, nil

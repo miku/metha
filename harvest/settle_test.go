@@ -1,15 +1,16 @@
-package metha
+package harvest
 
 import (
 	"testing"
 	"time"
 
 	"github.com/jinzhu/now"
+	"github.com/miku/metha/oai"
 )
 
 // identifyAt is an endpoint that advertises one granularity and nothing else.
-func identifyAt(granularity string) *Identify {
-	return &Identify{Granularity: granularity}
+func identifyAt(granularity string) *oai.Identify {
+	return &oai.Identify{Granularity: granularity}
 }
 
 // TestSettledFrom: with daily granularity a request cannot exclude the rest of

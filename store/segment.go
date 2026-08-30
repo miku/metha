@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 const (
@@ -112,7 +112,7 @@ func scanRecords(raw []byte) ([]recordRef, error) {
 			stack = append(stack, se.Name.Local)
 			continue
 		}
-		var rec metha.Record
+		var rec oai.Record
 		// DecodeElement consumes the whole element, end tag included, so the
 		// stack is unchanged by a record.
 		if err := dec.DecodeElement(&rec, &se); err != nil {

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/adrg/xdg"
+	"github.com/miku/metha/oai"
 )
 
 func TestGetBaseDirDefault(t *testing.T) {
@@ -27,5 +28,15 @@ func TestGetBaseDirEnv(t *testing.T) {
 	result := GetBaseDir()
 	if result != expected {
 		t.Errorf("expected %s, got %s", expected, result)
+	}
+}
+
+// TestUserAgentCarriesVersion: the release build injects the version into this
+// package, and the protocol package builds the User-Agent out of it. The wiring
+// is an init here, which is easy to delete by accident and silent when it is
+// gone - endpoints would just start seeing a version-less agent.
+func TestUserAgentCarriesVersion(t *testing.T) {
+	if want := "metha/" + Version; oai.DefaultUserAgent != want {
+		t.Errorf("oai.DefaultUserAgent = %q, want %q", oai.DefaultUserAgent, want)
 	}
 }

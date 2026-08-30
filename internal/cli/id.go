@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -19,10 +19,10 @@ func newIDCmd() *cobra.Command {
 		Aliases: []string{"metha-id"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
-				baseURL = metha.PrependSchema(args[0])
-				repo    = metha.Repository{BaseURL: baseURL}
+				baseURL = oai.PrependSchema(args[0])
+				repo    = oai.Repository{BaseURL: baseURL}
 				m       = make(map[string]interface{})
-				req     = metha.Request{Verb: "Identify", BaseURL: baseURL}
+				req     = oai.Request{Verb: "Identify", BaseURL: baseURL}
 			)
 			if showSizeOnly {
 				size, err := repo.CompleteListSize()
@@ -33,7 +33,7 @@ func newIDCmd() *cobra.Command {
 				fmt.Printf("%s\t%d\n", baseURL, size)
 				return nil
 			}
-			resp, err := metha.StdClient.Do(&req)
+			resp, err := oai.StdClient.Do(&req)
 			if err != nil {
 				return err
 			}

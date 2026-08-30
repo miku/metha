@@ -14,6 +14,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	"github.com/neurosnap/sentences/english"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -154,8 +155,8 @@ func first(ctx context.Context, endpoints ...search) fortuneResult {
 // createSearcher assembles a search type.
 func createSearcher(endpoint string, debug, oneSentence bool) search {
 	return func(ctx context.Context) fortuneResult {
-		client := metha.CreateClient(8*time.Second, 3)
-		req := metha.Request{
+		client := oai.CreateClient(8*time.Second, 3)
+		req := oai.Request{
 			BaseURL:        endpoint,
 			Verb:           "ListIdentifiers",
 			MetadataPrefix: "oai_dc",
@@ -176,7 +177,7 @@ func createSearcher(endpoint string, debug, oneSentence bool) search {
 			log.Printf("estimated probability of record: 1/%d", events)
 		}
 		rid := ids[rand.Intn(len(ids))]
-		req = metha.Request{
+		req = oai.Request{
 			BaseURL:        endpoint,
 			Verb:           "GetRecord",
 			MetadataPrefix: "oai_dc",

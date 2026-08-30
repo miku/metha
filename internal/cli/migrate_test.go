@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 )
 
@@ -74,12 +74,12 @@ func writeLegacyResponse(t *testing.T, dir, name, identifier string) {
 		t.Fatalf("create %s: %v", name, err)
 	}
 	defer f.Close()
-	resp := metha.Response{
-		ListRecords: metha.ListRecords{
-			Records: []metha.Record{
+	resp := oai.Response{
+		ListRecords: oai.ListRecords{
+			Records: []oai.Record{
 				{
-					Header:   metha.Header{Identifier: identifier, DateStamp: "2023-01-31"},
-					Metadata: metha.Metadata{Body: []byte("<dc:title>" + identifier + "</dc:title>")},
+					Header:   oai.Header{Identifier: identifier, DateStamp: "2023-01-31"},
+					Metadata: oai.Metadata{Body: []byte("<dc:title>" + identifier + "</dc:title>")},
 				},
 			},
 		},

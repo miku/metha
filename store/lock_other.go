@@ -1,6 +1,6 @@
 //go:build !unix
 
-package metha
+package store
 
 import "os"
 

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +30,7 @@ func newCatCmd() *cobra.Command {
 		Aliases: []string{"metha-cat"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := store.Open(baseDir, store.Identity{
-				BaseURL: metha.PrependSchema(args[0]),
+				BaseURL: oai.PrependSchema(args[0]),
 				Format:  format,
 				Set:     set,
 			})

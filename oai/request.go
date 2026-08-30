@@ -1,4 +1,4 @@
-package metha
+package oai
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strings"
 )
 
 var (
@@ -136,4 +137,12 @@ func (r *Request) URL() (*url.URL, error) {
 	}
 	// TODO(miku): some endpoints do not like encoded urls, e.g. http://web2.bium.univ-paris5.fr/oai-img/oai2.php
 	return url.Parse(fmt.Sprintf("%s?%s", r.BaseURL, v.EncodeVerbatim()))
+}
+
+// PrependSchema prepends http, if its missing.
+func PrependSchema(s string) string {
+	if !strings.HasPrefix(s, "http") {
+		return fmt.Sprintf("http://%s", s)
+	}
+	return s
 }

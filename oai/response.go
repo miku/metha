@@ -1,9 +1,10 @@
-package metha
+package oai
 
 import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -33,6 +34,11 @@ type Response struct {
 	ListRecords         ListRecords         `xml:"ListRecords,omitempty" json:"ListRecords,omitempty"`
 	ListSets            ListSets            `xml:"ListSets,omitempty" json:"ListSets,omitempty"`
 }
+
+// ErrInvalidEarliestDate marks an endpoint whose advertised granularity is
+// neither of the two forms the protocol allows, so nothing it says about dates
+// can be read.
+var ErrInvalidEarliestDate = errors.New("invalid earliest date")
 
 // Identify reports information about a repository.
 type Identify struct {

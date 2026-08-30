@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/miku/metha"
+	"github.com/miku/metha/harvest"
+	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -105,7 +107,7 @@ func (o *syncOpts) run(endpoint string) error {
 		log.Printf("Rate limiting enabled: %.2f bytes/sec (%.2f KB/s)",
 			rateLimitBytesPerSec, rateLimitBytesPerSec/1024)
 	}
-	baseURL := metha.PrependSchema(endpoint)
+	baseURL := oai.PrependSchema(endpoint)
 	identity := store.Identity{BaseURL: baseURL, Format: o.format, Set: o.set}
 	// Before anything else, and before the network: an endpoint still in the
 	// pre-1.0 layout has data this harvest cannot see, and harvesting it again
@@ -136,7 +138,7 @@ func (o *syncOpts) run(endpoint string) error {
 			log.Warn(`The default logger writes to STDERR. Writing errors there was explicitly requested, but -q or --log were not specified. Writing entire log to STDOUT to avoid double-writing error messages.`)
 			log.SetOutput(os.Stdout)
 		}
-		log.AddHook(metha.NewCopyHook(os.Stderr))
+		log.AddHook(NewCopyHook(os.Stderr))
 	}
 	headers := o.extraHeaders
 	if o.basicAuthCreds != "" {
@@ -154,50 +156,50 @@ func (o *syncOpts) run(endpoint string) error {
 		}
 		extra.Set(parts[0], parts[1])
 	}
-	harvest, err := metha.NewHarvest(baseURL)
+	h, err := harvest.NewHarvest(baseURL)
 	if err != nil {
 		return err
 	}
 	// if the harvest resulted in any extra header set, add them here
-	if harvest.Config.ExtraHeaders != nil {
-		for k, vs := range harvest.Config.ExtraHeaders {
+	if h.Config.ExtraHeaders != nil {
+		for k, vs := range h.Config.ExtraHeaders {
 			for _, v := range vs {
 				extra.Add(k, v)
 			}
 		}
 	}
 	if rateLimitBytesPerSec > 0 {
-		harvest.Client = metha.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
+		h.Client = oai.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
 	} else {
-		harvest.Client = metha.CreateClient(o.timeout, o.maxRetries)
+		h.Client = oai.CreateClient(o.timeout, o.maxRetries)
 	}
-	harvest.Config.From = o.from
-	harvest.Config.Until = o.until
-	harvest.Config.Format = o.format
-	harvest.Config.Set = o.set
-	harvest.Config.MaxRequests = o.maxRequests
-	harvest.Config.CleanBeforeDecode = true
-	harvest.Config.DisableSelectiveHarvesting = o.disableSelectiveHarvesting
-	harvest.Config.MaxEmptyResponses = o.maxEmptyResponses
-	harvest.Config.IgnoreHTTPErrors = o.ignoreHTTPErrors
-	harvest.Config.SuppressFormatParameter = o.suppressFormatParameter
-	harvest.Config.HourlyInterval = o.hourly
-	harvest.Config.DailyInterval = o.daily
-	harvest.Config.ExtraHeaders = extra
-	harvest.Config.Delay = o.delay
-	harvest.Config.IgnoreUnexpectedEOF = o.ignoreUnexpectedEOF
+	h.Config.From = o.from
+	h.Config.Until = o.until
+	h.Config.Format = o.format
+	h.Config.Set = o.set
+	h.Config.MaxRequests = o.maxRequests
+	h.Config.CleanBeforeDecode = true
+	h.Config.DisableSelectiveHarvesting = o.disableSelectiveHarvesting
+	h.Config.MaxEmptyResponses = o.maxEmptyResponses
+	h.Config.IgnoreHTTPErrors = o.ignoreHTTPErrors
+	h.Config.SuppressFormatParameter = o.suppressFormatParameter
+	h.Config.HourlyInterval = o.hourly
+	h.Config.DailyInterval = o.daily
+	h.Config.ExtraHeaders = extra
+	h.Config.Delay = o.delay
+	h.Config.IgnoreUnexpectedEOF = o.ignoreUnexpectedEOF
 	if o.removeCached {
 		log.Printf("removing already cached data for %s", identity.BaseURL)
 		if err := store.Remove(o.baseDir, identity); err != nil {
 			log.Println(err)
 		}
 	}
-	if err := o.runHarvest(harvest, identity); err != nil {
+	if err := o.runHarvest(h, identity); err != nil {
 		switch {
-		case errors.Is(err, metha.ErrAlreadySynced):
+		case errors.Is(err, harvest.ErrAlreadySynced):
 			log.Println("this repository is up-to-date")
 			return nil
-		case errors.Is(err, metha.ErrLocked):
+		case errors.Is(err, store.ErrLocked):
 			// Expected when the same endpoint is handed to two workers,
 			// e.g. by the shuf | parallel loop in the README. Not a failure.
 			log.Printf("another harvest holds this endpoint, skipping: %v", err)
@@ -214,7 +216,7 @@ func (o *syncOpts) run(endpoint string) error {
 // its own: an index left open keeps its write-ahead log and shared-memory files
 // on disk, with the last committed window still in the log rather than in the
 // database.
-func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity) error {
+func (o *syncOpts) runHarvest(h *harvest.Harvest, id store.Identity) error {
 	w, err := store.OpenWriter(o.baseDir, id)
 	if err != nil {
 		return err
@@ -223,12 +225,12 @@ func (o *syncOpts) runHarvest(harvest *metha.Harvest, id store.Identity) error {
 	// The identify response is what makes a shard self-describing: granularity
 	// and earliest datestamp are the two things a harvest needs, and the
 	// pre-1.0 layout had nowhere to keep them.
-	if err := w.SetIdentify(harvest.Identify); err != nil {
+	if err := w.SetIdentify(h.Identify); err != nil {
 		return err
 	}
-	harvest.Sink = w
-	log.Printf("harvest: %+v", harvest)
-	if err := harvest.Run(); err != nil {
+	h.Writer = w
+	log.Printf("harvest: %+v", h)
+	if err := h.Run(); err != nil {
 		return err
 	}
 	if o.disableSelectiveHarvesting {

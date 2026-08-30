@@ -1,4 +1,4 @@
-package metha
+package oai
 
 import (
 	"bytes"
@@ -35,10 +35,15 @@ var (
 	StdClient = &Client{Doer: http.DefaultClient}
 	// DefaultClient is the more resilient client, that will retry and timeout.
 	DefaultClient = &Client{Doer: CreateDoer(DefaultTimeout, DefaultMaxRetries)}
-	// DefaultUserAgent to identify crawler, some endpoints do not like the Go
-	// default (https://golang.org/src/net/http/request.go#L462), e.g.
+	// DefaultUserAgent identifies the crawler; some endpoints do not like the
+	// Go default (https://golang.org/src/net/http/request.go#L462), e.g.
 	// https://calhoun.nps.edu/oai/request.
-	DefaultUserAgent = fmt.Sprintf("metha/%s", Version)
+	//
+	// A version is appended by whatever program this is part of - the metha
+	// root package does it in an init - because the release build injects the
+	// version there, and a protocol package has no business knowing which
+	// binary it was linked into.
+	DefaultUserAgent = "metha"
 	// ControlCharReplacer helps to deal with broken XML: http://eprints.vu.edu.au/perl/oai2. Add more
 	// weird things to be cleaned before XML parsing here. Another faulty:
 	// http://digitalcommons.gardner-webb.edu/do/oai/?from=2016-02-29&metadataPr

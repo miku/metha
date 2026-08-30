@@ -62,6 +62,13 @@ never gives it back and then calls `os.Exit(0)` (harvest.go:266–279), and
 `shutdown()` split out purely so the handler's work is reachable from a test
 without killing the test binary.
 
+*Gone, most of it.* The packages are `oai`, `store` and `harvest`, root is
+aliases, and the driver names `*store.Writer`. The five forwarding methods
+collapsed to one, `write(func(*store.Writer) error)`. The mutex, the handler and
+`shutdown` did **not** go: they are what stands between a Ctrl-C and a commit,
+and only move 5 removes the goroutine they exclude. Move 4's "no embedded mutex"
+is therefore a claim about the end state, not about this step.
+
 Every one of those is downstream of an import-direction constraint. That is the
 tell: **the abstraction that costs the most is the one that exists to preserve
 an import direction rather than to express a boundary in the problem.**
@@ -187,6 +194,19 @@ then calls the writer directly: no interface, no five forwarding methods, no
 embedded mutex. This is the move that makes deleting v1 cheap rather than
 merely possible, so it belongs immediately after the deletion.
 
+**Done**, with one correction. The three packages are as drawn, and `go list
+-deps` now says so: `oai` depends on nothing of ours, `store` on `oai`,
+`harvest` on both. Root is the alias façade plus the three things that are the
+program's rather than any layer's - the version, the endpoint list and the
+default cache directory - and `internal/cli` imports the real packages, so the
+façade is dead weight only for external importers, which is what it is for.
+
+The correction: the mutex stays. The five forwarding methods became one seam,
+`write`, which is where the lock is taken; deleting it needs move 5's
+cancellable loop, not a package boundary. What did fall out of the split is
+better tests - the harvest tests write through a real `store.Writer` now instead
+of a fake sink, so they assert what a harvest leaves on disk.
+
 ### 5. `context.Context` through the client and the driver
 
 `signal.NotifyContext` in `main`, ctx checked between requests, `defer
@@ -264,7 +284,7 @@ These are earned and the measurements back them:
 |---|---|---|
 | 1 | extract the planner, pure — **done**, `plan.go` | no |
 | 2 | delete v1 (the 1.0 note's plan) — **done** | no |
-| 3 | package split, `Sink` deleted | no |
+| 3 | package split, `Sink` deleted — **done** | no |
 | 4 | window-granularity extents, `records` gone | **yes** |
 | 5 | sqlite gone, state as rename-atomic json | **yes** |
 | 6 | migrate the 200G corpus | — |

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // dayOf returns the date a bound falls on, or the empty string if there is no
@@ -67,14 +67,14 @@ type segFrame struct {
 // segments can cost time but cannot produce a wrong answer. An index that is
 // missing altogether falls back to reading the segments whole, duplicates and
 // all: the segments are the cache, and answering from them beats not answering.
-func (s *v2Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
-	return func(yield func(metha.Record, error) bool) {
+func (s *v2Store) Records(opts ReadOptions) iter.Seq2[oai.Record, error] {
+	return func(yield func(oai.Record, error) bool) {
 		frames, err := s.matchingFrames(opts)
 		if err != nil {
 			// An unreadable or missing index is not a reason to answer
 			// wrongly: fall back to reading everything.
 			if !errors.Is(err, errNoIndex) {
-				yield(metha.Record{}, err)
+				yield(oai.Record{}, err)
 				return
 			}
 			s.recordsByScan(opts)(yield)
@@ -83,7 +83,7 @@ func (s *v2Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
 		for _, sf := range frames {
 			content, err := readFrame(sf.Path, sf.Frame)
 			if err != nil {
-				yield(metha.Record{}, fmt.Errorf("%s: %w", sf.Path, err))
+				yield(oai.Record{}, fmt.Errorf("%s: %w", sf.Path, err))
 				return
 			}
 			if !recordsFromBytes(content, opts, yield) {
@@ -94,11 +94,11 @@ func (s *v2Store) Records(opts ReadOptions) iter.Seq2[metha.Record, error] {
 }
 
 // recordsByScan reads every segment of the group, in write order.
-func (s *v2Store) recordsByScan(opts ReadOptions) iter.Seq2[metha.Record, error] {
-	return func(yield func(metha.Record, error) bool) {
+func (s *v2Store) recordsByScan(opts ReadOptions) iter.Seq2[oai.Record, error] {
+	return func(yield func(oai.Record, error) bool) {
 		files, err := s.segments()
 		if err != nil {
-			yield(metha.Record{}, err)
+			yield(oai.Record{}, err)
 			return
 		}
 		for _, file := range files {
@@ -113,16 +113,16 @@ func (s *v2Store) recordsByScan(opts ReadOptions) iter.Seq2[metha.Record, error]
 // and all. It returns false when iteration should stop, either because the
 // consumer asked for it or because the file could not be read, in which case the
 // error was yielded.
-func recordsFromSegment(path string, opts ReadOptions, yield func(metha.Record, error) bool) bool {
+func recordsFromSegment(path string, opts ReadOptions, yield func(oai.Record, error) bool) bool {
 	f, err := os.Open(path)
 	if err != nil {
-		yield(metha.Record{}, err)
+		yield(oai.Record{}, err)
 		return false
 	}
 	defer f.Close()
 	dec, err := zstd.NewReader(f)
 	if err != nil {
-		yield(metha.Record{}, fmt.Errorf("%s: %w", path, err))
+		yield(oai.Record{}, fmt.Errorf("%s: %w", path, err))
 		return false
 	}
 	defer dec.Close()
@@ -131,12 +131,12 @@ func recordsFromSegment(path string, opts ReadOptions, yield func(metha.Record, 
 	xd := xml.NewDecoder(dec)
 	xd.Strict = false
 	for {
-		var resp metha.Response
+		var resp oai.Response
 		if err := xd.Decode(&resp); err != nil {
 			if errors.Is(err, io.EOF) {
 				return true
 			}
-			yield(metha.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
+			yield(oai.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
 			return false
 		}
 		for _, rec := range resp.ListRecords.Records {
@@ -225,16 +225,16 @@ func (s *v2Store) matchingFrames(opts ReadOptions) ([]segFrame, error) {
 }
 
 // recordsFromBytes yields the matching records of one decompressed frame.
-func recordsFromBytes(content []byte, opts ReadOptions, yield func(metha.Record, error) bool) bool {
+func recordsFromBytes(content []byte, opts ReadOptions, yield func(oai.Record, error) bool) bool {
 	dec := xml.NewDecoder(bytes.NewReader(content))
 	dec.Strict = false
 	for {
-		var resp metha.Response
+		var resp oai.Response
 		if err := dec.Decode(&resp); err != nil {
 			if errors.Is(err, io.EOF) {
 				return true
 			}
-			yield(metha.Record{}, fmt.Errorf("failed to decode XML in frame: %w", err))
+			yield(oai.Record{}, fmt.Errorf("failed to decode XML in frame: %w", err))
 			return false
 		}
 		for _, rec := range resp.ListRecords.Records {

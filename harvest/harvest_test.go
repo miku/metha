@@ -1,4 +1,4 @@
-package metha
+package harvest
 
 import (
 	"encoding/xml"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/now"
+	"github.com/miku/metha/oai"
 )
 
 func TestPrependSchema(t *testing.T) {
@@ -25,7 +26,7 @@ func TestPrependSchema(t *testing.T) {
 		{"localhost:8080", "http://localhost:8080"},
 	}
 	for _, test := range tests {
-		result := PrependSchema(test.input)
+		result := oai.PrependSchema(test.input)
 		if result != test.expected {
 			t.Errorf("PrependSchema(%q) = %q; expected %q", test.input, result, test.expected)
 		}
@@ -60,7 +61,7 @@ func TestHarvestFormatBound(t *testing.T) {
 		{"", ""},
 	}
 	for _, test := range tests {
-		h := &Harvest{Identify: &Identify{Granularity: test.granularity}}
+		h := &Harvest{Identify: &oai.Identify{Granularity: test.granularity}}
 		if got := h.formatBound(bound); got != test.expected {
 			t.Errorf("formatBound with granularity %q = %q; expected %q", test.granularity, got, test.expected)
 		}
@@ -76,7 +77,7 @@ func TestHarvestFormatBoundDayIsLocal(t *testing.T) {
 		if err != nil {
 			t.Skipf("no zoneinfo for %v: %v", name, err)
 		}
-		h := &Harvest{Identify: &Identify{Granularity: "YYYY-MM-DD"}}
+		h := &Harvest{Identify: &oai.Identify{Granularity: "YYYY-MM-DD"}}
 		endOfDay := time.Date(2026, 8, 28, 23, 59, 59, int(time.Second-1), loc)
 		if got, want := h.formatBound(endOfDay), "2026-08-28"; got != want {
 			t.Errorf("formatBound in %v = %q; expected %q", name, got, want)
@@ -122,7 +123,7 @@ func TestHarvestEarliestDate(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			id := &Identify{
+			id := &oai.Identify{
 				Granularity:       test.granularity,
 				EarliestDatestamp: test.earliestDate,
 			}
@@ -130,7 +131,7 @@ func TestHarvestEarliestDate(t *testing.T) {
 			if test.expectedError {
 				if err == nil {
 					t.Errorf("expected error, but got none")
-				} else if err != ErrInvalidEarliestDate {
+				} else if err != oai.ErrInvalidEarliestDate {
 					t.Errorf("expected ErrInvalidEarliestDate, but got: %v", err)
 				}
 			} else {
@@ -157,7 +158,7 @@ func TestHarvestPlannedInterval(t *testing.T) {
 			From:    "2020-01-01", // Set a custom from date
 			Until:   "2020-01-31", // Set a custom until date
 		},
-		Sink:    &fakeSink{resume: resume},
+		Writer:  writerResumingAt(t, resume),
 		Started: time.Now(),
 	}
 	cov, err := h.coverage()
@@ -193,8 +194,8 @@ func TestPlanAlreadySynced(t *testing.T) {
 			From:    "2020-01-01",
 			// No Until set, so the plan reaches to the end of today.
 		},
-		Identify: &Identify{Granularity: "YYYY-MM-DD", EarliestDatestamp: "2020-01-01"},
-		Sink:     &fakeSink{resume: time.Now().AddDate(0, 0, 1)},
+		Identify: &oai.Identify{Granularity: "YYYY-MM-DD", EarliestDatestamp: "2020-01-01"},
+		Writer:   writerResumingAt(t, time.Now().AddDate(0, 0, 1)),
 		Started:  time.Now(),
 	}
 	cov, err := h.coverage()
@@ -224,8 +225,8 @@ func TestHarvestRetry(t *testing.T) {
 		},
 	}
 
-	successOp := func() (*Response, error) {
-		return &Response{}, nil
+	successOp := func() (*oai.Response, error) {
+		return &oai.Response{}, nil
 	}
 
 	resp, err := h.retry(successOp)
@@ -238,13 +239,13 @@ func TestHarvestRetry(t *testing.T) {
 
 	// Test operation that fails once but succeeds on retry
 	attemptCount := 0
-	failsOnceOp := func() (*Response, error) {
+	failsOnceOp := func() (*oai.Response, error) {
 		attemptCount++
 		if attemptCount == 1 {
 			// Return an HTTPError that should be retried
-			return nil, HTTPError{StatusCode: 500}
+			return nil, oai.HTTPError{StatusCode: 500}
 		}
-		return &Response{}, nil
+		return &oai.Response{}, nil
 	}
 
 	attemptCount = 1 // Reset count for new operation
@@ -260,9 +261,9 @@ func TestHarvestRetry(t *testing.T) {
 	}
 
 	attemptCount = 0
-	alwaysFailOp := func() (*Response, error) {
+	alwaysFailOp := func() (*oai.Response, error) {
 		attemptCount++
-		return nil, HTTPError{StatusCode: 500}
+		return nil, oai.HTTPError{StatusCode: 500}
 	}
 
 	resp, err = h.retry(alwaysFailOp)
@@ -290,27 +291,27 @@ func TestHarvestShouldRetry(t *testing.T) {
 	}{
 		{
 			name:     "HTTP 408 timeout",
-			err:      HTTPError{StatusCode: 408},
+			err:      oai.HTTPError{StatusCode: 408},
 			expected: true,
 		},
 		{
 			name:     "HTTP 429 too many requests",
-			err:      HTTPError{StatusCode: 429},
+			err:      oai.HTTPError{StatusCode: 429},
 			expected: true,
 		},
 		{
 			name:     "HTTP 500 internal server error",
-			err:      HTTPError{StatusCode: 500},
+			err:      oai.HTTPError{StatusCode: 500},
 			expected: true,
 		},
 		{
 			name:     "HTTP 503 service unavailable",
-			err:      HTTPError{StatusCode: 503},
+			err:      oai.HTTPError{StatusCode: 503},
 			expected: true,
 		},
 		{
 			name:     "non-retryable HTTP error",
-			err:      HTTPError{StatusCode: 404},
+			err:      oai.HTTPError{StatusCode: 404},
 			expected: false,
 		},
 		{
@@ -346,7 +347,7 @@ func TestHarvestShouldRetry(t *testing.T) {
 
 	// Test when IgnoreHTTPErrors is false
 	h.Config.IgnoreHTTPErrors = false
-	result := h.shouldRetry(HTTPError{StatusCode: 500})
+	result := h.shouldRetry(oai.HTTPError{StatusCode: 500})
 	if result {
 		t.Error("shouldRetry() with IgnoreHTTPErrors disabled should return false")
 	}
@@ -386,25 +387,25 @@ func TestNewHarvest(t *testing.T) {
 
 // MockClient is a test implementation of the Client struct
 type MockClient struct {
-	Response *Response
+	Response *oai.Response
 	Error    error
 }
 
-func (c *MockClient) Do(req *Request) (*Response, error) {
+func (c *MockClient) Do(req *oai.Request) (*oai.Response, error) {
 	if c.Error != nil {
 		return nil, c.Error
 	}
 	if c.Response != nil {
 		return c.Response, nil
 	}
-	return &Response{}, nil
+	return &oai.Response{}, nil
 }
 
 func TestHarvestIdentify(t *testing.T) {
 	name := "Test Repository"
-	mockClient := &Client{Doer: &harvestMockDoer{
-		Response: &Response{
-			Identify: Identify{
+	mockClient := &oai.Client{Doer: &harvestMockDoer{
+		Response: &oai.Response{
+			Identify: oai.Identify{
 				RepositoryName:    name,
 				Granularity:       "YYYY-MM-DD",
 				EarliestDatestamp: "2020-01-01",
@@ -430,7 +431,7 @@ func TestHarvestIdentify(t *testing.T) {
 
 // harvestMockDoer implements the Doer interface for testing harvest functionality
 type harvestMockDoer struct {
-	Response *Response
+	Response *oai.Response
 	Error    error
 }
 
@@ -450,20 +451,20 @@ func (m *harvestMockDoer) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestHarvestRun(t *testing.T) {
-	mockClient := &Client{Doer: &harvestMockDoer{
-		Response: &Response{
-			ListRecords: ListRecords{
-				Records: []Record{{}}, // At least one record to avoid empty response
+	mockClient := &oai.Client{Doer: &harvestMockDoer{
+		Response: &oai.Response{
+			ListRecords: oai.ListRecords{
+				Records: []oai.Record{{}}, // At least one record to avoid empty response
 			},
 		},
 	}}
 
-	sink := &fakeSink{}
+	base := t.TempDir()
+	w := writerIn(t, base)
 	h := &Harvest{
 		Config: &Config{
-			BaseURL:                    "http://example.com/oai",
-			Set:                        "testSet",
-			Format:                     "testFormat",
+			BaseURL:                    testIdentity.BaseURL,
+			Format:                     testIdentity.Format,
 			MaxRequests:                1, // Limit to 1 request to avoid infinite loops
 			MaxRetries:                 1,
 			RetryDelay:                 time.Millisecond,
@@ -471,58 +472,72 @@ func TestHarvestRun(t *testing.T) {
 			DisableSelectiveHarvesting: true, // one boundless window
 		},
 		Client:  mockClient,
-		Sink:    sink,
+		Writer:  w,
 		Started: time.Now(),
 	}
 	if err := h.run(); err != nil {
 		t.Errorf("run: %v", err)
 	}
-	if len(sink.committed) != 1 {
-		t.Fatalf("committed %d window(s), want 1", len(sink.committed))
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
 	}
-	if w := sink.committed[0]; !w.From.IsZero() || !w.Until.IsZero() || w.Settled {
-		t.Errorf("committed %v..%v settled=%v, want one boundless unsettled window", w.From, w.Until, w.Settled)
+	// One window, claiming no range: an unbounded harvest cannot say what it
+	// covered, so it is never settled and its coverage is empty.
+	stats := windowsOf(t, base)
+	if stats.Windows != 1 {
+		t.Errorf("committed %d window(s), want 1", stats.Windows)
+	}
+	if stats.First != "" || stats.Last != "" {
+		t.Errorf("coverage %q..%q, want no boundaries at all", stats.First, stats.Last)
 	}
 }
 
 func TestHarvestRunInterval(t *testing.T) {
-	mockClient := &Client{Doer: &harvestMockDoer{
-		Response: &Response{
-			ListRecords: ListRecords{
-				Records: []Record{{}}, // At least one record to avoid empty response
+	mockClient := &oai.Client{Doer: &harvestMockDoer{
+		Response: &oai.Response{
+			ListRecords: oai.ListRecords{
+				Records: []oai.Record{{}}, // At least one record to avoid empty response
 			},
 		},
 	}}
-	sink := &fakeSink{}
+	base := t.TempDir()
+	w := writerIn(t, base)
 	h := &Harvest{
 		Config: &Config{
-			BaseURL:      "http://example.com/oai",
-			Set:          "testSet",
-			Format:       "testFormat",
+			BaseURL:      testIdentity.BaseURL,
+			Format:       testIdentity.Format,
 			MaxRequests:  1, // Limit to 1 request to avoid infinite loops
 			MaxRetries:   1,
 			RetryDelay:   time.Millisecond,
 			RetryBackoff: 1.0,
 		},
 		Client:  mockClient,
-		Sink:    sink,
+		Writer:  w,
 		Started: time.Now(),
-		Identify: &Identify{
+		Identify: &oai.Identify{
 			Granularity:       "YYYY-MM-DD",
 			EarliestDatestamp: "2020-01-01",
 		},
 	}
+	// Local, as a planner's boundaries are: a window is recorded in the zone it
+	// was computed in, and the shard renders the dates back the same way.
 	interval := Interval{
-		Begin: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-		End:   time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC),
+		Begin: time.Date(2020, 1, 1, 0, 0, 0, 0, time.Local),
+		End:   time.Date(2020, 1, 2, 0, 0, 0, 0, time.Local),
 	}
 	if err := h.runWindow(Window{Interval: interval, Settled: true}); err != nil {
 		t.Errorf("runWindow: %v", err)
 	}
-	if len(sink.committed) != 1 {
-		t.Fatalf("committed %d window(s), want 1", len(sink.committed))
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
 	}
-	if w := sink.committed[0]; !w.From.Equal(interval.Begin) || !w.Until.Equal(interval.End) || !w.Settled {
-		t.Errorf("committed %v..%v settled=%v, want the window it was given, settled", w.From, w.Until, w.Settled)
+	// The window it was given, and settled: the shard covers exactly that range
+	// and a next run would resume past it.
+	stats := windowsOf(t, base)
+	if stats.Windows != 1 {
+		t.Fatalf("committed %d window(s), want 1", stats.Windows)
+	}
+	if stats.First != "2020-01-01" || stats.Last != "2020-01-02" {
+		t.Errorf("coverage %q..%q, want 2020-01-01..2020-01-02", stats.First, stats.Last)
 	}
 }

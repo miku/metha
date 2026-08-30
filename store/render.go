@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // RenderOpts controls output by the metha-cat command.
@@ -53,7 +53,7 @@ func Render(s Store, opts RenderOpts) error {
 }
 
 // renderRecord marshals a single record and writes it as one line.
-func renderRecord(rec metha.Record, opts RenderOpts) error {
+func renderRecord(rec oai.Record, opts RenderOpts) error {
 	var (
 		b   []byte
 		err error

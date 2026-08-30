@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/klauspost/compress/zstd"
-	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // testStore returns a store over a fresh, empty shard.
@@ -24,7 +24,7 @@ func testStore(t *testing.T) Store {
 // storeWith writes each response as its own window and returns the store over
 // them. Windows a month apart, dated after the records they hold, so that a
 // datestamp filter has something to cut and the coverage map stays honest.
-func storeWith(t *testing.T, resps ...metha.Response) Store {
+func storeWith(t *testing.T, resps ...oai.Response) Store {
 	t.Helper()
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
@@ -77,7 +77,7 @@ func (nopWriteCloser) Close() error { return nil }
 // createFile writes responses into one file, each as an independent frame.
 // More than one response per file is what metha-pack produces when it
 // concatenates a directory's files into the newest one.
-func createFile(t *testing.T, dir, filename string, createWriter writerCreator, resps ...metha.Response) {
+func createFile(t *testing.T, dir, filename string, createWriter writerCreator, resps ...oai.Response) {
 	t.Helper()
 	file, err := os.Create(filepath.Join(dir, filename))
 	if err != nil {
@@ -98,17 +98,17 @@ func createFile(t *testing.T, dir, filename string, createWriter writerCreator, 
 
 // twoRecords is a response holding one record from January and one from
 // February, so that datestamp filters have something to cut.
-func twoRecords() metha.Response {
-	return metha.Response{
-		ListRecords: metha.ListRecords{
-			Records: []metha.Record{
+func twoRecords() oai.Response {
+	return oai.Response{
+		ListRecords: oai.ListRecords{
+			Records: []oai.Record{
 				{
-					Header:   metha.Header{Identifier: "id1", DateStamp: "2023-01-01"},
-					Metadata: metha.Metadata{Body: []byte("<dc:title>Test Title 1</dc:title>")},
+					Header:   oai.Header{Identifier: "id1", DateStamp: "2023-01-01"},
+					Metadata: oai.Metadata{Body: []byte("<dc:title>Test Title 1</dc:title>")},
 				},
 				{
-					Header:   metha.Header{Identifier: "id2", DateStamp: "2023-02-01"},
-					Metadata: metha.Metadata{Body: []byte("<dc:title>Test Title 2</dc:title>")},
+					Header:   oai.Header{Identifier: "id2", DateStamp: "2023-02-01"},
+					Metadata: oai.Metadata{Body: []byte("<dc:title>Test Title 2</dc:title>")},
 				},
 			},
 		},
@@ -116,13 +116,13 @@ func twoRecords() metha.Response {
 }
 
 // respWithTitle is a single-record response, identified by its title.
-func respWithTitle(title string) metha.Response {
-	return metha.Response{
-		ListRecords: metha.ListRecords{
-			Records: []metha.Record{
+func respWithTitle(title string) oai.Response {
+	return oai.Response{
+		ListRecords: oai.ListRecords{
+			Records: []oai.Record{
 				{
-					Header:   metha.Header{Identifier: title, DateStamp: "2023-01-01"},
-					Metadata: metha.Metadata{Body: []byte("<dc:title>" + title + "</dc:title>")},
+					Header:   oai.Header{Identifier: title, DateStamp: "2023-01-01"},
+					Metadata: oai.Metadata{Body: []byte("<dc:title>" + title + "</dc:title>")},
 				},
 			},
 		},

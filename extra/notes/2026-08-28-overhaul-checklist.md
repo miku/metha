@@ -341,6 +341,59 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       Not done here, and still open from the 1.0 note: migrate's `--jobs`
       parallelism and its progress output. Neither is about deleting v1.
 
+- [x] **Package split, `Sink` deleted.** Step 3. Four packages where there was
+      one, and `go list -deps` is the check that the arrows point the way the
+      note draws them:
+
+          oai      protocol only - requests, responses, a client. Imports
+                   nothing of ours.
+          store    the cache. Imports oai.
+          harvest  planner and driver. Imports both.
+          metha    the alias façade, plus the version, the endpoint list and the
+                   default cache directory - the three things that belong to the
+                   program rather than to a layer.
+
+      `internal/cli` imports `oai`, `store` and `harvest` directly and keeps
+      `metha` only for those three, so the façade carries no weight inside the
+      module. The lock moved to `store`, which is the only thing that takes one
+      now (`store.TryFlock`, `store.LockName`, `store.ErrLocked`);
+      `PrependSchema` and `ErrInvalidEarliestDate` moved to `oai`, next to what
+      they are about. `MultiError` and `UserHomeDir` had no callers left and
+      went with them.
+
+      **What did not go: the mutex.** Move 4 says "no embedded mutex", and that
+      is not reachable here. The mutex exists because the signal handler closes
+      the writer from another goroutine; removing it needs move 5's cancellable
+      loop, and removing it without one would reintroduce the race two entries
+      above. The five forwarding methods did collapse into one seam, `write(func
+      (*store.Writer) error)`, so there is a single place the lock is taken and
+      a single thing left to delete.
+
+      `TestWriterCallsExcludeShutdown` survives the loss of the fake sink by
+      stating the invariant the other way round: it holds the harvest lock and
+      asserts each call blocks, which needs no stand-in for the writer and is
+      the same property.
+
+      **The tests got better, not just moved.** Harvest tests write through a
+      real `store.Writer` into a temp dir, so what they assert is what a harvest
+      leaves on disk - windows, coverage, records - rather than what a fake was
+      told. `TestSettledBoundaryStandsStill` lost its reach into the index and
+      states the sliver invariant through `store.Stat` instead: run three times
+      a second apart, and the window count must stop growing. That is exactly
+      the bug it guards against, and it no longer depends on store internals.
+
+      One wiring detail worth knowing about: the release build injects the
+      version into `github.com/miku/metha.Version`, and the User-Agent is built
+      from it in `oai`. Root hands it over in an `init`, which is easy to delete
+      by accident and silent when it is gone, so `TestUserAgentCarriesVersion`
+      pins it.
+
+      API breaks, all of them named in the 1.0 note's frozen list or below it:
+      `metha.Sink` is gone (there is no interface to implement any more, and
+      `store.Writer` is nameable), and `metha.TryFlock`, `metha.LockName`,
+      `metha.ErrLocked` moved to `store`. Everything else keeps working through
+      the aliases.
+
 ---
 
 ## open — settle before the move

@@ -1,9 +1,11 @@
-package metha
+package harvest
 
 import (
 	"time"
 
 	dates "github.com/jinzhu/now"
+
+	"github.com/miku/metha/oai"
 )
 
 // Segmentation is how the settled past is cut into windows. One window is one
@@ -98,7 +100,7 @@ type PlanConfig struct {
 // resumes, how far into the present a request can reach, where the still
 // changing present begins, and how the settled past is cut up. Each of them is
 // therefore a row in a table test rather than a network harvest and a database.
-func Plan(cov Coverage, id *Identify, now time.Time, cfg PlanConfig) ([]Window, error) {
+func Plan(cov Coverage, id *oai.Identify, now time.Time, cfg PlanConfig) ([]Window, error) {
 	if cfg.Unbounded {
 		// No range was requested, so the window claims none, and it is never
 		// settled: a fetch that could not say what it asked for cannot claim to
@@ -128,7 +130,7 @@ func Plan(cov Coverage, id *Identify, now time.Time, cfg PlanConfig) ([]Window, 
 // plannedInterval is the whole span a run covers, before it is cut up: from
 // wherever the last run left off, or the start of the data if there was none,
 // to as far as this run may ask.
-func plannedInterval(cov Coverage, id *Identify, now time.Time, cfg PlanConfig) (Interval, error) {
+func plannedInterval(cov Coverage, id *oai.Identify, now time.Time, cfg PlanConfig) (Interval, error) {
 	// Asked for even when a resume point makes it moot, so that an endpoint
 	// whose granularity cannot be read is refused here rather than harvested
 	// with silently unbounded requests - formatBound drops the bounds from every
@@ -155,7 +157,7 @@ func plannedInterval(cov Coverage, id *Identify, now time.Time, cfg PlanConfig) 
 //
 // A date given as a date is read in the local zone, the one the window
 // boundaries are computed in, so that the two can be compared. refs #9100
-func dataStart(id *Identify, from string) (time.Time, error) {
+func dataStart(id *oai.Identify, from string) (time.Time, error) {
 	if from != "" {
 		return time.ParseInLocation("2006-01-02", from, time.Local)
 	}
@@ -163,7 +165,7 @@ func dataStart(id *Identify, from string) (time.Time, error) {
 }
 
 // plannedEnd is the right edge of the span a run covers.
-func plannedEnd(id *Identify, now time.Time, bound string) (time.Time, error) {
+func plannedEnd(id *oai.Identify, now time.Time, bound string) (time.Time, error) {
 	if bound == "" {
 		return reachableEnd(id, now), nil
 	}
@@ -182,7 +184,7 @@ func plannedEnd(id *Identify, now time.Time, bound string) (time.Time, error) {
 // far as the endpoint's granularity lets a request reach. An endpoint that
 // speaks only dates cannot be asked for less than a whole day, so the harvest
 // takes the whole of today and records it as unsettled; see settledFrom.
-func reachableEnd(id *Identify, now time.Time) time.Time {
+func reachableEnd(id *oai.Identify, now time.Time) time.Time {
 	if id.SecondGranularity() {
 		return now.Truncate(time.Second)
 	}
@@ -201,7 +203,7 @@ func reachableEnd(id *Identify, now time.Time) time.Time {
 //
 // Truncated to the second, the finest an OAI request can express, which also
 // keeps stored boundaries comparable as strings.
-func settledFrom(id *Identify, now time.Time) time.Time {
+func settledFrom(id *oai.Identify, now time.Time) time.Time {
 	if id.SecondGranularity() {
 		// Datestamps are exact here, so only the recent past is in doubt: a
 		// clock that runs behind ours, or a record indexed a moment after it was
