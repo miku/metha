@@ -27,8 +27,8 @@ symlinks to this binary, and still take the flags they always did; "metha shim
 install" lays them down again after a "go install".`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
 		},
 	}
 	root.AddCommand(

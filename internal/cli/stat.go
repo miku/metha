@@ -47,7 +47,9 @@ func newStatCmd() *cobra.Command {
 						}
 						continue
 					}
-					report(stats)
+					if err := report(stats); err != nil {
+						return err
+					}
 				}
 				return nil
 			}
@@ -63,10 +65,10 @@ func newStatCmd() *cobra.Command {
 	return cmd
 }
 
-// report prints one endpoint in full.
-func report(s *store.Stats) {
+// report prints one endpoint in full. The flush is the write, so its error is
+// the command's: everything above it only fills a buffer.
+func report(s *store.Stats) error {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
-	defer tw.Flush()
 	fmt.Fprintf(tw, "endpoint\t%s\n", s.Identity.BaseURL)
 	fmt.Fprintf(tw, "format\t%s\n", s.Identity.Format)
 	if s.Identity.Set != "" {
@@ -96,12 +98,12 @@ func report(s *store.Stats) {
 	if rate := s.Rate(); rate > 0 {
 		fmt.Fprintf(tw, "rate\t%s/s\n", humanBytes(int64(rate)))
 	}
+	return tw.Flush()
 }
 
 // statCache walks the whole cache, one line per endpoint, and totals it.
 func statCache(baseDir string, asJSON, failures bool) error {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
-	defer tw.Flush()
 	if !asJSON {
 		fmt.Fprintln(tw, "SIZE\tWINDOWS\tRECORDS\tDELETED\tFAILED\tLAST\tENDPOINT")
 	}
@@ -149,7 +151,11 @@ func statCache(baseDir string, asJSON, failures bool) error {
 	if asJSON {
 		return nil
 	}
-	tw.Flush()
+	// The table is one buffered write, and a listing of a quarter of a million
+	// shards truncated by a full disk or a closed pipe must not exit 0.
+	if err := tw.Flush(); err != nil {
+		return err
+	}
 	fmt.Fprintf(os.Stderr, "\n%d %s, %s on disk, %d records, %d deleted, %d failed windows",
 		shards, plural(shards, "entry"), humanBytes(total.Bytes), total.Records, total.Deleted, total.Failed)
 	if total.Fetched > 0 {

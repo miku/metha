@@ -27,10 +27,12 @@ func lockShard(shard string) (func(), error) {
 		return nil, fmt.Errorf("open lock file: %w", err)
 	}
 	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, fmt.Errorf("flock %s: %w", shard, err)
 	}
-	return func() { f.Close() }, nil
+	// Closing the file is what releases the lock; a failure to close leaves it
+	// held until the process exits, and there is no second thing to try.
+	return func() { _ = f.Close() }, nil
 }
 
 // TryFlock takes a non-blocking exclusive flock on path, creating the file if
@@ -43,7 +45,7 @@ func TryFlock(path string) (*os.File, error) {
 		return nil, fmt.Errorf("open lock file: %w", err)
 	}
 	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		f.Close()
+		_ = f.Close()
 		if errors.Is(err, syscall.EWOULDBLOCK) {
 			return nil, fmt.Errorf("%w: %s", ErrLocked, path)
 		}

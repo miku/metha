@@ -168,17 +168,17 @@ func openSegWriter(path string, committed int64, enc *zstd.Encoder) (*segWriter,
 	}
 	info, err := f.Stat()
 	if err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, err
 	}
 	if info.Size() > committed {
 		if err := f.Truncate(committed); err != nil {
-			f.Close()
+			_ = f.Close()
 			return nil, err
 		}
 	}
 	if _, err := f.Seek(committed, io.SeekStart); err != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, err
 	}
 	return &segWriter{path: path, f: f, enc: enc, size: committed}, nil
@@ -238,6 +238,6 @@ func (w *segWriter) close() error { return w.f.Close() }
 // index, so failing to unlink it is untidy rather than wrong.
 func (w *segWriter) discardIfEmpty() {
 	if w.size == 0 {
-		os.Remove(w.path)
+		_ = os.Remove(w.path)
 	}
 }

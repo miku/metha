@@ -280,13 +280,14 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 	// Before the status check, not after it. An error status returned without
 	// closing the body leaked the connection it was read on, and a harvest meets
 	// them in runs - a 503 is retried, and every retry leaked another one.
-	defer resp.Body.Close()
+	// Nothing to do if the close fails; the request is over either way.
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode >= 400 {
 		return nil, HTTPError{URL: link, StatusCode: resp.StatusCode}
 	}
 
 	// Apply rate limiting to the response body if enabled
-	var reader io.Reader = c.wrapWithRateLimit(resp.Body, ctx)
+	reader := c.wrapWithRateLimit(resp.Body, ctx)
 
 	// Detect compressed response.
 	reader, err = maybeCompressed(reader)
@@ -295,7 +296,8 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 	}
 	defer func() {
 		if c, ok := reader.(io.Closer); ok {
-			c.Close()
+			// A decompressor being released; the bytes are already read.
+			_ = c.Close()
 		}
 	}()
 

@@ -114,7 +114,7 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	}
 	defer func() {
 		if err != nil && lock != nil {
-			lock.Close()
+			_ = lock.Close()
 		}
 	}()
 	meta, err := readMeta(shard)
@@ -290,7 +290,7 @@ func (w *Writer) Close() error {
 		w.seg.discardIfEmpty()
 	}
 	if w.enc != nil {
-		w.enc.Close()
+		errs = append(errs, w.enc.Close())
 	}
 	if w.lock != nil {
 		errs = append(errs, w.lock.Close())
@@ -584,7 +584,7 @@ func removeV2(baseDir string, id Identity) error {
 	} else if err != nil {
 		return err
 	} else if lock != nil {
-		lock.Close()
+		_ = lock.Close()
 	}
 	if err := os.RemoveAll(dir); err != nil {
 		return err

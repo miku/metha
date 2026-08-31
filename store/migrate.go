@@ -61,7 +61,7 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 		return nil, err
 	}
 	if lock != nil {
-		defer lock.Close()
+		defer func() { _ = lock.Close() }()
 	}
 	result := &MigrateResult{Identity: id}
 	byDate := map[string][]string{}
@@ -86,7 +86,9 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer w.Close()
+	// Every window is already durable by the time this runs; Close releases the
+	// lock and tidies empty directories, and neither is worth failing over.
+	defer func() { _ = w.Close() }()
 
 	// The range the source covers, accumulated as the windows are worked out,
 	// and what the shard is counted over at the end.
@@ -223,12 +225,12 @@ func readWhole(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	r, err := decompress(path, f)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer func() { _ = r.Close() }()
 	return io.ReadAll(r)
 }
 

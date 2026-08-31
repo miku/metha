@@ -237,7 +237,14 @@ func (o *syncOpts) runHarvest(ctx context.Context, h *harvest.Harvest, id store.
 	if err != nil {
 		return err
 	}
-	defer w.Close()
+	// Worth saying if it fails, not worth failing the harvest over: everything
+	// committed is already durable, and what Close does is release the lock and
+	// drop a window that never reached a commit.
+	defer func() {
+		if err := w.Close(); err != nil {
+			log.Printf("closing the shard: %v", err)
+		}
+	}()
 	// The identify response is what makes a shard self-describing: granularity
 	// and earliest datestamp are the two things a harvest needs, and the
 	// pre-1.0 layout had nowhere to keep them.

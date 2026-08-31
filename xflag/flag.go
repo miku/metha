@@ -1,11 +1,10 @@
 // Package xflag add an additional flag type Array for repeated string flags.
 //
-//   var f xflag.Array
-//   flag.Var(&f, "r", "some repeatable flag")
+//	var f xflag.Array
+//	flag.Var(&f, "r", "some repeatable flag")
 //
-//   flag.Parse()                // $ command -r a -r b -r c
-//   for _, v := range f { ... } // []string{"a", "b", "c"}
-//
+//	flag.Parse()                // $ command -r a -r b -r c
+//	for _, v := range f { ... } // []string{"a", "b", "c"}
 package xflag
 
 import "strings"

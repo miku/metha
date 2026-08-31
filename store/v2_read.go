@@ -85,7 +85,7 @@ func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.R
 		yield(oai.Record{}, err)
 		return false
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dec, err := zstd.NewReader(io.NewSectionReader(f, e.Off, e.Len))
 	if err != nil {
 		yield(oai.Record{}, fmt.Errorf("%s: %w", path, err))

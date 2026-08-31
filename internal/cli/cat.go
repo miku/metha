@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"errors"
 	"os"
 
 	"github.com/miku/metha"
@@ -38,7 +39,6 @@ func newCatCmd() *cobra.Command {
 				return err
 			}
 			bw := bufio.NewWriter(os.Stdout)
-			defer bw.Flush()
 			// Deleted records are suppressed unless asked for: they carry no
 			// metadata, and a consumer that wants the tombstones is asking a
 			// different question than one reading records.
@@ -49,7 +49,7 @@ func newCatCmd() *cobra.Command {
 			case deleted:
 				policy = store.DeletedKeep
 			}
-			return store.Render(st, store.RenderOpts{
+			err = store.Render(st, store.RenderOpts{
 				Writer:  bw,
 				From:    from,
 				Until:   until,
@@ -58,6 +58,13 @@ func newCatCmd() *cobra.Command {
 				Root:    root,
 				UseJson: useJSON,
 			})
+			// Flushed here rather than in a defer, because the error matters.
+			// Everything this command writes goes through the buffer, so the
+			// last chunk of a corpus reaches the pipe in this call - and a
+			// deferred flush drops what it says. A full disk or a reader that
+			// went away then left "metha cat" exiting 0 on truncated output,
+			// which is the failure a pipeline cannot see.
+			return errors.Join(err, bw.Flush())
 		},
 	}
 	f := cmd.Flags()

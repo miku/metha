@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/miku/metha/oai"
 	"github.com/miku/metha/store"
 )
 
@@ -72,18 +71,6 @@ func windowsOf(t *testing.T, baseDir string) *store.Stats {
 		t.Fatalf("Stat: %v", err)
 	}
 	return stats
-}
-
-// respondingWith is a client that answers every request with one response
-// holding the given identifiers.
-func respondingWith(ids ...string) *oai.Client {
-	var recs []oai.Record
-	for _, id := range ids {
-		recs = append(recs, oai.Record{Header: oai.Header{Identifier: id, DateStamp: "2020-01-01"}})
-	}
-	return &oai.Client{Doer: &harvestMockDoer{
-		Response: &oai.Response{ListRecords: oai.ListRecords{Records: recs}},
-	}}
 }
 
 // recordIDs reads the identifiers a store holds, in read order.
