@@ -5,7 +5,27 @@
 > repositories that expose structured metadata via OAI-PMH. Service Providers
 > then make OAI-PMH service requests to harvest that metadata. -- https://www.openarchives.org/pmh/
 
-The metha command line tools can gather information on OAI-PMH endpoints and
+----
+
+Two significant changes starting with 0.5.0:
+
+* we use a single command `metha` and subcommands for the previously separate binaryies, e.g. `metha-sync` becomes `metha sync` (we provide shims for the transition)
+* we switch to a new internal storage layout: To migrate an existing cache to the new layout, simply type:
+
+```
+$ metha migrate --dry-run
+```
+
+This will list the cached endpoint data, that will be converted. If that looks good, run:
+
+
+```
+$ metha migrate --rm # to remove the previous files after migration is fully done
+```
+
+----
+
+The metha command line tool can gather information on OAI-PMH endpoints and
 harvest data incrementally. The goal of metha is to simplify data access.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20804433.svg)](https://zenodo.org/badge/latestdoi/56384577) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
@@ -26,18 +46,18 @@ The metha tool has been developed for [project finc](https://finc.info) at
 
 ## How it works
 
-The functionality is spread accross a few different executables:
+The functionality is spread accross a few different subcommands:
 
-* metha-sync for harvesting
-* metha-cat for viewing
-* metha-id for gathering data about endpoints
-* metha-ls for inspecting the local cache
-* metha-files for listing the associated files for a harvest
+* metha sync for harvesting
+* metha cat for viewing
+* metha id for gathering data about endpoints
+* metha ls for inspecting the local cache
+* metha files for listing the associated files for a harvest
 
-To harvest and endpoint in the default *oai_dc* format:
+To harvest and endpoint in the default *oai_dc* format (e.g. [arxiv.org](https://info.arxiv.org/help/oa/index.html)):
 
 ```sh
-$ metha-sync http://export.arxiv.org/oai2
+$ metha sync https://oaipmh.arxiv.org/oai
 ...
 ```
 
@@ -45,36 +65,31 @@ All downloaded files are written to a directory below a base directory. The base
 directory is `~/.cache/metha` by default and can be adjusted with the `METHA_DIR`
 environment variable.
 
-When the `-dir` flag is set, only the directory corresponding to a harvest is printed.
+When the `--dir` flag is set, only the directory corresponding to a harvest is printed.
 
 ```
-$ metha-sync -dir http://export.arxiv.org/oai2
-/home/miku/.metha/I29haV9kYyNodHRwOi8vZXhwb3J0LmFyeGl2Lm9yZy9vYWky
+$ metha sync --dir https://oaipmh.arxiv.org/oai
+/Users/tir/Library/Caches/metha/62/4a/624afaf261ab83ec
 ```
 
 ```sh
-$ METHA_DIR=/tmp/harvest metha-sync -dir http://export.arxiv.org/oai2
-/tmp/harvest/I29haV9kYyNodHRwOi8vZXhwb3J0LmFyeGl2Lm9yZy9vYWky
+$ METHA_DIR=/tmp/ ./metha sync --dir https://oaipmh.arxiv.org/oai
+/tmp/62/4a/624afaf261ab83ec
 ```
 
 The harvesting can be interrupted at any time and the HTTP client will
 automatically retry failed requests a few times before giving up.
 
-Currently, there is a limitation which only allows to harvest data up to the
-last day. Example: If the current date would be *Thu Apr 21 14:28:10 CEST
-2016*, the harvester would request all data since the repositories earliest
-date and *2016-04-20 23:59:59*.
-
 To stream the harvested XML data to stdout run:
 
 ```sh
-$ metha-cat http://export.arxiv.org/oai2
+$ metha cat https://oaipmh.arxiv.org/oai
 ```
 
 You can emit records based on datestamp as well:
 
 ```sh
-$ metha-cat -from 2016-01-01 http://export.arxiv.org/oai2
+$ metha cat --from 2016-01-01 https://oaipmh.arxiv.org/oai
 ```
 
 This will only stream records with a datestamp equal or after 2016-01-01.
@@ -83,19 +98,19 @@ To just stream all data really fast, use `find` and `zcat` over the harvesting
 directory.
 
 ```sh
-$ find $(metha-sync -dir http://export.arxiv.org/oai2) -name "*gz" | xargs unpigz -c
+$ metha files https://oaipmh.arxiv.org/oai | xargs -n1 zstdcat
 ```
 
 To display basic repository information:
 
 ```sh
-$ metha-id http://export.arxiv.org/oai2
+$ metha id https://oaipmh.arxiv.org/oai
 ```
 
 To list all harvested endpoints:
 
 ```sh
-$ metha-ls
+$ metha ls
 ```
 
 Further examples can be found in the metha [man page](https://github.com/miku/metha/blob/master/docs/metha.md):
@@ -131,30 +146,13 @@ with `METHA_NO_DEPRECATION=1`) and will be removed in metha 2.0.
 resolve throughout the 0.5.x line, but each one builds the whole program: nine
 of them come to about 186MB, where the single binary is about 25MB.
 
-## Limitations
-
-Currently the endpoint URL, the format and the set are concatenated and base64
-encoded to form the target directory, e.g:
-
-```
-$ echo "U291bmRzI29haV9kYyNodHRwOi8vY29wYWMuamlzYy5hYy51ay9vYWktcG1o" | base64 -d
-Sounds#oai_dc#http://copac.jisc.ac.uk/oai-pmh
-```
-
-If you have very long set names or a very long URL and the target directory
-exceeds e.g. 255 chars (on ext4), the harvest won't work.
-
 ## Harvesting Roulette
 
-```sh
-$ URL=$(shuf -n 1 <(curl -Lsf https://git.io/vKXFv)); metha-sync $URL && metha-cat $URL
-```
-
-In 0.1.27 a `metha-fortune` command was added, which fetches a random article
+In 0.1.27 a `metha fortune` command was added, which fetches a random article
 description and displays it.
 
 ```shell
-$ metha-fortune
+$ metha fortune
 Active Networking is concerned with the rapid definition and deployment of
 innovative, but reliable and robust, networking services. Towards this end we
 have developed a composite protocol and networking services architecture that
@@ -165,7 +163,7 @@ We will report on this work at the workshop.
 
     -- http://drops.dagstuhl.de/opus/phpoai/oai2.php
 
-$ metha-fortune
+$ metha fortune
 In this paper we show that the Lempert property (i.e., the equality between the
 Lempert function and the Carathéodory distance) holds in the tetrablock, a
 bounded hyperconvex domain which is not biholomorphic to a convex domain. The
@@ -174,14 +172,14 @@ Geom. Anal. 17(4), 717–750 (2007).
 
     -- http://ruj.uj.edu.pl/oai/request
 
-$ metha-fortune
+$ metha fortune
 I argue that Gödel's incompleteness theorem is much easier to understand when
 thought of in terms of computers, and describe the writing of a computer
 program which generates the undecidable Gödel sentence.
 
     -- http://quantropy.org/cgi/oai2
 
-$ metha-fortune
+$ metha fortune
 Nigeria, a country in West Africa, sits on the Atlantic coast with a land area
 of approximately 90 million hectares and a population of more than 140 million
 people. The southern part of the country falls within the tropical rainforest
@@ -211,7 +209,7 @@ and
 
 ```shell
 $ while true; do \
-    timeout 120 metha-sync -list | \
+    timeout 120 metha sync -list | \
     shuf | \
     parallel -j 64 -I {} "metha-sync -base-dir ~/.cache/metha {}"; \
 done
@@ -228,8 +226,6 @@ into a single JSON file you can utilize the
 ```shell
 $ fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D
 ```
-
-For notes on parallel processing of XML see: [Faster XML processing in Go](https://golangleipzig.space/posts/faster-go-xml-processing/).
 
 ![](docs/metha-net-zenith.png)
 
@@ -259,7 +255,7 @@ For notes on parallel processing of XML see: [Faster XML processing in Go](https
 Show formats of random repository:
 
 ```shell
-$ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha-id {} | jq .formats
+$ shuf -n 1 <(curl -Lsf https://git.io/vKXFv) | xargs -I {} metha id {} | jq .formats
 ```
 
 A snippet from a 2010 publication:
