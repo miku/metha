@@ -39,27 +39,28 @@ func (iv Interval) SplitAt(t time.Time) (before, after Interval) {
 	return before, after
 }
 
-// period is one calendar unit an interval can be cut along.
-type period struct {
-	// end is the last instant of the unit t falls in.
-	end func(time.Time) time.Time
-	// next is the first instant of the unit after the one t falls in.
-	next func(time.Time) time.Time
-}
+// period is one calendar unit an interval can be cut along: the last instant of
+// the unit an instant falls in.
+//
+// Where the next unit begins is deliberately not a second function. It is this
+// one plus a nanosecond, and saying so is what makes the cut gapless by
+// construction rather than by two definitions agreeing. They did not agree:
+// "the beginning of the month after t" was spelled t.AddDate(0, 1, 0) rounded
+// down, and Go normalises 31 January plus a month to 3 March, so a plan that
+// began on a 29th, 30th or 31st skipped the whole of the following month. The
+// gap was silent - a harvest resuming mid-month committed the day it began on,
+// then jumped a month, and the resume point moved past what it never asked for.
+type period func(time.Time) time.Time
+
+// end is the last instant of the unit t falls in, and next the first instant of
+// the one after it.
+func (p period) end(t time.Time) time.Time  { return p(t) }
+func (p period) next(t time.Time) time.Time { return p(t).Add(time.Nanosecond) }
 
 var (
-	byMonth = period{
-		end:  func(t time.Time) time.Time { return now.New(t).EndOfMonth() },
-		next: func(t time.Time) time.Time { return now.New(t.AddDate(0, 1, 0)).BeginningOfMonth() },
-	}
-	byDay = period{
-		end:  func(t time.Time) time.Time { return now.New(t).EndOfDay() },
-		next: func(t time.Time) time.Time { return now.New(t.AddDate(0, 0, 1)).BeginningOfDay() },
-	}
-	byHour = period{
-		end:  func(t time.Time) time.Time { return now.New(t).EndOfHour() },
-		next: func(t time.Time) time.Time { return now.New(t.Add(time.Hour)).BeginningOfHour() },
-	}
+	byMonth = period(func(t time.Time) time.Time { return now.New(t).EndOfMonth() })
+	byDay   = period(func(t time.Time) time.Time { return now.New(t).EndOfDay() })
+	byHour  = period(func(t time.Time) time.Time { return now.New(t).EndOfHour() })
 )
 
 // cut segments an interval along a calendar unit. The first window begins where

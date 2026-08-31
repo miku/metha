@@ -236,6 +236,22 @@ func (h *Harvest) run(ctx context.Context) (err error) {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		// A range some settled window already covers is not fetched again. The
+		// plan resumes from the earliest window that is not final, which is how a
+		// failure in the middle of a range gets retried at all - but everything
+		// after that failure has usually been fetched already, and without this
+		// the whole tail is refetched on every run until the bad window succeeds.
+		//
+		// It is also what keeps the index a coverage map. A refetched window
+		// replaces the row that matches it exactly; where the segmentation
+		// changed between runs - -daily added to an endpoint that got slow -
+		// nothing matches, and the new row is simply added beside the settled one
+		// it overlaps, so the records under the overlap are indexed twice and
+		// read twice.
+		if !w.Boundless() && h.Writer.HasWindow(w.Begin, w.End) {
+			log.Printf("already harvested, skipping: %v", w)
+			continue
+		}
 		if err := h.runWindow(ctx, w); err != nil {
 			// A window the operator said to skip leaves the range uncovered, so
 			// the next run plans it again; the abort in runWindow already made
@@ -285,7 +301,12 @@ requests:
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if h.Config.MaxRequests == i {
+		// Zero means no limit, and it has to be said: compared for equality, an
+		// unset MaxRequests matched the i == 0 the loop starts at, so a harvest
+		// configured in Go rather than through the flags broke before its first
+		// request and committed the range as empty - the same shape of bug the
+		// empty-response counter below had.
+		if h.Config.MaxRequests > 0 && i >= h.Config.MaxRequests {
 			log.Printf("max requests limit (%d) reached", h.Config.MaxRequests)
 			break
 		}

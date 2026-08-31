@@ -199,35 +199,56 @@ func TestPlan(t *testing.T) {
 // TestPlanIsGapless: the windows of a plan tile the range they were cut from,
 // nanosecond to nanosecond. A gap loses records forever - nothing ever comes
 // back to it - and an overlap fetches the same records twice.
+//
+// The resume points are the interesting axis, and every one of them is a day a
+// month can end on. "The month after t" used to be t plus one month rounded
+// down, and Go normalises 31 January plus a month to 3 March, so a plan resuming
+// on a 29th, 30th or 31st committed that day and then jumped a whole month. The
+// resume point moved past the gap with it, so nothing ever came back.
 func TestPlanIsGapless(t *testing.T) {
+	resumes := []time.Time{
+		{}, // No coverage yet: the plan starts at cfg.From.
+		local(2020, 1, 28, 0, 0, 0),
+		local(2020, 1, 29, 0, 0, 0), // A leap February.
+		local(2020, 1, 30, 0, 0, 0),
+		local(2020, 1, 31, 0, 0, 0),
+		local(2020, 1, 31, 17, 4, 5), // Mid-day, as an unsettled second-granularity window resumes.
+		local(2020, 2, 29, 0, 0, 0),
+	}
 	for _, seg := range []Segmentation{Monthly, Daily, Hourly} {
 		for _, id := range []*oai.Identify{idDay, idSecond} {
-			cfg := PlanConfig{From: "2020-01-01", Segmentation: seg}
-			started := local(2020, 3, 15, 14, 33, 20)
-			windows, err := Plan(Coverage{}, id, started, cfg)
-			if err != nil {
-				t.Fatalf("Plan: %v", err)
-			}
-			if len(windows) == 0 {
-				t.Fatal("no windows planned")
-			}
-			if want := local(2020, 1, 1, 0, 0, 0); !windows[0].Begin.Equal(want) {
-				t.Errorf("plan begins %v, want %v", windows[0].Begin, want)
-			}
-			if want := reachableEnd(id, started); !windows[len(windows)-1].End.Equal(want) {
-				t.Errorf("plan ends %v, want %v", windows[len(windows)-1].End, want)
-			}
-			for i := 1; i < len(windows); i++ {
-				if !windows[i].Begin.Equal(nextInstant(windows[i-1].End)) {
-					t.Errorf("segmentation %d: window %d begins %v, but the one before it ends %v",
-						seg, i, windows[i].Begin, windows[i-1].End)
+			for _, resume := range resumes {
+				cfg := PlanConfig{From: "2020-01-01", Segmentation: seg}
+				started := local(2020, 3, 15, 14, 33, 20)
+				windows, err := Plan(Coverage{Resume: resume}, id, started, cfg)
+				if err != nil {
+					t.Fatalf("Plan: %v", err)
 				}
-			}
-			// Exactly one unsettled window, and it is the last: a settled window
-			// after an unsettled one would be resumed past.
-			for i, w := range windows {
-				if !w.Settled && i != len(windows)-1 {
-					t.Errorf("segmentation %d: window %d of %d is unsettled", seg, i, len(windows))
+				if len(windows) == 0 {
+					t.Fatal("no windows planned")
+				}
+				want := resume
+				if want.IsZero() {
+					want = local(2020, 1, 1, 0, 0, 0)
+				}
+				if !windows[0].Begin.Equal(want) {
+					t.Errorf("plan begins %v, want %v", windows[0].Begin, want)
+				}
+				if want := reachableEnd(id, started); !windows[len(windows)-1].End.Equal(want) {
+					t.Errorf("plan ends %v, want %v", windows[len(windows)-1].End, want)
+				}
+				for i := 1; i < len(windows); i++ {
+					if !windows[i].Begin.Equal(nextInstant(windows[i-1].End)) {
+						t.Errorf("segmentation %d, resume %v: window %d begins %v, but the one before it ends %v",
+							seg, resume, i, windows[i].Begin, windows[i-1].End)
+					}
+				}
+				// Exactly one unsettled window, and it is the last: a settled window
+				// after an unsettled one would be resumed past.
+				for i, w := range windows {
+					if !w.Settled && i != len(windows)-1 {
+						t.Errorf("segmentation %d: window %d of %d is unsettled", seg, i, len(windows))
+					}
 				}
 			}
 		}

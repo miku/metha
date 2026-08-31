@@ -17,6 +17,20 @@ import (
 // which is the one answer that is both wrong and plausible.
 var ErrNotHarvested = errors.New("store: nothing harvested")
 
+// notHarvested names the identity the cache holds nothing for.
+//
+// Spelled out rather than formatted with %v: Identity.String is the
+// "set#format#baseURL" form the pre-1.0 directory names encode, which is what
+// legacyDir needs and not what a person reading an error wants - an unset set
+// leaves it opening with a bare "#", and the format sits in the middle of the
+// URL it is not part of.
+func notHarvested(id Identity) error {
+	if id.Set != "" {
+		return fmt.Errorf("%s (format %s, set %s): %w", id.BaseURL, id.Format, id.Set, ErrNotHarvested)
+	}
+	return fmt.Errorf("%s (format %s): %w", id.BaseURL, id.Format, ErrNotHarvested)
+}
+
 // Records streams the group's records.
 //
 // The index is asked first which windows can hold a matching record, and only
@@ -42,7 +56,7 @@ func (s *v2Store) Records(opts ReadOptions) iter.Seq2[oai.Record, error] {
 		// first commit. So a harvest that got as far as an empty window reads
 		// as empty, and one that was never run reads as never run.
 		if !hasGroup(s.baseDir, s.id) {
-			yield(oai.Record{}, fmt.Errorf("%v: %w", s.id, ErrNotHarvested))
+			yield(oai.Record{}, notHarvested(s.id))
 			return
 		}
 		st, err := loadState(statePath(s.Dir(), s.id.Format, s.id.Set), s.id.Format, s.id.Set)

@@ -29,10 +29,19 @@ type Stats struct {
 }
 
 // Stat summarises one harvested identity.
+//
+// An identity the cache holds nothing for is ErrNotHarvested rather than a
+// report of zeroes, which is the same answer Records gives and for the same
+// reason: a full report saying nothing was harvested, nothing failed and nothing
+// is on disk is indistinguishable from an endpoint that answered with nothing,
+// and a mistyped URL or the wrong -format is by far the likelier of the two.
 func Stat(baseDir string, id Identity) (*Stats, error) {
 	s, err := Open(baseDir, id)
 	if err != nil {
 		return nil, err
+	}
+	if !hasGroup(baseDir, id) {
+		return nil, notHarvested(id)
 	}
 	stats := &Stats{Identity: id}
 	files, err := s.Files()

@@ -163,3 +163,53 @@ func (m *mockDoer) Do(req *http.Request) (*http.Response, error) {
 	}
 	return http.DefaultClient.Do(newReq)
 }
+
+// TestRepository_SetsStopsOnACompletedList: a set list whose last page says so
+// with a cursor that has reached completeListSize ends the walk.
+//
+// The loop used to ask HasResumptionToken, which is true whenever the element is
+// there at all, and then send GetResumptionToken - which drops exactly that
+// token, because a cursor at the end of the list is how an endpoint says there
+// is no more. The empty token repeated the first request, and the first request
+// answered the same way: an endless loop appending the same two sets to the
+// slice until the process ran out of memory.
+func TestRepository_SetsStopsOnACompletedList(t *testing.T) {
+	var requests int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		if requests > 4 {
+			t.Errorf("Sets() is not terminating: %d requests", requests)
+			http.Error(w, "too many requests", http.StatusInternalServerError)
+			return
+		}
+		response := &Response{
+			ListSets: ListSets{
+				Set: []Set{{SetSpec: "set1", SetName: "First Set"}},
+				ResumptionToken: ResumptionToken{
+					Text:             "more-sets",
+					Cursor:           "2",
+					CompleteListSize: "2",
+				},
+			},
+		}
+		xmlData, _ := xml.Marshal(response)
+		w.Header().Set("Content-Type", "application/xml")
+		_, _ = w.Write(xmlData)
+	}))
+	defer server.Close()
+
+	originalDoer := DefaultClient.Doer
+	DefaultClient.Doer = &mockDoer{serverURL: server.URL}
+	defer func() { DefaultClient.Doer = originalDoer }()
+
+	sets, err := Repository{BaseURL: server.URL}.Sets()
+	if err != nil {
+		t.Fatalf("Sets() returned error: %v", err)
+	}
+	if len(sets) != 1 {
+		t.Errorf("got %d set(s), want 1", len(sets))
+	}
+	if requests != 1 {
+		t.Errorf("made %d request(s), want 1", requests)
+	}
+}

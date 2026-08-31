@@ -67,9 +67,14 @@ type HTTPError struct {
 	RequestError error
 }
 
-// Error prints the error message.
+// Error prints the error message. RequestError is usually nil - a status is the
+// answer to a request that worked - and printing "<nil>" after every 503 said
+// nothing.
 func (e HTTPError) Error() string {
-	return fmt.Sprintf("failed with %s on %s: %v", http.StatusText(e.StatusCode), e.URL, e.RequestError)
+	if e.RequestError != nil {
+		return fmt.Sprintf("failed with %s on %s: %v", http.StatusText(e.StatusCode), e.URL, e.RequestError)
+	}
+	return fmt.Sprintf("failed with %s on %s", http.StatusText(e.StatusCode), e.URL)
 }
 
 // RateLimitedReader wraps an io.Reader with rate limiting
@@ -272,10 +277,13 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode >= 400 {
-		return nil, HTTPError{URL: link, RequestError: err, StatusCode: resp.StatusCode}
-	}
+	// Before the status check, not after it. An error status returned without
+	// closing the body leaked the connection it was read on, and a harvest meets
+	// them in runs - a 503 is retried, and every retry leaked another one.
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return nil, HTTPError{URL: link, StatusCode: resp.StatusCode}
+	}
 
 	// Apply rate limiting to the response body if enabled
 	var reader io.Reader = c.wrapWithRateLimit(resp.Body, ctx)

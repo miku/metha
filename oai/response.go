@@ -340,7 +340,7 @@ func (response *Response) GetResumptionToken() string {
 	// If cursor and complete list size are non-empty and equal, we take it as
 	// a signal to stop harvesting.
 	if len(response.CompleteListSize()) > 0 && len(response.Cursor()) > 0 && response.CompleteListSize() == response.Cursor() {
-		log.Printf("cursor and complete list size match (%d), ignoring any token", len(response.Cursor()))
+		log.Printf("cursor and complete list size match (%s), ignoring any token", response.Cursor())
 		return ""
 	}
 

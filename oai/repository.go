@@ -13,42 +13,42 @@ type Repository struct {
 	BaseURL string
 }
 
-// Formats returns a list of metadata formats.
+// Formats returns a list of metadata formats. ListMetadataFormats is not a
+// flow-controlled verb - the response carries no resumption token - so this is
+// one request.
 func (r Repository) Formats() ([]MetadataFormat, error) {
-	var formats []MetadataFormat
-	var token string
-	for {
-		req := Request{BaseURL: r.BaseURL, Verb: "ListMetadataFormats", ResumptionToken: token}
-		resp, err := Do(&req)
-		if err != nil {
-			return nil, err
-		}
-		formats = append(formats, resp.ListMetadataFormats.MetadataFormat...)
-		if !resp.HasResumptionToken() {
-			break
-		}
-		token = resp.GetResumptionToken()
+	resp, err := Do(&Request{BaseURL: r.BaseURL, Verb: "ListMetadataFormats"})
+	if err != nil {
+		return nil, err
 	}
-	return formats, nil
+	return resp.ListMetadataFormats.MetadataFormat, nil
 }
 
-// Sets returns a list of sets.
+// Sets returns a list of sets, following the resumption tokens.
+//
+// The loop turns on the token it is about to send, not on whether the response
+// carried one. Those are different questions: GetResumptionToken drops a token
+// whose cursor has reached completeListSize, which is how a well-behaved
+// endpoint says the list is complete, and the old form asked
+// HasResumptionToken - which still says yes - and then repeated the very first
+// request with an empty token, forever, appending the same sets to the slice
+// each time. A token that does not change ends the list for the same reason a
+// harvest stops on one: the endpoint is not moving.
 func (r Repository) Sets() ([]Set, error) {
 	var sets []Set
 	var token string
 	for {
-		req := Request{BaseURL: r.BaseURL, Verb: "ListSets", ResumptionToken: token}
-		resp, err := Do(&req)
+		resp, err := Do(&Request{BaseURL: r.BaseURL, Verb: "ListSets", ResumptionToken: token})
 		if err != nil {
 			return nil, err
 		}
 		sets = append(sets, resp.ListSets.Set...)
-		if !resp.HasResumptionToken() {
-			break
+		next := resp.GetResumptionToken()
+		if next == "" || next == token {
+			return sets, nil
 		}
-		token = resp.GetResumptionToken()
+		token = next
 	}
-	return sets, nil
 }
 
 // ErrNoListSize marks an endpoint that did not say how many records it has and

@@ -45,6 +45,13 @@ func TestWriterThatWritesNothingLeavesNothing(t *testing.T) {
 		}
 		break
 	}
+	// Stat says the same thing, and it has to: a report of zero windows, zero
+	// records, zero failures and nothing on disk is exactly what an endpoint
+	// that answered with nothing looks like, so printing one for a mistyped URL
+	// or the wrong -format answers a question that was never asked.
+	if _, err := Stat(base, id); !errors.Is(err, ErrNotHarvested) {
+		t.Errorf("Stat: got %v, want ErrNotHarvested", err)
+	}
 }
 
 // TestAbortedWindowLeavesNothing: the harder case, because the first response
