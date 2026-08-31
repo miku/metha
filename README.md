@@ -7,10 +7,10 @@
 
 ----
 
-Two significant changes starting with 0.5.0:
+Note to existing users - **two significant changes starting with 0.5.0**:
 
-* we use a single command `metha` and subcommands for the previously separate binaryies, e.g. `metha-sync` becomes `metha sync` (we provide shims for the transition)
-* we switch to a new internal storage layout: To migrate an existing cache to the new layout, simply type:
+* we use a single command `metha` and subcommands for the previously separate binaryies, e.g. `metha-sync` becomes `metha sync` (we provide **shims** for the transition)
+* we switch to a new internal storage layout: to migrate an existing cache to the new layout, simply type:
 
 ```
 $ metha migrate --dry-run
@@ -211,7 +211,7 @@ and
 $ while true; do \
     timeout 120 metha sync -list | \
     shuf | \
-    parallel -j 64 -I {} "metha-sync -base-dir ~/.cache/metha {}"; \
+    parallel -j 64 -I {} "metha sync --base-dir ~/.cache/metha {}"; \
 done
 ```
 
