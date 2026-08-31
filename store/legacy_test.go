@@ -105,9 +105,11 @@ func TestListLegacyMissingBaseDir(t *testing.T) {
 	}
 }
 
-// TestLegacyFiles: what migrate reads. Temporary files of a harvest that never
-// finished, and the lock, are not data.
-func TestLegacyFiles(t *testing.T) {
+// TestReadLegacyDir: what migrate reads, and what it must not mistake for data.
+// The lock is metha's own and the temporary file is a truncated response of a
+// harvest that never finished; a name with no window date is data all the same,
+// and is what keeps --rm from removing the directory.
+func TestReadLegacyDir(t *testing.T) {
 	base := t.TempDir()
 	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
 	dir := legacyDir(base, id)
@@ -116,21 +118,39 @@ func TestLegacyFiles(t *testing.T) {
 	}
 	createFile(t, dir, "2023-01-01-00000001.xml.gz", createGzipWriter, twoRecords())
 	createFile(t, dir, "2023-02-01-00000001.xml.zst", createZstdWriter, twoRecords())
-	for _, name := range []string{"2023-03-01-00000001.xml-tmp-4711", "LOCK"} {
+	for _, name := range []string{"2023-03-01-00000001.xml-tmp-4711", "LOCK", "handmade.xml", "notes.txt"} {
 		if err := os.WriteFile(filepath.Join(dir, name), nil, 0644); err != nil {
 			t.Fatalf("write %s: %v", name, err)
 		}
 	}
-	files, err := legacyFiles(base, id)
+	if err := os.MkdirAll(filepath.Join(dir, "sub"), 0755); err != nil {
+		t.Fatalf("mkdir sub: %v", err)
+	}
+	c, err := ReadLegacyDir(base, id)
 	if err != nil {
-		t.Fatalf("legacyFiles: %v", err)
+		t.Fatalf("ReadLegacyDir: %v", err)
 	}
 	want := []string{
 		filepath.Join(dir, "2023-01-01-00000001.xml.gz"),
 		filepath.Join(dir, "2023-02-01-00000001.xml.zst"),
 	}
-	if !slices.Equal(files, want) {
-		t.Errorf("legacyFiles: got %v, want %v", files, want)
+	if !slices.Equal(c.Data, want) {
+		t.Errorf("Data: got %v, want %v", c.Data, want)
+	}
+	if !slices.Equal(c.Undated, []string{filepath.Join(dir, "handmade.xml")}) {
+		t.Errorf("Undated: got %v, want handmade.xml", c.Undated)
+	}
+	if !slices.Equal(c.Temp, []string{filepath.Join(dir, "2023-03-01-00000001.xml-tmp-4711")}) {
+		t.Errorf("Temp: got %v, want the -tmp- file", c.Temp)
+	}
+	if !slices.Equal(c.Foreign, []string{"notes.txt", "sub"}) {
+		t.Errorf("Foreign: got %v, want notes.txt and sub", c.Foreign)
+	}
+	if !slices.Equal(c.Unconverted(), []string{"handmade.xml", "notes.txt", "sub"}) {
+		t.Errorf("Unconverted: got %v, want everything --rm has to keep", c.Unconverted())
+	}
+	if c.Bytes == 0 {
+		t.Error("Bytes: got 0, want the size of the two data files")
 	}
 }
 
@@ -209,6 +229,58 @@ func TestRemoveLegacy(t *testing.T) {
 	}
 	if err := RemoveLegacy(base, Identity{Format: "oai_dc"}); !errors.Is(err, ErrNoBaseURL) {
 		t.Errorf("RemoveLegacy without a base url: got %v, want ErrNoBaseURL", err)
+	}
+	// A directory an earlier run already removed is not an error: --rm over a
+	// whole cache re-runs, and the second pass has nothing to do here.
+	if err := RemoveLegacy(base, id); err != nil {
+		t.Errorf("RemoveLegacy on a directory that is gone: got %v, want no error", err)
+	}
+}
+
+// TestRemoveLegacyKeepsWhatItDidNotConvert: the directory is removed only when
+// everything in it is either in the shard now or was never data. Anything else
+// stops the removal whole - removing the files around the leftover would leave
+// an endpoint that reads as unmigrated and has nothing left to migrate.
+func TestRemoveLegacyKeepsWhatItDidNotConvert(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "oai_dc"}
+	dir := legacyDir(base, id)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	createFile(t, dir, "2023-01-31-00000001.xml.zst", createZstdWriter, respWithTitle("migrated"))
+	if err := os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("mine"), 0644); err != nil {
+		t.Fatalf("write notes.txt: %v", err)
+	}
+	if _, err := Migrate(base, id); err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+	err := RemoveLegacy(base, id)
+	if !errors.Is(err, ErrLegacyLeftover) {
+		t.Fatalf("RemoveLegacy over a foreign file: got %v, want ErrLegacyLeftover", err)
+	}
+	var leftover *LegacyLeftoverError
+	if !errors.As(err, &leftover) || !slices.Equal(leftover.Entries, []string{"notes.txt"}) {
+		t.Errorf("error names %v, want the one entry it kept the directory for", err)
+	}
+	for _, name := range []string{"2023-01-31-00000001.xml.zst", "notes.txt"} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			t.Errorf("%s: got %v, want the file still in place", name, err)
+		}
+	}
+	// Take the leftover away and the same call goes through, temporary file and
+	// lock included: those are metha's own, and nothing is lost with them.
+	if err := os.Remove(filepath.Join(dir, "notes.txt")); err != nil {
+		t.Fatalf("remove notes.txt: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "2023-02-01-00000002.xml-tmp-4711"), []byte("<half"), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+	if err := RemoveLegacy(base, id); err != nil {
+		t.Fatalf("RemoveLegacy on a converted directory: %v", err)
+	}
+	if isDir(dir) {
+		t.Error("RemoveLegacy left the directory behind")
 	}
 }
 

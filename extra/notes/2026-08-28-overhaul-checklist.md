@@ -339,7 +339,8 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       and a clean listing after.
 
       Not done here, and still open from the 1.0 note: migrate's `--jobs`
-      parallelism and its progress output. Neither is about deleting v1.
+      parallelism and its progress output. Neither is about deleting v1. Done
+      later, in the entry below, together with what `--rm` checks.
 
 - [x] **Package split, `Sink` deleted.** Step 3. Four packages where there was
       one, and `go list -deps` is the check that the arrows point the way the
@@ -764,6 +765,59 @@ yet.** Anything that changes the on-disk shape is cheap today and a re-shuffle o
       Also true of an interrupt now: `TestCancelDropsTheWindowInFlight` asserts
       the cache is empty afterwards, where before it asserted only that no
       records were readable.
+
+- [x] **`migrate` for a corpus rather than an endpoint.** The last three items
+      the 1.0 note left on migrate, done together because they are the same
+      question asked three ways: what does this command owe someone who starts it
+      on 200G and comes back in an hour.
+
+      **`--jobs`, defaulting to `NumCPU`.** A shard is a shard's own business —
+      its own lock, its own index, its own segments — so conversions share
+      nothing but the disk, and the pool needs no coordination beyond the channel
+      it reads from. Measured on 60 endpoints of five 4,000-record responses
+      each, which is the shape of a real one rather than of a fixture: 13.3s at
+      `--jobs 1`, 4.8s at 6. On tiny endpoints the gain is 1.4x, because there
+      the work is the fsync at each commit and not the parse; the flag is worth
+      having for the corpus that has both.
+
+      **A counter, on by default.** `progress` in `internal/cli`: one line
+      repainted in place on a terminal, one line every 30s into a pipe or a log
+      file, `--quiet` for neither. It owns both streams while it runs, because a
+      status line and a message beside it are one problem — `printf` and `dataf`
+      clear the line before writing and put it back after, so nothing is ever
+      written over half a counter. The estimate appears only once a unit has
+      finished; extrapolating from no data is worse than saying nothing.
+
+      **And `--rm` removes only what it can account for.** It already refused
+      over an undated file, on the argument that verification cannot see one. But
+      `RemoveLegacy` was `os.RemoveAll`, so anything *else* in the directory — a
+      note someone left, a subdirectory, a file this version does not recognise —
+      went with the removal unmentioned, and the count check had nothing to say
+      about it because it was never data either side had counted.
+
+      Now one readdir sorts the directory (`ReadLegacyDir`) into what a migration
+      reads, what it read past, metha's own `-tmp-` litter from an interrupted
+      pre-1.0 harvest, and everything else; `Migrate` and `RemoveLegacy` both work
+      from it, so the two questions — what to convert, and whether the source can
+      go — are answered from one walk rather than two that could disagree.
+      Removal names the files it deletes and then calls `os.Remove` on the
+      directory, which refuses one that still holds anything: the same trick
+      `discardEmpty` uses two entries above, and for the same reason.
+
+      The refusal is per endpoint and it fails closed: the directory stays
+      *whole*, so it is still migratable, and the reason names the entries that
+      stopped it. Counted apart from a failure, too, and this is the distinction
+      worth keeping — a conversion that failed means the data is not in a shard,
+      a kept source means it is, verified, and only the copy is still on disk.
+      One costs correctness, the other costs space. `--dry-run` reports the same
+      check ahead of time, with file counts and sizes, so a 200G run can be
+      planned rather than discovered.
+
+      Verified on a synthetic cache of 3,000 endpoints holding all three shapes:
+      38 of 40 directories removed, the two with a leftover kept whole and named,
+      the one with a `-tmp-` file removed along with it, and a Ctrl-C at 30 of
+      3,000 stopping between endpoints with `interrupted after 30 of 3000
+      endpoints` and exit 1.
 
 ---
 

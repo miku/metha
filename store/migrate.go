@@ -50,7 +50,7 @@ func (r *MigrateResult) Verified() bool {
 // skipped - and it leaves the source alone; removing it is the caller's
 // decision, and only sensible once the result verifies.
 func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
-	files, err := legacyFiles(baseDir, id)
+	contents, err := ReadLegacyDir(baseDir, id)
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +63,10 @@ func Migrate(baseDir string, id Identity) (*MigrateResult, error) {
 	if lock != nil {
 		defer func() { _ = lock.Close() }()
 	}
-	result := &MigrateResult{Identity: id}
+	result := &MigrateResult{Identity: id, Skipped: contents.Undated}
 	byDate := map[string][]string{}
-	for _, file := range files {
+	for _, file := range contents.Data {
 		groups := legacyFilePattern.FindStringSubmatch(filepath.Base(file))
-		if len(groups) < 2 {
-			result.Skipped = append(result.Skipped, file)
-			continue
-		}
 		byDate[groups[1]] = append(byDate[groups[1]], file)
 	}
 	dates := make([]string, 0, len(byDate))
