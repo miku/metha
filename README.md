@@ -55,6 +55,7 @@ The functionality is spread accross a few different subcommands:
 * metha files for listing the associated files for a harvest
 * metha sweep for harvesting every known endpoint, on a schedule
 * metha endpoints for what the sweep learned about each one
+* metha export for writing the whole cache out as one stream of records
 
 To harvest and endpoint in the default *oai_dc* format (e.g. [arxiv.org](https://info.arxiv.org/help/oa/index.html)):
 
@@ -246,13 +247,37 @@ and
 units; see [extra/linux](extra/linux) for how to install them, and for what
 they replaced.
 
-metha stores harvested data in one file per interval; to combine all XML files
-into a single JSON file you can utilize the
-[xmlstream.go](https://github.com/miku/metha/blob/master/extra/largecrawl/xmlstream.go) (adjust the harvest directory):
+## Exporting the whole cache
+
+metha stores harvested data in one file per interval. `metha export` writes all
+of it out as one stream, one JSON document per line:
 
 ```shell
-$ fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D
+$ metha export -o corpus.ndjson.zst    # compressed by extension
+$ metha export | jq .header.identifier # or straight down a pipe
+$ metha export --from 2024-01-01       # only what is recent
 ```
+
+Every line carries an `endpoint` field naming the repository the record came
+from — the one thing an OAI-PMH record does not say about itself, and the one
+thing a corpus of a few hundred million of them needs:
+
+```shell
+$ metha export | jq -r '[.endpoint, .header.identifier] | @tsv'
+```
+
+It reads and never writes the cache, and takes no locks, so it is safe to run
+while a sweep is harvesting. To export part of the corpus, name endpoints as
+arguments or pass a file of them — which is what `metha endpoints` prints:
+
+```shell
+$ metha endpoints --state active > live.txt
+$ metha export --endpoints live.txt -o live.ndjson.zst
+```
+
+`--xml` writes one XML document instead, and the record filters `metha cat`
+has — `--from`, `--until`, `--setspec`, `--deleted` — all work the same way
+here.
 
 ![](docs/metha-net-zenith.png)
 
