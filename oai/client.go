@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,6 +32,14 @@ const (
 )
 
 var (
+	// ErrParseFailed marks a response that would not decode under any of the
+	// encoding declarations DoContext tries. It is a sentinel rather than an
+	// ad-hoc fmt.Errorf because a caller has a real decision to make about it:
+	// a document that is not XML at all is usually a home page where a base URL
+	// was meant, which is a different thing from a request that failed, and
+	// something classifying an endpoint has to be able to tell them apart.
+	ErrParseFailed = errors.New("failed to parse response")
+
 	// StdClient is the standard lib http client.
 	StdClient = &Client{Doer: http.DefaultClient}
 	// DefaultClient is the more resilient client, that will retry and timeout.
@@ -351,5 +360,5 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		response.Raw = body
 		return &response, nil
 	}
-	return nil, fmt.Errorf("failed to parse response")
+	return nil, ErrParseFailed
 }

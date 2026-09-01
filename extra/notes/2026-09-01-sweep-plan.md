@@ -507,6 +507,41 @@ Steps 1-4 are pure and can be written and tested without a network. Step 5 is
 the one with the real risk in it. Step 9 is what actually replaces the eleven
 lines.
 
+### status: steps 1-4 done
+
+The `sweep` package now holds `sweep.go` (types), `roster.go`, `classify.go`,
+`due.go` and `select.go`, with 31 tests over 91 cases. Four things the
+implementation changed or settled:
+
+**`oai.ErrParseFailed`.** Classification needed to tell "this document is not
+XML" from "this request failed", and `oai.Client.DoContext` was returning the
+former as a bare `fmt.Errorf("failed to parse response")` that nothing could
+match. It is now a sentinel in `oai`, which is the only change this work made
+outside the new package.
+
+**The first failure of any class is treated as transient.** Not in the plan
+above, and it should have been: with the classes taken at face value, one DNS
+blip would have set `gone`'s base interval and buried a live repository for
+thirty days on a single observation. One observation is not evidence of a
+category, so the class is only believed from the second failure. A dead URL now
+costs about five requests in its first year - 1h, 30d, 60d, 120d, 180d - which
+is the convergence the design wanted, reached without ever risking the
+amputation the risks section worries about.
+
+**Interleaving had to be rewritten before it was ever run in anger.** The
+obvious round-robin - walk every host once per round - is quadratic in
+(largest host x hosts), and the corpus is the worst possible shape for it: 784
+endpoints on one host, 62,294 hosts. It took **5.3 seconds** to order one
+selection. Bucketing by round instead is one pass: **0.33 seconds**. Worth
+recording because nothing about the corpus *count* predicts it; only the
+distribution does.
+
+**Measured at corpus scale** (`TestAtCorpusScale`, and one run against the real
+embedded list): seed 244k endpoints 190ms, apply and journal 244k outcomes
+620ms, compact 380ms, load 290ms, select 330ms, and a roster of **5.4 MB**. The
+estimate above was "a few megabytes", which holds. All of it is noise against a
+24h budget, so the daily full-corpus cadence needs no defending.
+
 ---
 
 ## risks
