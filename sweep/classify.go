@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"os"
 	"syscall"
 
 	"github.com/miku/metha/harvest"
@@ -52,19 +53,28 @@ func Classify(err error, gained int, deadline bool) (Class, bool) {
 	if errors.Is(err, harvest.ErrAlreadySynced) {
 		return ClassOK, true
 	}
-	// Cancellation is ambiguous by itself, so the runner disambiguates it. Our
-	// own deadline is an outcome - a slow endpoint is a fact about the endpoint
-	// worth writing down. Anything else cancelled is the sweep's budget running
-	// out or an operator pressing Ctrl-C, and the endpoint is owed another turn
-	// rather than a failure.
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-		if deadline {
-			return ClassTimeout, true
-		}
-		return "", false
-	}
+	// Our own deadline is an outcome: a slow endpoint is a fact about the
+	// endpoint worth writing down.
 	if deadline {
 		return ClassTimeout, true
+	}
+	// Cancellation is never inferred from the error, because it cannot be.
+	// http.Client.Timeout reports "context deadline exceeded (Client.Timeout
+	// exceeded while awaiting headers)", and errors.Is finds
+	// context.DeadlineExceeded in it - so an ordinary request timeout against a
+	// host that blackholes packets is, to errors.Is, identical to this sweep
+	// being stopped.
+	//
+	// Reading it as cancellation threw away the outcome for exactly the
+	// endpoints the roster is for. Measured over 300 real endpoints, 64 of 184
+	// were discarded this way, nearly all of them unreachable hosts: they would
+	// have been re-attempted at full cost every sweep, for ever, with nothing
+	// anywhere recording that they had ever been tried. Whether the sweep was
+	// stopped is something only the runner knows, and it now says so rather
+	// than leaving it to be guessed; a plain Canceled stays here as a
+	// defensive case for callers outside the runner.
+	if errors.Is(err, context.Canceled) {
+		return "", false
 	}
 
 	// Order matters from here down, because the categories overlap as types. A
@@ -121,6 +131,13 @@ func Classify(err error, gained int, deadline bool) (Class, bool) {
 		return ClassProtocol, true
 	}
 	if errors.Is(err, io.ErrUnexpectedEOF) {
+		return ClassTransient, true
+	}
+	// A request that ran out of time. Transient rather than gone, because a
+	// timeout cannot tell a host that is never coming back from one having a
+	// bad afternoon; the backoff walks it out either way, and the seven-day cap
+	// is the safe side to be wrong on.
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, os.ErrDeadlineExceeded) {
 		return ClassTransient, true
 	}
 	var netErr net.Error

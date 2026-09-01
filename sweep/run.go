@@ -253,12 +253,23 @@ func (r *Runner) one(ctx context.Context, roster *Roster, pol Policy, url string
 	res := r.Attempt(epCtx, url)
 	elapsed := r.now().Sub(start)
 
-	// Whose deadline fired. The endpoint's own is an outcome - slowness is a
-	// fact about the endpoint worth writing down - while the sweep's budget
-	// expiring is not: that endpoint was not given its turn and is owed one.
-	// The two are indistinguishable from the error alone, since a child context
-	// reports its parent's expiry as its own.
-	deadline := epCtx.Err() != nil && ctx.Err() == nil
+	// Whose deadline fired, decided here rather than left to Classify to infer.
+	// It cannot be inferred: an ordinary client timeout surfaces as
+	// context.DeadlineExceeded, so the error alone cannot tell a host that
+	// would not answer from a sweep that was stopped. Only this function knows,
+	// because only this function holds both contexts.
+	//
+	// A failure while the sweep is stopping is not the endpoint's: it was not
+	// given its turn and is owed another, so nothing is recorded. A success is
+	// kept whatever the clock is doing - work that was done is work that was
+	// done.
+	if res.Err != nil && ctx.Err() != nil {
+		w.Skipped++
+		return nil
+	}
+	// Whatever is left can only be the endpoint's own deadline, which is an
+	// outcome: slowness is a fact about the endpoint worth writing down.
+	deadline := epCtx.Err() != nil
 
 	class, record := Classify(res.Err, res.Gained, deadline)
 	if !record {

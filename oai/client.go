@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -136,6 +137,20 @@ var sharedTransport = sync.OnceValue(newTransport)
 // newTransport returns a transport tuned for harvesting.
 func newTransport() *http.Transport {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// A separate, shorter budget for getting connected at all.
+	//
+	// The client's timeout covers the whole request, so without this a host
+	// that accepts nothing - a lapsed domain pointed at an address that
+	// blackholes packets, which the long tail is full of - costs the entire
+	// timeout before anything is known about it, exactly as a large repository
+	// slowly sending real records does. They are different failures and they
+	// deserve different patience: a machine that will answer answers the SYN
+	// quickly, whatever it then does. Ten seconds is far beyond any reachable
+	// host's handshake and a sixth of what an unreachable one used to cost.
+	tr.DialContext = (&net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext
 	// Endpoints in the long tail regularly have expired, self-signed or
 	// otherwise broken certificate chains.
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

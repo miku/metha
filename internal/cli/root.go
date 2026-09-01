@@ -33,6 +33,7 @@ install" lays them down again after a "go install".`,
 	}
 	root.AddCommand(
 		newSyncCmd(),
+		newSweepCmd(),
 		newCatCmd(),
 		newLsCmd(),
 		newFilesCmd(),

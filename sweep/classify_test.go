@@ -7,9 +7,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"os"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/miku/metha/harvest"
 	"github.com/miku/metha/oai"
@@ -27,6 +31,10 @@ func TestClassify(t *testing.T) {
 	refused := &net.OpError{Op: "dial", Err: syscall.ECONNREFUSED}
 	noHost := &net.DNSError{Err: "no such host", Name: "gone.invalid", IsNotFound: true}
 	dnsTimeout := &url.Error{Op: "Get", URL: "http://slow.example", Err: &net.DNSError{IsTimeout: true}}
+	// What a dial onto an address that swallows packets leaves behind, which the
+	// long tail of the corpus is full of: private ranges, and machines that
+	// moved years ago.
+	ioTimeout := &net.OpError{Op: "dial", Net: "tcp", Err: os.ErrDeadlineExceeded}
 	// And the way harvest wraps whatever outlived its retries.
 	wrapped := func(err error) error {
 		return fmt.Errorf("failed to make request after retries: %w", err)
@@ -52,6 +60,20 @@ func TestClassify(t *testing.T) {
 		{"wrapped lock", fmt.Errorf("open: %w", store.ErrLocked), 0, false, "", false},
 		{"the sweep's own budget ran out", context.Canceled, 0, false, "", false},
 		{"an operator pressed Ctrl-C", context.Canceled, 12, false, "", false},
+
+		// The rows that matter most here, because getting them wrong is silent.
+		// http.Client.Timeout reports "context deadline exceeded", and errors.Is
+		// finds context.DeadlineExceeded inside it - so a host that blackholes
+		// packets is, to errors.Is, indistinguishable from this sweep being
+		// stopped. Reading it as cancellation discarded the outcome for exactly
+		// the endpoints the roster exists to remember: 64 of 184 over 300 real
+		// endpoints, nearly all unreachable hosts, which would then have been
+		// retried at full cost every sweep for ever.
+		{"a real client timeout", realClientTimeout(t), 0, false, ClassTransient, true},
+		{"a bare deadline, ours or not", context.DeadlineExceeded, 0, false, ClassTransient, true},
+		{"an i/o deadline", os.ErrDeadlineExceeded, 0, false, ClassTransient, true},
+		{"a dial timeout", ioTimeout, 0, false, ClassTransient, true},
+		{"a dial timeout, wrapped", wrapped(ioTimeout), 0, false, ClassTransient, true},
 
 		// Our deadline, which is an outcome: slowness is a fact about the
 		// endpoint worth writing down.
@@ -116,6 +138,39 @@ func TestClassify(t *testing.T) {
 			}
 		})
 	}
+}
+
+// realClientTimeout produces the error an http.Client actually returns when its
+// timeout fires, rather than a reconstruction of it.
+//
+// Built for real because the shape is the whole point, and it is not what it
+// looks like: the message reads "context deadline exceeded (Client.Timeout
+// exceeded while awaiting headers)" and errors.Is(err, context.DeadlineExceeded)
+// is true. Anything that reads that as "our context was cancelled" is wrong
+// about every timed-out endpoint in the corpus. Hand-writing a stand-in here
+// would pin a belief about Go rather than Go.
+func realClientTimeout(t *testing.T) error {
+	t.Helper()
+	stall := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		select {
+		case <-stall:
+		case <-r.Context().Done():
+		}
+	}))
+	t.Cleanup(func() { close(stall); srv.Close() })
+
+	_, err := (&http.Client{Timeout: 50 * time.Millisecond}).Get(srv.URL)
+	if err == nil {
+		t.Fatal("the stalling server answered")
+	}
+	// The premise, asserted rather than assumed: if Go ever stops reporting a
+	// client timeout this way, this test should say so here rather than let the
+	// rows below quietly start passing for the wrong reason.
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("a client timeout no longer wraps context.DeadlineExceeded: %v", err)
+	}
+	return err
 }
 
 // TestClassifyNeverBuriesAnEndpointItDidNotReach is the property behind the

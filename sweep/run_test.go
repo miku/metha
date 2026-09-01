@@ -333,6 +333,73 @@ func TestRunSurvivesCancellation(t *testing.T) {
 	}
 }
 
+// TestRunRecordsATimedOutEndpoint is the regression for the bug this design is
+// least able to survive: forgetting the dead.
+//
+// An endpoint that times out returns an error carrying context.DeadlineExceeded,
+// because that is how http.Client.Timeout reports itself. While the runner
+// inferred cancellation from the error, every one of those was read as "the
+// sweep was stopped" and dropped - so unreachable hosts, which are most of what
+// a sweep spends its time on, were never recorded as anything and were retried
+// at full cost every single night, for ever.
+//
+// The sweep is not cancelled here and its budget has not expired. Every one of
+// these must therefore land in the roster.
+func TestRunRecordsATimedOutEndpoint(t *testing.T) {
+	roster := seeded(t, "http://slow.test/oai", "http://fine.test/oai")
+	rep, err := runner(func(_ context.Context, url string) Result {
+		if url == "http://slow.test/oai" {
+			// What a client timeout looks like, as Go spells it.
+			return Result{Err: fmt.Errorf(
+				`Get "http://slow.test/oai?verb=Identify": %w (Client.Timeout exceeded while awaiting headers)`,
+				context.DeadlineExceeded)}
+		}
+		return Result{Gained: 3, Total: 3}
+	}).Run(context.Background(), roster, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Skipped != 0 {
+		t.Errorf("Skipped = %d; a timed-out endpoint is an outcome, not a skip", rep.Skipped)
+	}
+	if rep.Attempted != 2 {
+		t.Errorf("Attempted = %d, want 2", rep.Attempted)
+	}
+	p, ok := roster.Get("http://slow.test/oai")
+	if !ok {
+		t.Fatal("the timed-out endpoint is not in the roster")
+	}
+	if p.Attempts != 1 || p.LastClass != ClassTransient {
+		t.Errorf("recorded %d attempts as %q, want 1 as %q", p.Attempts, p.LastClass, ClassTransient)
+	}
+	// And it is backed off, which is the entire point of having recorded it.
+	if !p.NextDue.After(epoch) {
+		t.Error("the timed-out endpoint was not backed off")
+	}
+}
+
+// TestRunKeepsWorkFinishedAsTheBudgetExpires: a harvest that succeeded is
+// recorded even if the budget ran out while it was finishing. Only a failure
+// during shutdown is owed another turn.
+func TestRunKeepsWorkFinishedAsTheBudgetExpires(t *testing.T) {
+	roster := seeded(t, "http://a.test/oai")
+	ctx, cancel := context.WithCancel(context.Background())
+	rep, err := runner(func(context.Context, string) Result {
+		// The sweep is stopped just as this one lands its records.
+		cancel()
+		return Result{Gained: 40, Total: 40}
+	}).Run(ctx, roster, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Attempted != 1 || rep.Classes[ClassOK] != 1 {
+		t.Errorf("attempted %d with classes %v, want one ok", rep.Attempted, rep.Classes)
+	}
+	if p, _ := roster.Get("http://a.test/oai"); p.Records != 40 {
+		t.Errorf("Records = %d; work that was done was thrown away", p.Records)
+	}
+}
+
 // TestRunSkipsALockedShard: a user running metha sync by hand during a sweep
 // should cost exactly nothing. It is not a failure and it leaves no mark.
 func TestRunSkipsALockedShard(t *testing.T) {
