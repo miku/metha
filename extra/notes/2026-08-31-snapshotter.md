@@ -431,3 +431,64 @@ unit. Step 9 may never be needed.
 5. **One sweep process or one per shard-range?** Affects whether the roster
    needs a lock at all.
 6. **What is the User-Agent, and what contact URL goes in it?**
+
+----
+
+## FEEDBACK
+
+* we do not need to exactly replicate the current, systemd based setup; in fact, we would like to address some of its shortcomings
+* the roster file for state looks good, and having some append only updates
+  with regular compaction looks good and simple: I like that it is a separate
+thing, "sweep.json" or even compressed "sweep.json.zst" and the append only
+data may even live in some temporary location until it gets compacted and
+atomically updated; that single state file then can also be used for example to
+extract a list of "bad urls" e.g. that never responded, or slow URLs, etc. - I hope a single (compressed) file would be enough, as sharding would again increase the number of things to manage;
+* do we really need the quirks? probably yes, so we need to add support for that
+* the schduling algorithm can then be a pure function from state.json.zst to a list of endpoints to fetch
+* regarding the schedule, it may be that one or few endpoints are fetching data slowly and for a long time - it would be good to not slow down everything too much - that was the reason we had the time limit; a hard timeout and then starting over would be conceptually the simplest, probably sensible for a first pass; there could be a still simple enough design, where the state-file is updated while harvests are still running so that long-running harvests continue, while we move on the list, because a lot of other harvests finished/failed etc.
+* there could be different scheduling algorithms, something to plug in, in case we want something else; a bit of abstraction, but not too much
+* the dead letter can be basically inferred from the state.json.zst and we could have a harvest style that basically ignores marked "dead" endpoints
+* intervals and schedule start: could use systemctl, but would need to check, if a sweep is already running, so that we do not get overlapping runs
+* systemctl timer/service is good, familiar
+* a `--no-intervalls` endpoint should fetch again, but then replace the previous fetch (or leave alone, if for example the number of records did not change - assuming records have not been altered)
+* when the roster and the cache disagree, we should update the roster; the cached data is the core of the data; the user is free to update any endpoint and the roster will catch up at sweep time
+
+
+## open questions, for you rather than for me
+
+1. **Roster location and format.** In the cache directory (so it moves with the
+   data) or beside the config? Sharded JSONL as proposed, one file, or SQLite —
+   which was just removed for good reasons that do not apply to this file.
+
+I think a sweep.json.zst in the cache dir would be a good start.
+
+2. **`target_records`, `min_poll`, `max_interval`.** These are freshness policy
+   and yours to set. My starting guess: 6h / 30d / "poll when ~100 new records
+   are expected".
+
+I think, we can just do a systemd timer, let the whole thing run every 24h and maybe set a cap at 24h or so; initially, some fetches may take longer, but eventually it would catch up
+
+
+3. **Retire or never retire.** I have argued for never — only ever slower. If
+   the list should shrink for real, that is a different design.
+
+It would be good to be able to add and update the list of endpoints at any
+time. Either by putting a file with a list of endpoints in some "hot folder" or
+"importing" a list or just updating a "master list" somewhere. Could be file driven or a subcommand/flag
+
+4. **Does the converged list ship in the binary?** `contrib/sites.tsv` is
+   embedded and is most of the binary size. A list that changes weekly is
+   arguably a download, not a build artifact.
+
+Keep the list embedded, it is more static; let me manually extract the dead
+letter endpoints after a while and update the list. We do frequent releases and
+often the list will be updated then as well.
+
+5. **One sweep process or one per shard-range?** Affects whether the roster
+   needs a lock at all.
+
+One sweep process to start, simpler to manage.
+
+6. **What is the User-Agent, and what contact URL goes in it?**
+
+Use some common thing like metha/1.2.3 (name, version)

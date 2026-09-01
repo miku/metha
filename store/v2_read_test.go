@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/miku/metha/oai"
@@ -306,5 +308,144 @@ func TestDatestampGranularity(t *testing.T) {
 		if got := identifiers(t, s, tt.opts); !slices.Equal(got, tt.want) {
 			t.Errorf("From=%q Until=%q: got %v, want %v", tt.opts.From, tt.opts.Until, got, tt.want)
 		}
+	}
+}
+
+// countingReader reports how much of the stream has actually been consumed.
+type countingReader struct {
+	r io.Reader
+	n int64
+}
+
+func (c *countingReader) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	c.n += int64(n)
+	return n, err
+}
+
+// bigListRecords is one response document holding n records, which is what an
+// endpoint that does not paginate sends.
+func bigListRecords(n int) string {
+	var b strings.Builder
+	b.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` +
+		`<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><ListRecords>`)
+	for i := range n {
+		fmt.Fprintf(&b, `<record><header><identifier>id-%06d</identifier>`+
+			`<datestamp>2020-01-01</datestamp></header>`+
+			`<metadata><oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/">`+
+			`<dc:title>%s</dc:title></oai_dc:dc></metadata></record>`,
+			i, strings.Repeat("padding ", 64))
+	}
+	b.WriteString(`</ListRecords></OAI-PMH>`)
+	return b.String()
+}
+
+// TestReadDoesNotBufferWholeResponse: a read must cost one record, not one
+// response.
+//
+// Records used to be reached by decoding a whole oai.Response and walking its
+// ListRecords, which holds every record of a document in memory - and holds it
+// for as long as any of them is still being written out, so the garbage
+// collector sizes its next heap against it. An endpoint that answers without a
+// resumption token sends its whole set as one document, and "metha export"
+// reads as many endpoints at once as the machine has cores: one such document
+// per worker was enough to take a 128GB machine to the OOM killer.
+//
+// The property is measured on the stream rather than on the heap, which is the
+// same property without the flakiness: at the first record, a reader that
+// streams has touched a little of the document and one that buffers has touched
+// all of it.
+func TestReadDoesNotBufferWholeResponse(t *testing.T) {
+	doc := bigListRecords(2000)
+	cr := &countingReader{r: strings.NewReader(doc)}
+	var atFirst int64
+	var seen int
+	recordsFromXML(newDecoder(cr), "test", ReadOptions{}, func(rec oai.Record, err error) bool {
+		if err != nil {
+			t.Fatalf("read: %v", err)
+		}
+		if seen == 0 {
+			atFirst = cr.n
+		}
+		seen++
+		return true
+	})
+	if seen != 2000 {
+		t.Errorf("got %d records, want 2000", seen)
+	}
+	// Generous: the decoder reads ahead in blocks, and the point is the order of
+	// magnitude. Buffering the document would put this at len(doc).
+	if limit := int64(len(doc)) / 10; atFirst > limit {
+		t.Errorf("consumed %d bytes of a %d byte document before the first record; "+
+			"want under %d, the response is being buffered whole", atFirst, len(doc), limit)
+	}
+}
+
+// TestNestedRecordElementIsNotARecord: only <record> directly inside
+// <ListRecords> is a record.
+//
+// marcxml metadata has a <record> element of its own, and a reader that matched
+// the name anywhere would emit the MARC record inside a record as a second,
+// headerless record - silently doubling the line count of an export over every
+// endpoint serving MARC.
+func TestNestedRecordElementIsNotARecord(t *testing.T) {
+	base := t.TempDir()
+	id := Identity{BaseURL: "http://example.com", Format: "marcxml"}
+	w, err := OpenWriter(base, id)
+	if err != nil {
+		t.Fatalf("OpenWriter: %v", err)
+	}
+	if err := w.Begin(day(t, "2023-01-01"), day(t, "2023-01-31"), true); err != nil {
+		t.Fatalf("Begin: %v", err)
+	}
+	raw := `<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><ListRecords>` +
+		`<record><header><identifier>the-record</identifier><datestamp>2023-01-15</datestamp></header>` +
+		`<metadata><record xmlns="http://www.loc.gov/MARC21/slim"><leader>00000nam</leader>` +
+		`<datafield tag="245"><subfield code="a">A title</subfield></datafield></record></metadata>` +
+		`</record></ListRecords></OAI-PMH>`
+	if err := w.Append([]byte(raw)); err != nil {
+		t.Fatalf("Append: %v", err)
+	}
+	if err := w.Commit(); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+	s, err := Open(base, id)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	if got, want := identifiers(t, s, ReadOptions{}), []string{"the-record"}; !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+// TestRecordsAcrossConcatenatedResponses: an extent holds the responses of a
+// window back to back, and every one of them contributes its records.
+func TestRecordsAcrossConcatenatedResponses(t *testing.T) {
+	doc := func(ids ...string) string {
+		var b strings.Builder
+		b.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` +
+			`<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><ListRecords>`)
+		for _, id := range ids {
+			fmt.Fprintf(&b, `<record><header><identifier>%s</identifier>`+
+				`<datestamp>2020-01-01</datestamp></header></record>`, id)
+		}
+		b.WriteString(`<resumptionToken>tok</resumptionToken></ListRecords></OAI-PMH>`)
+		return b.String()
+	}
+	stream := doc("a", "b") + doc("c") + doc("d", "e")
+	var got []string
+	recordsFromXML(newDecoder(strings.NewReader(stream)), "test", ReadOptions{},
+		func(rec oai.Record, err error) bool {
+			if err != nil {
+				t.Fatalf("read: %v", err)
+			}
+			got = append(got, rec.Header.Identifier)
+			return true
+		})
+	if want := []string{"a", "b", "c", "d", "e"}; !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
 	}
 }

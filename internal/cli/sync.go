@@ -37,6 +37,7 @@ type syncOpts struct {
 	logStderr                  bool
 	maxEmptyResponses          int
 	maxRequests                int
+	maxBodyBytes               int
 	quiet                      bool
 	removeCached               bool
 	set                        string
@@ -84,6 +85,8 @@ func newSyncCmd() *cobra.Command {
 	f.BoolVar(&o.logStderr, "log-errors-to-stderr", false, "log errors and warnings to STDERR; if --log or -q are not given, write full log to STDOUT")
 	f.IntVar(&o.maxEmptyResponses, "max-empty-responses", 10, "allow a number of empty responses before failing")
 	f.IntVar(&o.maxRequests, "max", 1048576, "maximum number of token loops")
+	f.IntVar(&o.maxBodyBytes, "max-body-bytes", oai.DefaultMaxBodyBytes,
+		"give up on a response longer than this many bytes")
 	f.BoolVarP(&o.quiet, "quiet", "q", false, "suppress all output")
 	f.BoolVar(&o.removeCached, "rm", false, "remove all cached files before starting anew")
 	f.StringVar(&o.set, "set", "", "set name")
@@ -126,6 +129,7 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 	}
 	if o.quiet {
 		log.SetOutput(io.Discard)
+		routeStdlibLog(io.Discard)
 	}
 	if o.logFile != "" {
 		file, err := os.OpenFile(o.logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -133,6 +137,7 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 			return fmt.Errorf("error opening log file: %w", err)
 		}
 		log.SetOutput(file)
+		routeStdlibLog(file)
 	}
 	if o.logStderr {
 		if !o.quiet && o.logFile == "" {
@@ -157,7 +162,18 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 		}
 		extra.Set(parts[0], parts[1])
 	}
-	h, err := harvest.NewHarvest(ctx, baseURL)
+	// The client is built before the harvest, not after it. Identify is the
+	// first request and the one a dead URL fails on, so it is the request that
+	// decides what a bad endpoint costs - and until this was passed in, it was
+	// made on the default client, ignoring -T and -r entirely. See
+	// harvest.NewHarvestWithClient.
+	var client *oai.Client
+	if rateLimitBytesPerSec > 0 {
+		client = oai.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
+	} else {
+		client = oai.CreateClient(o.timeout, o.maxRetries)
+	}
+	h, err := harvest.NewHarvestWithClient(ctx, baseURL, client)
 	if err != nil {
 		if errors.Is(err, harvest.ErrNotAnEndpoint) {
 			// Almost always a host where a path was meant. Worth saying,
@@ -175,16 +191,12 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 			}
 		}
 	}
-	if rateLimitBytesPerSec > 0 {
-		h.Client = oai.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
-	} else {
-		h.Client = oai.CreateClient(o.timeout, o.maxRetries)
-	}
 	h.Config.From = o.from
 	h.Config.Until = o.until
 	h.Config.Format = o.format
 	h.Config.Set = o.set
 	h.Config.MaxRequests = o.maxRequests
+	h.Config.MaxBodyBytes = o.maxBodyBytes
 	h.Config.CleanBeforeDecode = true
 	h.Config.DisableSelectiveHarvesting = o.disableSelectiveHarvesting
 	h.Config.MaxEmptyResponses = o.maxEmptyResponses

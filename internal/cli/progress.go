@@ -43,6 +43,7 @@ type progress struct {
 	start   time.Time
 	last    time.Time
 	painted bool
+	current string           // the unit most recently started, if progress names them
 	now     func() time.Time // replaced in tests
 }
 
@@ -61,6 +62,18 @@ func newProgress(status, data io.Writer, tty, silent bool, label string, total i
 	p.start = p.now()
 	p.last = p.start
 	return p
+}
+
+// begin names the unit a worker is starting now, so the counter can say which
+// one is costing the time. With a pool there is more than one unit in flight
+// and one line cannot hold them all; it names the most recently started, which
+// is the one whose cost is about to appear in the numbers. It costs a lock and
+// a string assignment, once per unit.
+func (p *progress) begin(unit string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.current = unit
+	p.paint(false)
 }
 
 // step records one finished unit of work, and repaints if it is time.
@@ -159,6 +172,12 @@ func (p *progress) line(now time.Time) string {
 	fmt.Fprintf(&b, ", %s", duration(elapsed))
 	if eta, ok := p.eta(elapsed); ok {
 		fmt.Fprintf(&b, ", eta %s", duration(eta))
+	}
+	// Last, because it is the newest fact: not what has been done but what is
+	// being done. A URL runs long, and a terminal line repainted in place can
+	// afford it; a log line carries it as the annotation it is.
+	if p.current != "" {
+		fmt.Fprintf(&b, ", %s", p.current)
 	}
 	return b.String()
 }

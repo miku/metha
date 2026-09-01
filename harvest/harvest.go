@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -57,9 +58,11 @@ type Config struct {
 	ExtraHeaders               http.Header
 	IgnoreUnexpectedEOF        bool
 	Delay                      time.Duration
-	MaxRetries                 int           // Maximum number of retry attempts
-	RetryDelay                 time.Duration // Delay between retries
-	RetryBackoff               float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
+	// MaxBodyBytes bounds one response. Zero means oai.DefaultMaxBodyBytes.
+	MaxBodyBytes int
+	MaxRetries   int           // Maximum number of retry attempts
+	RetryDelay   time.Duration // Delay between retries
+	RetryBackoff float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
 }
 
 // Harvest contains parameters for mass-download. MaxRequests and
@@ -81,14 +84,41 @@ type Harvest struct {
 	Started  time.Time
 }
 
-// NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
+// NewHarvest creates a new harvest. A network connection will be used for an
+// initial Identify request, made with oai.DefaultClient.
+//
+// Deprecated for anything that has a client of its own: use
+// NewHarvestWithClient. Setting Client on the result is too late, because the
+// Identify has already been made by then - see there for what that cost.
 func NewHarvest(ctx context.Context, baseURL string) (*Harvest, error) {
-	h := Harvest{Config: &Config{
-		BaseURL:      baseURL,
-		MaxRetries:   3,
-		RetryDelay:   10 * time.Second,
-		RetryBackoff: 2.0,
-	}}
+	return NewHarvestWithClient(ctx, baseURL, nil)
+}
+
+// NewHarvestWithClient creates a harvest that identifies with the given client.
+// A nil client means oai.DefaultClient.
+//
+// The distinction matters more than it looks. Identify is the first request a
+// harvest makes and by far the likeliest to fail - a dead host fails here and
+// nowhere else - so it is the one request whose timeout and retry count decide
+// what a bad URL costs. Assigning Client after NewHarvest, which is what every
+// caller did, left that request on the default client's eight retries with
+// exponential backoff and its ten-minute timeout, whatever the caller had
+// asked for.
+//
+// The cost was measured, before it was understood: "metha sync http:// --retries
+// 2 --timeout 3s" was still retrying after 249 seconds. Eight doubling waits
+// from a second is 255, which is where the number came from. Neither flag was
+// reaching the request that was spending the time.
+func NewHarvestWithClient(ctx context.Context, baseURL string, client *oai.Client) (*Harvest, error) {
+	h := Harvest{
+		Client: client,
+		Config: &Config{
+			BaseURL:      baseURL,
+			MaxRetries:   3,
+			RetryDelay:   10 * time.Second,
+			RetryBackoff: 2.0,
+		},
+	}
 	if err := h.identify(ctx); err != nil {
 		return nil, err
 	}
@@ -257,7 +287,12 @@ func (h *Harvest) run(ctx context.Context) (err error) {
 			// the next run plans it again; the abort in runWindow already made
 			// sure it left nothing half-written behind.
 			if errors.Is(err, errSkipWindow) {
-				log.Printf("skipping the rest of this window: %v", errors.Unwrap(err))
+				// The error itself, not errors.Unwrap of it: this is built with
+				// two %w verbs, so it unwraps to a slice and the single-error
+				// Unwrap returns nil. Every skipped window was logging "skipping
+				// the rest of this window: <nil>", which is the one line that
+				// would have said why.
+				log.Printf("%v", err)
 				continue
 			}
 			return err
@@ -319,6 +354,7 @@ requests:
 			CleanBeforeDecode:       h.Config.CleanBeforeDecode,
 			SuppressFormatParameter: h.Config.SuppressFormatParameter,
 			ExtraHeaders:            h.Config.ExtraHeaders,
+			MaxBodyBytes:            h.Config.MaxBodyBytes,
 		}
 		// A boundless window asks for everything, which is what an endpoint
 		// that cannot handle from and until is given.
@@ -403,18 +439,77 @@ requests:
 	return h.Writer.Commit()
 }
 
+// encodingSuspect reports whether an error could plausibly be about how the
+// endpoint encoded its answer, which is the only thing asking again with
+// Accept-Encoding: identity can fix.
+//
+// The workaround used to fire on every error identify saw, and that is the most
+// expensive line in a sweep. A host that does not answer its SYN costs the dial
+// timeout to find out; retrying it costs the same again, for a header that
+// cannot matter to a connection that was never made. Measured over 200 real
+// endpoints from the embedded list: 149 came back unreachable, at 20.0s each -
+// exactly twice the 10s dial timeout - and that was 51 of the sweep's 68
+// worker-minutes. Half of it bought nothing.
+//
+// What is excluded is only what cannot possibly be about encoding and is
+// expensive to ask twice: a timeout, where nothing arrived and asking again
+// costs the same wait over; a name that does not resolve, where there is no
+// server; and an HTTP status, where the server answered and said something
+// else entirely. Everything a reachable server did - a reset, a truncated
+// body, a document that would not decompress or parse - still gets the second
+// request, because a server that dislikes a header is exactly the case the
+// workaround was written for.
+//
+// Narrow on purpose. A refused connection or an unreachable network is
+// pointless to retry too, but it costs milliseconds to learn, and the rule
+// worth having here is the one that gives up the least.
+func encodingSuspect(err error) bool {
+	if err == nil {
+		return false
+	}
+	// Our own cancellation, which nothing about the endpoint can explain. The
+	// client's own timeout arrives in this shape too.
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	var nerr net.Error
+	if errors.As(err, &nerr) && nerr.Timeout() {
+		return false
+	}
+	var dns *net.DNSError
+	if errors.As(err, &dns) {
+		return false
+	}
+	// A response past the size limit is the one failure asking again without
+	// compression reliably makes worse: the limit is on the decompressed body,
+	// so identity encoding sends the same number of bytes over the wire that
+	// were already too many to keep, and the second request is refused exactly
+	// where the first was. For a repository this costs a wasted round trip; for
+	// an endpoint answering with a compression bomb it is a second one on
+	// request.
+	if errors.Is(err, oai.ErrResponseTooLarge) {
+		return false
+	}
+	var herr oai.HTTPError
+	return !errors.As(err, &herr)
+}
+
 // identify runs an OAI identify request and caches the result.
 func (h *Harvest) identify(ctx context.Context) error {
 	req := oai.Request{
 		Verb:         "Identify",
 		BaseURL:      h.Config.BaseURL,
 		ExtraHeaders: h.Config.ExtraHeaders,
+		MaxBodyBytes: h.Config.MaxBodyBytes,
 	}
 	if h.Client == nil {
 		h.Client = oai.DefaultClient
 	}
 	resp, err := h.Client.DoContext(ctx, &req)
 	if err != nil {
+		if !encodingSuspect(err) {
+			return err
+		}
 		log.Printf("trying workaround: %v", err)
 		// try to workaround for the whole harvest
 		if h.Config.ExtraHeaders == nil {

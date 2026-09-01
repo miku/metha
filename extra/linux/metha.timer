@@ -1,0 +1,20 @@
+[Unit]
+Description=Harvest every known OAI-PMH endpoint daily
+Documentation=https://github.com/miku/metha
+
+[Timer]
+Unit=metha.service
+OnCalendar=daily
+
+# A machine that was off overnight should still sweep rather than silently skip
+# a day.
+Persistent=true
+
+# Two hours of jitter, and it is manners rather than tuning. Every installation
+# running the stock unit would otherwise start at exactly 00:00, which makes a
+# synchronised request to sixty-two thousand hosts from every metha there is.
+# The same argument the roster makes for jittering next_due, one level up.
+RandomizedDelaySec=2h
+
+[Install]
+WantedBy=timers.target

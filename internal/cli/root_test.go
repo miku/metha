@@ -32,6 +32,26 @@ func TestVersionFlagBeforeArgs(t *testing.T) {
 	}
 }
 
+// TestHelpShowsBaseDir: "metha" with no verb prints the help, and the help says
+// which directory the harvest would land in.
+func TestHelpShowsBaseDir(t *testing.T) {
+	t.Setenv("METHA_DIR", "/tmp/metha-help-test")
+	root := NewRoot()
+	var out bytes.Buffer
+	root.SetOut(&out)
+	root.SetErr(&out)
+	root.SetArgs(nil)
+	if err := root.Execute(); err != nil {
+		t.Fatalf("help: %v", err)
+	}
+	if !strings.Contains(out.String(), "/tmp/metha-help-test") {
+		t.Errorf("help does not name the base directory:\n%s", out.String())
+	}
+	if !strings.Contains(out.String(), "METHA_DIR") {
+		t.Errorf("help does not name METHA_DIR:\n%s", out.String())
+	}
+}
+
 // TestEveryLegacyNameResolves: a symlink is laid down for each legacy name, and
 // each one has to land on a command that exists.
 func TestEveryLegacyNameResolves(t *testing.T) {

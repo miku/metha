@@ -53,6 +53,9 @@ The functionality is spread accross a few different subcommands:
 * metha id for gathering data about endpoints
 * metha ls for inspecting the local cache
 * metha files for listing the associated files for a harvest
+* metha sweep for harvesting every known endpoint, on a schedule
+* metha endpoints for what the sweep learned about each one
+* metha export for writing the whole cache out as one stream of records
 
 To harvest and endpoint in the default *oai_dc* format (e.g. [arxiv.org](https://info.arxiv.org/help/oa/index.html)):
 
@@ -201,31 +204,80 @@ interaction in resource conservation.
 
 ## Scrape all metadata in a best-effort way
 
-Use an endless loop with a timeout to get out of any hanging connection (which
-happen). Example scrapes, converted to JSON: 326M records, 60+ GB:
+`metha sweep` harvests every endpoint metha knows about — 244,040 of them, seeded
+from the embedded list — records what became of each one, and exits. Example scrapes,
+converted to JSON: 326M records, 60+ GB:
 [2023-11-01-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_2023-11-01/2023-11-01-metha-oai.ndjson.zst),
 and
 [2026-02-23-oaiscrape-unique.jsonl.zst](https://archive.org/download/oaiscrape-2026-02-27/2026-02-23-oaiscrape-unique.jsonl.zst) (214M records, 41GB compressed).
 
 ```shell
-$ while true; do \
-    timeout 120 metha sync -list | \
-    shuf | \
-    parallel -j 64 -I {} "metha sync --base-dir ~/.cache/metha {}"; \
-done
+$ metha sweep --dry-run     # what is due, without a single request
+$ metha sweep --limit 100   # try it on a hundred endpoints
+$ metha sweep               # everything due, with the defaults
 ```
 
-Alternatively, use a
-[metha.service](https://raw.githubusercontent.com/miku/metha/master/extra/linux/metha.service)
-file to run harvests continuously.
+It keeps a roster beside the cache, `sweep.json.zst`, holding one profile per
+endpoint: when it was last attempted, what happened, and when it is next due.
+That memory is the whole point. An endpoint that answers is polled daily; one
+that has never resolved backs off to a few requests a year, and is never dropped,
+because repositories move and domains come back. Requests are partitioned by
+host, so a repository with several hundred endpoints is never asked more than one
+question at a time.
 
-metha stores harvested data in one file per interval; to combine all XML files
-into a single JSON file you can utilize the
-[xmlstream.go](https://github.com/miku/metha/blob/master/extra/largecrawl/xmlstream.go) (adjust the harvest directory):
+A sweep is bounded twice — `--deadline` per endpoint (1h), `--budget` for the
+whole run (24h) — and everything harvested before either fires is kept. Two
+sweeps cannot overlap: the second finds the lock held, says so, and exits 0.
+
+`metha endpoints` is the view onto what it learned, and it prints URLs one per
+line so its output is an input:
 
 ```shell
-$ fd . '/data/.cache/metha' -e xml.gz | parallel unpigz -c | xmlstream -D
+$ metha endpoints --state quarantined       # what has stopped answering
+$ metha endpoints --class gone              # what never answered at all
+$ metha endpoints --slower-than 5m --json   # what a sweep spends its time on
+$ metha endpoints --state active            # the corrected endpoint list
+$ metha endpoints --import my-endpoints.txt # add your own
 ```
+
+To run it nightly, use the
+[metha.service](https://raw.githubusercontent.com/miku/metha/master/extra/linux/metha.service)
+and
+[metha.timer](https://raw.githubusercontent.com/miku/metha/master/extra/linux/metha.timer)
+units; see [extra/linux](extra/linux) for how to install them, and for what
+they replaced.
+
+## Exporting the whole cache
+
+metha stores harvested data in one file per interval. `metha export` writes all
+of it out as one stream, one JSON document per line:
+
+```shell
+$ metha export -o corpus.ndjson.zst    # compressed by extension
+$ metha export | jq .header.identifier # or straight down a pipe
+$ metha export --from 2024-01-01       # only what is recent
+```
+
+Every line carries an `endpoint` field naming the repository the record came
+from — the one thing an OAI-PMH record does not say about itself, and the one
+thing a corpus of a few hundred million of them needs:
+
+```shell
+$ metha export | jq -r '[.endpoint, .header.identifier] | @tsv'
+```
+
+It reads and never writes the cache, and takes no locks, so it is safe to run
+while a sweep is harvesting. To export part of the corpus, name endpoints as
+arguments or pass a file of them — which is what `metha endpoints` prints:
+
+```shell
+$ metha endpoints --state active > live.txt
+$ metha export --endpoints live.txt -o live.ndjson.zst
+```
+
+`--xml` writes one XML document instead, and the record filters `metha cat`
+has — `--from`, `--until`, `--setspec`, `--deleted` — all work the same way
+here.
 
 ![](docs/metha-net-zenith.png)
 

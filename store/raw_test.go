@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"slices"
@@ -98,6 +99,54 @@ func TestReadsNonUTF8Document(t *testing.T) {
 	// by anything downstream whatever the endpoint's encoding was.
 	if !strings.Contains(titles[0], "Grün") {
 		t.Errorf("record body %q, want it to carry the decoded ü", titles[0])
+	}
+}
+
+// TestNonUTF8DocumentStreamDoesNotStack: an extent of ISO-8859-1 documents is
+// converted once, not once per document.
+//
+// encoding/xml calls CharsetReader for every declaration it meets and replaces
+// its reader with the result, so a converter built over the previous converter
+// reads that one's UTF-8 output as ISO-8859-1 and encodes it again. Each
+// document adds a layer and each layer doubles every non-ASCII byte, which is
+// exponential in the number of documents: the endpoint that found this stored
+// 65 of them in 806KB, and the read had spent 600MB and half an hour without
+// finishing. The bodies here stay the size they were written, and the ü stays
+// one ü rather than becoming Ã¼ and then Ãƒآ¼.
+func TestNonUTF8DocumentStreamDoesNotStack(t *testing.T) {
+	// 0xFC is "ü" in ISO-8859-1, and not valid UTF-8 on its own.
+	doc := func(id string) string {
+		return "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" +
+			"<OAI-PMH><ListRecords><record><header><identifier>" + id +
+			"</identifier><datestamp>2023-01-05</datestamp></header>" +
+			"<metadata><dc><title>Gr\xfcn</title></dc></metadata></record>" +
+			"</ListRecords></OAI-PMH>"
+	}
+	docs := make([]string, 12)
+	for i := range docs {
+		docs[i] = doc(fmt.Sprint(i))
+	}
+	s, _ := appendRaw(t, docs...)
+	var bodies []string
+	for rec, err := range s.Records(ReadOptions{}) {
+		if err != nil {
+			t.Fatalf("Records: %v", err)
+		}
+		bodies = append(bodies, string(rec.Metadata.Body))
+	}
+	if len(bodies) != len(docs) {
+		t.Fatalf("read %d records, want %d", len(bodies), len(docs))
+	}
+	// Every record was written identically, so every body has to come back
+	// identical too. Under stacking they grow with their position in the extent.
+	for i, got := range bodies {
+		if got != bodies[0] {
+			t.Fatalf("record %d body is %d bytes against %d for the first: the charset reader is stacking",
+				i, len(got), len(bodies[0]))
+		}
+		if !strings.Contains(got, "Grün") {
+			t.Fatalf("record %d body %q, want the decoded ü exactly once", i, got)
+		}
 	}
 }
 
