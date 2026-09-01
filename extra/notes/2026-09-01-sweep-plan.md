@@ -772,6 +772,53 @@ of this window: <nil>` — the error is built with two `%w` verbs, so it unwraps
 to a slice and single-error `errors.Unwrap` returns nil. The one line that
 would have said *why* a window was skipped was saying nothing.
 
+### status: step 9 done, and the eleven lines retired
+
+`extra/linux/metha.service` is now a `Type=oneshot` sweep and
+`extra/linux/metha.timer` drives it daily, with `Persistent=true` so a machine
+that was off does not silently skip a day and `RandomizedDelaySec=2h` so every
+installation running the stock unit does not start at exactly 00:00. The
+filenames were kept rather than replaced: the README has linked to the raw
+`metha.service` on master for years, a `.timer` has to share its base name with
+the service it drives, and both facts point the same way. `extra/linux/README.md`
+is new — install, watch, and what replaced what. The `while true; timeout 120 |
+shuf | parallel` recipe is gone from the README, and `sweep` and `endpoints` are
+in the verb list at the top.
+
+**The unit is where the design's decisions become operational, and two of them
+had to be said out loud.** `--budget 20h` against a daily timer leaves four
+hours of headroom, which matters because a sweep that runs past the next fire is
+not an error — the second finds the lock and exits 0 — but an installation
+permanently one sweep behind should be noticeable rather than absorbed.
+`TimeoutStopSec=120` is there because `systemctl stop` sends SIGTERM,
+`interruptible()` already handles it (`internal/cli/main.go:39`), and the sweep
+compacts the roster on the way out: the grace period is the difference between a
+clean compaction and a journal replayed tomorrow.
+
+**One thing I asserted and had to withdraw.** The first draft carried
+`TimeoutStartSec=infinity` with a comment calling it load-bearing — that for
+`Type=oneshot` it bounds `ExecStart` and defaults to ninety seconds, so leaving
+it out would reintroduce `RuntimeMaxSec=300s` a hundred times harder. Checked
+against `systemd.service(5)` rather than memory: for `Type=oneshot` the start
+timeout is **disabled by default**, so the line changes nothing as the unit
+stands. It is kept, and the comment now says what it is actually for — every
+other service type does take its ninety seconds from `DefaultTimeoutStartSec`,
+so a later change of `Type=` would otherwise reintroduce the pathology without
+touching a line that mentions time. Worth recording because it is the same
+class of mistake the note keeps finding elsewhere: a plausible mechanism
+believed without measuring it.
+
+**Also settled by running it.** The roster seeds to **244,040** endpoints, not
+the 244,346 in `contrib/sites.tsv` — 306 lines do not survive `Seeds`. Both
+numbers are now used where each is true: the list has 244,346 lines, the roster
+holds 244,040. A fresh `sweep.json.zst` with nothing learned yet is 2.0 MB,
+against the 5.4 MB measured once every profile carries an outcome.
+
+What is left of the plan is nothing; what is left of the work is the two policy
+questions above — the endpoint whose every window fails and still classes
+`empty`, and promoting a long run of `transient` to `gone` — and the export and
+analysis verbs, which were never in this plan.
+
 ---
 
 ## risks
