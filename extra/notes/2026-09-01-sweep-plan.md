@@ -542,6 +542,49 @@ embedded list): seed 244k endpoints 190ms, apply and journal 244k outcomes
 estimate above was "a few megabytes", which holds. All of it is noise against a
 24h budget, so the daily full-corpus cadence needs no defending.
 
+### status: step 5 done, and the 249 seconds explained
+
+`sweep/run.go` holds the `Runner` — the host-partitioned pool, the per-endpoint
+deadline, the budget, the journal flusher and the `Report`. `sweep/harvest.go`
+holds `Harvester`, the real `Attempt`, which is thin on purpose: a swept
+endpoint leaves the shard a hand-harvested one does. Tested against `httptest`
+end to end, including that a real host never sees two concurrent requests.
+
+**The 249 seconds had a cause, and it was not the nested retries.** The
+original note blamed three stacked retry layers for a dead URL taking four
+minutes with `--retries 2 --timeout 3s`. The layers are real, but they were not
+what was spending the time. `NewHarvest` made its `Identify` request with
+`oai.DefaultClient` — eight retries, exponential backoff, a ten-minute timeout
+— and returned; every caller then set `h.Client` **afterwards**, by which point
+the only request that had been made was the one that ignored the flags. Since
+`Identify` is where a dead endpoint fails and nowhere else, `-T` and `-r`
+were being ignored on exactly the request whose cost they were meant to bound.
+Eight doubling waits from a second is 255 seconds, which is where the number
+came from.
+
+Measured against a 503, before and after, with `--retries 2 --timeout 3s`:
+
+| | |
+|---|---|
+| before (`NewHarvest`, client set after) | **8m 29s** |
+| after (`NewHarvestWithClient`) | **4.1s** |
+
+`harvest.NewHarvestWithClient` takes the client up front; `NewHarvest` keeps
+working and delegates to it. `sync` and the sweep both use it, so **`metha
+sync` gets this fix too** — its timeout and retry flags now mean what they say.
+This does not make step 2b unnecessary (one honest retry layer is still worth
+having), but it does mean the headline number that motivated 2b was a
+plumbing bug rather than a design flaw.
+
+**Two smaller things.** `Harvester` also lowers `Config.MaxRetries` and
+`RetryDelay`, because harvest's own retry layer defaults to three retries from
+ten seconds doubling — seventy seconds of waiting per window, which a sweep
+cannot afford when tomorrow's sweep retries anyway. And `IdentityEncoding`, the
+quirk the plan called "the one that pays", turned out to need no change to
+`harvest` after all: `identify` sets that header on the config it shares, and
+only on its workaround path, so the header's presence afterwards is the
+fingerprint of having needed it. Step 8 is that much smaller.
+
 ---
 
 ## risks

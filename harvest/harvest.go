@@ -81,14 +81,41 @@ type Harvest struct {
 	Started  time.Time
 }
 
-// NewHarvest creates a new harvest. A network connection will be used for an initial Identify request.
+// NewHarvest creates a new harvest. A network connection will be used for an
+// initial Identify request, made with oai.DefaultClient.
+//
+// Deprecated for anything that has a client of its own: use
+// NewHarvestWithClient. Setting Client on the result is too late, because the
+// Identify has already been made by then - see there for what that cost.
 func NewHarvest(ctx context.Context, baseURL string) (*Harvest, error) {
-	h := Harvest{Config: &Config{
-		BaseURL:      baseURL,
-		MaxRetries:   3,
-		RetryDelay:   10 * time.Second,
-		RetryBackoff: 2.0,
-	}}
+	return NewHarvestWithClient(ctx, baseURL, nil)
+}
+
+// NewHarvestWithClient creates a harvest that identifies with the given client.
+// A nil client means oai.DefaultClient.
+//
+// The distinction matters more than it looks. Identify is the first request a
+// harvest makes and by far the likeliest to fail - a dead host fails here and
+// nowhere else - so it is the one request whose timeout and retry count decide
+// what a bad URL costs. Assigning Client after NewHarvest, which is what every
+// caller did, left that request on the default client's eight retries with
+// exponential backoff and its ten-minute timeout, whatever the caller had
+// asked for.
+//
+// The cost was measured, before it was understood: "metha sync http:// --retries
+// 2 --timeout 3s" was still retrying after 249 seconds. Eight doubling waits
+// from a second is 255, which is where the number came from. Neither flag was
+// reaching the request that was spending the time.
+func NewHarvestWithClient(ctx context.Context, baseURL string, client *oai.Client) (*Harvest, error) {
+	h := Harvest{
+		Client: client,
+		Config: &Config{
+			BaseURL:      baseURL,
+			MaxRetries:   3,
+			RetryDelay:   10 * time.Second,
+			RetryBackoff: 2.0,
+		},
+	}
 	if err := h.identify(ctx); err != nil {
 		return nil, err
 	}

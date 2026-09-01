@@ -157,7 +157,18 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 		}
 		extra.Set(parts[0], parts[1])
 	}
-	h, err := harvest.NewHarvest(ctx, baseURL)
+	// The client is built before the harvest, not after it. Identify is the
+	// first request and the one a dead URL fails on, so it is the request that
+	// decides what a bad endpoint costs - and until this was passed in, it was
+	// made on the default client, ignoring -T and -r entirely. See
+	// harvest.NewHarvestWithClient.
+	var client *oai.Client
+	if rateLimitBytesPerSec > 0 {
+		client = oai.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
+	} else {
+		client = oai.CreateClient(o.timeout, o.maxRetries)
+	}
+	h, err := harvest.NewHarvestWithClient(ctx, baseURL, client)
 	if err != nil {
 		if errors.Is(err, harvest.ErrNotAnEndpoint) {
 			// Almost always a host where a path was meant. Worth saying,
@@ -174,11 +185,6 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 				extra.Add(k, v)
 			}
 		}
-	}
-	if rateLimitBytesPerSec > 0 {
-		h.Client = oai.CreateClientWithRateLimit(o.timeout, o.maxRetries, rateLimitBytesPerSec)
-	} else {
-		h.Client = oai.CreateClient(o.timeout, o.maxRetries)
 	}
 	h.Config.From = o.from
 	h.Config.Until = o.until
