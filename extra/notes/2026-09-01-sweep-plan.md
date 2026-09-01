@@ -576,6 +576,63 @@ This does not make step 2b unnecessary (one honest retry layer is still worth
 having), but it does mean the headline number that motivated 2b was a
 plumbing bug rather than a design flaw.
 
+### status: step 6 done, and three things only a live run could find
+
+`metha sweep` exists: flags, the sweep lock, seeding, import, reconcile-at-start,
+the progress counter and the summary. `sweep/seeds.go` cleans the list and
+`sweep/reconcile.go` adopts what the cache already holds.
+
+Everything below was found by running it against real endpoints. None of it
+showed up in the tests, and each one is measured on the same 300 endpoints from
+the embedded list, 16 workers, an 8-minute budget:
+
+| | swept | records | outcomes lost | dead found |
+|---|---|---|---|---|
+| as first written | 17 | 1,325 | 47 | 12 |
+| after the retry and dial fixes | 151 | 9,844 | 125 | 51 |
+| after the classification fix | **283** | **18,039** | **3** | **52** |
+
+**1. The dead cost nine attempts each.** The two retry layers multiply: three
+retries at each is nine attempts at a host that is not there, at thirty seconds
+apiece — four and a half minutes of a worker to prove what the first attempt
+showed. `DefaultRetries` is now 1, so four. They get another four tomorrow.
+
+**2. A host that swallows packets cost as much as a large repository.** The
+client's timeout covers the whole request, so an unreachable host burned the
+entire budget before anything was known about it. `oai`'s transport now sets a
+separate ten-second dial timeout: a machine that will answer answers the SYN
+quickly, whatever it does afterwards. This one helps `sync` too.
+
+**3. The sweep was forgetting the dead — the one failure this design cannot
+survive.** `http.Client.Timeout` reports `context deadline exceeded (Client.Timeout
+exceeded while awaiting headers)`, and `errors.Is(err, context.DeadlineExceeded)`
+finds it. `Classify` read that as "our context was cancelled, this endpoint was
+never really tried" and recorded nothing — so every timed-out endpoint was
+dropped, and timed-out endpoints are most of what a sweep meets. They would have
+been re-attempted at full cost every night for ever, with nothing anywhere
+recording that they had ever been tried. **64 of 184 outcomes were being thrown
+away.** Whether the sweep was stopped is something only the runner knows, so it
+now says so instead of leaving it to be inferred; a timeout classifies as
+`transient`. The regression test builds the error from a real `httptest` server
+rather than reconstructing it, because a hand-written stand-in would pin a belief
+about Go rather than Go.
+
+**A tuning question this leaves open.** 295 of the 414 endpoints swept came back
+`transient`, most of them unreachable hosts, and `transient` caps at seven days
+where `gone` caps at a hundred and eighty. A timeout genuinely cannot tell a
+lapsed domain from a bad afternoon, so the conservative cap is right for one
+observation — but an endpoint that has timed out on every attempt for six months
+is not having a bad afternoon. Promoting a long run of `transient` to `gone`
+would be the next real saving; it is policy, and it is yours.
+
+**Also worth knowing.** `--deadline` must be comfortably larger than
+`timeout × (retries+1)²`, or dead endpoints are recorded as `timeout` (capped at
+7 days) instead of `gone` (180). With `--deadline 45s` against the defaults, 90
+of 136 came back as timeouts and only 30 as gone; the command now warns. And
+the harvest log is discarded unless `--log` or `--verbose` is given: sixty-four
+workers interleaving logrus lines is several unreadable gigabytes per nightly
+run, and the summary is what anyone actually reads.
+
 **Two smaller things.** `Harvester` also lowers `Config.MaxRetries` and
 `RetryDelay`, because harvest's own retry layer defaults to three retries from
 ten seconds doubling — seventy seconds of waiting per window, which a sweep
