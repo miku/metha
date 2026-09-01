@@ -34,6 +34,7 @@ install" lays them down again after a "go install".`,
 	root.AddCommand(
 		newSyncCmd(),
 		newSweepCmd(),
+		newEndpointsCmd(),
 		newCatCmd(),
 		newLsCmd(),
 		newFilesCmd(),

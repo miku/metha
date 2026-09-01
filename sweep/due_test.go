@@ -355,3 +355,63 @@ func TestApplyTruncatesLastError(t *testing.T) {
 		t.Errorf("LastError is %d bytes, want at most %d", len(got.LastError), maxError+len("…"))
 	}
 }
+
+// TestBlockAndUnblock is the one transition no outcome can make, in both
+// directions. "Nothing resets blocked" is about outcomes; a flag set by hand
+// still needs a hand-operated way back, or the first URL blocked by mistake can
+// only be recovered by editing a compressed file.
+func TestBlockAndUnblock(t *testing.T) {
+	pol := noJitter()
+	tests := []struct {
+		name string
+		p    Profile
+		want State
+	}{
+		{"never attempted", Profile{URL: "u", State: StateNew}, StateNew},
+		{"healthy", Profile{URL: "u", State: StateActive, Attempts: 4}, StateActive},
+		{"failing", Profile{URL: "u", State: StateProbation, Attempts: 4, Failures: 2}, StateProbation},
+		{"long dead", Profile{URL: "u", State: StateQuarantined, Attempts: 9, Failures: 9}, StateQuarantined},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			blocked := test.p.Block(epoch)
+			if blocked.State != StateBlocked {
+				t.Fatalf("Block() left it %q", blocked.State)
+			}
+			// The counters are untouched: blocking is a decision about whether to
+			// ask, not a claim about what the endpoint would have said - and
+			// keeping them is what lets the state be read back rather than
+			// remembered.
+			if blocked.Attempts != test.p.Attempts || blocked.Failures != test.p.Failures {
+				t.Errorf("Block() changed the counters: %+v", blocked)
+			}
+			if got := blocked.Unblock(pol).State; got != test.want {
+				t.Errorf("Unblock() = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+// TestBlockStamps: an endpoint blocked before the sweep has ever heard of it is
+// still an endpoint the roster now knows, and every profile in the file has a
+// first_seen.
+func TestBlockStamps(t *testing.T) {
+	got := Profile{URL: "u"}.Block(epoch)
+	if !got.FirstSeen.Equal(epoch) {
+		t.Errorf("FirstSeen = %v, want %v", got.FirstSeen, epoch)
+	}
+	// And an endpoint that was already known keeps the day it was first seen.
+	earlier := epoch.Add(-30 * Day)
+	if got := (Profile{URL: "u", FirstSeen: earlier}).Block(epoch); !got.FirstSeen.Equal(earlier) {
+		t.Errorf("FirstSeen = %v, want the original %v", got.FirstSeen, earlier)
+	}
+}
+
+// TestUnblockLeavesOthersAlone: it is the inverse of Block and nothing else, so
+// it must not quietly recompute the state of an endpoint that was not blocked.
+func TestUnblockLeavesOthersAlone(t *testing.T) {
+	before := Profile{URL: "u", State: StateProbation, Attempts: 4, Failures: 1}
+	if got := before.Unblock(noJitter()); got != before {
+		t.Errorf("Unblock() changed an unblocked profile: %+v", got)
+	}
+}

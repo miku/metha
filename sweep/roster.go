@@ -126,6 +126,35 @@ func Open(dir, format, set string) (*Roster, error) {
 	return r, nil
 }
 
+// Load reads the roster without taking it over: the header as it stands and
+// every profile, sorted by URL.
+//
+// Open is for a sweep. It creates the journal, folds in whatever a killed run
+// left behind and compacts, all of which are writes - and a view that rewrites
+// the file it is reading is a view that can lose the work of a sweep running
+// beside it. This one only reads, so "metha endpoints" needs no lock and costs
+// a running sweep nothing.
+//
+// The journal is still replayed, because a sweep that is running right now has
+// its outcomes there and not yet in the roster proper. Reading it is how a
+// listing taken mid-sweep is current rather than a day old; what is left out is
+// only the writing back.
+func Load(dir, format, set string) (Header, []Profile, error) {
+	r := &Roster{
+		dir:      dir,
+		profiles: make(map[string]*Profile),
+		header:   Header{Version: rosterVersion, Format: format, Set: set},
+		Now:      func() time.Time { return time.Now().UTC() },
+	}
+	if err := r.load(); err != nil {
+		return Header{}, nil, err
+	}
+	if _, err := r.replay(); err != nil {
+		return Header{}, nil, err
+	}
+	return r.Header(), r.Profiles(), nil
+}
+
 // load reads the roster proper.
 func (r *Roster) load() error {
 	f, err := os.Open(filepath.Join(r.dir, RosterName))

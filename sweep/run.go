@@ -177,28 +177,57 @@ func (r *Runner) Run(ctx context.Context, roster *Roster, sel Selector) (*Report
 	return out, errors.Join(errs...)
 }
 
+// bucketsPerJob is how many host buckets each worker's share is cut into.
+//
+// One bucket per worker is the obvious partition and it is what this did at
+// first. It makes a sweep as long as its unluckiest worker: the endpoints are
+// even enough by count, but their cost is not - an unreachable host is twenty
+// seconds and a live repository can be twenty minutes - so one worker draws the
+// slow ones and everybody else finishes early and idles. Measured over a
+// 200-endpoint run: 3,373 worker-seconds of work, which is 53s spread over 64
+// workers, took 211s because one bucket held four of the slow ones. Four times
+// the wall clock, and it is what an operator sees as a counter frozen at
+// 194/200 for minutes.
+//
+// Eight buckets each is enough to make that vanish - the tail is now one
+// bucket's worth of work rather than one worker's - and it costs nothing:
+// buckets are handed out as workers come free, so the imbalance that remains is
+// at most the last bucket each worker takes.
+const bucketsPerJob = 8
+
 // sweep runs the pool and returns one report per worker.
 //
-// Work is partitioned by host rather than handed out from a shared queue, which
+// Work is bucketed by host rather than handed out endpoint by endpoint, which
 // is how "one in-flight request per host" holds without a lock: every endpoint
-// on a host lands on the same worker, and a worker does one thing at a time. It
-// is the topology that guarantees it, so there is no per-host semaphore to
-// maintain and no way to forget to take one.
+// on a host lands in the same bucket, a bucket is held by one worker at a time
+// because it leaves the queue when taken, and a worker does one thing at a
+// time. It is the topology that guarantees it, so there is no per-host
+// semaphore to maintain and no way to forget to take one.
 //
-// What it costs is work stealing: a worker that draws a slow host finishes
-// after the others. That is bounded by the per-endpoint deadline, and with
-// 62,294 hosts over 64 workers the partitions are even enough that it does not
-// show. The selector's interleaving is what makes the inside of a partition
-// well behaved too - a worker's list alternates between its own thousand-odd
-// hosts rather than working through one host's 784 endpoints back to back.
+// The buckets outnumber the workers, and that is what buys back the work
+// stealing a fixed partition gives up: a worker that draws a slow bucket holds
+// up only that bucket, and the next one goes to whoever is free. Within a
+// bucket the selector's interleaving still holds - a worker's list alternates
+// between its hosts rather than working through one host's 784 endpoints back
+// to back.
 func (r *Runner) sweep(ctx context.Context, roster *Roster, pol Policy, urls []string) ([]*Report, []error) {
 	jobs := r.jobs()
 	if len(urls) < jobs {
 		jobs = max(len(urls), 1)
 	}
-	parts := partition(urls, jobs)
-	reports := make([]*Report, len(parts))
-	errs := make([]error, len(parts))
+	// Filled and closed before any worker starts, so a receive that finds it
+	// empty means the sweep is done rather than that the next bucket has not
+	// been written yet.
+	queue := make(chan []string, jobs*bucketsPerJob)
+	for _, part := range partition(urls, jobs*bucketsPerJob) {
+		if len(part) > 0 {
+			queue <- part
+		}
+	}
+	close(queue)
+
+	reports := make([]*Report, jobs)
+	errs := make([]error, jobs)
 
 	// A roster that cannot be written to stops the sweep. Carrying on would
 	// harvest the whole corpus while recording none of it, and every one of
@@ -208,20 +237,22 @@ func (r *Runner) sweep(ctx context.Context, roster *Roster, pol Policy, urls []s
 	defer cancel()
 
 	var wg sync.WaitGroup
-	for i, part := range parts {
+	for i := range jobs {
 		w := &Report{Classes: make(map[Class]int), Entered: make(map[State]int)}
 		reports[i] = w
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for _, url := range part {
-				if ctx.Err() != nil {
-					return
-				}
-				if err := r.one(ctx, roster, pol, url, w); err != nil {
-					errs[i] = err
-					cancel()
-					return
+			for part := range queue {
+				for _, url := range part {
+					if ctx.Err() != nil {
+						return
+					}
+					if err := r.one(ctx, roster, pol, url, w); err != nil {
+						errs[i] = err
+						cancel()
+						return
+					}
 				}
 			}
 		}()
@@ -358,9 +389,10 @@ func (r *Runner) now() time.Time {
 	return time.Now().UTC()
 }
 
-// partition splits a selection into n lists by host, keeping each list in the
-// order it was given. Every endpoint on a host lands in the same list, which is
-// the whole point; see sweep.
+// partition splits a selection into n buckets by host, keeping each bucket in
+// the order it was given. Every endpoint on a host lands in the same bucket,
+// which is the whole point; see sweep. Empty buckets are ordinary - there are
+// more of them than workers on purpose - and the caller drops them.
 func partition(urls []string, n int) [][]string {
 	if n < 1 {
 		n = 1

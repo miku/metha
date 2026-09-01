@@ -522,3 +522,84 @@ func TestPartitionKeepsAHostTogether(t *testing.T) {
 		}
 	}
 }
+
+// TestRunDoesNotQueueBehindASlowEndpoint is the regression for the frozen
+// counter. Work is bucketed by host, and when there was one bucket per worker a
+// slow endpoint held up everything that hashed to the same worker - measured at
+// four times the wall clock a balanced run would have taken, and seen as a
+// counter stuck at 194/200 for minutes.
+//
+// With more buckets than workers, a slow endpoint holds up its own bucket and
+// nothing else: one worker is stuck, the other drains the rest.
+//
+// The threshold is an absolute claim rather than one computed from
+// bucketsPerJob, which would make the test agree with whatever that constant
+// says. Measured on these 41 endpoints: one bucket per worker leaves 20 of the
+// 40 behind the slow one, and eight leaves 2.
+func TestRunDoesNotQueueBehindASlowEndpoint(t *testing.T) {
+	// The slow one sorts first, so it is at the head of its bucket and anything
+	// sharing that bucket is genuinely behind it.
+	const others = 40
+	// A slow endpoint may hold up its own bucket. Holding up a tenth of the
+	// selection is the property under test.
+	const mustFinish = others - others/10
+	urls := []string{"http://aaa-slow.test/oai"}
+	for i := range others {
+		urls = append(urls, fmt.Sprintf("http://h%02d.test/oai", i))
+	}
+	roster := seeded(t, urls...)
+
+	release := make(chan struct{})
+	done := make(chan string, len(urls))
+	r := runner(func(ctx context.Context, url string) Result {
+		if url == "http://aaa-slow.test/oai" {
+			select {
+			case <-release:
+			case <-ctx.Done():
+			}
+		}
+		done <- url
+		return Result{Gained: 1, Total: 1}
+	})
+	// Two workers, so that with one bucket each the slow endpoint would take
+	// half the corpus down with it.
+	r.Jobs = 2
+
+	// Nearly all of the others have to finish while the slow one is still
+	// blocked. That is the whole assertion: the run completes either way, so
+	// what is being measured is how much of it had to wait.
+	stalled := make(chan struct{})
+	go func() {
+		for range mustFinish {
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+				close(stalled)
+				close(release) // unwedge the run, so the test fails rather than hangs
+				return
+			}
+		}
+		close(release)
+	}()
+
+	rep, err := r.Run(context.Background(), roster, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-stalled:
+		t.Errorf("fewer than %d of %d endpoints finished while one was blocked: "+
+			"a worker held work it could have given up", mustFinish, others)
+	default:
+	}
+	if rep.Attempted != len(urls) {
+		t.Errorf("attempted %d of %d", rep.Attempted, len(urls))
+	}
+	// A worker was free to take the rest, so everything was recorded.
+	for _, url := range urls {
+		p, ok := roster.Get(url)
+		if !ok || p.Attempts != 1 {
+			t.Errorf("%s: %+v, want one attempt", url, p)
+		}
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -430,6 +431,46 @@ requests:
 	return h.Writer.Commit()
 }
 
+// encodingSuspect reports whether an error could plausibly be about how the
+// endpoint encoded its answer, which is the only thing asking again with
+// Accept-Encoding: identity can fix.
+//
+// The workaround used to fire on every error identify saw, and that is the most
+// expensive line in a sweep. A host that does not answer its SYN costs the dial
+// timeout to find out; retrying it costs the same again, for a header that
+// cannot matter to a connection that was never made. Measured over 200 real
+// endpoints from the embedded list: 149 came back unreachable, at 20.0s each -
+// exactly twice the 10s dial timeout - and that was 51 of the sweep's 68
+// worker-minutes. Half of it bought nothing.
+//
+// So the rule is what the workaround always meant: it applies to a response we
+// could not read, not to a request that never arrived. Anything that reports
+// itself as a network error - a dial or read timeout, a refused connection, a
+// name that does not resolve, a reset - means no HTTP response came back, and
+// an HTTPError means one did and said something else entirely. What is left is
+// what the workaround was written for: a body that would not decompress, a
+// truncated document, an unexpected EOF.
+//
+// A connection reset is the one exclusion worth arguing about, since a server
+// that hates a header can drop the connection rather than answer. The evidence
+// says it is not worth the second request: in the run above, every reset that
+// was retried was reset again.
+func encodingSuspect(err error) bool {
+	if err == nil {
+		return false
+	}
+	// Our own cancellation, which nothing about the endpoint can explain.
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	var nerr net.Error
+	if errors.As(err, &nerr) {
+		return false
+	}
+	var herr oai.HTTPError
+	return !errors.As(err, &herr)
+}
+
 // identify runs an OAI identify request and caches the result.
 func (h *Harvest) identify(ctx context.Context) error {
 	req := oai.Request{
@@ -442,6 +483,9 @@ func (h *Harvest) identify(ctx context.Context) error {
 	}
 	resp, err := h.Client.DoContext(ctx, &req)
 	if err != nil {
+		if !encodingSuspect(err) {
+			return err
+		}
 		log.Printf("trying workaround: %v", err)
 		// try to workaround for the whole harvest
 		if h.Config.ExtraHeaders == nil {

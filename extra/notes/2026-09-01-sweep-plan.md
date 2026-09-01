@@ -642,6 +642,54 @@ quirk the plan called "the one that pays", turned out to need no change to
 only on its workaround path, so the header's presence afterwards is the
 fingerprint of having needed it. Step 8 is that much smaller.
 
+### status: step 7 done, and the two questions a view raises
+
+`metha endpoints` exists: the filters (`--state`, `--class`, `--slower-than`,
+plus URLs as arguments), `--json`, `--import`, `--block`. It prints URLs one per
+line, so the output is an input — to `--import`, to `metha sync`, or to the next
+release's endpoint list. Measured on the full corpus: a listing of all 244,040
+endpoints takes **0.28s**.
+
+**A view must not take the roster over.** `sweep.Open` is written for a sweep:
+it creates the journal, folds in whatever a killed run left behind, and
+compacts. All three are writes, and a listing that did them beside a running
+sweep would unlink the journal that sweep is still appending to. So the reading
+path is now `sweep.Load`, which reads the roster and replays the journal into a
+slice and stops there — no lock, no journal, nothing created. Replaying still
+matters: a sweep running right now has its outcomes in the journal and not yet
+in the roster proper, so `metha endpoints --state quarantined` mid-sweep is
+current rather than a day old. That is the listing an operator actually wants,
+because the moment they ask is the moment a sweep is running long.
+
+**The writes are the other way round.** `--import`, `--block` and `--unblock`
+take the sweep lock, and unlike `metha sweep` — which exits 0 on a held lock so
+a timer firing over a long sweep does not mail anybody — they **fail loudly**.
+A sweep holds the whole roster in memory and compacts it on exit, so an edit
+made beside one would be overwritten silently, hours later; an operator who
+asked for an endpoint to be blocked and was not told otherwise has to be able
+to believe it.
+
+**`--unblock`, which the plan did not have.** "Nothing resets blocked" is a rule
+about *outcomes* — no amount of harvesting undoes an exclusion — but a flag set
+by hand with no hand-operated way back means the first URL blocked by mistake
+can only be recovered by editing a zstd file. The state it returns to is read
+off the profile's own counters (`Attempts == 0` → new, `Failures == 0` →
+active, else probation or quarantined by the threshold) rather than remembered
+across the block, on the same argument the profile makes for not storing the
+host: a value that has to agree with another value is one more thing that can
+disagree.
+
+**Blocking an endpoint the roster has never heard of adds it, blocked.** Not an
+error, because the embedded list is re-seeded on every run: an exclusion that
+only covered endpoints already in the roster would be quietly undone by the next
+release adding that URL to `contrib/sites.tsv`.
+
+**One thing left as it is.** `Elapsed` marshals as nanoseconds, because the
+`--json` output *is* the roster line — the same bytes the file holds, which is
+what makes the view provably not a second store. Reading it wants a `jq`
+division; changing the encoding would change the file format for a cosmetic
+gain.
+
 ---
 
 ## risks

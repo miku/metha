@@ -364,10 +364,7 @@ func reportLines(rep *sweep.Report) []string {
 	var lines []string
 
 	var counts []string
-	for _, class := range []sweep.Class{
-		sweep.ClassOK, sweep.ClassEmpty, sweep.ClassTimeout, sweep.ClassTransient,
-		sweep.ClassRefused, sweep.ClassProtocol, sweep.ClassGone,
-	} {
+	for _, class := range sweep.Classes() {
 		if n := rep.Classes[class]; n > 0 {
 			counts = append(counts, fmt.Sprintf("%s %s", thousands(n), class))
 		}

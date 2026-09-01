@@ -104,6 +104,20 @@ const (
 	ClassGone Class = "gone"
 )
 
+// States lists every state, in the order an endpoint walks through them. It is
+// here so that the flag help, the error a bad --state gets and any code that
+// counts by state all read from one list: a taxonomy repeated in three places
+// is a taxonomy that will be extended in two.
+func States() []State {
+	return []State{StateNew, StateActive, StateProbation, StateQuarantined, StateBlocked}
+}
+
+// Classes lists every class, healthiest first, for the same reason.
+func Classes() []Class {
+	return []Class{ClassOK, ClassEmpty, ClassTimeout, ClassTransient,
+		ClassRefused, ClassProtocol, ClassGone}
+}
+
 // Quirks is what the sweep has learned about how an endpoint has to be asked.
 //
 // Everything here is recorded passively, from what an ordinary attempt already

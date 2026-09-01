@@ -185,6 +185,54 @@ func (p Profile) Apply(o Outcome, now time.Time, pol Policy) Profile {
 	return p
 }
 
+// Block takes an endpoint out of the sweep by hand, and is the only way into
+// StateBlocked: no outcome sets it, and Apply refuses to move one out.
+//
+// This is the way an operator who asks not to be harvested gets excluded, which
+// at 62,294 hosts on a nightly schedule is not a nicety. It is also why the
+// exclusion is a state rather than a separate file: a list of URLs to skip that
+// lives beside the roster is a list that a selector can forget to consult.
+//
+// The counters are left exactly as they are. Blocking is a decision about
+// whether to ask, not a claim about what the endpoint would have said, and
+// keeping them is what lets Unblock put the endpoint back where it was.
+func (p Profile) Block(now time.Time) Profile {
+	if p.FirstSeen.IsZero() {
+		p.FirstSeen = now.UTC()
+	}
+	p.State = StateBlocked
+	return p
+}
+
+// Unblock puts a hand-blocked endpoint back on the schedule.
+//
+// "Nothing resets blocked" is about outcomes: no amount of harvesting undoes an
+// exclusion. A hand-set flag still needs a hand-operated way back, or the first
+// URL blocked by mistake can only be recovered by editing a compressed file.
+//
+// The state it returns to is read off the counters rather than remembered,
+// which is the same argument the profile makes for not storing the host: a
+// value that has to agree with another value is one more thing that can
+// disagree. NextDue is left alone - an endpoint blocked for a year has a due
+// time long past and is attempted at the next sweep, which is what unblocking
+// meant.
+func (p Profile) Unblock(pol Policy) Profile {
+	if p.State != StateBlocked {
+		return p
+	}
+	switch {
+	case p.Attempts == 0:
+		p.State = StateNew
+	case p.Failures == 0:
+		p.State = StateActive
+	case p.Failures >= quarantineAt(pol):
+		p.State = StateQuarantined
+	default:
+		p.State = StateProbation
+	}
+	return p
+}
+
 // healthy reports whether an attempt is one the endpoint should be credited
 // for. ok and empty both are - an endpoint with nothing new to give is a
 // healthy endpoint, and treating "answered with nothing" as a failure would

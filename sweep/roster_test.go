@@ -417,3 +417,91 @@ func mustLine(t *testing.T, v any) []byte {
 	}
 	return b
 }
+
+// TestLoadIsReadOnly is what makes "metha endpoints" safe to run at any moment.
+// Open takes the roster over - it creates the journal, folds in what a killed
+// run left and compacts - and a view that did any of that beside a running
+// sweep would pull the journal out from under a process still appending to it.
+func TestLoadIsReadOnly(t *testing.T) {
+	dir := t.TempDir()
+	r := openRoster(t, dir)
+	if _, err := r.Seed([]string{"http://a.test/oai", "http://b.test/oai"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Compact(); err != nil {
+		t.Fatal(err)
+	}
+	// A sweep running now: one outcome journalled, not yet compacted.
+	if err := r.Reopen(); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Put(Profile{URL: "http://a.test/oai", State: StateQuarantined, Failures: 6}); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Flush(); err != nil {
+		t.Fatal(err)
+	}
+
+	h, profiles, err := Load(dir, "oai_dc", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h.Version != rosterVersion || h.Format != "oai_dc" {
+		t.Errorf("header = %+v, want version %d and oai_dc", h, rosterVersion)
+	}
+	if len(profiles) != 2 {
+		t.Fatalf("Load returned %d profiles, want 2", len(profiles))
+	}
+	// The journal is replayed, so a listing taken mid-sweep is current rather
+	// than a day old.
+	if profiles[0].State != StateQuarantined {
+		t.Errorf("%s is %q, want the journalled quarantined", profiles[0].URL, profiles[0].State)
+	}
+	// And nothing was written: the journal the running sweep is appending to is
+	// still there, with its record in it.
+	b, err := os.ReadFile(filepath.Join(dir, JournalName))
+	if err != nil {
+		t.Fatalf("Load removed the journal: %v", err)
+	}
+	if len(b) == 0 {
+		t.Error("Load emptied the journal")
+	}
+}
+
+// TestLoadWithoutARoster: a directory that has never been swept loads as an
+// empty roster rather than an error, the same as Open.
+func TestLoadWithoutARoster(t *testing.T) {
+	dir := t.TempDir()
+	_, profiles, err := Load(dir, "oai_dc", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(profiles) != 0 {
+		t.Errorf("Load returned %d profiles, want none", len(profiles))
+	}
+	// And it created nothing on the way.
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Errorf("Load left %v behind", entries)
+	}
+}
+
+// TestLoadRefusesAnotherSweep: the header guard is the whole reason a URL is
+// enough of a key, and a view has to honour it too - a listing that silently
+// reinterpreted another format's rows would be worse than one that failed.
+func TestLoadRefusesAnotherSweep(t *testing.T) {
+	dir := t.TempDir()
+	r := openRoster(t, dir)
+	if _, err := r.Seed([]string{"http://a.test/oai"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Compact(); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Load(dir, "marcxml", ""); !errors.Is(err, ErrIdentity) {
+		t.Errorf("Load of another format returned %v, want ErrIdentity", err)
+	}
+}
