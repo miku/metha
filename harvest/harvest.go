@@ -285,7 +285,12 @@ func (h *Harvest) run(ctx context.Context) (err error) {
 			// the next run plans it again; the abort in runWindow already made
 			// sure it left nothing half-written behind.
 			if errors.Is(err, errSkipWindow) {
-				log.Printf("skipping the rest of this window: %v", errors.Unwrap(err))
+				// The error itself, not errors.Unwrap of it: this is built with
+				// two %w verbs, so it unwraps to a slice and the single-error
+				// Unwrap returns nil. Every skipped window was logging "skipping
+				// the rest of this window: <nil>", which is the one line that
+				// would have said why.
+				log.Printf("%v", err)
 				continue
 			}
 			return err
@@ -443,28 +448,33 @@ requests:
 // exactly twice the 10s dial timeout - and that was 51 of the sweep's 68
 // worker-minutes. Half of it bought nothing.
 //
-// So the rule is what the workaround always meant: it applies to a response we
-// could not read, not to a request that never arrived. Anything that reports
-// itself as a network error - a dial or read timeout, a refused connection, a
-// name that does not resolve, a reset - means no HTTP response came back, and
-// an HTTPError means one did and said something else entirely. What is left is
-// what the workaround was written for: a body that would not decompress, a
-// truncated document, an unexpected EOF.
+// What is excluded is only what cannot possibly be about encoding and is
+// expensive to ask twice: a timeout, where nothing arrived and asking again
+// costs the same wait over; a name that does not resolve, where there is no
+// server; and an HTTP status, where the server answered and said something
+// else entirely. Everything a reachable server did - a reset, a truncated
+// body, a document that would not decompress or parse - still gets the second
+// request, because a server that dislikes a header is exactly the case the
+// workaround was written for.
 //
-// A connection reset is the one exclusion worth arguing about, since a server
-// that hates a header can drop the connection rather than answer. The evidence
-// says it is not worth the second request: in the run above, every reset that
-// was retried was reset again.
+// Narrow on purpose. A refused connection or an unreachable network is
+// pointless to retry too, but it costs milliseconds to learn, and the rule
+// worth having here is the one that gives up the least.
 func encodingSuspect(err error) bool {
 	if err == nil {
 		return false
 	}
-	// Our own cancellation, which nothing about the endpoint can explain.
+	// Our own cancellation, which nothing about the endpoint can explain. The
+	// client's own timeout arrives in this shape too.
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return false
 	}
 	var nerr net.Error
-	if errors.As(err, &nerr) {
+	if errors.As(err, &nerr) && nerr.Timeout() {
+		return false
+	}
+	var dns *net.DNSError
+	if errors.As(err, &dns) {
 		return false
 	}
 	var herr oai.HTTPError

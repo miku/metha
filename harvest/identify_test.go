@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/miku/metha/oai"
@@ -21,7 +22,10 @@ import (
 // measured at 20.0s per unreachable endpoint against a 10s dial timeout, which
 // was 51 of one 200-endpoint sweep's 68 worker-minutes.
 func TestEncodingSuspect(t *testing.T) {
-	dial := &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("i/o timeout")}
+	// A dial timeout as the net package builds one: the timeout is a property
+	// of the wrapped error, so a stand-in that merely says "i/o timeout" in its
+	// text would pin a belief about the string rather than about the error.
+	dial := &net.OpError{Op: "dial", Net: "tcp", Err: os.ErrDeadlineExceeded}
 	tests := []struct {
 		name string
 		err  error
@@ -33,8 +37,9 @@ func TestEncodingSuspect(t *testing.T) {
 		{"dial timeout as the client wraps it",
 			&url.Error{Op: "Get", URL: "http://a.test/oai", Err: dial}, false},
 		{"name does not resolve", &net.DNSError{Err: "no such host", IsNotFound: true}, false},
-		{"connection refused",
-			&net.OpError{Op: "dial", Err: errors.New("connect: connection refused")}, false},
+		// A server was there and dropped us; that is what the workaround is for.
+		{"connection reset",
+			&net.OpError{Op: "read", Err: errors.New("connection reset by peer")}, true},
 		// The server answered; it just answered with a status.
 		{"http error", oai.HTTPError{StatusCode: 503}, false},
 		{"http error wrapped", fmt.Errorf("identify: %w", oai.HTTPError{StatusCode: 403}), false},
@@ -96,7 +101,7 @@ func identifyXML(t *testing.T) string {
 // answer without gzip.
 func TestIdentifyDoesNotRetryAnUnreachableHost(t *testing.T) {
 	d := &countingDoer{reply: func(int, *http.Request) (string, error) {
-		return "", &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("i/o timeout")}
+		return "", &net.OpError{Op: "dial", Net: "tcp", Err: os.ErrDeadlineExceeded}
 	}}
 	_, err := NewHarvestWithClient(context.Background(), "http://gone.invalid/oai", &oai.Client{Doer: d})
 	if err == nil {

@@ -603,3 +603,32 @@ func TestRunDoesNotQueueBehindASlowEndpoint(t *testing.T) {
 		}
 	}
 }
+
+// TestRunNamesWhatWasStillRunning: an endpoint cut by the budget has nothing
+// recorded against it - it was not given its turn - so unless the report names
+// it, the last stretch of a sweep is unexplained by construction. Measured on a
+// 200-endpoint run: five minutes of work and then twenty minutes waiting for
+// two endpoints that nothing could name.
+func TestRunNamesWhatWasStillRunning(t *testing.T) {
+	roster := seeded(t, "http://fast.test/oai", "http://wedged.test/oai")
+	r := runner(func(ctx context.Context, url string) Result {
+		if url == "http://wedged.test/oai" {
+			<-ctx.Done()
+			return Result{Err: ctx.Err()}
+		}
+		return Result{Gained: 1, Total: 1}
+	})
+	r.Budget = 50 * time.Millisecond
+
+	rep, err := r.Run(context.Background(), roster, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rep.Unfinished) != 1 || rep.Unfinished[0] != "http://wedged.test/oai" {
+		t.Errorf("Unfinished = %v, want the wedged endpoint", rep.Unfinished)
+	}
+	// And it is still exactly as it was: not attempted, still due.
+	if p, _ := roster.Get("http://wedged.test/oai"); p.Attempts != 0 || p.State != StateNew {
+		t.Errorf("the cut endpoint was recorded as %+v", p)
+	}
+}

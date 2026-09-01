@@ -381,6 +381,15 @@ func reportLines(rep *sweep.Report) []string {
 	if rep.Skipped > 0 {
 		lines = append(lines, fmt.Sprintf("%s skipped, not attempted", thousands(rep.Skipped)))
 	}
+	// The endpoints that were still running when the clock ran out, named. This
+	// is the answer to the question a sweep otherwise leaves unanswerable: the
+	// counter stops moving near the end, and everything that could explain it -
+	// the outcome, the class, the elapsed time - belongs to attempts that
+	// finished. These did not.
+	if len(rep.Unfinished) > 0 {
+		lines = append(lines, fmt.Sprintf("still harvesting when the sweep stopped: %s",
+			strings.Join(rep.Unfinished, ", ")))
+	}
 	if changed := rep.Changed(); changed > 0 {
 		var moves []string
 		for _, state := range []sweep.State{

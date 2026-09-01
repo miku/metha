@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hash/fnv"
 	"runtime"
+	"slices"
 	"sync"
 	"time"
 )
@@ -97,8 +98,25 @@ type Report struct {
 	Entered   map[State]int
 	Recovered int
 
+	// Unfinished names the endpoints that were still being harvested when the
+	// sweep stopped, up to maxUnfinished of them.
+	//
+	// Nothing is recorded against these - they were not given their turn - so
+	// without this they leave no trace at all, and the last stretch of a sweep
+	// is unexplained by construction. Measured on a 200-endpoint run: everything
+	// else was done in five minutes and the remaining twenty were two endpoints
+	// nothing could name. "The counter sat at 198/200 for twenty minutes" and
+	// "these two endpoints are slow" are the same fact, and only one of them is
+	// actionable.
+	Unfinished []string
+
 	Elapsed time.Duration
 }
+
+// maxUnfinished bounds the list. A budget expiring leaves a handful; a Ctrl-C
+// leaves one per worker, which is sixty-four lines nobody wants and no more
+// informative than the first few.
+const maxUnfinished = 10
 
 // Changed is how many endpoints changed state.
 func (r *Report) Changed() int {
@@ -164,7 +182,14 @@ func (r *Runner) Run(ctx context.Context, roster *Roster, sel Selector) (*Report
 		for state, n := range w.Entered {
 			out.Entered[state] += n
 		}
+		for _, url := range w.Unfinished {
+			if len(out.Unfinished) < maxUnfinished {
+				out.Unfinished = append(out.Unfinished, url)
+			}
+		}
 	}
+	// The workers finish in whatever order they finish; the report should not.
+	slices.Sort(out.Unfinished)
 	out.Elapsed = r.now().Sub(started)
 	// Whatever the workers left buffered, before the caller is told the sweep
 	// is over.
@@ -217,7 +242,8 @@ func (r *Runner) sweep(ctx context.Context, roster *Roster, pol Policy, urls []s
 	}
 	// Filled and closed before any worker starts, so a receive that finds it
 	// empty means the sweep is done rather than that the next bucket has not
-	// been written yet.
+	// been written yet. The buffer holds every bucket there can be, so filling
+	// it cannot block on workers that are not running yet.
 	queue := make(chan []string, jobs*bucketsPerJob)
 	for _, part := range partition(urls, jobs*bucketsPerJob) {
 		if len(part) > 0 {
@@ -296,6 +322,9 @@ func (r *Runner) one(ctx context.Context, roster *Roster, pol Policy, url string
 	// done.
 	if res.Err != nil && ctx.Err() != nil {
 		w.Skipped++
+		if len(w.Unfinished) < maxUnfinished {
+			w.Unfinished = append(w.Unfinished, url)
+		}
 		return nil
 	}
 	// Whatever is left can only be the endpoint's own deadline, which is an

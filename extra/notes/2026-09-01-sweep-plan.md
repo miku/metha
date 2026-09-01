@@ -690,6 +690,88 @@ what makes the view provably not a second store. Reading it wants a `jq`
 division; changing the encoding would change the file format for a cosmetic
 gain.
 
+### status: why a sweep sits still, measured
+
+Reported from a live run: `--limit 200` shows `sweeping 194/200` and then
+nothing happens for many minutes. The suspicion was a connection that opens and
+then goes silent, and the question was whether a context could bound it.
+
+**The contexts were already right.** `DoContext` builds every request with
+`http.NewRequestWithContext`, pester's backoff selects on `req.Context().Done()`,
+`harvest.sleep` is cancellable, and the runner wraps one attempt in
+`context.WithTimeout(ctx, --deadline)`. A cancel reaches the socket. Nothing
+below needed a context added; what the run needed was to stop *spending* time.
+
+Measured with the harvest log and the roster's own `Elapsed`, over 200 real
+endpoints from the embedded list (`metha endpoints --json`, which reads the
+journal while the sweep is still running):
+
+| | |
+|---|---|
+| total worker-time | 60.0 min |
+| spent on endpoints that returned nothing (`transient`) | 42.7 min, **71%** |
+| median endpoint | 20.0s |
+| sum of work ÷ 64 workers (a balanced run) | 53s |
+| actual wall clock to finish the last one | 211s |
+
+Three separate causes, in order of what they cost.
+
+**1. Every unreachable host was dialled twice, and the second dial bought
+nothing.** `identify` retried *any* failure with `Accept-Encoding: identity` —
+a workaround for servers that mis-encode a response, applied to hosts that had
+not answered a SYN. The dial timeout is 10s, so an unreachable endpoint cost
+20.0s, exactly twice, and that was 71% of the sweep. `encodingSuspect` now
+gates the retry: a timeout, a name that does not resolve, or an HTTP status
+means asking again cannot help, while a reset, a truncated body or a document
+that would not parse still gets the second request. Deliberately narrow — a
+refused connection is pointless to retry too, but it costs milliseconds to
+learn.
+
+**2. A slow endpoint held every endpoint queued behind it.** Work was
+partitioned by host into exactly one bucket per worker, so one bucket with four
+slow endpoints made a 53s run take 211s while 63 workers idled. The buckets are
+now eight per worker, handed out from a channel as workers come free. The
+one-in-flight-per-host guarantee is unchanged and still topological: every
+endpoint of a host is in one bucket, and a bucket is off the queue while it is
+being worked.
+
+Re-measured, same 200 endpoints, same outcomes (8 ok, 6 empty, 138 transient, 2
+refused, 8 protocol, 36 gone — identical class counts, so nothing was bought by
+classifying less):
+
+| | before | after |
+|---|---|---|
+| total worker-time | 60.0 min | **38.9 min** |
+| on unreachable hosts | 42.7 min | **22.7 min** |
+| median endpoint | 20.0s | **10.0s** |
+| 90% of endpoints done at | 1.4 min | **0.5 min** |
+| 95% | 1.7 min | **0.6 min** |
+| 98% | 3.0 min | **1.3 min** |
+
+**3. What is left is one or two genuinely slow endpoints, and the sweep could
+not say which.** In both runs everything was done in about five minutes and
+then two endpoints ran until the 25-minute budget cut them. That is the
+deadline working as designed — a large repository is allowed an hour — but an
+endpoint cut by the clock has nothing recorded against it, so it left no trace
+whatsoever. `Report.Unfinished` now names them, and the summary ends with
+`still harvesting when the sweep stopped: …`. The counter still stops moving;
+it is no longer a mystery when it does.
+
+**Left open, and it is policy.** One endpoint spent 279s walking window after
+window, each answered with an Internal Server Error, and finished classed
+`empty` — which counts as healthy, so it is due again in 24h and will do the
+same tomorrow, for ever. `IgnoreHTTPErrors` makes a failed window skip to the
+next, and nothing bounds how many windows may fail in a row. Two fixes are
+available and they are different decisions: read `store.Stat`'s failed-window
+count in `Harvester.Attempt` so the class reflects it, or stop a harvest after
+*k* consecutive failed windows. The first stops the mislabelling, the second
+stops the spending.
+
+**Also fixed on the way past.** Every skipped window logged `skipping the rest
+of this window: <nil>` — the error is built with two `%w` verbs, so it unwraps
+to a slice and single-error `errors.Unwrap` returns nil. The one line that
+would have said *why* a window was skipped was saying nothing.
+
 ---
 
 ## risks
