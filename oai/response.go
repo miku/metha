@@ -284,15 +284,61 @@ type ListMetadataFormats struct {
 	MetadataFormat []MetadataFormat `xml:"metadataFormat,omitempty" json:"metadataFormat,omitempty"`
 }
 
-// Description holds information about a set.
+// Description holds information about a repository or a set.
 type Description struct {
 	Body []byte `xml:",innerxml"`
+	// raw is the JSON this description was decoded from, kept so that a
+	// description read back out of a meta.json marshals to what it was. Empty
+	// for a description that came from XML, which is every description on the
+	// harvest path. See UnmarshalJSON.
+	raw []byte
 }
 
 // MarshalJSON renders the description as JSON rather than as base64. This is
 // the one that shows in "metha id": a repository's oai-identifier and toolkit
 // blocks, and the description of every set.
-func (desc Description) MarshalJSON() ([]byte, error) { return innerXMLToJSON(desc.Body) }
+func (desc Description) MarshalJSON() ([]byte, error) {
+	if len(desc.raw) > 0 {
+		return desc.raw, nil
+	}
+	return innerXMLToJSON(desc.Body)
+}
+
+// UnmarshalJSON reads back what MarshalJSON wrote, and never fails.
+//
+// The schema says a description is any element from another namespace, so a
+// description that marshalled through innerXMLToJSON is a JSON object - but a
+// body that would not parse as XML comes back as a JSON *string* of itself
+// instead, and that is not something a struct can be unmarshalled from.
+// encoding/json then fails the whole document, which is how one repository
+// putting a sentence of prose directly inside <description> made its entire
+// meta.json unreadable and cost "metha stat" the shard:
+//
+//	json: cannot unmarshal string into Meta.identify.description.0 of type oai.Description
+//
+// Rare, but a quarter of a million endpoints makes rare things routine, and a
+// shard is not worth losing over the part of Identify nothing reads.
+//
+// Both shapes are kept verbatim in raw. A string is additionally decoded into
+// Body, because a string is exactly the case where the description was
+// character data and that data *is* the inner XML - so GoString and the XML
+// encoding keep working for it. An object cannot go back to XML the same way,
+// since mxj has already flattened the distinction between an attribute and a
+// child element, and inventing an element order and a set of namespace
+// declarations to re-render it would be a worse answer than admitting the JSON
+// is where it now lives.
+func (desc *Description) UnmarshalJSON(b []byte) error {
+	if string(b) == "null" {
+		return nil // by convention, a no-op
+	}
+	desc.raw = bytes.Clone(b)
+	desc.Body = nil
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		desc.Body = []byte(s)
+	}
+	return nil
+}
 
 // GoString is a formatter for Description content.
 func (desc Description) GoString() string { return string(desc.Body) }
