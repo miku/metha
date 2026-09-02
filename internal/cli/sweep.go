@@ -106,9 +106,11 @@ func (o *sweepOpts) setupLog() (func(), error) {
 			return nil, err
 		}
 		log.SetOutput(f)
+		routeStdlibLog(f)
 		return func() { _ = f.Close() }, nil
 	default:
 		log.SetOutput(io.Discard)
+		routeStdlibLog(io.Discard)
 		return func() {}, nil
 	}
 }

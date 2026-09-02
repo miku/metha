@@ -126,6 +126,7 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 	}
 	if o.quiet {
 		log.SetOutput(io.Discard)
+		routeStdlibLog(io.Discard)
 	}
 	if o.logFile != "" {
 		file, err := os.OpenFile(o.logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -133,6 +134,7 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 			return fmt.Errorf("error opening log file: %w", err)
 		}
 		log.SetOutput(file)
+		routeStdlibLog(file)
 	}
 	if o.logStderr {
 		if !o.quiet && o.logFile == "" {
