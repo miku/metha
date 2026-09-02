@@ -69,6 +69,15 @@ next fire is not a failure — the sweep lock means the second one prints
 flaps nor mails anybody — but an installation permanently one sweep behind is
 worth noticing rather than absorbing.
 
+**Memory scales with `--jobs`, not with the corpus.** The roster is a fixed
+~320MB whatever the machine; everything above that is the endpoints in flight,
+so 64 workers cost roughly a sixteenth of what 1024 would. Measured on a sweep
+of 3,000 endpoints at `--jobs 256`: 2.4GB resident, 4.2GB peak footprint. If a
+sweep should be held to a budget, uncomment both `GOMEMLIMIT` and `MemoryMax` in
+the unit — the first makes Go's collector work harder as it approaches the
+figure, the second is the backstop. `GOMEMLIMIT` alone will not prevent an OOM,
+and `MemoryMax` alone turns one into a kill.
+
 **`TimeoutStartSec=infinity` is there for the next person, not for today.** For
 `Type=oneshot` the start timeout is already disabled by default, so the line
 changes nothing as the unit stands. It matters if `Type=` is ever changed:

@@ -50,6 +50,15 @@ TimeoutStopSec=120
 Nice=10
 IOSchedulingClass=idle
 
+# Memory scales with --jobs, not with the size of the corpus: the roster is a
+# fixed ~320MB and everything above that is the endpoints in flight. If a sweep
+# should be held to a budget, do it with both of these together - GOMEMLIMIT
+# makes Go's collector work harder as it approaches the figure, and MemoryMax is
+# the backstop if that is not enough. GOMEMLIMIT alone will not stop an OOM, and
+# MemoryMax alone turns one into a kill.
+#Environment=GOMEMLIMIT=8GiB
+#MemoryMax=10G
+
 # It needs the network, its own state directory, and nothing else.
 NoNewPrivileges=true
 PrivateTmp=true

@@ -819,6 +819,73 @@ questions above — the endpoint whose every window fails and still classes
 `empty`, and promoting a long run of `transient` to `gone` — and the export and
 analysis verbs, which were never in this plan.
 
+### status: where the memory went
+
+Reported from a live run: `metha sweep --jobs 256 --limit 20000` on a 128GB
+machine, sitting at over half of it. Four causes, and the first one is most of
+it.
+
+**1. A zstd encoder costs what the machine has, not what the work needs.**
+`store.OpenWriter` builds one `zstd.NewWriter` per shard, and a sweep opens one
+per endpoint being harvested. `zstd.NewWriter` sizes its internal concurrency at
+`GOMAXPROCS` and allocates window and hash state per goroutine, so an idle
+encoder is priced by the core count of the machine it happens to be on.
+Measured on the real path, 200 writers each having committed one window:
+
+| GOMAXPROCS | per writer | at `--jobs 256` |
+|---|---|---|
+| 6 | 7.86 MB | 2.0 GB |
+| 16 | 20.44 MB | 5.1 GB |
+| 64 | **80.81 MB** | **20.2 GB** |
+| any, with `WithEncoderConcurrency(1)` | **1.57 MB** | **0.4 GB** |
+
+Twenty gigabytes of encoders holding nothing. And nothing is lost by fixing it:
+encoder concurrency parallelises the blocks of one stream, every stream here is
+written serially by the one goroutine harvesting that endpoint, and the
+parallelism that matters is already at the endpoint level. The saving grows with
+the core count, which is the wrong way round for a fleet machine and exactly why
+it went unnoticed on a laptop.
+
+**2. Every response was copied three times before it was parsed.**
+`maybeCompressed` read the whole body to look at its first four bytes, handed
+back a reader over those bytes, and `DoContext` read them again - two full
+copies alive at once, on every request, compressed or not. Then the
+declaration loop opened with `bytes.Replace(respBody, utf8decl, utf8decl, 1)`,
+replacing the declaration with itself, which `bytes.Replace` serves with a full
+copy whether or not it matches. Sniffing is now a `bufio.Peek(4)` and the first
+declaration is used as-is: 21.89x the body allocated per request, down to
+18.86x. What is left is the XML decoder, which is the work.
+
+**3. Every zstd-encoded response leaked its decoder.** `zstd.Decoder.Close`
+returns nothing, so a `*Decoder` does not satisfy `io.Closer`, and it was being
+wrapped in `io.NopCloser` - which does satisfy it, and does nothing. The
+decoder's goroutines and block buffers were never released. `IOReadCloser()`
+exists for exactly this. Rare per endpoint; a sweep meets every endpoint there
+is.
+
+**Measured end to end**, same 3,000 endpoints, same flags, on a 6-core machine
+where cause 1 is at its *weakest*:
+
+| | before | after |
+|---|---|---|
+| records harvested | 296,668 | **472,930** |
+| peak memory footprint | **10.92 GB** | **4.22 GB** |
+| max RSS | 2.49 GB | 2.44 GB |
+
+Two and a half times less memory while harvesting one and a half times more.
+Max RSS barely moves because Go's collector sets its heap target from what is
+live, and holds it; the footprint is where the churn shows. On the 64-core
+machine that prompted this, cause 1 alone is thirteen times larger than it is
+here.
+
+**What is not a bug.** The roster costs **319MB** resident on its own - 244,040
+profiles, loaded whole, before a single request. That is the floor, it does not
+depend on `--jobs`, and everything above it is endpoints in flight. So memory
+scales with the worker count and not with the corpus, which is worth saying
+plainly: `--jobs 256` is four times the default and costs four times the
+non-floor memory. The unit file now carries commented `GOMEMLIMIT` and
+`MemoryMax` lines for anyone who wants a hard budget.
+
 ---
 
 ## risks

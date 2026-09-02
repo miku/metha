@@ -1,6 +1,7 @@
 package oai
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"context"
@@ -226,26 +227,43 @@ func DoContext(ctx context.Context, r *Request) (*Response, error) {
 }
 
 // maybeCompressed detects compressed content and decompresses it on the fly.
+//
+// The detection needs four bytes, so it peeks at four rather than reading the
+// body to find them. It used to read the whole thing, hand back a reader over
+// the bytes, and have DoContext read them again - two full copies of every
+// response alive at once, on every request, whether or not anything was
+// compressed. At one endpoint that is a response worth of memory nobody
+// notices; at --jobs 256 it is that times two hundred and fifty six.
 func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
-	buf, err := io.ReadAll(r)
-	if err != nil {
+	br := bufio.NewReader(r)
+	// Short of four bytes is not an error here: a body that ends early is not
+	// compressed by any of these, and whatever went wrong with it belongs to
+	// the read that follows rather than to sniffing.
+	magic, err := br.Peek(4)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
 
 	// Check for zstd magic number (0x28 0xB5 0x2F 0xFD)
-	if len(buf) >= 4 && buf[0] == 0x28 && buf[1] == 0xB5 && buf[2] == 0x2F && buf[3] == 0xFD {
-		zr, err := zstd.NewReader(bytes.NewReader(buf))
+	if len(magic) >= 4 && magic[0] == 0x28 && magic[1] == 0xB5 && magic[2] == 0x2F && magic[3] == 0xFD {
+		zr, err := zstd.NewReader(br)
 		if err == nil {
 			log.Println("zstd-decompress-on-the-fly")
-			return io.NopCloser(zr), nil
+			// IOReadCloser rather than io.NopCloser: a zstd decoder holds
+			// goroutines and block buffers that only Close releases, and
+			// Decoder.Close returns nothing, so it does not satisfy io.Closer
+			// on its own. Wrapped in a NopCloser it was never closed, and every
+			// zstd-encoded response leaked what it had allocated - rare per
+			// endpoint, and a sweep meets every endpoint there is.
+			return zr.IOReadCloser(), nil
 		}
 		// If zstd decompression fails, don't try gzip - it's definitely meant to be zstd
 		return nil, fmt.Errorf("failed to decompress zstd data: %w", err)
 	}
 
 	// Check for gzip magic number (0x1F 0x8B)
-	if len(buf) >= 2 && buf[0] == 0x1F && buf[1] == 0x8B {
-		gr, err := gzip.NewReader(bytes.NewReader(buf))
+	if len(magic) >= 2 && magic[0] == 0x1F && magic[1] == 0x8B {
+		gr, err := gzip.NewReader(br)
 		if err == nil {
 			log.Println("gzip-decompress-on-the-fly")
 			return gr, nil
@@ -255,7 +273,7 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	}
 
 	// No compression detected
-	return io.NopCloser(bytes.NewReader(buf)), nil
+	return io.NopCloser(br), nil
 }
 
 // wrapWithRateLimit wraps a reader with rate limiting if enabled
@@ -353,7 +371,15 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		[]byte(`<?xml version="1.0" encoding="US-ASCII"?>`),
 	}
 	for i, decl := range decls {
-		body := bytes.Replace(respBody, []byte(`<?xml version="1.0" encoding="UTF-8"?>`), decl, 1)
+		// The first declaration is the one being searched for, so replacing it
+		// costs a full copy of the response to produce the response. That copy
+		// was made on every successful request - which is nearly all of them,
+		// since the loop exists for a handful of endpoints that misdeclare
+		// their encoding and the first pass is what the rest parse on.
+		body := respBody
+		if i > 0 {
+			body = bytes.Replace(respBody, []byte(`<?xml version="1.0" encoding="UTF-8"?>`), decl, 1)
+		}
 		dec := xml.NewDecoder(bytes.NewReader(body))
 		dec.CharsetReader = charset.NewReaderLabel
 		dec.Strict = false
