@@ -58,9 +58,11 @@ type Config struct {
 	ExtraHeaders               http.Header
 	IgnoreUnexpectedEOF        bool
 	Delay                      time.Duration
-	MaxRetries                 int           // Maximum number of retry attempts
-	RetryDelay                 time.Duration // Delay between retries
-	RetryBackoff               float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
+	// MaxBodyBytes bounds one response. Zero means oai.DefaultMaxBodyBytes.
+	MaxBodyBytes int
+	MaxRetries   int           // Maximum number of retry attempts
+	RetryDelay   time.Duration // Delay between retries
+	RetryBackoff float64       // Multiplier for delay between retries (e.g., 2.0 for exponential backoff)
 }
 
 // Harvest contains parameters for mass-download. MaxRequests and
@@ -352,6 +354,7 @@ requests:
 			CleanBeforeDecode:       h.Config.CleanBeforeDecode,
 			SuppressFormatParameter: h.Config.SuppressFormatParameter,
 			ExtraHeaders:            h.Config.ExtraHeaders,
+			MaxBodyBytes:            h.Config.MaxBodyBytes,
 		}
 		// A boundless window asks for everything, which is what an endpoint
 		// that cannot handle from and until is given.
@@ -477,6 +480,16 @@ func encodingSuspect(err error) bool {
 	if errors.As(err, &dns) {
 		return false
 	}
+	// A response past the size limit is the one failure asking again without
+	// compression reliably makes worse: the limit is on the decompressed body,
+	// so identity encoding sends the same number of bytes over the wire that
+	// were already too many to keep, and the second request is refused exactly
+	// where the first was. For a repository this costs a wasted round trip; for
+	// an endpoint answering with a compression bomb it is a second one on
+	// request.
+	if errors.Is(err, oai.ErrResponseTooLarge) {
+		return false
+	}
 	var herr oai.HTTPError
 	return !errors.As(err, &herr)
 }
@@ -487,6 +500,7 @@ func (h *Harvest) identify(ctx context.Context) error {
 		Verb:         "Identify",
 		BaseURL:      h.Config.BaseURL,
 		ExtraHeaders: h.Config.ExtraHeaders,
+		MaxBodyBytes: h.Config.MaxBodyBytes,
 	}
 	if h.Client == nil {
 		h.Client = oai.DefaultClient

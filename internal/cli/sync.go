@@ -37,6 +37,7 @@ type syncOpts struct {
 	logStderr                  bool
 	maxEmptyResponses          int
 	maxRequests                int
+	maxBodyBytes               int
 	quiet                      bool
 	removeCached               bool
 	set                        string
@@ -84,6 +85,8 @@ func newSyncCmd() *cobra.Command {
 	f.BoolVar(&o.logStderr, "log-errors-to-stderr", false, "log errors and warnings to STDERR; if --log or -q are not given, write full log to STDOUT")
 	f.IntVar(&o.maxEmptyResponses, "max-empty-responses", 10, "allow a number of empty responses before failing")
 	f.IntVar(&o.maxRequests, "max", 1048576, "maximum number of token loops")
+	f.IntVar(&o.maxBodyBytes, "max-body-bytes", oai.DefaultMaxBodyBytes,
+		"give up on a response longer than this many bytes")
 	f.BoolVarP(&o.quiet, "quiet", "q", false, "suppress all output")
 	f.BoolVar(&o.removeCached, "rm", false, "remove all cached files before starting anew")
 	f.StringVar(&o.set, "set", "", "set name")
@@ -193,6 +196,7 @@ func (o *syncOpts) run(ctx context.Context, endpoint string) error {
 	h.Config.Format = o.format
 	h.Config.Set = o.set
 	h.Config.MaxRequests = o.maxRequests
+	h.Config.MaxBodyBytes = o.maxBodyBytes
 	h.Config.CleanBeforeDecode = true
 	h.Config.DisableSelectiveHarvesting = o.disableSelectiveHarvesting
 	h.Config.MaxEmptyResponses = o.maxEmptyResponses

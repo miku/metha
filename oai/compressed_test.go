@@ -36,7 +36,7 @@ func TestMaybeCompressedSniffsWithoutBuffering(t *testing.T) {
 	body := strings.Repeat("<record>x</record>", 200000) // several megabytes
 	c := &countingReader{r: strings.NewReader(body)}
 
-	rc, err := maybeCompressed(c)
+	rc, err := maybeCompressed(c, DefaultMaxBodyBytes)
 	if err != nil {
 		t.Fatalf("maybeCompressed: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestMaybeCompressedDecompresses(t *testing.T) {
 		{"plain", []byte(plain)},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			rc, err := maybeCompressed(bytes.NewReader(tt.body))
+			rc, err := maybeCompressed(bytes.NewReader(tt.body), DefaultMaxBodyBytes)
 			if err != nil {
 				t.Fatalf("maybeCompressed: %v", err)
 			}
@@ -113,7 +113,7 @@ func TestMaybeCompressedDecompresses(t *testing.T) {
 // class of failure than a truncated response.
 func TestMaybeCompressedShortBody(t *testing.T) {
 	for _, body := range []string{"", "<", "<?x"} {
-		rc, err := maybeCompressed(strings.NewReader(body))
+		rc, err := maybeCompressed(strings.NewReader(body), DefaultMaxBodyBytes)
 		if err != nil {
 			t.Fatalf("maybeCompressed(%q): %v", body, err)
 		}

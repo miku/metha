@@ -27,6 +27,12 @@ type Harvester struct {
 	// asked again tomorrow, and the budget is better spent on the corpus than
 	// on one host. Zero means DefaultRetries; NoRetries means none.
 	Retries int
+	// MaxBodyBytes bounds one response. Zero means oai.DefaultMaxBodyBytes.
+	//
+	// A sweep is the reason there is a bound at all: it meets every endpoint
+	// there is, so it meets the ones that answer with something no repository
+	// would send, and it meets them --jobs at a time.
+	MaxBodyBytes int
 	// Delay sleeps between requests to one endpoint, on top of the politeness
 	// the runner's host partitioning already provides.
 	Delay time.Duration
@@ -97,6 +103,7 @@ func (h *Harvester) Attempt(ctx context.Context, endpoint string) Result {
 	hv.Config.IgnoreHTTPErrors = true
 	hv.Config.MaxEmptyResponses = 10
 	hv.Config.MaxRequests = 1 << 20
+	hv.Config.MaxBodyBytes = h.MaxBodyBytes
 	// The harvest's own retry layer sits above the client's, and its defaults -
 	// three retries from ten seconds, doubling - are seventy seconds of waiting
 	// per window before anything gives up. A sweep wants both layers small: an

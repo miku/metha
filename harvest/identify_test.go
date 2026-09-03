@@ -50,6 +50,12 @@ func TestEncodingSuspect(t *testing.T) {
 		{"unreadable document", oai.ErrParseFailed, true},
 		{"truncated body", io.ErrUnexpectedEOF, true},
 		{"broken gzip", errors.New("failed to decompress gzip data: unexpected EOF"), true},
+		// Read fine, and there was too much of it. Asking again without
+		// compression sends the same bytes uncompressed and is refused in the
+		// same place, so the second request buys nothing.
+		{"response too large", oai.ErrResponseTooLarge, false},
+		{"response too large, wrapped",
+			fmt.Errorf("identify: %w", oai.ErrResponseTooLarge), false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
