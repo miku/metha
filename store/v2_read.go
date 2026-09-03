@@ -160,6 +160,12 @@ func recordsFromXML(xd *xml.Decoder, path string, opts ReadOptions, yield func(o
 			if !opts.match(&rec) {
 				continue
 			}
+			// After the filter, so the count is of records that would have been
+			// written, and before the yield, so the body is dropped here rather
+			// than going on to cost seven times its size in the renderer.
+			if opts.tooLarge(&rec) {
+				continue
+			}
 			if !yield(rec, nil) {
 				return false
 			}

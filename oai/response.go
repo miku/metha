@@ -189,9 +189,29 @@ type Metadata struct {
 // marshaller returns an error, so a single malformed metadata block used to take
 // "metha cat --json" down with it, and over a corpus this size there will be
 // malformed blocks.
+// maxMapXML is the largest body innerXMLToJSON will build a map of.
+//
+// mxj holds the whole document as nested maps and slices of strings before
+// anything is marshalled, and that representation is far larger than the bytes
+// it came from: measured over bodies from 2MB to 120MB, rendering one costs a
+// flat 7.3x its size in allocations. On a normal record - a few kilobytes - that
+// is nothing. On the pathological ones it is the difference between an export
+// that finishes and one the OOM killer takes, since export renders --jobs
+// records at a time.
+//
+// Past this size the body is emitted as a JSON string of itself instead, which
+// is the same thing that already happens to a body that will not parse. The
+// shape of the field changes, from an object to a string, and that is worth it
+// here: a metadata block this size is not a document anyone is going to address
+// by path, and the alternative is not a nicer object but no output at all.
+const maxMapXML = 4 << 20
+
 func innerXMLToJSON(body []byte) ([]byte, error) {
 	if len(bytes.TrimSpace(body)) == 0 {
 		return []byte("{}"), nil
+	}
+	if len(body) > maxMapXML {
+		return json.Marshal(string(body))
 	}
 	// TODO: Is there a more uniform way to create JSON, e.g. one that has some
 	// listify option, like xmltodict?

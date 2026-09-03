@@ -47,6 +47,13 @@ Each line carries an "endpoint" field naming the repository the record came
 from, which is the one thing an OAI-PMH record does not say about itself and
 the one thing a corpus of them needs.
 
+A record whose metadata runs past --max-record-bytes is left out, and the count
+and the endpoints it came from are reported at the end. The bound is there
+because nothing else bounds one: text that has been through the UTF-8/CP1252
+double-encoding loop grows by a factor of 2.2 a round, and a single record of it
+has been seen rendering to 1.6GB - enough, times --jobs, to lose the whole run.
+Pass 0 for no bound.
+
 It reads and never writes the cache, and takes no locks, so it is safe to run
 while a sweep is harvesting. What it sees is the cache as of the moment it
 reads each shard: windows commit whole, so a shard being written to yields the
@@ -77,6 +84,8 @@ records committed so far and never a half-written one.`,
 	f.StringVar(&o.root, "root", "Records", "root element to wrap the XML in")
 	f.BoolVar(&o.noEndpoint, "no-endpoint", false, "leave the endpoint field out of each JSON line")
 	f.IntVar(&o.jobs, "jobs", runtime.NumCPU(), "endpoints to read in parallel")
+	f.IntVar(&o.maxRecordBytes, "max-record-bytes", defaultMaxRecordBytes,
+		"drop records whose metadata exceeds this many bytes; 0 for no bound")
 	f.BoolVarP(&o.quiet, "quiet", "q", false, "no progress counter")
 	return cmd
 }
@@ -98,7 +107,24 @@ type exportOpts struct {
 	noEndpoint  bool
 	jobs        int
 	quiet       bool
+
+	maxRecordBytes int
 }
+
+// defaultMaxRecordBytes is how large one record's metadata may be before export
+// leaves it out.
+//
+// A record is a few kilobytes; a large one - marcxml, mets - is a few hundred.
+// Sixteen megabytes is a thousand times the first and fifty times the second, so
+// nothing a repository means to publish comes near it, and what does come near
+// it is text that has been through the UTF-8/CP1252 double-encoding loop enough
+// times to grow by 2.2x a round. See store.ReadOptions.MaxRecordBytes.
+//
+// The bound is what makes the memory of an export predictable rather than a
+// property of the worst record in the corpus: rendering costs about 7x the
+// record and --jobs of them run at once, so this is the number that, times the
+// job count, says what the run will need.
+const defaultMaxRecordBytes = 16 << 20
 
 // chunkSize is how much a worker accumulates before handing it to the writer.
 //
@@ -214,13 +240,29 @@ func (o *exportOpts) run(ctx context.Context, args []string) error {
 	}()
 
 	var (
-		records int64
-		failed  int
-		read    int
-		empty   int
-		missing int
+		records  int64
+		failed   int
+		read     int
+		empty    int
+		missing  int
+		oversize int
+		bloated  int // endpoints holding at least one such record
+		largest  int
 	)
 	for r := range results {
+		// Reported as it happens, not only in the summary: a dropped record is
+		// the one outcome here that names a repository worth looking at, and by
+		// the time the summary prints, the run that would have led someone to it
+		// is over.
+		if r.oversize > 0 {
+			oversize += r.oversize
+			bloated++
+			largest = max(largest, r.largest)
+			if bloated <= maxNamed {
+				p.printf("%s: %s over --max-record-bytes, largest %s",
+					r.id.BaseURL, plural2(r.oversize, "record"), humanBytes(int64(r.largest)))
+			}
+		}
 		switch {
 		// The cache holding nothing for an endpoint is a fact about the cache,
 		// not a failed read, and the store is careful to say which it means.
@@ -270,6 +312,11 @@ func (o *exportOpts) run(ctx context.Context, args []string) error {
 	if missing > 0 {
 		fmt.Fprintf(os.Stderr, "; %s never harvested", thousands(missing))
 	}
+	if oversize > 0 {
+		fmt.Fprintf(os.Stderr, "; %s over --max-record-bytes at %s dropped from %s, largest %s",
+			plural2(oversize, "record"), humanBytes(int64(o.maxRecordBytes)),
+			plural2(bloated, "endpoint"), humanBytes(int64(largest)))
+	}
 	fmt.Fprintln(os.Stderr)
 	warnLegacy(o.baseDir)
 
@@ -296,6 +343,13 @@ type exportResult struct {
 	records int
 	bytes   int64
 	err     error
+
+	// oversize is how many records the size bound left out, and largest is the
+	// biggest of them. Kept per endpoint because that is the unit anyone acts
+	// on: a corpus dump that quietly lost records should be able to say which
+	// repository to go and look at.
+	oversize int
+	largest  int
 }
 
 // one renders a single endpoint into the chunk stream.
@@ -305,21 +359,30 @@ func (o *exportOpts) one(ctx context.Context, id store.Identity, chunks chan<- [
 		return exportResult{id: id, err: err}
 	}
 	c := &chunker{ctx: ctx, out: chunks}
+	res := exportResult{id: id}
 	err = store.Render(st, store.RenderOpts{
 		Writer: c,
 		// Empty: the root element belongs to the export, not to each endpoint.
-		Root:     "",
-		From:     o.from,
-		Until:    o.until,
-		SetSpec:  o.setSpec,
-		Deleted:  o.deletedPolicy(),
-		UseJson:  !o.asXML,
-		Endpoint: o.endpointField(id),
+		Root:           "",
+		From:           o.from,
+		Until:          o.until,
+		SetSpec:        o.setSpec,
+		Deleted:        o.deletedPolicy(),
+		UseJson:        !o.asXML,
+		Endpoint:       o.endpointField(id),
+		MaxRecordBytes: o.maxRecordBytes,
+		// Called from this endpoint's own worker, so the counters below need no
+		// lock: one goroutine renders one endpoint.
+		Oversize: func(_ string, n int) {
+			res.oversize++
+			res.largest = max(res.largest, n)
+		},
 	})
 	if ferr := c.flush(); err == nil {
 		err = ferr
 	}
-	return exportResult{id: id, records: c.records, bytes: c.written, err: err}
+	res.records, res.bytes, res.err = c.records, c.written, err
+	return res
 }
 
 // endpointField is the provenance written into each line, or the empty string

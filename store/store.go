@@ -92,6 +92,51 @@ type ReadOptions struct {
 	Until   string // inclusive upper bound on the record datestamp
 	SetSpec string // only records carrying this setSpec
 	Deleted DeletedPolicy
+
+	// MaxRecordBytes drops a record whose raw metadata and about blocks come to
+	// more than this many bytes. Zero means no bound.
+	//
+	// The bound is on what a record costs to render, not on anything a caller
+	// asked about, and it exists because nothing else bounds it. The harvest
+	// caps a response at 1GB of stored bytes; a record read back out of one can
+	// be three times that, because a response stored under a single-byte
+	// encoding declaration is converted to UTF-8 on the way in and every byte
+	// above 0x7f grows. Text that has been through the UTF-8/CP1252
+	// double-encoding loop a dozen times is entirely such bytes, so it converts
+	// at 2.2x, and a single record of it was seen rendering to 1.6GB.
+	//
+	// Rendering that record costs about seven times its size again, because
+	// JSON output goes through a map of the whole document, and export runs
+	// --jobs of those at once. One repository of 1326 records was enough to
+	// have the OOM killer take an export of a 170 million record corpus.
+	//
+	// Dropping is the right answer rather than truncating: a record that big is
+	// mojibake, not metadata, and a truncated one would be a line that lies
+	// about itself in a way nothing downstream could detect. What matters is
+	// that the drop is counted and reported - see Oversize.
+	MaxRecordBytes int
+
+	// Oversize, when set, is called once for each record MaxRecordBytes
+	// dropped, with its identifier and the size that dropped it. A caller that
+	// does not set it gets the filtering and no account of it.
+	Oversize func(identifier string, n int)
+}
+
+// tooLarge reports whether a record exceeds MaxRecordBytes, and tells Oversize
+// about it if so. The two raw blocks are the whole of it: everything else on a
+// record is a header field of bounded length.
+func (opts ReadOptions) tooLarge(rec *oai.Record) bool {
+	if opts.MaxRecordBytes <= 0 {
+		return false
+	}
+	n := len(rec.Metadata.Body) + len(rec.About.Body)
+	if n <= opts.MaxRecordBytes {
+		return false
+	}
+	if opts.Oversize != nil {
+		opts.Oversize(rec.Header.Identifier, n)
+	}
+	return true
 }
 
 // match reports whether a record passes the filter.

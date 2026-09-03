@@ -19,6 +19,11 @@ type RenderOpts struct {
 	Deleted DeletedPolicy
 	UseJson bool
 
+	// MaxRecordBytes and Oversize bound and report what one record may cost.
+	// See ReadOptions, which is where they take effect.
+	MaxRecordBytes int
+	Oversize       func(identifier string, n int)
+
 	// Endpoint, when set, is written into every JSON line as an "endpoint"
 	// field.
 	//
@@ -55,10 +60,12 @@ func Render(s Store, opts RenderOpts) error {
 		}
 	}
 	read := ReadOptions{
-		From:    opts.From,
-		Until:   opts.Until,
-		SetSpec: opts.SetSpec,
-		Deleted: opts.Deleted,
+		From:           opts.From,
+		Until:          opts.Until,
+		SetSpec:        opts.SetSpec,
+		Deleted:        opts.Deleted,
+		MaxRecordBytes: opts.MaxRecordBytes,
+		Oversize:       opts.Oversize,
 	}
 	for rec, err := range s.Records(read) {
 		if err != nil {
