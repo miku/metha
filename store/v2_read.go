@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -79,6 +80,12 @@ func (s *v2Store) Records(opts ReadOptions) iter.Seq2[oai.Record, error] {
 //
 // The extent is decoded as a stream rather than in one piece: it is a whole
 // number of frames, and a month-wide window can hold a great many of them.
+//
+// The zstd decoder is held to one goroutine. Its default is GOMAXPROCS capped
+// at four, and it allocates a window per goroutine, which is a cost paid per
+// open reader on a machine that reads as many extents at once as it has cores.
+// The parallelism that matters is already at the endpoint level, where export
+// put it. See the encoder in v2_writer.go, which is limited for the same reason.
 func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.Record, error) bool) bool {
 	f, err := os.Open(path)
 	if err != nil {
@@ -86,7 +93,7 @@ func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.R
 		return false
 	}
 	defer func() { _ = f.Close() }()
-	dec, err := zstd.NewReader(io.NewSectionReader(f, e.Off, e.Len))
+	dec, err := zstd.NewReader(io.NewSectionReader(f, e.Off, e.Len), zstd.WithDecoderConcurrency(1))
 	if err != nil {
 		yield(oai.Record{}, fmt.Errorf("%s: %w", path, err))
 		return false
@@ -95,22 +102,70 @@ func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.R
 	// Each frame holds several responses back to back, and zstd reads a run of
 	// frames as one stream, so the whole extent decodes as a sequence of
 	// documents.
-	xd := newDecoder(dec)
+	return recordsFromXML(newDecoder(dec), path, opts, yield)
+}
+
+// recordsFromXML yields the matching records of a stream of response documents,
+// one record at a time.
+//
+// A record is decoded when its element is reached and dropped when it has been
+// yielded, so what this holds is one record however long the stream is. The
+// obvious form - decode a whole oai.Response, walk its ListRecords - holds one
+// document instead, and that is a bound only as long as the documents are well
+// formed.
+//
+// They are not. The cache stores what endpoints actually sent, and the decoder
+// that reads it back is deliberately lenient (see newDecoder), so a response
+// that was cut off mid-flight is stored and read without complaint. Decoding
+// whole documents across such a response does not stop at its end - there is no
+// end - and the decoder goes on appending records to that one document's
+// ListRecords out of every response that follows it in the extent, until the
+// bytes run out. The Response is then thrown away for a syntax error, but the
+// memory was spent to build it: an export of a large cache was seen reaching
+// 125GB and being killed by the OOM killer, on a single decode of a single
+// extent whose first document was truncated. Streaming the records makes the
+// truncation cost what it should - the error is still reported, at the end,
+// with every record before it delivered.
+func recordsFromXML(xd *xml.Decoder, path string, opts ReadOptions, yield func(oai.Record, error) bool) bool {
+	// Only <record> directly inside <ListRecords> is a record. The depth check
+	// is not pedantry: marcxml metadata has a <record> element of its own, and a
+	// bare name match would export the MARC record inside a record as a record.
+	// Matching on the local name alone, and not the namespace, is what decoding
+	// into oai.Response did, and endpoints that declare no namespace at all are
+	// common enough that tightening it here would drop records that have always
+	// been exported.
+	var stack []string
 	for {
-		var resp oai.Response
-		if err := xd.Decode(&resp); err != nil {
+		tok, err := xd.Token()
+		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return true
 			}
 			yield(oai.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
 			return false
 		}
-		for _, rec := range resp.ListRecords.Records {
+		switch t := tok.(type) {
+		case xml.StartElement:
+			if t.Name.Local != "record" || len(stack) == 0 || stack[len(stack)-1] != "ListRecords" {
+				stack = append(stack, t.Name.Local)
+				continue
+			}
+			var rec oai.Record
+			// DecodeElement consumes through the matching end element, so the
+			// stack stays balanced without pushing this one.
+			if err := xd.DecodeElement(&rec, &t); err != nil {
+				yield(oai.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
+				return false
+			}
 			if !opts.match(&rec) {
 				continue
 			}
 			if !yield(rec, nil) {
 				return false
+			}
+		case xml.EndElement:
+			if len(stack) > 0 {
+				stack = stack[:len(stack)-1]
 			}
 		}
 	}
