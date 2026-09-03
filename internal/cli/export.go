@@ -168,6 +168,7 @@ func (o *exportOpts) run(ctx context.Context, args []string) error {
 		go func() {
 			defer wg.Done()
 			for id := range work {
+				p.begin(id.BaseURL)
 				results <- o.one(ctx, id, chunks)
 			}
 		}()

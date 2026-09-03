@@ -89,6 +89,7 @@ func (o *migrateOpts) run(ctx context.Context, args []string) error {
 		go func() {
 			defer wg.Done()
 			for id := range work {
+				p.begin(id.BaseURL)
 				results <- migrateOne(o.baseDir, id, o.remove)
 			}
 		}()
