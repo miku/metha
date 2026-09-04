@@ -23,6 +23,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// $ time metha export | zstd -c -T0 > metha-export-2026-09-03.json.zst
+// 162,377,654 records from 97,227 endpoints in 19m28s, 370.2GB; 11,800 endpoints matched nothing
+//
+// real    22m42.321s
+// user    488m0.518s
+// sys     7m47.819s
+
 // newExportCmd writes the whole cache out as one stream of records.
 //
 // It is metha cat over every endpoint at once, and it exists because the corpus
