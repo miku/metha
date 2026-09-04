@@ -7,7 +7,7 @@
 
 ----
 
-Note to existing users - **two significant changes starting with 0.5.0**:
+> Note to existing users - **two significant changes starting with 0.5.0**:
 
 * we use a single command `metha` and subcommands for the previously separate binaryies, e.g. `metha-sync` becomes `metha sync` (we provide **shims** for the transition)
 * we switch to a new internal storage layout: to migrate an existing cache to the new layout, simply type:
@@ -64,9 +64,9 @@ $ metha sync https://oaipmh.arxiv.org/oai
 ...
 ```
 
-All downloaded files are written to a directory below a base directory. The base
-directory is `~/.cache/metha` by default and can be adjusted with the `METHA_DIR`
-environment variable.
+All downloaded files are written to a directory below a base directory. The
+base directory is `~/.cache/metha` by default ("xdg") and can also be adjusted
+with the `METHA_DIR` environment variable.
 
 When the `--dir` flag is set, only the directory corresponding to a harvest is printed.
 
@@ -97,20 +97,13 @@ $ metha cat --from 2016-01-01 https://oaipmh.arxiv.org/oai
 
 This will only stream records with a datestamp equal or after 2016-01-01.
 
-To just stream all data really fast, use `find` and `zcat` over the harvesting
-directory.
-
-```sh
-$ metha files https://oaipmh.arxiv.org/oai | xargs -n1 zstdcat
-```
-
 To display basic repository information:
 
 ```sh
 $ metha id https://oaipmh.arxiv.org/oai
 ```
 
-To list all harvested endpoints:
+To list all harvested endpoints on your machine:
 
 ```sh
 $ metha ls
@@ -119,7 +112,7 @@ $ metha ls
 Further examples can be found in the metha [man page](https://github.com/miku/metha/blob/master/docs/metha.md):
 
 ```
-$ man metha
+$ man metha # when installed from a package
 ```
 
 ## Installation
@@ -133,7 +126,7 @@ $ go install -v github.com/miku/metha/cmd/metha@latest
 Since 0.5 metha is a single binary with one subcommand per verb: `metha sync`,
 `metha cat`, `metha ls` and so on. See `metha help`.
 
-The nine commands metha used to install — `metha-sync`, `metha-cat`, … — are
+The nine commands metha used to install — `metha-sync`, `metha-cat`, ... are
 still there as symlinks to it. metha reads the name it was invoked under and
 runs the matching verb, so existing scripts keep working, flags included. The
 packages install those names for you; after a `go install` you can add them with
@@ -204,12 +197,13 @@ interaction in resource conservation.
 
 ## Scrape all metadata in a best-effort way
 
-`metha sweep` harvests every endpoint metha knows about — 244,040 of them, seeded
-from the embedded list — records what became of each one, and exits. Example scrapes,
-converted to JSON: 326M records, 60+ GB:
+`metha sweep` harvests every endpoint metha knows about — 244,040 of them,
+seeded from the embedded list — records what became of each one, and exits.
+Previously conducted example scrapes, converted to JSON: 326M records, 60+ GB:
 [2023-11-01-metha-oai.ndjson.zst](https://archive.org/download/oai_harvest_2023-11-01/2023-11-01-metha-oai.ndjson.zst),
 and
-[2026-02-23-oaiscrape-unique.jsonl.zst](https://archive.org/download/oaiscrape-2026-02-27/2026-02-23-oaiscrape-unique.jsonl.zst) (214M records, 41GB compressed).
+[2026-02-23-oaiscrape-unique.jsonl.zst](https://archive.org/download/oaiscrape-2026-02-27/2026-02-23-oaiscrape-unique.jsonl.zst)
+(214M records, 41GB compressed).
 
 ```shell
 $ metha sweep --dry-run     # what is due, without a single request
@@ -219,14 +213,13 @@ $ metha sweep               # everything due, with the defaults
 
 It keeps a roster beside the cache, `sweep.json.zst`, holding one profile per
 endpoint: when it was last attempted, what happened, and when it is next due.
-That memory is the whole point. An endpoint that answers is polled daily; one
-that has never resolved backs off to a few requests a year, and is never dropped,
-because repositories move and domains come back. Requests are partitioned by
-host, so a repository with several hundred endpoints is never asked more than one
-question at a time.
+An endpoint that answers is polled daily; one that has never resolved backs off
+to a few requests a year (and is never dropped, because repositories move and
+domains come back). Requests are partitioned by host, so a repository with
+several hundred endpoints is never asked more than one question at a time.
 
-A sweep is bounded twice — `--deadline` per endpoint (1h), `--budget` for the
-whole run (24h) — and everything harvested before either fires is kept. Two
+A sweep is bounded twice: `--deadline` per endpoint (1h), `--budget` for the
+whole run (24h) and everything harvested before either fires is kept. Two
 sweeps cannot overlap: the second finds the lock held, says so, and exits 0.
 
 `metha endpoints` is the view onto what it learned, and it prints URLs one per
@@ -259,7 +252,7 @@ $ metha export --from 2024-01-01       # only what is recent
 ```
 
 Every line carries an `endpoint` field naming the repository the record came
-from — the one thing an OAI-PMH record does not say about itself, and the one
+from; the one thing an OAI-PMH record does not say about itself, and the one
 thing a corpus of a few hundred million of them needs:
 
 ```shell
@@ -268,7 +261,7 @@ $ metha export | jq -r '[.endpoint, .header.identifier] | @tsv'
 
 It reads and never writes the cache, and takes no locks, so it is safe to run
 while a sweep is harvesting. To export part of the corpus, name endpoints as
-arguments or pass a file of them — which is what `metha endpoints` prints:
+arguments or pass a file of them (which is what `metha endpoints` prints):
 
 ```shell
 $ metha endpoints --state active > live.txt
@@ -276,8 +269,7 @@ $ metha export --endpoints live.txt -o live.ndjson.zst
 ```
 
 `--xml` writes one XML document instead, and the record filters `metha cat`
-has — `--from`, `--until`, `--setspec`, `--deleted` — all work the same way
-here.
+has: `--from`, `--until`, `--setspec`, `--deleted` work the same way here.
 
 ![](docs/metha-net-zenith.png)
 
@@ -301,6 +293,7 @@ here.
 * [Andreas Czerniak](https://github.com/ACz-UniBi)
 * [David Glück](https://github.com/dvglc)
 * [Justin Kelly](https://github.com/justinkelly)
+* Claude Opus 4.8/5, ZAI GLM 5.2/3, ...
 
 ## Misc
 
@@ -334,6 +327,7 @@ of metadata via HTTP. -- [Interweaving OAI-PMH Data Sources with the Linked Data
 * [Connectome](https://cms.www.switch.ch/fr/connectome/) (linked open research data, [#28](https://github.com/miku/metha/issues/28#issuecomment-1144526453)), [From MARCXML to Records in Contexts](https://zenodo.org/record/7400442/files/SWITCH%20Patrinum%20RiC_20221205_Wildi.pdf)
 * [Comparison w/ other OAI tools](https://github.com/Deutsche-Digitale-Bibliothek/ddblabs-ometha#geschwindigkeit) (de)
 * [biblio.ai](https://github.com/biblio-ai/extract)
+* Datasets ("oaiscrape") generated by metha has been used for [Preserving Scholarly Communications on the Web with Open Metadata](https://zenodo.org/records/16367574) (2025)
 
 ## Asciicast
 
