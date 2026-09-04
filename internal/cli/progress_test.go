@@ -107,6 +107,29 @@ func TestProgressLine(t *testing.T) {
 	}
 }
 
+// TestProgressBegin: the counter names the unit most recently started, which
+// is the unit to watch when the numbers stop moving. When everything else has
+// finished and one unit is still running, that name is the whole diagnosis.
+func TestProgressBegin(t *testing.T) {
+	var status, data bytes.Buffer
+	start := time.Now()
+	p := newProgress(&status, &data, true, false, "exporting", 3)
+	p.start = start
+
+	p.begin("https://example.org/oai")
+	if got := p.line(start); !strings.Contains(got, "exporting 0/3, 0s, https://example.org/oai") {
+		t.Errorf("before any unit finishes: got %q, want the unit named", got)
+	}
+	p.done, p.bytes = 2, 5<<20
+	got := p.line(start.Add(time.Minute))
+	if !strings.HasSuffix(got, ", https://example.org/oai") {
+		t.Errorf("in flight: got %q, want the unit named last", got)
+	}
+	if strings.Contains(got, "https://example.org/oai, ") {
+		t.Errorf("in flight: got %q, want the unit at the end of the line", got)
+	}
+}
+
 // TestProgressQuiet: --quiet is silence on the counter, not on the messages.
 // What went wrong with an endpoint is the reason the run is being watched.
 func TestProgressQuiet(t *testing.T) {

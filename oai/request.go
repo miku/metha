@@ -33,6 +33,15 @@ type Request struct {
 	CleanBeforeDecode       bool
 	SuppressFormatParameter bool
 	ExtraHeaders            http.Header
+
+	// MaxBodyBytes is how much of the response to read before giving up on it
+	// with ErrResponseTooLarge. Zero means DefaultMaxBodyBytes.
+	//
+	// It is on the request rather than the client because it is a fact about
+	// what this endpoint is expected to send, and the one endpoint that needs
+	// it raised should not raise it for every other endpoint sharing the
+	// client - which, in a sweep, is all of them.
+	MaxBodyBytes int
 }
 
 // Values enhances the builtin url.Values.

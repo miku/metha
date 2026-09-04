@@ -45,10 +45,40 @@ func segFileName(n int) string {
 // through oai.Response, a cache is no longer uniformly UTF-8, and an
 // ISO-8859-1 document with an honest declaration is one a decoder without this
 // refuses outright.
+//
+// The charset reader converts the stream at most once, however many
+// declarations it carries. An extent is a run of whole documents back to back,
+// each opening with its own declaration, and encoding/xml answers every one of
+// them by replacing its reader with what CharsetReader returns. Handed
+// charset.NewReaderLabel directly, that stacks: the second document's
+// declaration wraps the converter installed for the first, so layer two reads
+// layer one's UTF-8 output as ISO-8859-1 and re-encodes it, layer three does it
+// again, and a run of documents becomes a run of double-encodings. Every
+// non-ASCII byte doubles per layer, so the cost is exponential in the number of
+// documents rather than linear in their size: a real 806KB shard of Portuguese
+// records reached sixteen layers, at which point a 5KB record's metadata
+// decoded to 7MB and rendered to a 15MB line - 465 records into a 542MB stream,
+// with the read still going and the resident set oscillating around 600MB. That
+// is what looked like a memory leak at export time. It is not a leak; nothing
+// is retained. It is one record genuinely becoming that large.
 func newDecoder(r io.Reader) *xml.Decoder {
 	dec := xml.NewDecoder(r)
 	dec.Strict = false
-	dec.CharsetReader = charset.NewReaderLabel
+	// label is the encoding being converted from, once one is. Subsequent
+	// declarations are answered with the stream unchanged, which is the right
+	// answer for the same encoding repeated - the conversion is already running -
+	// and the safe one when they differ. A converter cannot be switched
+	// mid-stream: it has buffered raw bytes past the point the declaration
+	// applies to, so there is no position to switch at. Leaving it alone costs
+	// one document its non-ASCII characters; stacking costs the whole read.
+	var label string
+	dec.CharsetReader = func(l string, in io.Reader) (io.Reader, error) {
+		if label != "" {
+			return in, nil
+		}
+		label = l
+		return charset.NewReaderLabel(l, in)
+	}
 	return dec
 }
 

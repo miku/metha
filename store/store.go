@@ -92,6 +92,52 @@ type ReadOptions struct {
 	Until   string // inclusive upper bound on the record datestamp
 	SetSpec string // only records carrying this setSpec
 	Deleted DeletedPolicy
+
+	// MaxRecordBytes drops a record whose raw metadata and about blocks come to
+	// more than this many bytes. Zero means no bound.
+	//
+	// The bound is on what a record costs to render, not on anything a caller
+	// asked about. Rendering costs about seven times the record, because JSON
+	// output goes through a map of the whole document, and export runs --jobs of
+	// those at once - so without a bound the memory of an export is a property of
+	// the worst record in the corpus rather than of anything the operator chose.
+	//
+	// It is not sized against real records and is not meant to fire on one. The
+	// records this was written for turned out not to be records: a shard of
+	// ISO-8859-1 responses was being converted to UTF-8 once per document rather
+	// than once per extent, so each document in an extent added a decoding layer
+	// and a 5KB record came back as 7MB of mojibake. That was metha's own doing
+	// and is fixed at the source - see newDecoder in segment.go - which leaves
+	// this as what it should have been all along: the valve that catches whatever
+	// the next such thing is, on a corpus too large to have looked at.
+	//
+	// Dropping is the right answer rather than truncating: a truncated record
+	// would be a line that lies about itself in a way nothing downstream could
+	// detect. What matters is that the drop is counted and reported, so that it
+	// leads someone back to the repository - see Oversize.
+	MaxRecordBytes int
+
+	// Oversize, when set, is called once for each record MaxRecordBytes
+	// dropped, with its identifier and the size that dropped it. A caller that
+	// does not set it gets the filtering and no account of it.
+	Oversize func(identifier string, n int)
+}
+
+// tooLarge reports whether a record exceeds MaxRecordBytes, and tells Oversize
+// about it if so. The two raw blocks are the whole of it: everything else on a
+// record is a header field of bounded length.
+func (opts ReadOptions) tooLarge(rec *oai.Record) bool {
+	if opts.MaxRecordBytes <= 0 {
+		return false
+	}
+	n := len(rec.Metadata.Body) + len(rec.About.Body)
+	if n <= opts.MaxRecordBytes {
+		return false
+	}
+	if opts.Oversize != nil {
+		opts.Oversize(rec.Header.Identifier, n)
+	}
+	return true
 }
 
 // match reports whether a record passes the filter.

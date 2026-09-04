@@ -127,7 +127,24 @@ func openWriter(baseDir string, id Identity) (w *Writer, err error) {
 	if err != nil {
 		return nil, err
 	}
-	enc, err := zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
+	// One encoder goroutine, explicitly. zstd.NewWriter otherwise sizes its
+	// internal concurrency at GOMAXPROCS and allocates window and hash state
+	// per goroutine, so the cost of an idle encoder is a function of the
+	// machine rather than of the work: measured at 1.55MB per writer at
+	// concurrency 1, and 80.8MB at 64.
+	//
+	// That is paid per open Writer, and a sweep opens one per endpoint being
+	// harvested. At --jobs 256 on a 64-core machine it came to 20GB of
+	// encoders holding nothing, which is what a sweep on a 128GB machine was
+	// seen spending half its memory on.
+	//
+	// Nothing is lost. Encoder concurrency parallelises the blocks of a single
+	// stream, and every stream here is written serially by the one goroutine
+	// harvesting that endpoint; the parallelism that matters is already at the
+	// endpoint level, where the sweep put it.
+	enc, err := zstd.NewWriter(nil,
+		zstd.WithEncoderLevel(zstd.SpeedDefault),
+		zstd.WithEncoderConcurrency(1))
 	if err != nil {
 		return nil, err
 	}

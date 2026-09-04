@@ -1,12 +1,78 @@
 [Unit]
-Description=Harvest all OAI endpoints continuously
+Description=Harvest every known OAI-PMH endpoint once
+Documentation=https://github.com/miku/metha
+# A sweep is nothing but network, so there is no point starting one before
+# there is any.
+Wants=network-online.target
+After=network-online.target
 
 [Service]
-ExecStart=/bin/bash -c 'metha sync --list | shuf | parallel -j 64 -I {} "metha sync --base-dir $HOME/.cache/metha {}"'
-User=tir
-Group=tir
-RuntimeMaxSec=300s
-Restart=always
+Type=oneshot
 
-[Install]
-WantedBy=multi-user.target
+User=metha
+Group=metha
+StateDirectory=metha
+Environment=METHA_DIR=/var/lib/metha
+
+ExecStart=/usr/local/bin/metha sweep --budget 20h --jobs 64
+
+# The bound on a sweep is --budget, not the unit.
+#
+# What this replaced was RuntimeMaxSec=300s with Restart=always, and that was a
+# watchdog standing in for a progress model. It meant no endpoint needing more
+# than five minutes could ever finish a window: it was cut, its window was
+# dropped, and the next pass started it from the same resume point - so the
+# largest repositories, the ones with the most to harvest, were exactly the ones
+# that starved. --budget stops a sweep by declining to start new endpoints, and
+# it still compacts the roster on the way out, so every outcome already recorded
+# is kept.
+#
+# Set explicitly rather than relied upon. For Type=oneshot the start timeout is
+# disabled by default, so this changes nothing today - but it bounds the whole
+# of ExecStart for every other service type, where it would take its 90 seconds
+# from DefaultTimeoutStartSec. Anyone who later changes Type= would otherwise
+# reintroduce the pathology above without touching a line that mentions time.
+TimeoutStartSec=infinity
+
+# There is nothing to restart. A sweep exits when it is done, the timer decides
+# when the next one happens, and a sweep that failed has already written down
+# why against every endpoint it reached.
+Restart=no
+
+# systemctl stop sends SIGTERM, and metha handles it: the sweep stops between
+# requests, everything harvested stays on disk, and the roster is compacted
+# before the process exits. The grace period covers that compaction - well
+# under a second on a full corpus - plus the harvests in flight being cut.
+KillSignal=SIGTERM
+TimeoutStopSec=120
+
+# A nightly chore should lose to anything a person is waiting for.
+Nice=10
+IOSchedulingClass=idle
+
+# Memory scales with --jobs, not with the size of the corpus: the roster is a
+# fixed ~320MB and everything above that is the endpoints in flight. If a sweep
+# should be held to a budget, do it with both of these together - GOMEMLIMIT
+# makes Go's collector work harder as it approaches the figure, and MemoryMax is
+# the backstop if that is not enough. GOMEMLIMIT alone will not stop an OOM, and
+# MemoryMax alone turns one into a kill.
+#Environment=GOMEMLIMIT=8GiB
+#MemoryMax=10G
+
+# It needs the network, its own state directory, and nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+# AF_NETLINK is in the list because Go's resolver reads the interface table
+# when it sorts several answers for one name; without it that call fails and
+# the sort is silently skipped.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+RestrictNamespaces=true
+LockPersonality=true
+
+# No [Install] section on purpose: metha.timer is what gets enabled. A sweep
+# wanted by multi-user.target would also run at every boot.

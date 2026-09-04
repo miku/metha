@@ -12,6 +12,9 @@ import (
 // cmd/metha-* stubs are the same three lines.
 func Main() {
 	ctx := interruptible()
+	// Every command, before any of them can make a request. Commands that
+	// choose a log destination of their own repeat this with that destination.
+	routeStdlibLog(os.Stderr)
 	args, legacy := Dispatch(os.Args)
 	root := NewRoot()
 	if legacy != "" {

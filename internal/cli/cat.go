@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/miku/metha"
@@ -23,6 +24,15 @@ func newCatCmd() *cobra.Command {
 		setSpec     string
 		deleted     bool
 		onlyDeleted bool
+
+		// Unbounded by default, where export bounds by default. The asymmetry is
+		// the difference in what is being asked: export is a corpus dump over a
+		// quarter of a million repositories, where one pathological record must
+		// not take the run down, and cat is someone looking at one endpoint they
+		// named - very possibly the pathological one, precisely because export
+		// just reported it. A tool for inspecting a shard should not be the one
+		// that hides what is in it.
+		maxRecordBytes int
 	)
 	cmd := &cobra.Command{
 		Use:     "cat ENDPOINT",
@@ -50,13 +60,19 @@ func newCatCmd() *cobra.Command {
 				policy = store.DeletedKeep
 			}
 			err = store.Render(st, store.RenderOpts{
-				Writer:  bw,
-				From:    from,
-				Until:   until,
-				SetSpec: setSpec,
-				Deleted: policy,
-				Root:    root,
-				UseJson: useJSON,
+				Writer:         bw,
+				From:           from,
+				Until:          until,
+				SetSpec:        setSpec,
+				Deleted:        policy,
+				Root:           root,
+				UseJson:        useJSON,
+				MaxRecordBytes: maxRecordBytes,
+				// To stderr, so it does not land in the records on stdout.
+				Oversize: func(id string, n int) {
+					fmt.Fprintf(os.Stderr, "skipping %s: %s over --max-record-bytes\n",
+						id, humanBytes(int64(n)))
+				},
 			})
 			// Flushed here rather than in a defer, because the error matters.
 			// Everything this command writes goes through the buffer, so the
@@ -78,5 +94,6 @@ func newCatCmd() *cobra.Command {
 	f.StringVar(&setSpec, "setspec", "", "only records carrying this setSpec")
 	f.BoolVar(&deleted, "deleted", false, "include records the endpoint marked deleted")
 	f.BoolVar(&onlyDeleted, "only-deleted", false, "emit only the records the endpoint marked deleted")
+	f.IntVar(&maxRecordBytes, "max-record-bytes", 0, "skip records whose metadata exceeds this many bytes; 0 for no bound")
 	return cmd
 }

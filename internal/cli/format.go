@@ -50,6 +50,25 @@ func dash(s string) string {
 	return s
 }
 
+// thousands groups a count so that six figures can be read at a glance. A sweep
+// reports numbers in the hundreds of thousands, and "244346" beside "24434" is
+// a difference nobody sees at the end of a long day.
+func thousands(n int) string {
+	s := fmt.Sprintf("%d", n)
+	sign := ""
+	if strings.HasPrefix(s, "-") {
+		sign, s = "-", s[1:]
+	}
+	var b strings.Builder
+	for i, r := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			b.WriteByte(',')
+		}
+		b.WriteRune(r)
+	}
+	return sign + b.String()
+}
+
 // humanBytes renders a byte count in units a person can read.
 func humanBytes(n int64) string {
 	const unit = 1024

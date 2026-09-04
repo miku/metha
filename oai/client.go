@@ -1,13 +1,16 @@
 package oai
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -28,9 +31,50 @@ const (
 	DefaultMaxRetries = 8
 	// burstLimit for traffic shaping
 	burstLimit = 1000 * 1000 * 1000
+
+	// DefaultMaxBodyBytes is how much of a response metha will read before
+	// giving up on it, when a Request does not say.
+	//
+	// The old limit was a gigabyte, which was not a bound on anything: no
+	// repository sends a gigabyte in one response, so nothing legitimate was
+	// ever near it, while a hostile endpoint could reach it from about sixty
+	// kilobytes on the wire. The body is sniffed for compression and
+	// decompressed on the fly, and a zstd frame of whitespace - built with
+	// nothing cleverer than "zstd -19" - measured 32,492 to 1, so 66KB of
+	// response became 2GB of memory. Held three times over by the cleaning
+	// path below, times --jobs of them at once.
+	//
+	// Sixty-four megabytes is far above any real ListRecords page - a thousand
+	// records of a kilobyte each is one megabyte - and far below what hurts.
+	// An endpoint that genuinely needs more says so plainly now, as
+	// ErrResponseTooLarge rather than as a parse failure, and --max-body-bytes
+	// is there for it.
+	DefaultMaxBodyBytes = 64 << 20
 )
 
 var (
+	// ErrParseFailed marks a response that would not decode under any of the
+	// encoding declarations DoContext tries. It is a sentinel rather than an
+	// ad-hoc fmt.Errorf because a caller has a real decision to make about it:
+	// a document that is not XML at all is usually a home page where a base URL
+	// was meant, which is a different thing from a request that failed, and
+	// something classifying an endpoint has to be able to tell them apart.
+	ErrParseFailed = errors.New("failed to parse response")
+
+	// ErrResponseTooLarge marks a body that ran past MaxBodyBytes.
+	//
+	// A sentinel, and reported rather than truncated, for the same reason
+	// ErrParseFailed is one. The limit used to cut the body off wherever it
+	// fell and hand the fragment to the decoder, which then failed on the
+	// truncation - so an endpoint sending more than metha will read was
+	// recorded as an endpoint sending something that is not XML. Those want
+	// different answers: the second is a base URL pointing at a home page and
+	// will never work, the first is a real repository whose responses are too
+	// big for the current limit and would harvest fine with a larger one, or a
+	// smaller window. Silently keeping the fragment was never right either -
+	// it is a partial response stored as if it were whole.
+	ErrResponseTooLarge = errors.New("response too large")
+
 	// StdClient is the standard lib http client.
 	StdClient = &Client{Doer: http.DefaultClient}
 	// DefaultClient is the more resilient client, that will retry and timeout.
@@ -127,6 +171,20 @@ var sharedTransport = sync.OnceValue(newTransport)
 // newTransport returns a transport tuned for harvesting.
 func newTransport() *http.Transport {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// A separate, shorter budget for getting connected at all.
+	//
+	// The client's timeout covers the whole request, so without this a host
+	// that accepts nothing - a lapsed domain pointed at an address that
+	// blackholes packets, which the long tail is full of - costs the entire
+	// timeout before anything is known about it, exactly as a large repository
+	// slowly sending real records does. They are different failures and they
+	// deserve different patience: a machine that will answer answers the SYN
+	// quickly, whatever it then does. Ten seconds is far beyond any reachable
+	// host's handshake and a sixth of what an unreachable one used to cost.
+	tr.DialContext = (&net.Dialer{
+		Timeout:   10 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext
 	// Endpoints in the long tail regularly have expired, self-signed or
 	// otherwise broken certificate chains.
 	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -201,27 +259,122 @@ func DoContext(ctx context.Context, r *Request) (*Response, error) {
 	return DefaultClient.DoContext(ctx, r)
 }
 
-// maybeCompressed detects compressed content and decompresses it on the fly.
-func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
-	buf, err := io.ReadAll(r)
+// readBody reads r whole, or reports that it is longer than limit.
+//
+// One byte past the limit is read on purpose: a body of exactly limit bytes is
+// fine and a body of limit+1 is not, and reading limit bytes cannot tell those
+// apart - which is how the old form came to truncate silently instead of
+// refusing.
+func readBody(r io.Reader, limit int) ([]byte, error) {
+	b, err := io.ReadAll(io.LimitReader(r, int64(limit)+1))
 	if err != nil {
+		return nil, err
+	}
+	if len(b) > limit {
+		return nil, fmt.Errorf("%w: over %d bytes", ErrResponseTooLarge, limit)
+	}
+	return b, nil
+}
+
+// badChars are the bytes stripBadChars drops: the control characters outside
+// the XML character range, which is every one below 0x20 except tab's
+// neighbours line feed and carriage return.
+//
+// Tab is dropped along with them, which the XML spec does not ask for. That is
+// deliberate and old: it is what ControlCharReplacer has always done, and the
+// cache was harvested that way.
+var badChars = func() (t [256]bool) {
+	for c := range 0x20 {
+		t[c] = true
+	}
+	t['\n'], t['\r'] = false, false
+	return t
+}()
+
+// stripBadChars removes the characters an XML decoder will not accept, in place.
+//
+// In place, and over the bytes already read, because this used to cost three
+// copies of the whole body: io.ReadAll gave one, string(b) a second, and
+// Replacer.Replace a third, all live at once and all before the size limit had
+// been consulted. On a body a hostile endpoint chose the size of, that was the
+// difference between a bound and three times a bound.
+//
+// The single-byte replacements are safe to make at the byte level because a
+// UTF-8 continuation byte is never below 0x80, so no multi-byte character can
+// contain one. U+FFFD and U+FFFE are matched as the three bytes they encode to,
+// which is what a strings.Replacer over the same runes was doing anyway.
+func stripBadChars(b []byte) []byte {
+	// The common case by a wide margin: nothing to remove, and no reason to
+	// walk the body twice or move a byte of it.
+	i := 0
+	for ; i < len(b); i++ {
+		if badChars[b[i]] || b[i] == 0xEF {
+			break
+		}
+	}
+	if i == len(b) {
+		return b
+	}
+	out := b[:i]
+	for i < len(b) {
+		switch {
+		case badChars[b[i]]:
+			i++
+		// U+FFFD (EF BF BD) and U+FFFE (EF BF BE).
+		case b[i] == 0xEF && i+2 < len(b) && b[i+1] == 0xBF && (b[i+2] == 0xBD || b[i+2] == 0xBE):
+			i += 3
+		default:
+			out = append(out, b[i])
+			i++
+		}
+	}
+	return out
+}
+
+// maybeCompressed detects compressed content and decompresses it on the fly,
+// refusing a frame that would decode to more than limit bytes.
+//
+// The detection needs four bytes, so it peeks at four rather than reading the
+// body to find them. It used to read the whole thing, hand back a reader over
+// the bytes, and have DoContext read them again - two full copies of every
+// response alive at once, on every request, whether or not anything was
+// compressed. At one endpoint that is a response worth of memory nobody
+// notices; at --jobs 256 it is that times two hundred and fifty six.
+//
+// The limit is passed to the zstd decoder rather than left to the read
+// downstream. Its own default is 64GB, which is not a bound worth having when
+// the body is chosen by whoever is answering the request, and a decompressor
+// that refuses is cheaper than one that expands and is then thrown away.
+func maybeCompressed(r io.Reader, limit int) (io.ReadCloser, error) {
+	br := bufio.NewReader(r)
+	// Short of four bytes is not an error here: a body that ends early is not
+	// compressed by any of these, and whatever went wrong with it belongs to
+	// the read that follows rather than to sniffing.
+	magic, err := br.Peek(4)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, err
 	}
 
 	// Check for zstd magic number (0x28 0xB5 0x2F 0xFD)
-	if len(buf) >= 4 && buf[0] == 0x28 && buf[1] == 0xB5 && buf[2] == 0x2F && buf[3] == 0xFD {
-		zr, err := zstd.NewReader(bytes.NewReader(buf))
+	if len(magic) >= 4 && magic[0] == 0x28 && magic[1] == 0xB5 && magic[2] == 0x2F && magic[3] == 0xFD {
+		zr, err := zstd.NewReader(br, zstd.WithDecoderMaxMemory(uint64(limit)))
 		if err == nil {
 			log.Println("zstd-decompress-on-the-fly")
-			return io.NopCloser(zr), nil
+			// IOReadCloser rather than io.NopCloser: a zstd decoder holds
+			// goroutines and block buffers that only Close releases, and
+			// Decoder.Close returns nothing, so it does not satisfy io.Closer
+			// on its own. Wrapped in a NopCloser it was never closed, and every
+			// zstd-encoded response leaked what it had allocated - rare per
+			// endpoint, and a sweep meets every endpoint there is.
+			return zr.IOReadCloser(), nil
 		}
 		// If zstd decompression fails, don't try gzip - it's definitely meant to be zstd
 		return nil, fmt.Errorf("failed to decompress zstd data: %w", err)
 	}
 
 	// Check for gzip magic number (0x1F 0x8B)
-	if len(buf) >= 2 && buf[0] == 0x1F && buf[1] == 0x8B {
-		gr, err := gzip.NewReader(bytes.NewReader(buf))
+	if len(magic) >= 2 && magic[0] == 0x1F && magic[1] == 0x8B {
+		gr, err := gzip.NewReader(br)
 		if err == nil {
 			log.Println("gzip-decompress-on-the-fly")
 			return gr, nil
@@ -231,7 +384,7 @@ func maybeCompressed(r io.Reader) (io.ReadCloser, error) {
 	}
 
 	// No compression detected
-	return io.NopCloser(bytes.NewReader(buf)), nil
+	return io.NopCloser(br), nil
 }
 
 // wrapWithRateLimit wraps a reader with rate limiting if enabled
@@ -289,8 +442,15 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 	// Apply rate limiting to the response body if enabled
 	reader := c.wrapWithRateLimit(resp.Body, ctx)
 
-	// Detect compressed response.
-	reader, err = maybeCompressed(reader)
+	limit := r.MaxBodyBytes
+	if limit <= 0 {
+		limit = DefaultMaxBodyBytes
+	}
+
+	// Detect compressed response. The decoder is given the same bound the read
+	// below applies, so a frame that claims to expand past it is refused by the
+	// decompressor rather than being expanded and then thrown away.
+	reader, err = maybeCompressed(reader, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -301,19 +461,20 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		}
 	}()
 
-	if r.CleanBeforeDecode {
-		// Remove some chars, that the XML decoder will complain about.
-		b, err := io.ReadAll(reader)
-		if err != nil {
-			return nil, err
-		}
-		reader = io.NopCloser(strings.NewReader(ControlCharReplacer.Replace(string(b))))
-	}
-	// Drain response XML, iterate over various XML encoding declarations.
-	// Limit the amount we can read, to 1GB, cf. https://github.com/miku/metha/issues/35
-	respBody, err := io.ReadAll(io.LimitReader(reader, 1<<30))
+	// One read, bounded, before anything else touches the body.
+	//
+	// The bound used to sit after the cleaning step rather than before it, and
+	// the cleaning step read the body whole with no limit of its own. Since
+	// that is the branch a sweep runs under - see sweep/harvest.go - the limit
+	// was applied to a reader over bytes that were already in memory, and
+	// bounded nothing at all on the path that does the actual harvesting.
+	respBody, err := readBody(reader, limit)
 	if err != nil {
 		return nil, err
+	}
+	if r.CleanBeforeDecode {
+		// Remove some chars, that the XML decoder will complain about.
+		respBody = stripBadChars(respBody)
 	}
 	// refs #21812, hack around misleading XML declarations; we only cover
 	// declared "UTF-8", but actually ... A rare issue nonetheless; add more
@@ -329,7 +490,15 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		[]byte(`<?xml version="1.0" encoding="US-ASCII"?>`),
 	}
 	for i, decl := range decls {
-		body := bytes.Replace(respBody, []byte(`<?xml version="1.0" encoding="UTF-8"?>`), decl, 1)
+		// The first declaration is the one being searched for, so replacing it
+		// costs a full copy of the response to produce the response. That copy
+		// was made on every successful request - which is nearly all of them,
+		// since the loop exists for a handful of endpoints that misdeclare
+		// their encoding and the first pass is what the rest parse on.
+		body := respBody
+		if i > 0 {
+			body = bytes.Replace(respBody, []byte(`<?xml version="1.0" encoding="UTF-8"?>`), decl, 1)
+		}
 		dec := xml.NewDecoder(bytes.NewReader(body))
 		dec.CharsetReader = charset.NewReaderLabel
 		dec.Strict = false
@@ -351,5 +520,5 @@ func (c *Client) DoContext(ctx context.Context, r *Request) (*Response, error) {
 		response.Raw = body
 		return &response, nil
 	}
-	return nil, fmt.Errorf("failed to parse response")
+	return nil, ErrParseFailed
 }

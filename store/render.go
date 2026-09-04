@@ -18,6 +18,35 @@ type RenderOpts struct {
 	SetSpec string
 	Deleted DeletedPolicy
 	UseJson bool
+
+	// MaxRecordBytes and Oversize bound and report what one record may cost.
+	// See ReadOptions, which is where they take effect.
+	MaxRecordBytes int
+	Oversize       func(identifier string, n int)
+
+	// Endpoint, when set, is written into every JSON line as an "endpoint"
+	// field.
+	//
+	// A record does not say where it came from: OAI-PMH gives it a header, a
+	// metadata element and an about, and nothing that names the repository. For
+	// one endpoint's output that is fine, because the question was asked about
+	// an endpoint. For a corpus dump it is not - a few hundred million lines
+	// drawn from a quarter of a million repositories, with no way back to which
+	// one said what.
+	//
+	// XML output ignores this. An attribute on the record element would change
+	// the shape of the record itself, and a corpus is exported as JSON.
+	Endpoint string
+}
+
+// jsonRecord is a record with its provenance. The embedding is what keeps the
+// line the same shape it has always been: the record's own fields stay at the
+// top level, in their order, and "endpoint" is appended rather than wrapped
+// around them. A consumer reading .header.identifier does not care that the
+// field arrived.
+type jsonRecord struct {
+	oai.Record
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 // Render writes every record of s matching the datestamp bounds to the writer,
@@ -31,10 +60,12 @@ func Render(s Store, opts RenderOpts) error {
 		}
 	}
 	read := ReadOptions{
-		From:    opts.From,
-		Until:   opts.Until,
-		SetSpec: opts.SetSpec,
-		Deleted: opts.Deleted,
+		From:           opts.From,
+		Until:          opts.Until,
+		SetSpec:        opts.SetSpec,
+		Deleted:        opts.Deleted,
+		MaxRecordBytes: opts.MaxRecordBytes,
+		Oversize:       opts.Oversize,
 	}
 	for rec, err := range s.Records(read) {
 		if err != nil {
@@ -58,9 +89,12 @@ func renderRecord(rec oai.Record, opts RenderOpts) error {
 		b   []byte
 		err error
 	)
-	if opts.UseJson {
+	switch {
+	case opts.UseJson && opts.Endpoint != "":
+		b, err = json.Marshal(jsonRecord{Record: rec, Endpoint: opts.Endpoint})
+	case opts.UseJson:
 		b, err = json.Marshal(rec)
-	} else {
+	default:
 		rec.XMLName = xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"}
 		b, err = xml.Marshal(rec)
 	}
