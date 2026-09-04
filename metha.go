@@ -105,9 +105,3 @@ func NewHarvest(ctx context.Context, baseURL string) (*Harvest, error) {
 
 // PrependSchema prepends http, if it is missing.
 func PrependSchema(s string) string { return oai.PrependSchema(s) }
-
-// init hands the release version to the protocol package, which builds the
-// User-Agent out of it. The version is injected here by the release build
-// (-X github.com/miku/metha.Version=...), and oai has no business knowing which
-// binary it was linked into.
-func init() { oai.DefaultUserAgent = "metha/" + Version }

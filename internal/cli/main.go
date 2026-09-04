@@ -5,6 +5,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/miku/metha"
+	"github.com/miku/metha/oai"
 )
 
 // Main is the whole of every main package metha ships. The binary decides what
@@ -15,6 +18,7 @@ func Main() {
 	// Every command, before any of them can make a request. Commands that
 	// choose a log destination of their own repeat this with that destination.
 	routeStdlibLog(os.Stderr)
+	setUserAgent()
 	args, legacy := Dispatch(os.Args)
 	root := NewRoot()
 	if legacy != "" {
@@ -26,6 +30,17 @@ func Main() {
 		os.Exit(1)
 	}
 }
+
+// setUserAgent tells the endpoints which build is calling. The version is
+// injected into the metha package by the release build (-X
+// github.com/miku/metha.Version=...), and oai reads DefaultUserAgent on every
+// request, so one assignment before the first of them covers the whole run, no
+// matter which client a command builds.
+//
+// This is the program's business, not the library's: it used to be an init in
+// package metha, which meant that importing metha for a type alias silently
+// rewrote a global in oai and left some other binary claiming to be metha.
+func setUserAgent() { oai.DefaultUserAgent = "metha/" + metha.Version }
 
 // interruptible returns the context every command runs under: the first
 // interrupt cancels it, and a long-running command stops at the next point it

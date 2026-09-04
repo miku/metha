@@ -84,9 +84,10 @@ var (
 	// https://calhoun.nps.edu/oai/request.
 	//
 	// A version is appended by whatever program this is part of - the metha
-	// root package does it in an init - because the release build injects the
-	// version there, and a protocol package has no business knowing which
-	// binary it was linked into.
+	// binary does it on startup - because the release build injects the version
+	// there, and a protocol package has no business knowing which binary it was
+	// linked into. It is read on every request, so a program can set it once
+	// before it starts making them.
 	DefaultUserAgent = "metha"
 	// ControlCharReplacer helps to deal with broken XML: http://eprints.vu.edu.au/perl/oai2. Add more
 	// weird things to be cleaned before XML parsing here. Another faulty:
