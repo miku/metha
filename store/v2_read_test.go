@@ -360,7 +360,7 @@ func TestReadDoesNotBufferWholeResponse(t *testing.T) {
 	cr := &countingReader{r: strings.NewReader(doc)}
 	var atFirst int64
 	var seen int
-	recordsFromXML(newRecordScanner(cr, 0), "test", ReadOptions{}, func(rec oai.Record, err error) bool {
+	recordsFromXML(newDecoder(cr), "test", ReadOptions{}, func(rec oai.Record, err error) bool {
 		if err != nil {
 			t.Fatalf("read: %v", err)
 		}
@@ -437,7 +437,7 @@ func TestRecordsAcrossConcatenatedResponses(t *testing.T) {
 	}
 	stream := doc("a", "b") + doc("c") + doc("d", "e")
 	var got []string
-	recordsFromXML(newRecordScanner(strings.NewReader(stream), 0), "test", ReadOptions{},
+	recordsFromXML(newDecoder(strings.NewReader(stream)), "test", ReadOptions{},
 		func(rec oai.Record, err error) bool {
 			if err != nil {
 				t.Fatalf("read: %v", err)

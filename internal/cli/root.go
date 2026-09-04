@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/miku/metha"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +27,9 @@ local cache, so a second run only fetches what is new.
 
 Until 0.5 metha installed one executable per verb. They are still there, as
 symlinks to this binary, and still take the flags they always did; "metha shim
-install" lays them down again after a "go install".`,
+install" lays them down again after a "go install".
+
+` + baseDirNotice(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,6 +62,17 @@ install" lays them down again after a "go install".`,
 	setVersion(root, metha.Version)
 	root.SetVersionTemplate("{{.Version}}\n")
 	return root
+}
+
+// baseDirNotice names the cache directory this run would use, and says where
+// that came from. Which directory a harvest lands in is the first thing anyone
+// asks, and it moves with the environment, so the bare "metha" help answers it
+// instead of leaving people to guess at the XDG default.
+func baseDirNotice() string {
+	if dir := os.Getenv("METHA_DIR"); dir != "" {
+		return fmt.Sprintf("Cache directory: %s (from METHA_DIR)", dir)
+	}
+	return fmt.Sprintf("Cache directory: %s (set METHA_DIR to override)", metha.GetBaseDir())
 }
 
 // setVersion marks the whole tree with the version, which is what makes cobra

@@ -193,11 +193,12 @@ type Metadata struct {
 //
 // mxj holds the whole document as nested maps and slices of strings before
 // anything is marshalled, and that representation is far larger than the bytes
-// it came from: measured over bodies from 2MB to 120MB, rendering one costs a
-// flat 7.3x its size in allocations. On a normal record - a few kilobytes - that
-// is nothing. On the pathological ones it is the difference between an export
-// that finishes and one the OOM killer takes, since export renders --jobs
-// records at a time.
+// it came from: rendering one costs a flat 7.3x its size in allocations. On a
+// normal record - a few kilobytes, and the largest seen in a 338,000-record
+// cache was 67KB - that is nothing, and this never comes into it. It is here for
+// the body that has no business being this size, where 7.3x is the difference
+// between an export that finishes and one the OOM killer takes, since export
+// renders --jobs records at a time.
 //
 // Past this size the body is emitted as a JSON string of itself instead, which
 // is the same thing that already happens to a body that will not parse. The

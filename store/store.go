@@ -97,23 +97,24 @@ type ReadOptions struct {
 	// more than this many bytes. Zero means no bound.
 	//
 	// The bound is on what a record costs to render, not on anything a caller
-	// asked about, and it exists because nothing else bounds it. The harvest
-	// caps a response at 1GB of stored bytes; a record read back out of one can
-	// be three times that, because a response stored under a single-byte
-	// encoding declaration is converted to UTF-8 on the way in and every byte
-	// above 0x7f grows. Text that has been through the UTF-8/CP1252
-	// double-encoding loop a dozen times is entirely such bytes, so it converts
-	// at 2.2x, and a single record of it was seen rendering to 1.6GB.
+	// asked about. Rendering costs about seven times the record, because JSON
+	// output goes through a map of the whole document, and export runs --jobs of
+	// those at once - so without a bound the memory of an export is a property of
+	// the worst record in the corpus rather than of anything the operator chose.
 	//
-	// Rendering that record costs about seven times its size again, because
-	// JSON output goes through a map of the whole document, and export runs
-	// --jobs of those at once. One repository of 1326 records was enough to
-	// have the OOM killer take an export of a 170 million record corpus.
+	// It is not sized against real records and is not meant to fire on one. The
+	// records this was written for turned out not to be records: a shard of
+	// ISO-8859-1 responses was being converted to UTF-8 once per document rather
+	// than once per extent, so each document in an extent added a decoding layer
+	// and a 5KB record came back as 7MB of mojibake. That was metha's own doing
+	// and is fixed at the source - see newDecoder in segment.go - which leaves
+	// this as what it should have been all along: the valve that catches whatever
+	// the next such thing is, on a corpus too large to have looked at.
 	//
-	// Dropping is the right answer rather than truncating: a record that big is
-	// mojibake, not metadata, and a truncated one would be a line that lies
-	// about itself in a way nothing downstream could detect. What matters is
-	// that the drop is counted and reported - see Oversize.
+	// Dropping is the right answer rather than truncating: a truncated record
+	// would be a line that lies about itself in a way nothing downstream could
+	// detect. What matters is that the drop is counted and reported, so that it
+	// leads someone back to the repository - see Oversize.
 	MaxRecordBytes int
 
 	// Oversize, when set, is called once for each record MaxRecordBytes

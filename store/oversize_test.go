@@ -13,11 +13,16 @@ import (
 
 // mojibake applies the UTF-8/CP1252 double-encoding loop n times to s.
 //
-// It is the shape the bound exists for. A repository that re-encodes its own
-// text on every reindex grows it by about 2.2x a round once every byte is above
-// 0x7f, so a single character becomes a megabyte by the sixteenth pass and
-// tens of megabytes by the twenty-first, which is how 1326 records came to hold
-// one of 1.6GB.
+// It is a cheap way to build a body far larger than the text it started as:
+// about 2.2x a round once every byte is above 0x7f, so a single character is a
+// megabyte by the sixteenth pass. That is a real growth curve, and it is here to
+// exercise the bound rather than to stand for any repository seen doing it -
+// nothing in a 338,000-record cache renders past 67KB.
+//
+// It is worth knowing that a decoder can do this to a shard by itself, which is
+// what made these tests look like they were passing for the right reason: a
+// charset reader stacked once per document turned each document in an extent
+// into another pass of exactly this loop. See newDecoder in segment.go.
 func mojibake(s string, n int) string {
 	for range n {
 		var b strings.Builder

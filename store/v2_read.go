@@ -18,96 +18,6 @@ import (
 // which is the one answer that is both wrong and plausible.
 var ErrNotHarvested = errors.New("store: nothing harvested")
 
-// ErrRecordTooLarge marks an extent abandoned because decoding one record from
-// it would not fit in MaxRecordBytes.
-//
-// It is a different thing from the Oversize callback, and the two are not
-// redundant. Oversize is for a record that decoded cleanly and turned out to be
-// too big: the record is dropped, the ones after it are read, and nothing is
-// lost but the one. This is for a record whose decode cannot be allowed to
-// finish, and there is no way back from that - the decoder has consumed an
-// unknown amount of the stream, so what follows can no longer be located
-// exactly. Everything up to it has already been yielded; the rest of the extent
-// is given up on and said so.
-//
-// What produces it is a response stored truncated. The decoder is deliberately
-// lenient, so a record whose closing tag never arrived does not end there: it
-// goes on absorbing every response that follows it in the extent as its own
-// inner XML, until the bytes run out. That single record is then worth several
-// gigabytes, and the size check that used to sit after the decode never got to
-// run, because the decode never returned.
-var ErrRecordTooLarge = errors.New("store: record too large to decode")
-
-// errRecordBudget is what budgetReader returns, and it never leaves this file:
-// recordsFromXML turns it into ErrRecordTooLarge, which says something a caller
-// can act on.
-var errRecordBudget = errors.New("record budget exhausted")
-
-// budgetReader stops a single decode from reading the world.
-//
-// It is armed around one DecodeElement and disarmed the rest of the time,
-// because a bound on a record is what is wanted and not a bound on the extent -
-// which is large on purpose and read whole in the normal case. While armed it
-// hands out at most the remaining budget and then refuses, which surfaces as a
-// decode error rather than as memory that was already spent.
-type budgetReader struct {
-	r     io.Reader
-	left  int
-	armed bool
-}
-
-func (b *budgetReader) arm(n int) { b.left, b.armed = n, true }
-func (b *budgetReader) disarm()   { b.armed = false }
-
-// recordScanner is a decoder over a stream of response documents together with
-// the budget bounding what one record of it may read.
-//
-// The two travel together because they are only meaningful together: the budget
-// has to wrap the reader this decoder reads from, and nothing about a
-// *xml.Decoder and a *budgetReader passed side by side says that they do.
-// Building both here is what makes the mismatch unrepresentable.
-type recordScanner struct {
-	xd *xml.Decoder
-	// budget is nil when max was not positive, which is how a caller asks for
-	// no bound at all - see ReadOptions.MaxRecordBytes.
-	budget *budgetReader
-}
-
-func newRecordScanner(r io.Reader, max int) *recordScanner {
-	if max <= 0 {
-		return &recordScanner{xd: newDecoder(r)}
-	}
-	b := &budgetReader{r: r}
-	return &recordScanner{xd: newDecoder(b), budget: b}
-}
-
-// record decodes one record from the element just reached, bounded.
-func (s *recordScanner) record(rec *oai.Record, start *xml.StartElement, max int) error {
-	if s.budget == nil {
-		return s.xd.DecodeElement(rec, start)
-	}
-	// Armed only around this call. Between records the decoder is walking
-	// structure and reading almost nothing, and an extent is allowed to be as
-	// large as it likes.
-	s.budget.arm(recordBudget(max))
-	defer s.budget.disarm()
-	return s.xd.DecodeElement(rec, start)
-}
-func (b *budgetReader) Read(p []byte) (int, error) {
-	if !b.armed {
-		return b.r.Read(p)
-	}
-	if b.left <= 0 {
-		return 0, errRecordBudget
-	}
-	if len(p) > b.left {
-		p = p[:b.left]
-	}
-	n, err := b.r.Read(p)
-	b.left -= n
-	return n, err
-}
-
 // notHarvested names the identity the cache holds nothing for.
 //
 // Spelled out rather than formatted with %v: Identity.String is the
@@ -192,26 +102,8 @@ func recordsFromExtent(path string, e extent, opts ReadOptions, yield func(oai.R
 	// Each frame holds several responses back to back, and zstd reads a run of
 	// frames as one stream, so the whole extent decodes as a sequence of
 	// documents.
-	//
-	// The budget goes between the decompressor and the XML decoder, which is the
-	// only place it can go: what has to be bounded is how much one DecodeElement
-	// may pull, and by the time the record is in hand the memory is spent.
-	return recordsFromXML(newRecordScanner(dec, opts.MaxRecordBytes), path, opts, yield)
+	return recordsFromXML(newDecoder(dec), path, opts, yield)
 }
-
-// recordBudget is how much one DecodeElement may read for a record bounded at
-// max bytes.
-//
-// Larger than max, and deliberately so: the two bounds catch different things.
-// The cheap check after the decode is what handles a record that is merely
-// oversized - it is dropped, counted, named, and the extent goes on. The budget
-// is the backstop for a record that must not be allowed to finish decoding at
-// all, and it costs the rest of the extent, so it should fire only when the
-// cheap check could not have. Four times plus a megabyte leaves room for the
-// decoder's own buffering and for the difference between a record's inner XML
-// and the bytes it was decoded from, without letting anything near the sizes
-// that cause trouble.
-func recordBudget(max int) int { return 4*max + 1<<20 }
 
 // recordsFromXML yields the matching records of a stream of response documents,
 // one record at a time.
@@ -219,22 +111,17 @@ func recordBudget(max int) int { return 4*max + 1<<20 }
 // A record is decoded when its element is reached and dropped when it has been
 // yielded, so what this holds is one record however long the stream is. The
 // obvious form - decode a whole oai.Response, walk its ListRecords - holds one
-// document instead, and that is a bound only as long as the documents are well
-// formed.
+// document instead, and a document is only as good a bound as it is well formed:
+// the decoder is lenient by design (see newDecoder), so it will read a great
+// deal of a stream into one element before concluding it was malformed.
 //
-// They are not. The cache stores what endpoints actually sent, and the decoder
-// that reads it back is deliberately lenient (see newDecoder), so a response
-// that was cut off mid-flight is stored and read without complaint. Decoding
-// whole documents across such a response does not stop at its end - there is no
-// end - and the decoder goes on appending records to that one document's
-// ListRecords out of every response that follows it in the extent, until the
-// bytes run out. The Response is then thrown away for a syntax error, but the
-// memory was spent to build it: an export of a large cache was seen reaching
-// 125GB and being killed by the OOM killer, on a single decode of a single
-// extent whose first document was truncated. Streaming the records makes the
-// truncation cost what it should - the error is still reported, at the end,
-// with every record before it delivered.
-func recordsFromXML(sc *recordScanner, path string, opts ReadOptions, yield func(oai.Record, error) bool) bool {
+// Nothing unbalanced enough to provoke that can reach a segment, because Append
+// scans every response and refuses the ones that will not parse, so an extent is
+// whole documents or nothing. The bound here does not rely on that, which is the
+// point of it - and it gets the error handling right as a side effect: a failure
+// is reported where it is reached, with every record before it already
+// delivered, rather than costing the whole document it appeared in.
+func recordsFromXML(dec *xml.Decoder, path string, opts ReadOptions, yield func(oai.Record, error) bool) bool {
 	// Only <record> directly inside <ListRecords> is a record. The depth check
 	// is not pedantry: marcxml metadata has a <record> element of its own, and a
 	// bare name match would export the MARC record inside a record as a record.
@@ -244,7 +131,7 @@ func recordsFromXML(sc *recordScanner, path string, opts ReadOptions, yield func
 	// been exported.
 	var stack []string
 	for {
-		tok, err := sc.xd.Token()
+		tok, err := dec.Token()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return true
@@ -261,12 +148,7 @@ func recordsFromXML(sc *recordScanner, path string, opts ReadOptions, yield func
 			var rec oai.Record
 			// Decoding consumes through the matching end element, so the stack
 			// stays balanced without pushing this one.
-			err := sc.record(&rec, &t, opts.MaxRecordBytes)
-			if errors.Is(err, errRecordBudget) {
-				yield(oai.Record{}, fmt.Errorf("%s: %w", path, ErrRecordTooLarge))
-				return false
-			}
-			if err != nil {
+			if err := dec.DecodeElement(&rec, &t); err != nil {
 				yield(oai.Record{}, fmt.Errorf("failed to decode XML from %s: %w", path, err))
 				return false
 			}

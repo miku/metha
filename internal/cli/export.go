@@ -48,11 +48,11 @@ from, which is the one thing an OAI-PMH record does not say about itself and
 the one thing a corpus of them needs.
 
 A record whose metadata runs past --max-record-bytes is left out, and the count
-and the endpoints it came from are reported at the end. The bound is there
-because nothing else bounds one: text that has been through the UTF-8/CP1252
-double-encoding loop grows by a factor of 2.2 a round, and a single record of it
-has been seen rendering to 1.6GB - enough, times --jobs, to lose the whole run.
-Pass 0 for no bound.
+and the endpoints it came from are reported at the end. Nothing a repository
+means to publish comes near the default, so the bound is a valve rather than a
+filter: it is what turns one impossible record into a line of stderr naming the
+repository it came from, instead of a run that renders --jobs of them at once
+and is killed. Pass 0 for no bound.
 
 It reads and never writes the cache, and takes no locks, so it is safe to run
 while a sweep is harvesting. What it sees is the cache as of the moment it
@@ -115,15 +115,17 @@ type exportOpts struct {
 // leaves it out.
 //
 // A record is a few kilobytes; a large one - marcxml, mets - is a few hundred.
-// Sixteen megabytes is a thousand times the first and fifty times the second, so
-// nothing a repository means to publish comes near it, and what does come near
-// it is text that has been through the UTF-8/CP1252 double-encoding loop enough
-// times to grow by 2.2x a round. See store.ReadOptions.MaxRecordBytes.
+// Measured over a cache of 394 endpoints, 338,368 records read with no bound at
+// all ran to 2.4KB at the median, 9.2KB at the 99th centile and 67KB at the
+// largest. Sixteen megabytes is two hundred times that largest, which is the
+// point: this is not meant to fire, and a corpus where it starts firing is one
+// with something wrong in it worth being told about.
 //
-// The bound is what makes the memory of an export predictable rather than a
-// property of the worst record in the corpus: rendering costs about 7x the
-// record and --jobs of them run at once, so this is the number that, times the
-// job count, says what the run will need.
+// It is deliberately far above anything real because dropping records is the
+// expensive mistake. What it buys is that the memory of an export is predictable
+// rather than a property of the worst record in the corpus: rendering costs about
+// 7x the record and --jobs of them run at once, so this number, times the job
+// count, says what the run will need. See store.ReadOptions.MaxRecordBytes.
 const defaultMaxRecordBytes = 16 << 20
 
 // chunkSize is how much a worker accumulates before handing it to the writer.
