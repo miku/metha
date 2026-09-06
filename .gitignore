@@ -11,3 +11,6 @@ metha*.rpm
 digest.txt
 .env
 /metha
+
+sweep-post-resolve.json.zst
+sweep.json.zst
