@@ -614,3 +614,286 @@ live corpus.
    dictionary (§1.3, §4). This is the systematic version of the user's original
    proposal, and it is placed last only because the steps above make it cheaper
    and let it be measured.
+
+---
+
+> A third round, 2026-09-05, this time with the roster in hand
+> (`sweep.json.zst`, compacted 2026-09-05, 244,041 endpoints). §0–§10 above
+> reasoned from `sites.tsv`, which is a list of *guesses and facts mixed
+> together*. The roster says which is which, and that changes the answer.
+
+## 11. What the roster actually says
+
+| | | |
+|---|---|---|
+| endpoints | 244,041 | |
+| state `active` | 91,867 | **37.6%** |
+| state `probation` | 151,755 | 62.2% |
+| state `quarantined` | 419 | 0.2% |
+
+By class: `empty` 78,304 · `gone` 61,034 · `protocol` 40,734 · `transient`
+35,386 · `refused` 14,921 · `ok` 13,429 · `timeout` 233. Counting an endpoint
+as *live* when its last class was `ok` or `empty` gives 91,733, which is the
+`active` state to within 134 — the two agree, and "live" below always means
+`ok`+`empty`.
+
+`empty` being the largest class by far is worth a note: it is not a failure.
+It is an endpoint that answered correctly and had nothing new in the window,
+which is the steady state of a dormant journal.
+
+Host-level, which §0 argued is the real unit:
+
+| | |
+|---|---|
+| distinct hosts | 56,727 |
+| hosts with ≥1 live endpoint | 22,288 (39.3%) |
+| hosts where everything fails | 34,439 (60.7%) |
+| hosts partly live | 12,433 |
+| dead URLs sitting on a *live* host | 47,983 |
+
+### 11.1 The live corpus is 97% OJS journals and ~2,100 repositories
+
+Class by URL shape:
+
+| shape | URLs | live | rate |
+|---|---|---|---|
+| OJS `…/index.php/CTX/oai` | 183,319 | 82,658 | 45% |
+| OJS site-level `…/index/oai` | 3,495 | 603 | 17% |
+| `/oai` | 3,250 | 1,140 | 35% |
+| DSpace `/oai/request` | 2,952 | 961 | 33% |
+| EPrints `/cgi/oai2` | 1,174 | 468 | 40% |
+| bepress `/do/oai` | 826 | 463 | 56% |
+| DSpace 3/4 `/dspace-oai/request` | 504 | 28 | **6%** |
+| DSpace 7 `/server/oai` | 334 | 198 | **59%** |
+| Invenio `/oai2d` | 67 | 30 | 45% |
+| bare hostname, no path | 13,007 | 21 | **0.2%** |
+| other | 35,113 | 5,163 | 15% |
+
+Add the repository families up: 5,857 URLs, **2,148 live**. That is the entire
+institutional-repository holding. Against 83,261 live OJS contexts, the working
+corpus is **97% journal contexts and 3% repositories**.
+
+Two numbers in that table are diagnoses, not statistics. `/dspace-oai/request`
+at 6% is a dead deployment pattern from DSpace 3/4 — retire it. `/server/oai`
+at 59%, the best rate of any repository shape, against `/oai/request` at 33%,
+is the DSpace 6→7 migration predicted in §2, visible in the data: the new path
+works far more often than the old one, and we hold nine times as many of the old.
+
+The 13,007 bare hostnames deserve their own sentence. Nine of them return `ok`.
+They are not endpoints; they are hostnames somebody appended to `sites.tsv`
+without a path, and every sweep spends requests confirming that a homepage is
+not an OAI endpoint. They are also 13,007 free, pre-qualified probe targets.
+
+## 12. We are not missing the repositories. We cannot reach them.
+
+Join OpenDOAR 2026 (`extra/opendoar/2026/endpoints.jsonl`, 6,181 repositories
+with a URL, 4,182 with a ROR id, each carrying a declared `software_name`)
+against the roster by host:
+
+- **6,181 of 6,181 are already in the roster.** Not one is undiscovered.
+- **2,040 are live. 33%.**
+- 4,140 known, named, ROR-identified repositories fail: `protocol` 1,611,
+  `transient` 1,590, `gone` 598, `refused` 235, `timeout` 106.
+
+By declared software:
+
+| software | repos | live | rate |
+|---|---|---|---|
+| DSpace | 2,512 | 781 | 31% |
+| EPrints | 590 | 318 | 54% |
+| WEKO (JP) | 530 | 33 | **6%** |
+| Digital Commons | 401 | 255 | 64% |
+| islandora | 199 | 140 | 70% |
+| OPUS | 101 | 74 | 73% |
+| CONTENTdm | 90 | 11 | 12% |
+| HAL | 87 | 0 | **0%** |
+| PURE | 87 | 28 | 32% |
+| dLibra | 67 | 25 | 37% |
+| Fedora | 64 | 19 | 30% |
+| DSpace-CRIS | 45 | 16 | 36% |
+| Figshare | 44 | 0 | **0%** |
+| Greenstone | 37 | 4 | 11% |
+| Dataverse | 37 | 17 | 46% |
+| **total** | **6,181** | **2,040** | **33%** |
+
+Spot-check the failures and the cause is unambiguous — these are not dead
+repositories, they are live repositories at a path we never tried:
+`bora.uib.no` (`protocol`), `duo.uio.no` (`protocol`),
+`eldorado.tu-dortmund.de` (`transient`), `docta.ucm.es` (`transient`),
+`www.alexandria.unisg.ch` — a DSpace-CRIS, for which `sites.tsv` holds
+`/cgi/oai2`, an EPrints path.
+
+A whole-family zero is a missing rule, not 87 dead sites: every HAL portal
+harvests from `api.archives-ouvertes.fr/oai/<portal>/`, and we try
+`hal.<univ>.fr/oai`. WEKO at 6% of 530 is the same failure, and it *is* the
+`.jp` gap that §8 attributed to search-engine language bias.
+
+**4,140 repositories is twice the number we currently harvest.** No discovery
+method in this file can offer a yield like that, because these have already
+been discovered.
+
+## 13. Why every dump pass so far returned only OJS
+
+The existing dump extractions:
+
+| file | candidates | non-OJS |
+|---|---|---|
+| `crossref-possibly-oai-2025-05-02.txt` | 62,428 | 7 |
+| `openalex-oai-sample-2025-05-08.txt` | 43,557 | 6 |
+| `datacite-possibly-oai.txt` | 2,112 | **0** |
+| total | 108,097 | 13 (0.012%) |
+
+DataCite is the DOI registry of the *repository* world — datasets, theses,
+DSpace, Dataverse, Invenio. A pass over DataCite that returns 2,112 OJS journals
+and zero repositories is not measuring DataCite. It is measuring the extraction
+rule.
+
+The rule was: *find URLs in the dump that already look like OAI endpoints.*
+Only one platform makes that work. OJS puts `index.php/<ctx>/oai` in reachable
+metadata; DSpace, EPrints, Invenio and Dataverse never write their OAI base URL
+anywhere a DOI record can carry it. So the method could only ever return OJS,
+it did, 108,097 times, and that is where the 97%/3% split in §11.1 comes from.
+It is an artifact of the instrument.
+
+**The dumps do not contain OAI URLs. They contain landing pages.** And a
+landing page names the software in its path shape, which is all we need:
+
+```
+/handle/1234/5678                  DSpace 5/6      → {root}/oai/request
+/items/<uuid>, /entities/publication/<uuid>
+                                   DSpace 7/8      → {root}/server/oai/request
+/id/eprint/<n>                     EPrints         → {root}/cgi/oai2
+/<series>/vol1/iss2/3/             Digital Commons → {root}/do/oai/
+/index.php/<ctx>/article/view/<n>  OJS             → {root}/index.php/<ctx>/oai
+/dataset.xhtml?persistentId=doi:   Dataverse       → {root}/oai
+/records/<id>                      InvenioRDM      → {root}/oai2d
+/islandora/object/<pid>            Islandora       → {root}/oai2
+/concern/<model>/<id>              Samvera/Hyrax   → {root}/catalog/oai
+/frontdoor/index/index/docId/<n>   OPUS4           → {root}/oai
+/receive/<id>                      MyCoRe          → {root}/servlets/OAIDataProvider
+/dlibra/publication/<n>            dLibra          → {root}/oai-pmh-repository.xml
+/digital/collection/<c>/id/<n>     CONTENTdm       → {root}/oai/oai.php
+/en/publications/<slug>            Pure            → {root}/ws/oai
+```
+
+That table is the whole idea. It turns "a URL that looks like an endpoint" into
+"a URL that proves a repository exists, plus the rule for where its endpoint
+lives". It inverts the platform bias exactly, because DSpace and friends are
+precisely the platforms whose landing pages are *shaped*, and OJS is the one
+that needed no inference in the first place.
+
+## 14. The focused effort: **resolve the known, then derive from landing pages**
+
+One pipeline, two stages, both offline until the final probe. Stage 1 produces
+the rule table that Stage 2 applies at scale, so they are not independent
+projects — Stage 1 is the calibration run for Stage 2.
+
+### 14.1 Stage 1 — resolve the 6,181 (days, not weeks)
+
+> Implemented: `extra/resolve/` (`resolve.py`, `families.py`, README).
+
+OpenDOAR is a **labeled set**: URL, ROR id, and the operator's own declaration
+of what software they run. Nothing else we have is labeled.
+
+1. For each of the 4,140 non-live repositories, take `software_name`, look up
+   its path list, probe `?verb=Identify` in order, follow redirects, try
+   `https` and the `www`/bare variant. Ten or so requests per host, 6,181
+   hosts — a single-machine afternoon.
+2. Confirm on the response, never the status code: XML containing `<Identify>`
+   and `<baseURL>`. **Canonicalise on the `<baseURL>` the endpoint reports**,
+   which is the value worth storing and is free at this point.
+3. Emit corrections, not additions. `sites.tsv` already holds a wrong path for
+   most of these hosts, so a resolved endpoint must *supersede* the guess.
+   Adding a 244,042nd URL while leaving `/cgi/oai2` on a DSpace-CRIS in place
+   makes the ratio worse while the knowledge gets better.
+4. Write down the per-software hit rate of each path. That table is the output
+   that matters, more than the endpoints.
+
+Expected: institutional-repository coverage from ~2,100 to somewhere near
+4,500–5,000. A guess, but the failure classes above (1,611 `protocol` + 1,590
+`transient` are overwhelmingly wrong-path, not dead) make it a defensible one.
+
+Two family-wide rules pay for the stage on their own: HAL (87 repos, 0 live,
+one URL template) and WEKO (530 repos, 6% live, one URL template). Both are
+confirmed on samples — HAL resolves 8 of 10 against
+`api.archives-ouvertes.fr`, and WEKO's path was `/oai` all along.
+
+Three traps found while building it, all of which would have produced
+confident wrong answers rather than errors:
+
+- **Site-wide fallbacks.** Falling back to `oai/hal/` "resolves" every HAL
+  portal onto four million records belonging to all of HAL. Any portal that is
+  really a set is now recorded as `base_url` + `set`, and only after confirming
+  the set exists.
+- **Platform consolidation.** `bora.uib.no` and `duo.uio.no` both now redirect
+  to `nva.sikt.no`; Norway merged its repositories into one national platform.
+  Any such merge hands the same endpoint to many institutions, so the report
+  lists every base URL claimed more than once.
+- **Concurrency limits read as absence.** All 530 WEKO repositories are on one
+  server, which limits concurrent requests rather than rate — twelve parallel
+  probes returned `429` for everything, and a throttled response is not
+  OAI-PMH, so the family's *correct* path was recorded as a miss. Rate limiting
+  is now per registrable domain, and `throttled` is a distinct outcome from
+  `unresolved`. This one matters beyond WEKO: it applies to every shared
+  platform, which is 88% of `sites.tsv`.
+
+### 14.2 Stage 2 — derive from landing pages, keyed on ROR
+
+Now run the calibrated rules over the dumps. One streaming pass each, no
+network:
+
+| dump | field | why |
+|---|---|---|
+| DataCite | `attributes.url`, `client_id`, creator/contributor ROR | Highest repository density of the three. Its client model is *one client per repository* — a curated repository census with an institution join, which nobody has read as one. Start here. |
+| OpenAlex | `locations[].landing_page_url` where `source.type == "repository"`; `sources` entity; `institutions` entity | The only green-OA census there is. `locations` on a repository copy is a landing page on an IR, by construction. `institutions` supplies the works-count ranking and the ROR spine. |
+| Crossref | `resource.primary.URL`, `institution[].id` (ROR), `member` | Largest, but publisher-dominated. Best for OJS completeness and for the `/index.php/<ctx>/` contexts we are still missing on hosts we already know. |
+
+Reduce each to `(host, path_shape, ror, doi_count)` and aggregate. The output is
+a few million rows before dedup, a few hundred thousand hosts after — small
+enough to keep in one file. Then:
+
+1. **Shape → software → candidate base URLs**, from §13's table with Stage 1's
+   measured ordering.
+2. **Diff against the roster, by host, using `last_class`.** Three buckets, and
+   they get different treatment:
+   - host absent → new candidate;
+   - host present but all entries `protocol`/`gone` → **correction**, the case
+     Stage 1 taught us to expect (34,439 hosts qualify today);
+   - host present and live → check for missing siblings (47,983 dead URLs sit
+     on live hosts; 12,433 hosts are only partly live).
+3. **Probe in DOI-count order.** Every candidate arrives with a count, so the
+   queue sorts itself and a budget can be spent top-down.
+4. **Carry provenance from the start** — `(dump, snapshot date, rule id, host,
+   ror, doi_count)`. §9 asked for this; a derivation pass is the moment it is
+   free to add, and without it this pass becomes another anonymous 100k blob and
+   is as unretractable as the last three.
+
+The ROR key is the quiet win. Because every candidate carries an institution,
+§1's coverage denominator falls out as a byproduct rather than as a separate
+project: *N institutions with ≥1 live endpoint, of M with any output at all*,
+and the remainder is a work-ranked dark list. That sentence is the thing we
+still cannot say, and this is the cheapest way to be able to say it.
+
+### 14.3 What not to do first
+
+- Not search-engine dorking (§A). Capped at ~100 results a query, needs
+  etiquette, and it competes with a pass that has 4,140 known repositories
+  sitting unresolved.
+- Not new registries (§6). We have not finished reading the one registry we
+  already downloaded.
+- Not CT logs (§1.3). It answers "which subdomain is the repository", and the
+  6,181-row labeled set says our failures are paths, not hosts. Revisit for the
+  genuinely dark institutions Stage 2 identifies.
+- Not more bulk OJS. Adding long-tail contexts to a corpus that is already 97%
+  OJS moves the ratio down and coverage sideways.
+
+### 14.4 Scoreboard
+
+Report these, per stage, and nothing else:
+
+- live endpoints, split OJS / repository — the 97:3 ratio is the thing to move;
+- institutions (ROR) with ≥1 live endpoint, and the same restricted to
+  institutions above a works threshold;
+- per-rule precision: candidates emitted vs. `Identify`-confirmed;
+- corrections vs. additions — a pass that fixes 4,000 URLs and adds none is a
+  better pass than one that adds 40,000 guesses.
