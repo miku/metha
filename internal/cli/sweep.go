@@ -337,23 +337,33 @@ func (l limited) Select(profiles []sweep.Profile, now time.Time, pol sweep.Polic
 // summarise is the line printed before a sweep starts: what the roster holds,
 // and how much of it is due.
 func summarise(profiles []sweep.Profile, due int) string {
-	var blocked, quarantined int
+	var blocked, superseded, quarantined int
 	for _, p := range profiles {
 		switch p.State {
 		case sweep.StateBlocked:
 			blocked++
+		case sweep.StateSuperseded:
+			superseded++
 		case sweep.StateQuarantined:
 			quarantined++
 		}
 	}
 	var b strings.Builder
+	// Blocked and superseded are off the schedule for good, so they are not
+	// "held back" - held back is what is waiting its turn, and counting a
+	// permanent exclusion as waiting would make the number grow every time the
+	// roster learns something.
 	fmt.Fprintf(&b, "%s in the roster, %s due, %s held back",
-		thousands(len(profiles)), thousands(due), thousands(len(profiles)-due-blocked))
+		thousands(len(profiles)), thousands(due),
+		thousands(len(profiles)-due-blocked-superseded))
 	if quarantined > 0 {
 		fmt.Fprintf(&b, ", %s quarantined", thousands(quarantined))
 	}
 	if blocked > 0 {
 		fmt.Fprintf(&b, ", %s blocked", thousands(blocked))
+	}
+	if superseded > 0 {
+		fmt.Fprintf(&b, ", %s superseded", thousands(superseded))
 	}
 	return b.String()
 }

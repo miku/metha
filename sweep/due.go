@@ -139,11 +139,12 @@ func Due(p Profile, now time.Time, pol Policy) time.Time {
 // machine a table rather than a walk through the runner.
 func (p Profile) Apply(o Outcome, now time.Time, pol Policy) Profile {
 	now = now.UTC()
-	// Blocked is set by hand, for an operator who asked not to be harvested,
-	// and nothing resets it. A blocked endpoint should never have been selected
-	// in the first place; refusing to move one here means a bug in a selector
-	// costs a wasted request rather than a lost exclusion.
-	if p.State == StateBlocked {
+	// Blocked and superseded are set by hand and nothing resets them. Neither
+	// should ever have been selected in the first place; refusing to move one
+	// here means a bug in a selector costs a wasted request rather than a lost
+	// exclusion - or, for a superseded URL, a wrong path quietly reinstated by
+	// the one attempt that happened to reach something.
+	if p.State == StateBlocked || p.State == StateSuperseded {
 		return p
 	}
 	if p.FirstSeen.IsZero() {
@@ -209,17 +210,60 @@ func (p Profile) Block(now time.Time) Profile {
 // "Nothing resets blocked" is about outcomes: no amount of harvesting undoes an
 // exclusion. A hand-set flag still needs a hand-operated way back, or the first
 // URL blocked by mistake can only be recovered by editing a compressed file.
-//
-// The state it returns to is read off the counters rather than remembered,
-// which is the same argument the profile makes for not storing the host: a
-// value that has to agree with another value is one more thing that can
-// disagree. NextDue is left alone - an endpoint blocked for a year has a due
-// time long past and is attempted at the next sweep, which is what unblocking
-// meant.
 func (p Profile) Unblock(pol Policy) Profile {
 	if p.State != StateBlocked {
 		return p
 	}
+	return p.reschedule(pol)
+}
+
+// Supersede records that this URL is not the endpoint and that by is, taking it
+// off the schedule.
+//
+// The replacement is required. A supersession with nothing on the other side is
+// an assertion that a URL is wrong, which is what quarantine already says and
+// says on evidence; the whole value here is the pointer, because it is what
+// makes the decision reviewable a year later and what Unsupersede needs to be
+// worth having.
+//
+// The counters are left as they are, for the reason Block leaves them: this is
+// a decision about whether to ask, not a claim about what the endpoint would
+// have said, and keeping them is what lets the endpoint go back where it was.
+func (p Profile) Supersede(by string, now time.Time) Profile {
+	if by == "" || by == p.URL {
+		return p
+	}
+	if p.FirstSeen.IsZero() {
+		p.FirstSeen = now.UTC()
+	}
+	p.State = StateSuperseded
+	p.SupersededBy = by
+	return p
+}
+
+// Unsupersede puts a superseded endpoint back on the schedule.
+//
+// Every bulk correction is somebody's bad rule eventually, and 1,740 rows
+// applied from one file need one way back that is not editing a compressed
+// roster by hand. The pointer is dropped with the state: an endpoint that is
+// being harvested again is not superseded by anything.
+func (p Profile) Unsupersede(pol Policy) Profile {
+	if p.State != StateSuperseded {
+		return p
+	}
+	p.SupersededBy = ""
+	return p.reschedule(pol)
+}
+
+// reschedule reads the state back off the counters, for the hand-set states on
+// their way out.
+//
+// Read rather than remembered, which is the same argument the profile makes for
+// not storing the host: a value that has to agree with another value is one more
+// thing that can disagree. NextDue is left alone - an endpoint held back for a
+// year has a due time long past and is attempted at the next sweep, which is
+// what putting it back meant.
+func (p Profile) reschedule(pol Policy) Profile {
 	switch {
 	case p.Attempts == 0:
 		p.State = StateNew

@@ -69,14 +69,15 @@ func (allSelector) Select(profiles []Profile, _ time.Time, _ Policy) []string {
 
 // order filters and sorts, which is everything the two selectors share.
 //
-// Blocked is excluded here rather than in each selector, because an exclusion
-// that has to be remembered in more than one place is one that will eventually
-// be forgotten in one of them - and the thing forgotten would be an operator
-// who asked not to be harvested.
+// The hand-set states are excluded here rather than in each selector, because
+// an exclusion that has to be remembered in more than one place is one that will
+// eventually be forgotten in one of them - and the thing forgotten would be an
+// operator who asked not to be harvested, or 1,740 wrong paths back on the
+// schedule and diluting the ratio again.
 func order(profiles []Profile, want func(Profile) bool) []string {
 	sel := make([]Profile, 0, len(profiles))
 	for _, p := range profiles {
-		if p.State == StateBlocked {
+		if p.State == StateBlocked || p.State == StateSuperseded {
 			continue
 		}
 		if want(p) {

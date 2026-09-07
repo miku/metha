@@ -64,9 +64,23 @@ const (
 	// polled, at whatever interval its class has backed off to.
 	StateQuarantined State = "quarantined"
 	// StateBlocked is set by hand and by nothing else, for an operator who has
-	// asked not to be harvested. No outcome resets it and no selector returns
-	// it; see Profile.Apply, which refuses to move one.
+	// asked not to be harvested, or for an endpoint we have decided not to ask
+	// - an aggregator that serves records the corpus already holds from their
+	// own repositories. No outcome resets it and no selector returns it; see
+	// Profile.Apply, which refuses to move one.
 	StateBlocked State = "blocked"
+	// StateSuperseded is an endpoint we now know is the wrong URL for a
+	// repository whose right one we have. It is hand-set like StateBlocked and
+	// behaves like it - never selected, no outcome moves it - and it differs in
+	// carrying SupersededBy, which is what makes it a fact rather than a
+	// deletion: the roster says what replaced it and can be asked to undo it.
+	//
+	// This is not "it failed". Failure has a state already, and quarantine is
+	// where it goes. Superseding is for the case the resolve pass produced 1,740
+	// of: contrib/sites.tsv held /cgi/oai2 - an EPrints path - for
+	// alexandria.unisg.ch, which runs DSpace-CRIS at /server/oai/request. The
+	// wrong URL is not a repository that stopped answering. It never was one.
+	StateSuperseded State = "superseded"
 )
 
 // Class is what one attempt on one endpoint meant. It is the endpoint-level
@@ -111,7 +125,8 @@ const (
 // counts by state all read from one list: a taxonomy repeated in three places
 // is a taxonomy that will be extended in two.
 func States() []State {
-	return []State{StateNew, StateActive, StateProbation, StateQuarantined, StateBlocked}
+	return []State{StateNew, StateActive, StateProbation, StateQuarantined,
+		StateBlocked, StateSuperseded}
 }
 
 // Classes lists every class, healthiest first, for the same reason.
@@ -171,6 +186,16 @@ type Profile struct {
 	LastError string `json:"last_error,omitempty"`
 	Failures  int    `json:"consecutive_failures,omitempty"`
 	Attempts  int    `json:"attempts,omitempty"`
+
+	// SupersededBy is the endpoint that replaced this one, set with the state
+	// of the same name and empty otherwise.
+	//
+	// It is the reason superseding is a state rather than a deletion. Deleting
+	// the row would not even work - the seed list is re-read every run, so the
+	// URL would be back tomorrow with its counters lost - and it would throw
+	// away the one thing the resolve pass produced that is worth keeping: not
+	// that a URL is wrong, but which URL is right instead.
+	SupersededBy string `json:"superseded_by,omitempty"`
 
 	// Records is what the cache holds for this endpoint, as of the last
 	// attempt. It is a copy of an answer the store owns, kept here only so that

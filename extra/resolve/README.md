@@ -176,10 +176,57 @@ corrections is a decision, not a side effect. To review before committing:
 # what would change
 jq -r 'select(.action=="correction") | [.host, .base_url, .matched_rule] | @tsv' resolved.ndjson
 
-# net-new endpoints, best first
-jq -r 'select(.status|startswith("resolved")) | select(.confidence=="identify")
+# net-new endpoints, best first. status=="resolved", NOT startswith("resolved"):
+# see below.
+jq -r 'select(.status=="resolved") | select(.confidence=="identify")
        | .base_url' resolved.ndjson | sort -u
 ```
+
+### Never take `.base_url` from a `resolved-set` record
+
+`startswith("resolved")` matches `resolved-set` too, and `.base_url` on one of
+those is the *shared* endpoint - the whole of HAL - which only means this
+repository when paired with its `set`. The roster has one set, in its header,
+so there is no row that can hold the pair. Thirteen repositories through that
+filter is one aggregator URL, thirteen times.
+
+That is not hypothetical: it is how `api.archives-ouvertes.fr/oai/hal/` entered
+the roster twice, harvested 970,564 records attributed to nothing, and timed
+out at the one-hour deadline still going. The 129 HAL portal endpoints already
+hold 8.5M records between them, which is more than HAL contains, so the
+aggregator was duplicating what its own members already provide. Both spellings
+are now `metha endpoints --block`ed, and the set-scoped repositories are parked
+in `hal-sets-2026-09-07.tsv` with the `metha-sync -set` invocation that would
+harvest one properly.
+
+**Run `--report`'s collision check first, every time.** It is the one that finds
+this class of problem, and it also caught two HAL portals resolved onto
+`collection:SEARCH`, which is a user-interface path and not an institution.
+
+### Retiring the URLs a resolution supersedes
+
+`supersede.py` turns a run into a correction file, and `metha endpoints` applies
+it:
+
+```sh
+./supersede.py resolved.ndjson --roster ../../sweep.json.zst > corrections.tsv
+metha endpoints --supersede corrections.tsv     # under the sweep lock
+metha endpoints --state superseded --json       # what changed, and to what
+metha endpoints --unsupersede <url>             # the way back
+```
+
+The roster keeps the row and records `superseded_by`, rather than dropping it.
+Dropping would not even work - `contrib/sites.tsv` is re-read every run, so the
+URL returns tomorrow with its counters lost - and the pointer is the part worth
+keeping: not that a URL is wrong, but which one is right instead.
+
+`supersede.py` is much narrower than "the resolver found something better",
+because a rule that works by host breaks on every host that is not one
+repository. Its docstring has the three guards and what each of them caught.
+The 2026-09-06 run yields **1,467 corrections onto 880 endpoints**, and leaves
+alone 374 `transient`, 136 `refused` and 34 live candidates: failure to reach a
+URL is not evidence that the URL is wrong, which is the same mistake the sweep's
+politeness key was making at the time.
 
 ## Next
 

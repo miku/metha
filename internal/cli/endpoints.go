@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -44,14 +45,17 @@ It prints URLs, one per line, so the output is an input - to --import, to
 metha sync, or to the next release's endpoint list. --json prints the whole
 profile instead, with the counters, the last error and the timings.
 
---import, --block and --unblock change the roster. They are the only things
-here that write, they take the sweep lock, and they harvest nothing.`,
+--import, --block, --unblock, --supersede and --unsupersede change the roster.
+They are the only things here that write, they take the sweep lock, and they
+harvest nothing.`,
 		Example: `  metha endpoints --state quarantined      # what has stopped answering
   metha endpoints --class gone             # what never answered at all
   metha endpoints --slower-than 5m --json  # what a sweep spends its time on
   metha endpoints http://export.arxiv.org/oai2 --json
   metha endpoints --import new-endpoints.txt
-  metha endpoints --block http://example.com/oai`,
+  metha endpoints --block http://example.com/oai
+  metha endpoints --supersede corrections.tsv   # wrong URL <TAB> right one
+  metha endpoints --state superseded --json     # what was replaced, and by what`,
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return o.run(args)
@@ -67,19 +71,25 @@ here that write, they take the sweep lock, and they harvest nothing.`,
 	f.StringVar(&o.importFile, "import", "", "add the endpoints in this file to the roster, and harvest nothing")
 	f.StringArrayVar(&o.block, "block", nil, "never harvest this endpoint (repeatable)")
 	f.StringArrayVar(&o.unblock, "unblock", nil, "undo --block (repeatable)")
+	f.StringVar(&o.supersedeFile, "supersede", "",
+		"take endpoints off the schedule, naming what replaced each: a file of "+
+			"wrong-url<TAB>right-url lines")
+	f.StringArrayVar(&o.unsupersede, "unsupersede", nil, "undo --supersede (repeatable)")
 	return cmd
 }
 
 type endpointsOpts struct {
-	baseDir    string
-	format     string
-	state      string
-	class      string
-	slowerThan time.Duration
-	asJSON     bool
-	importFile string
-	block      []string
-	unblock    []string
+	baseDir       string
+	format        string
+	state         string
+	class         string
+	slowerThan    time.Duration
+	asJSON        bool
+	importFile    string
+	block         []string
+	unblock       []string
+	supersedeFile string
+	unsupersede   []string
 }
 
 func (o *endpointsOpts) run(args []string) error {
@@ -88,7 +98,7 @@ func (o *endpointsOpts) run(args []string) error {
 	}
 	if o.writes() {
 		if len(args) > 0 {
-			return fmt.Errorf("--import, --block and --unblock take no arguments; name the endpoints in the flag")
+			return fmt.Errorf("the writing flags take no arguments; name the endpoints in the flag")
 		}
 		return o.mutate()
 	}
@@ -109,7 +119,8 @@ func (o *endpointsOpts) validate() error {
 }
 
 func (o *endpointsOpts) writes() bool {
-	return o.importFile != "" || len(o.block) > 0 || len(o.unblock) > 0
+	return o.importFile != "" || len(o.block) > 0 || len(o.unblock) > 0 ||
+		o.supersedeFile != "" || len(o.unsupersede) > 0
 }
 
 // list prints the roster, filtered.
@@ -269,6 +280,120 @@ func (o *endpointsOpts) apply(roster *sweep.Roster) error {
 			return err
 		}
 		fmt.Fprintf(os.Stderr, "unblocked: %s, now %s\n", url, p.State)
+	}
+	if o.supersedeFile != "" {
+		if err := o.applySupersede(roster); err != nil {
+			return err
+		}
+	}
+	for _, arg := range o.unsupersede {
+		url := oai.PrependSchema(arg)
+		p, ok := roster.Get(url)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "not in the roster: %s\n", url)
+			continue
+		}
+		if p.State != sweep.StateSuperseded {
+			fmt.Fprintf(os.Stderr, "not superseded: %s\n", url)
+			continue
+		}
+		p = p.Unsupersede(sweep.DefaultPolicy())
+		if err := roster.Put(p); err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "unsuperseded: %s, now %s\n", url, p.State)
+	}
+	return nil
+}
+
+// applySupersede reads a two-column file of wrong-url<TAB>right-url and takes
+// the left one off the schedule, pointing at the right one.
+//
+// A file rather than a repeatable flag because the unit this exists for is a
+// resolve pass, and the last one produced 1,740 rows. A flag that has to be
+// written 1,740 times is a flag nobody uses.
+//
+// The refusals are the interesting part, and they are all refusals rather than
+// errors: a correction file is derived from a pass over the live web, so some
+// of it will be stale by the time it is applied, and one bad row must not
+// abandon the other 1,739. What it will not do:
+//
+//   - supersede a URL the roster has never heard of. There is nothing to take
+//     off the schedule, and creating a row to immediately exclude would put a
+//     URL in the roster that no seed list ever claimed.
+//   - supersede a URL by something the roster does not hold, or by something
+//     that is blocked or itself superseded. The replacement has to be an
+//     endpoint that is actually being swept, or the correction takes a URL off
+//     the schedule and puts nothing back - which is how a repository silently
+//     leaves the corpus.
+//   - touch a blocked endpoint. An exclusion asked for by an operator outranks
+//     a rule inferred from a probe.
+func (o *endpointsOpts) applySupersede(roster *sweep.Roster) error {
+	f, err := os.Open(o.supersedeFile)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+
+	now := time.Now().UTC()
+	var applied, already int
+	skipped := map[string]int{}
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for line := 1; sc.Scan(); line++ {
+		text := strings.TrimSpace(sc.Text())
+		if text == "" || strings.HasPrefix(text, "#") {
+			continue
+		}
+		from, to, ok := strings.Cut(text, "\t")
+		from, to = strings.TrimSpace(from), strings.TrimSpace(to)
+		if !ok || from == "" || to == "" {
+			return fmt.Errorf("%s:%d: want wrong-url<TAB>right-url, got %q",
+				o.supersedeFile, line, text)
+		}
+		from, to = oai.PrependSchema(from), oai.PrependSchema(to)
+		if from == to {
+			skipped["replaced by itself"]++
+			continue
+		}
+		p, found := roster.Get(from)
+		switch {
+		case !found:
+			skipped["not in the roster"]++
+			continue
+		case p.State == sweep.StateBlocked:
+			skipped["blocked by hand"]++
+			continue
+		case p.State == sweep.StateSuperseded:
+			already++
+			continue
+		}
+		switch replacement, found := roster.Get(to); {
+		case !found:
+			skipped["replacement not in the roster"]++
+			continue
+		case replacement.State == sweep.StateBlocked:
+			skipped["replacement is blocked"]++
+			continue
+		case replacement.State == sweep.StateSuperseded:
+			// Chains are not followed, deliberately. Following one would apply
+			// a rule nobody wrote down, and a cycle would hang; two passes over
+			// the file resolve a chain honestly if that is what was meant.
+			skipped["replacement is itself superseded"]++
+			continue
+		}
+		if err := roster.Put(p.Supersede(to, now)); err != nil {
+			return err
+		}
+		applied++
+	}
+	if err := sc.Err(); err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "superseded %s from %s, %s already were\n",
+		plural2(applied, "endpoint"), o.supersedeFile, thousands(already))
+	for _, reason := range slices.Sorted(maps.Keys(skipped)) {
+		fmt.Fprintf(os.Stderr, "  skipped %s: %s\n", thousands(skipped[reason]), reason)
 	}
 	return nil
 }

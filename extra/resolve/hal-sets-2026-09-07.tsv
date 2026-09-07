@@ -1,0 +1,25 @@
+# Repositories that are a SET of a shared endpoint, not an endpoint of
+# their own. The roster carries one set per roster, in its header, so
+# these cannot be rows in it: writing base_url alone hands all four
+# million HAL records to each of them in turn. Harvested, if at all, with
+#     metha-sync -set <set> <base_url>
+#
+# The SUSPECT rows are a real defect in resolve.py rather than a data
+# quirk: collection:SEARCH is a HAL user-interface path, not an
+# institution, and two portals resolved onto it. resolve.py --report's
+# collision check is what catches this; it has to be run before any of
+# this is used.
+host	base_url	set	ror_id	name	note
+hal-anses.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:ANSES		HAL Anses	
+hal-descartes.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:SEARCH	https://ror.org/05f82e368	HAL Descartes	SUSPECT: set claimed by 2 repositories
+hal-supelec.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:SUPELEC	https://ror.org/00n7gwn90	HAL-SUPELEC	
+hal-univ-diderot.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:SEARCH		Hal-Diderot	SUSPECT: set claimed by 2 repositories
+hal-univ-pau.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:UNIV-PAU	https://ror.org/01frn9647	HAL e2s UPPA	
+hal-univ-rennes1.archives-ouvertes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:UNIV-RENNES1		HAL-Rennes 1	
+hal.cirad.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:CIRAD		HAL-CIRAD	
+hal.in2p3.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:IN2P3	https://ror.org/03fd77x13	HAL-IN2P3	
+hal.science	https://api.archives-ouvertes.fr/oai/hal/	collection:SUAD	https://ror.org/03e1ymy32	SUAD Institutional Repository	
+hal.univ-lille3.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:UNIV-LILLE3	https://ror.org/04b0z7q78	HAL - Lille 3	
+hal.univ-nantes.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:UNIV-NANTES	https://ror.org/03gnr7b55	HAL-Univ-Nantes	
+hal.upmc.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:UPMC		HAL-UPMC	
+jeannicod.ccsd.cnrs.fr	https://api.archives-ouvertes.fr/oai/hal/	collection:JEAN-NICOD	https://ror.org/01qfab443	Archive Electronique - Institut Jean Nicod	
