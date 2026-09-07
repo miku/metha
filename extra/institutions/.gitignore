@@ -1,0 +1,13 @@
+# Raw registry dumps. Large, and permanently re-downloadable from a pinned
+# Zenodo version, so the Makefile can always rebuild.
+data/
+__pycache__/
+
+# orgs.jsonl is 22 MB and regenerates in ~40s from a pinned dump. This repo
+# does commit data generously (extra/core's 10,284 files, resolved.ndjson at
+# 7 MB) but those are one-time pulls; this one is rebuilt every ROR release,
+# so committing it would add ~22 MB to history a dozen times a year for a file
+# `make orgs.jsonl` reproduces exactly. edges.jsonl IS committed: it is 2 MB,
+# derives only from sources already in this repo, needs no network, and is the
+# validation set Phase 2 is checked against.
+orgs.jsonl

@@ -1167,3 +1167,269 @@ provenance argument, no longer an argument.
    throttling is not being read as absence. The 59 in particular were never
    retried.
 4. **Then Stage 2**, with the guards and the ROR link built in from the start.
+
+---
+
+> A fifth round, 2026-09-07, prompted by a simpler question than the last four:
+> BASE says it searches **493,806,581 documents from 11,836 content providers**,
+> we hold **242,913,413 records from 99,928 harvested endpoints**, and the
+> provider list in `extra/base/providers/` has 11,889 rows that we appear to
+> mostly have. So where does a 250M gap come from? The answer is that the two
+> numbers count different things, and once they are made comparable the gap
+> mostly disappears — but making them comparable turns up four defects that are
+> worth more than the comparison.
+
+## 16. BASE's 493.8M against our 242.9M
+
+### 16.1 Our number, stated so it can be compared to something
+
+| | |
+|---|---|
+| harvested endpoints | 99,928 |
+| records | 242,913,413 |
+| of which deleted (tombstones) | 12,307,169 |
+| failed windows | 267,086 |
+| on disk / fetched | 102.7 GB / 637.4 GB |
+
+Against the roster (`sweep-post-resolve-2026-09-07.json.zst`, 245,025 endpoints,
+94,671 live), the same 242.9M splits in a way the headline hides:
+
+- **180.9M sit on currently-live endpoints**; the other **62.0M** were harvested
+  by endpoints that now fail, including 2.1M on endpoints already quarantined.
+- **15.2M (8.4% of the live total) are double-counted**: 8,378 endpoints are a
+  second spelling — `http`/`https`, `www.`/bare — of an endpoint we already
+  have. `invenio.nusl.cz/oai2d` contributes 764,672 records twice;
+  `biblio.ugent.be/oai` 554,791 twice. 94,671 live URLs collapse to 86,151
+  distinct `(host, path)` pairs.
+- Nothing is deduplicated *across* endpoints, and the corpus is 88%
+  multi-tenant, so a record served by both a journal endpoint and its site-level
+  sibling is counted twice again.
+
+A defensible comparable figure is **~165M**, and it should not be stated more
+precisely than that. BASE's documents are deduplicated; ours are not.
+
+### 16.2 Two thirds of BASE's 493.8M never touched an OAI-PMH endpoint
+
+First, the file. `base-providers-2026-09-07.json` is **byte-identical** to
+`base-providers-2026-07-28.json` (`md5 183080b5c30b090c046dd9bef534fe72`) — a
+re-dated copy, not a fresh pull. Its 11,889 rows sum to **479,496,866
+documents**. That accounts for the two small discrepancies in the question: the
+14.3M (3%) below the headline is roughly six weeks of growth, and 11,889 rows
+against a claimed 11,836 providers is 0.4%, the difference between every row in
+the list and the collections BASE currently counts as active.
+
+The large discrepancy is elsewhere. Grouped by the `system` field:
+
+| kind | providers | documents | share |
+|---|---|---|---|
+| aggregator / publisher feed (`Eigenentwicklung`, `CrossRef`, `Unbekannt`) | 676 | 322,476,174 | **67.3%** |
+| an actual repository software | 11,213 | 157,020,692 | 32.7% |
+
+The guess in the question was "pubmed, datacite … about 100M extra". It is
+larger and it is more concentrated:
+
+| provider | documents |
+|---|---|
+| DataCite | 117,597,440 |
+| PubMed Central | 40,724,330 |
+| ScienceDirect (Elsevier) | 21,880,963 |
+| Springer Nature | 18,000,156 |
+| DOAJ Articles | 12,900,795 |
+| Wiley | 11,058,714 |
+| Gallica (BnF) | 7,911,650 |
+| Informa, OUP, Zenodo, IEEE, SAGE, HAL, RePEc, JSTOR, arXiv … | each 3–8M |
+
+**Ten providers are 52.1% of BASE. Fifty are 66.4%.** DataCite and PMC alone
+are 158.3M, a third of the index. The 336 providers whose `system` is
+`CrossRef` — ScienceDirect, Springer, Wiley, IEEE, JSTOR, Brill, Emerald — are
+publisher metadata arriving through Crossref, 106.3M documents, and *none of it
+is available over OAI-PMH from anybody*. The 308 `Unbekannt` providers (80.1M)
+are the bespoke bulk feeds: PMC, Gallica, RePEc, DNB, HathiTrust, DTIC, NTRS.
+
+So BASE is not an OAI-PMH harvester with a long tail. It is a discovery index
+whose bulk arrives through a handful of bulk agreements, with an OAI-PMH long
+tail attached. The long tail is the only part we are in the same business as,
+and it is 157.0M, not 493.8M.
+
+### 16.3 Of that 157.0M we already have most of the providers
+
+BASE's `url` field is a homepage, not an endpoint, so the join has to be done
+twice and the answer is a range:
+
+| join | live providers | rate | documents behind them |
+|---|---|---|---|
+| exact host (`www.` stripped) | 6,683 / 11,213 | 59.6% | 68,440,856 (43.6%) |
+| registrable domain | 8,803 / 11,213 | 78.5% | 117,951,812 (75.1%) |
+
+The domain join over-credits, and by a known amount: **46.3% of the 11,213
+providers share a registrable domain with another provider** — 587 WEKO
+repositories on `nii.ac.jp`, 118 HAL portals on `archives-ouvertes.fr`, 87
+CONTENTdm collections on `oclc.org`, 57 on `figshare.com`, 50 on
+`diva-portal.org`. One live endpoint under `nii.ac.jp` marks all 587 covered.
+The host join under-credits by the §15.4 amount: 13% of endpoints are not on
+their repository's host, which is why HAL scores 0/168 there.
+
+The truth is between the two. What is not in doubt is the third bucket:
+**50 of 11,213 providers have no host in the roster at all.** §12 found this
+against OpenDOAR's 6,181 and this is the same finding against a labeled set
+1.8× larger. Discovery is not the constraint. It has not been the constraint
+for two rounds.
+
+### 16.4 And we harvest 9,527 sites BASE does not list
+
+| our live endpoints | endpoints | sites | records |
+|---|---|---|---|
+| on a BASE-provider domain | 62,283 | 5,244 | 148,197,955 |
+| **not a BASE provider at all** | **32,388** | **9,527** | **32,682,728** |
+
+The largest: `kb.dk` 3.4M, `aiscr.cz` 2.1M, `dpi-proceedings.com` 1.3M across
+105 endpoints, `data-bib.muenchen.de` 1.2M, `redalyc.org` 766k,
+`edpsciences.org` 459k, `recercat.cat` 450k, plus 472 endpoints under
+`info.vn`. Mostly the long-tail OJS and the national digital libraries that a
+curated provider list does not reach.
+
+Which gives the scoreboard sentence §14.4 asked for and §15.7 could not write:
+**against BASE's OAI-shaped 157.0M we hold ~165M, we reach 60–78% of their
+providers, and we harvest 9,527 sites they do not list.** The 493.8M headline
+is not a coverage gap. It is DataCite, Crossref and PubMed Central.
+
+### 16.5 The gap that is real: 4,480 providers whose host we have and cannot reach
+
+88.6M documents sit behind them. By declared software, host join:
+
+| software | providers | live | rate | documents | unreached |
+|---|---|---|---|---|---|
+| HAL | 168 | 0 | 0% | 12,158,401 | 12,158,401 |
+| DSpace | 475 | 259 | 55% | 22,249,987 | 9,456,789 |
+| **CONTENTdm** | 162 | 21 | **13%** | 9,247,240 | 9,176,353 |
+| DSpace XOAI | 1,096 | 628 | 57% | 22,085,446 | 9,114,378 |
+| Invenio | 31 | 23 | 74% | 7,497,258 | 6,296,946 |
+| DLPS | 3 | 0 | 0% | 5,247,288 | 5,247,288 |
+| Digital Commons | 516 | 398 | 77% | 9,748,484 | 4,871,714 |
+| Pure | 61 | 25 | 41% | 5,236,073 | 4,050,526 |
+| OJS | 6,623 | 4,411 | 67% | 11,800,177 | 2,582,638 |
+| EPrints 3 | 481 | 329 | 68% | 8,870,459 | 2,515,613 |
+| **Figshare** | 91 | 2 | **2%** | 2,491,741 | 2,376,382 |
+| dLibra | 53 | 27 | 51% | 3,999,482 | 2,059,484 |
+| Islandora | 85 | 36 | 42% | 2,537,971 | 1,978,993 |
+| **WEKO** | 598 | 93 | **16%** | 2,069,806 | 1,876,902 |
+| **total** | **11,213** | **6,683** | **60%** | **157,020,692** | **88,579,836** |
+
+Spot-checking the three worst rates says the same thing three different ways,
+and none of them is "the repository is gone":
+
+- **Figshare, 2%.** All 97 roster entries for those 89 dead providers are **bare
+  hostnames with no path**, and every one returns `EOF`. We never recorded a
+  path for a single Figshare portal.
+- **CONTENTdm, 13%.** 141 dead providers, and the dominant error on the bare
+  hostname is `XML syntax error on line 45` — that is our parser reading OCLC's
+  homepage. Where a path exists it is `/oai/oai.php` and the class is
+  `transient`; 87 of these share one platform.
+- **HAL 0/168 and DLPS 0/3** are not failures at all. They are §15.4's
+  measurement defect: the endpoint is on a different host from the repository,
+  and a host join cannot see it.
+
+### 16.6 NII: the site key helped threefold and did not fix it
+
+§15.9's first item was "re-sweep under the site key". This file is that sweep,
+and the WEKO family is the test case:
+
+| | before (09-06) | after (09-07) |
+|---|---|---|
+| `*.repo.nii.ac.jp` live | 32 | **93** |
+| still `transient` | 1,151 | 1,090 |
+| quarantined | 341 | **1,000** |
+| `429 Too Many Requests`, corpus-wide | 1,390 | 1,221 |
+
+Three times the live endpoints, and 1,090 endpoints still throttled. Splitting
+the 1,188 NII rows by URL shape says why, and it is only half a politeness
+problem:
+
+| shape | URLs | live |
+|---|---|---|
+| bare hostname, no path | 630 | **0** |
+| `/oai` | 554 | 93 |
+| other | 4 | 0 |
+
+**630 of them cannot ever succeed** — they are hostnames, not endpoints — and
+each one spends a request per sweep against the one server in the corpus that
+is known to answer `429` under load. The 554 real endpoints are correct, and
+461 of them are still being refused. Serialising per site was necessary and is
+not sufficient: NII needs a named per-site policy with a request *budget* per
+sweep window, not merely a concurrency of one.
+
+### 16.7 13,008 bare hostnames, 22 live, unchanged
+
+§11.1 counted them and called them free probe targets. Two sweeps later the
+number is identical — 13,008 URLs with no path, 22 live (0.17%) — and 1,991 of
+them are now quarantined. They are 5.3% of the roster, they cost a request
+every sweep, and they concentrate on exactly the shared platforms that throttle
+(NII 630, Figshare 97). They also have never been cheaper to fix: BASE and
+OpenDOAR both hand us a declared `system` per host, and `extra/resolve`'s
+`families.py` already holds the measured path list per software. Expand them
+against their own family's dictionary, then supersede what does not resolve.
+The mechanism arrived in §15.5 and this is what it is for.
+
+### 16.8 Quarantine is measuring us, not the web
+
+| | before | after |
+|---|---|---|
+| quarantined | 9,150 | **31,400** |
+| of which `transient` | 9,009 | **30,816 (98%)** |
+| `gone` / `protocol` | 141 | 238 / 231 |
+| records already harvested on quarantined endpoints | — | 2,083,451 |
+
+Quarantine exists to retire things that are not endpoints. 98% of it is
+`transient`, which means it is retiring endpoints *we could not reach*, and
+§16.6 shows what that population actually is. `gone` and `protocol` together —
+the two classes that are positive evidence — are 1.5% of it.
+
+§15.8 asked for a `throttled` class distinct from `transient` and filed it as
+tidiness. This is the number that makes it urgent: without the split, a bad
+week of networking retires 30,000 endpoints, the live ratio *improves*, and
+every table in this file gets better while the corpus gets smaller. The same
+argument as §9's, arriving as a measurement instead of a principle for the
+third time.
+
+### 16.9 Order, revised again
+
+1. **Expand or supersede the 13,008 bare hostnames** (§16.7). Free, offline,
+   removes 5.3% of the roster's request budget, and it is a prerequisite for
+   §16.6 rather than a cleanup after it.
+2. **Split `throttled` out of `transient`, and do not quarantine on it**
+   (§16.8). Until this exists no reachability number in this file is safe.
+3. **Per-site request budgets for the four hosted platforms** — NII, OCLC
+   CONTENTdm, Figshare, bepress (§16.5, §16.6). Between them they hold 23M
+   documents behind a rate limit, not behind a discovery problem.
+4. **Run Stage 1's resolver over the 4,480 unreached BASE providers**, keyed on
+   their declared `system` (§16.5). It is the OpenDOAR pass again against a
+   labeled set 1.8× larger, already downloaded, with 88.6M documents behind it
+   and per-software path precision already measured.
+5. **Re-pull the BASE provider list for real**; the current file is July's,
+   re-dated.
+6. **Stop framing this as a gap against BASE.** On the OAI-harvestable world
+   there isn't one; on DataCite and Crossref there is, and no amount of endpoint
+   discovery will close it because those are not endpoints. If that 322M is
+   wanted, it is a different project — bulk DOI metadata — and it should be
+   named as one.
+
+### 16.10 The side track this opens
+
+§16.3 is the third time a labeled set has said the same thing: OpenDOAR's 6,181,
+BASE's 11,213, and both times essentially none are undiscovered. Which means the
+interesting unknown is no longer "which endpoints exist" but **"which
+institutions do we have nothing for"** — §1's inversion, never attempted.
+
+That needs a denominator we do not have: a list of the world's universities,
+colleges, research facilities and archives, with their domains, joined against
+the roster. ROR puts the addressable set at **~40–45k organisations**
+(`education` 27,055 + `facility` 14,610 + `archive` 3,237, types overlapping),
+and today only **4,268 of our 14,771 live sites are academic-shaped** — a crude
+16% ceiling on institutional coverage that nobody can improve on because nobody
+can measure it.
+
+Roadmap in `extra/institutions/README.md`. It is deliberately a side track: its
+first three phases are offline and spend no request budget, so they do not
+compete with §16.9, and it starts by reproducing the ~4,500 ROR-identified
+institutions already sitting in `extra/opendoar/2026/endpoints.jsonl` and
+`extra/core/` rather than by downloading anything.
