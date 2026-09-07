@@ -897,3 +897,273 @@ Report these, per stage, and nothing else:
 - per-rule precision: candidates emitted vs. `Identify`-confirmed;
 - corrections vs. additions — a pass that fixes 4,000 URLs and adds none is a
   better pass than one that adds 40,000 guesses.
+
+---
+
+> A fourth round, 2026-09-07. Stage 1 ran, its results were fed into the roster
+> and swept (`sweep-post-resolve.json.zst`, compacted 2026-09-06, 245,025
+> endpoints). §11–§14 predicted; this is what happened. The prediction was too
+> optimistic by about half, and the largest finding is why: for a whole class of
+> repository the sweep was measuring its own concurrency rather than the web.
+
+## 15. Stage 1, measured
+
+### 15.1 What it bought
+
+| | before | after |
+|---|---|---|
+| endpoints | 244,041 | 245,025 (**+984, 0 removed**) |
+| live (`ok`+`empty`) | 91,733 | 92,575 |
+| hosts with ≥1 live endpoint | 22,288 / 56,727 | 22,959 / 56,768 |
+| OpenDOAR repositories live | 2,040 / 6,181 (33%) | **2,656 / 6,181 (43%)** |
+| repository-family live endpoints | 2,162 | **2,716** |
+| repository share of live corpus | 2.5% | 3.2% |
+| roster `records` total | 201.2M | 228.5M |
+
+The precision is the part worth keeping. The 984 added endpoints are **66.8%
+live** against a corpus average of 37.8%, and **12.6M of the +27.3M records came
+from them alone** — about 12,800 records each, against a corpus mean nearer
+2,500. The largest are exactly the shapes the list never had:
+`drc.libraries.uc.edu` 589k, `repositum.tuwien.at` 540k, `ir.pku.edu.cn` 497k,
+**`arxiv.org/oai2` 476k**, then a row of Pure `/ws/oai`. No bulk OJS import has
+ever come close to this per-URL yield, which is §14.3's argument arriving as a
+number.
+
+§2's DSpace 6→7 hypothesis is now measured rather than argued:
+
+| shape | URLs b→a | live b→a | rate |
+|---|---|---|---|
+| DSpace 7 `/server/oai` | 331 → 796 | 196 → **608** | 59% → **76%** |
+| DSpace `/oai/request` | 2,947 → 3,039 | 960 → 1,016 | 33% → 33% |
+| DSpace 3/4 `/dspace-oai/request` | 484 → 486 | 28 → 30 | 6% → 6% |
+
+`/server/oai/request` is now the best-performing shape in the corpus.
+
+### 15.2 The prediction was wrong by half, and the gap is instructive
+
+§14.1 expected institutional-repository coverage "near 4,500–5,000". It reached
+2,656. Two subtractions account for the difference, and only one of them is
+about repositories:
+
+- **Stage 1 resolved 1,176 of the 4,140 it worked on (28%)**, leaving 2,670
+  `unresolved` and 59 `throttled`. The estimate assumed the failure classes were
+  overwhelmingly wrong-path. Rather more of them are wrong-host, gone, or behind
+  something that does not answer a probe.
+- **Of the 1,127 distinct base URLs it did find, the sweep reaches 687 (62%).**
+  A third of the pass's output did not become coverage.
+
+That second number is not a fact about repositories. It is §15.3.
+
+### 15.3 The sweep was measuring its own concurrency
+
+The politeness guarantee was sound and the key was wrong. `sweep.Host` keyed on
+the hostname, and a hostname is not a machine:
+
+- **530 WEKO repositories share one server** at `*.repo.nii.ac.jp`. Under a
+  hostname key those were 530 politeness keys, so 64 workers ran 64 of them at
+  once against one machine. NII limits concurrency rather than rate, and
+  answered `429`. **1,151 of the 1,188 NII endpoints came back `transient`, 32
+  were live, and 341 had already reached quarantine.** `extra/resolve` hit this
+  exact trap two days earlier, diagnosed it, and fixed it inside the resolver
+  with per-domain limiting — §14.1's third trap, written down at the time. The
+  sweep one level up had the same bug and nobody thought to look.
+- **A host and its `www.` alias were two keys.** `www.ajol.info` holds 664
+  endpoints and `ajol.info` 6; `vjol.info.vn` 661 and `www.vjol.info.vn` 657;
+  `raco.cat` 615 and `www.raco.cat` 599. Both halves ran concurrently by
+  construction. AJOL returned **661 identical `EOF`s**.
+
+Corpus-wide, **244 hosts with ≥20 endpoints are more than half `transient`.
+They hold 12,533 endpoints, of which 11,776 are transient and 259 are live** —
+34% of the whole transient class, and that undercounts NII, which spreads across
+hostnames. The error taxonomy is what a server under too many simultaneous
+requests looks like, not what a dead repository looks like:
+
+| | |
+|---|---|
+| `i/o timeout` | 13,586 |
+| `EOF` | 2,316 |
+| context deadline | 1,884 |
+| `429 Too Many Requests` | 1,390 |
+| `tls: unrecognized name` | 887 |
+| connection reset | 884 |
+
+and the dial failures concentrate on a handful of addresses — 299 on
+`103.84.116.31`, 260 on `34.78.94.222` (the INASP JOL platform), 240 on
+`200.137.162.31`.
+
+**Fixed**: the politeness key is now `sweep.Site`, the registrable domain
+(eTLD+1, via the public suffix list, because `.ac.id`, `.ac.uk`, `.com.br` and
+`.edu.my` are all in the corpus and counting labels merges every UK university
+or splits NII back into 530). 62,243 hosts collapse to 35,630 sites. The cost is
+a coarser partition — the largest key goes from 1,192 endpoints to 2,320 — paid
+back by raising `bucketsPerJob` from 8 to 32, which takes the p99 bucket from
+1,062 to 515, better than it was before the key changed.
+
+**What this invalidates.** Every "unreachable" conclusion in §11–§12 about a
+*shared platform* was measured with this instrument. §12 read WEKO's 6% as
+evidence of the `.jp` gap §8 predicted; WEKO's path was right all along and the
+sweep was throttling itself. Quarantine went from 419 to 9,150 over one sweep,
+9,009 of them `transient` at five consecutive failures — that is the corpus
+losing AJOL, the JOL family and NII, not repositories dying. Nothing needs
+resetting by hand: the schedule is a function of class and failure count, not
+state, and `ClassTransient` caps at seven days.
+
+### 15.4 Resolve found it; the sweep could not reach it
+
+The clearest single table in this round. For each family, what Stage 1 resolved,
+and what the sweep then made of it:
+
+| software | resolved | live in the sweep | the rest |
+|---|---|---|---|
+| islandora | 24 | **23** | timeout 1 |
+| DSpace | 574 | **453** | transient 68, refused 29, gone 10 |
+| EPrints | 63 | 37 | transient 15, timeout 9 |
+| PURE | 16 | 10 | timeout 6 |
+| Digital Commons | 98 | **16** | **transient 71**, timeout 11 |
+| WEKO | 56 | **2** | **transient 48** |
+| CONTENTdm | 45 | **0** | **transient 44**, gone 1 |
+| HAL | 61 | 14 | never attempted 47 |
+
+Every family that converted well is self-hosted. Every family that converted
+badly is one hosted platform: bepress, NII, OCLC. The split is not about
+software quality, or about those repositories, or about anything on the web. It
+is the hostname key, family by family.
+
+Seen through §12's table, the same split is what did and did not move. This one
+counts *repositories with at least one live endpoint*, so a family can gain here
+while converting badly above — Digital Commons does both, because most of its
+gain came from hosts that already had something live.
+
+| software | repos | live before | live after | Δ |
+|---|---|---|---|---|
+| DSpace | 2,512 | 781 (31%) | 1,174 (47%) | **+393** |
+| Digital Commons | 401 | 255 (64%) | 288 (72%) | +33 |
+| `?` | 354 | 48 (14%) | 75 (21%) | +27 |
+| EPrints | 590 | 318 (54%) | 342 (58%) | +24 |
+| islandora | 199 | 140 (70%) | 162 (81%) | +22 |
+| DSpace-CRIS | 45 | 16 (36%) | 27 (60%) | +11 |
+| PURE | 87 | 28 (32%) | 37 (43%) | +9 |
+| **WEKO** | 530 | 33 (6%) | 33 (6%) | **+0** |
+| **CONTENTdm** | 90 | 11 (12%) | 11 (12%) | **+0** |
+| **HAL** | 87 | 0 (0%) | 0 (0%) | **+0** |
+| **Figshare** | 44 | 0 (0%) | 0 (0%) | **+0** |
+| total | 6,181 | 2,040 (33%) | 2,656 (43%) | +616 |
+
+This is why §12's zeros need re-reading. Three families show **+0** despite
+Stage 1 resolving 56, 61 and 45 endpoints for them, and for two different
+reasons: WEKO and CONTENTdm were throttled, while HAL's
+endpoints are all on `api.archives-ouvertes.fr` and a join keyed on the
+institution's own host cannot see them at all. **160 of 1,189 resolutions (13%)
+put the endpoint on a different host from the repository** — every HAL portal,
+42 DSpace consolidations such as Canada's `*.scholaris.ca`, and a scatter of
+others. The coverage denominator §1 asked for cannot be a host join. It has to
+use the endpoint↔repository link the resolver already emits.
+
+### 15.5 A correction applied as an addition is not a correction
+
+§14.1 step 3 and the resolver README both insisted that a resolved endpoint must
+*supersede* the guess. All 1,189 resolutions were labelled `correction`, and
+**zero URLs left the roster**. The URLs they were meant to replace were all
+still there: 2,460 of them on those same hosts, 2,423 failing, being re-requested
+every sweep and sitting in the denominator of every ratio in this file.
+
+They could not simply be deleted. `contrib/sites.tsv` is re-read every run, so a
+dropped URL returns the next day with its counters lost. So the roster gained
+`superseded`, a hand-set state carrying `superseded_by` — the pointer is the
+point, because it makes the decision reviewable and reversible, and because what
+a resolve pass produces is not "this URL is wrong" but "this one is right
+instead". `metha endpoints --supersede <file>` applies a run; `--unsupersede`
+undoes one.
+
+`extra/resolve/supersede.py` derives the file, and it is deliberately much
+narrower than "the resolver found something better", because **a rule that works
+by host breaks on every host that is not one repository — and 88% of this corpus
+is multi-tenant.** Three guards, each of which caught a real cross-attribution:
+
+| guard | what it caught |
+|---|---|
+| replacement claimed by >1 repository | `hal.archives-ouvertes.fr/UNIV-PICARDIE → oai/hal/`: one collection recorded as all four million HAL records. Also Zenodo, CGSpace |
+| >1 repository resolved on the host | `dial.uclouvain.be` — the leftovers were being offered to both |
+| >1 institution-shaped path prefix | `www.opus-bayern.de` serves six universities under `/ku-eichstaett`, `/uni-passau` and so on, `opus.kobv.de` four more; Passau's URL was being handed to Nuremberg |
+
+It also leaves alone 374 `transient`, 136 `refused`, 27 `timeout` and 34 live
+candidates. Only `protocol` and `gone` are positive observations that a URL is
+not an endpoint; the rest mean the request never got an answer, which — see
+§15.3 — was usually us. The result is **1,467 corrections onto 880 endpoints**,
+down from the 2,423 the naive rule offered, and all of that difference is worth
+paying.
+
+### 15.6 HAL, and the recipe that produced it
+
+`https://api.archives-ouvertes.fr/oai/hal/` was in the roster, had harvested
+**970,564 records attributed to nothing**, and timed out at the one-hour
+deadline still going. Meanwhile the 129 HAL portal endpoints hold **8.5M records
+between them, more than HAL itself contains** — the aggregator was duplicating
+what its own members already provide. Both spellings are now blocked.
+
+The root cause was one predicate in `extra/resolve`'s own README. Its
+feed-back recipe said `select(.status|startswith("resolved"))`, which matches
+`resolved-set` as well, and `.base_url` on a set record is the *shared* endpoint
+— meaningful only paired with its `set`, which the roster has no row shape to
+hold. Thirteen repositories through that filter is one aggregator URL, thirteen
+times. Fixed to `== "resolved"`; `supersede.py` skips set records; the thirteen
+are parked in `hal-sets-2026-09-07.tsv` with their ROR ids and the `metha-sync
+-set` invocation that would harvest one properly.
+
+Two of those thirteen resolved onto `collection:SEARCH`, which is a HAL
+user-interface path and not an institution — a real defect in `resolve.py`,
+flagged in the file. `--report`'s collision check is what finds this class of
+thing, and the lesson is that it has to be run every time rather than once.
+
+### 15.7 The scoreboard §14.4 asked for
+
+- **live endpoints, OJS vs repository** — 2.5% → 3.2% repository. Moved, barely.
+  The 97:3 ratio is a ratio of a very large number to a small one and one pass
+  cannot shift it; the honest version is that repository-family live endpoints
+  grew 26% while OJS grew 0.3%.
+- **institutions with ≥1 live endpoint** — 2,040 → 2,656 of 6,181, and the
+  metric is broken for the 13% of repositories whose endpoint is off-host.
+- **per-rule precision** — measured; `resolve.py --report` prints it, and
+  `families.py` now carries it into Stage 2, which was the point of Stage 1.
+- **corrections vs additions** — 1,189 corrections claimed, **0 applied as
+  corrections**, because no mechanism existed. Now 1,467, and the mechanism is
+  `--supersede`.
+
+One number the scoreboard did not ask for and should have: **corpus live moved
++842, while 2,733 pre-existing endpoints became live and 2,548 stopped.**
+Sweep-to-sweep churn is ±2,500. The 657 live endpoints Stage 1 added are only
+legible because they were tracked separately — which is §9's per-source
+provenance argument, no longer an argument.
+
+### 15.8 What this changes about Stage 2
+
+- **Re-sweep before re-measuring.** Every rate in §11, §12 and §15.1 for a
+  shared platform was taken with the broken key. The DSpace, EPrints and
+  Islandora numbers are sound; the bepress, WEKO, CONTENTdm and JOL numbers are
+  not, and one clean sweep is cheaper than reasoning around them.
+- **Stage 2's rules are host rules, so they inherit §15.5's guards.** Mining
+  landing pages gives `(host, path_shape, ror)`, and the mapping from host to
+  repository is one-to-one only on the 12% of the corpus that is not
+  multi-tenant. The three guards should be in the derivation from the first row,
+  not bolted on after a bad import, which is exactly the mistake §9 warned about
+  and this round repeated.
+- **Carry the endpoint↔repository link, not just the endpoint.** 13% of
+  resolutions are off-host, and every coverage question in §1 is unanswerable
+  without it.
+- **`throttled` is not `unresolved`, at both levels.** The resolver already
+  distinguishes them; the roster does not, and `transient` is currently doing
+  the work of both "the server is busy" and "we were rude". A class that
+  separated them would have made §15.3 visible in a report rather than in an
+  investigation.
+
+### 15.9 Order, revised
+
+1. **Re-sweep under the site key**, and re-measure §12's table. The families
+   that read as dead are the cheapest coverage in the file — WEKO alone is 530
+   repositories whose correct path is already known.
+2. **Apply the 1,467 corrections** and the HAL block, then check what the ratio
+   does when the denominator stops carrying URLs we know are wrong.
+3. **Re-run Stage 1 on the 2,670 `unresolved` and 59 `throttled`**, now that
+   throttling is not being read as absence. The 59 in particular were never
+   retried.
+4. **Then Stage 2**, with the guards and the ROR link built in from the start.
