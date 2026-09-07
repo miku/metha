@@ -102,39 +102,44 @@ func order(profiles []Profile, want func(Profile) bool) []string {
 }
 
 // interleave reorders a selection so that consecutive entries come from
-// different hosts wherever possible: round-robin over the hosts, each host
+// different sites wherever possible: round-robin over the sites, each site
 // keeping its own order.
 //
-// This is the politeness mechanism, and it is why there is no per-host cap. A
+// This is the politeness mechanism, and it is why there is no per-site cap. A
 // cap made sense when a pass was a sample of the corpus; with a sweep that
 // covers everything daily it would permanently drop the tail of every large
-// host - and 4,165 hosts hold over half the endpoints, so that tail is half the
+// site - and 4,165 hosts hold over half the endpoints, so that tail is half the
 // corpus. Interleaving solves the starvation the cap was aimed at and loses
-// nothing: the host with 784 endpoints contributes its first before any host
+// nothing: the site with 2,320 endpoints contributes its first before any site
 // contributes its second.
 //
-// The order within a host is preserved, so the caller's sort still decides
-// which of a host's endpoints goes first.
+// Site rather than Host, because the hostname is not the machine: 530 WEKO
+// repositories share one server under *.repo.nii.ac.jp, and www.ajol.info and
+// ajol.info are the same server spelled twice. Interleaving over hostnames
+// spaces those out from themselves and no one else. See Site.
 //
-// Bucketing by round, rather than walking every host once per round. The latter
+// The order within a site is preserved, so the caller's sort still decides
+// which of a site's endpoints goes first.
+//
+// Bucketing by round, rather than walking every site once per round. The latter
 // is the obvious way to write this and is quadratic exactly where it hurts: the
-// corpus has 62,294 hosts and its largest holds 784 endpoints, so the obvious
-// form visits 49 million host slots to place 244,346 URLs and almost every
+// corpus has 35,630 sites and its largest holds 2,320 endpoints, so the obvious
+// form visits 82 million site slots to place 245,025 URLs and almost every
 // visit finds nothing. Measured at 5.3 seconds against 0.3 for this. The shape
-// of the corpus - one enormous host and a very long tail of hosts with a single
-// endpoint - is what makes the difference that large.
+// of the corpus - a few enormous sites and a very long tail of sites with a
+// single endpoint - is what makes the difference that large.
 func interleave(urls []string) []string {
-	// A URL's round is how many endpoints on its host came before it. Bucketing
+	// A URL's round is how many endpoints on its site came before it. Bucketing
 	// by that and concatenating gives the same order in one pass, and keeps the
 	// result a deterministic function of the input - a map iteration here would
 	// reshuffle the corpus on every run and make the tests meaningless.
 	seen := make(map[string]int, len(urls))
 	var rounds [][]string
 	for _, u := range urls {
-		h := Host(u)
-		r := seen[h]
-		seen[h] = r + 1
-		// A host reaches round r only after r earlier entries, each of which
+		s := Site(u)
+		r := seen[s]
+		seen[s] = r + 1
+		// A site reaches round r only after r earlier entries, each of which
 		// created the round before it, so this extends rounds by one at most.
 		if r == len(rounds) {
 			rounds = append(rounds, nil)

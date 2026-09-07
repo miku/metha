@@ -152,15 +152,15 @@ func TestAtCorpusScale(t *testing.T) {
 	if got := len(Selectors["due"].Select(profiles, epoch.Add(Day), pol)); got != len(profiles) {
 		t.Errorf("a day on, selected %d of %d", got, len(profiles))
 	}
-	// And the politeness guarantee, on a selection this size: the largest host
-	// contributes its first endpoint before any host contributes its second.
+	// And the politeness guarantee, on a selection this size: the largest site
+	// contributes its first endpoint before any site contributes its second.
 	firsts := make(map[string]bool)
 	for i, u := range sel {
-		h := Host(u)
-		if firsts[h] {
-			t.Fatalf("host %s appears twice within the first %d of %d selected", h, i+1, len(sel))
+		s := Site(u)
+		if firsts[s] {
+			t.Fatalf("site %s appears twice within the first %d of %d selected", s, i+1, len(sel))
 		}
-		firsts[h] = true
+		firsts[s] = true
 		if len(firsts) == 1000 {
 			break
 		}

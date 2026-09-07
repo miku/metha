@@ -34,6 +34,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 // State is where an endpoint stands with the sweep. It is a coarse summary of
@@ -202,11 +204,7 @@ type Outcome struct {
 	Quirks  *Quirks
 }
 
-// Host is the politeness key: the unit a scheduler must not hammer, as opposed
-// to the endpoint, which is the unit of work. 244,346 endpoints live on 62,294
-// hosts, and 4,165 of those hosts hold over half the corpus, so any ordering
-// that treats endpoints as independent hits those hosts several workers at a
-// time.
+// Host is the hostname an endpoint is reached at, folded to lower case.
 //
 // A URL that will not parse is its own host. That is not a fallback so much as
 // the right answer: it cannot be harvested either, and grouping every
@@ -214,13 +212,67 @@ type Outcome struct {
 // no reason.
 //
 // Case is folded, because a host name is case-insensitive and the corpus holds
-// both spellings. Scheme and port are not part of the key: the 613 pairs
-// differing only in scheme are one machine, and so is a host reached on two
-// ports.
+// both spellings. Scheme and port are not part of it: the 613 pairs differing
+// only in scheme are one machine, and so is a host reached on two ports.
+//
+// This is not the politeness key. See Site.
 func Host(rawurl string) string {
 	u, err := url.Parse(rawurl)
 	if err != nil || u.Hostname() == "" {
 		return strings.ToLower(rawurl)
 	}
 	return strings.ToLower(u.Hostname())
+}
+
+// Site is the politeness key: the unit a scheduler must not hammer, as opposed
+// to the endpoint, which is the unit of work. It is the registrable domain -
+// eTLD+1 - because that is the boundary an operator controls, and an operator
+// with one server behind fifty names is still one server.
+//
+// The key used to be the hostname, and the 2026-09-06 roster is what a hostname
+// key costs. Two failures, both of them the same mistake:
+//
+//   - 530 WEKO repositories are served from one machine at *.repo.nii.ac.jp.
+//     Under a hostname key those are 530 politeness keys, so 64 workers ran 64
+//     of them at once against one server. NII limits concurrency rather than
+//     rate, and answered with 429: 1,151 of the 1,188 NII endpoints came back
+//     transient and 341 had already reached quarantine. The path was right -
+//     extra/resolve had just found it - and the sweep was recording the whole
+//     family as dead.
+//   - A host and its www. alias are one machine and were two keys.
+//     www.ajol.info holds 664 endpoints and ajol.info another 6; vjol.info.vn
+//     and www.vjol.info.vn, 661 and 657; raco.cat and www.raco.cat, 615 and
+//     599. Both halves ran concurrently by construction, and AJOL returned 661
+//     identical EOFs.
+//
+// Together those two shapes account for 34% of the corpus's transient class,
+// on 244 hosts that are more than half transient and hold 12,533 endpoints
+// between them - of which 259 are live. Almost none of that is a dead
+// repository. It is a shared server being asked more than one question at a
+// time, recorded as absence.
+//
+// eTLD+1 rather than a fixed suffix count, because the corpus is full of
+// multi-label public suffixes - .ac.id, .ac.uk, .com.br, .edu.my - and counting
+// labels either merges every UK university into one key or splits NII back
+// into 530. The public suffix list is the only thing that gets ac.uk and
+// blogspot.com both right.
+//
+// Anything with no registrable domain - a raw IP, localhost, an unparseable
+// string - is its own key. The corpus does hold raw-IP OJS hosts (152
+// endpoints on one of them), and an IP is already exactly one server.
+//
+// The cost is a coarser partition, and it is bounded: the largest key goes
+// from 1,192 endpoints (nii.ac.jp's hosts, which were never really separate)
+// to 2,320 (um.edu.my, which genuinely spans subdomains). bucketsPerJob pays
+// that back at the p99.
+func Site(rawurl string) string {
+	host := Host(rawurl)
+	// Errors here are the interesting cases rather than the broken ones: an IP
+	// literal, a single-label name, the empty string. Each is already its own
+	// server, so the host is the right key and there is nothing to report.
+	domain, err := publicsuffix.EffectiveTLDPlusOne(host)
+	if err != nil || domain == "" {
+		return host
+	}
+	return domain
 }

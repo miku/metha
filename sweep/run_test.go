@@ -128,16 +128,21 @@ func TestRunSelectsOnlyWhatIsDue(t *testing.T) {
 	}
 }
 
-// TestRunSerialisesPerHost is the politeness guarantee, and the reason the pool
-// partitions by host instead of pulling from a shared queue. With 30 endpoints
-// on three hosts and eight workers, a shared queue would have several workers
-// on one host at once; this must never exceed one.
-func TestRunSerialisesPerHost(t *testing.T) {
+// TestRunSerialisesPerSite is the politeness guarantee, and the reason the pool
+// partitions by site instead of pulling from a shared queue. A shared queue
+// would have several workers on one site at once; this must never exceed one.
+//
+// The endpoints are spread over subdomains and www. aliases on purpose. That is
+// the shape the guarantee used to miss: under a hostname key these were 33
+// separate keys and the pool ran them concurrently, which is how one NII server
+// answered 1,151 endpoints with 429 and one AJOL server answered 661 with EOF.
+func TestRunSerialisesPerSite(t *testing.T) {
 	var urls []string
-	for h := range 3 {
+	for s := range 3 {
 		for i := range 10 {
-			urls = append(urls, fmt.Sprintf("http://h%d.test/oai/%d", h, i))
+			urls = append(urls, fmt.Sprintf("http://r%d.repo.s%d.test/oai/%d", i, s, i))
 		}
+		urls = append(urls, fmt.Sprintf("http://www.s%d.test/oai", s))
 	}
 	roster := seeded(t, urls...)
 
@@ -146,16 +151,16 @@ func TestRunSerialisesPerHost(t *testing.T) {
 	var worst int
 
 	rep, err := runner(func(_ context.Context, url string) Result {
-		h := Host(url)
+		s := Site(url)
 		mu.Lock()
-		inFlight[h]++
-		worst = max(worst, inFlight[h])
+		inFlight[s]++
+		worst = max(worst, inFlight[s])
 		mu.Unlock()
-		// Long enough that overlapping requests to one host would actually
+		// Long enough that overlapping requests to one site would actually
 		// overlap; a pool that got this wrong would be caught reliably.
 		time.Sleep(2 * time.Millisecond)
 		mu.Lock()
-		inFlight[h]--
+		inFlight[s]--
 		mu.Unlock()
 		return Result{Gained: 1, Total: 1}
 	}).Run(context.Background(), roster, nil)
@@ -168,7 +173,7 @@ func TestRunSerialisesPerHost(t *testing.T) {
 	mu.Lock()
 	defer mu.Unlock()
 	if worst > 1 {
-		t.Errorf("%d requests in flight to one host at once, want at most 1", worst)
+		t.Errorf("%d requests in flight to one site at once, want at most 1", worst)
 	}
 }
 
@@ -490,12 +495,15 @@ func TestRunStopsWhenTheRosterCannotBeWritten(t *testing.T) {
 	}
 }
 
-func TestPartitionKeepsAHostTogether(t *testing.T) {
+func TestPartitionKeepsASiteTogether(t *testing.T) {
 	var urls []string
-	for h := range 50 {
+	for s := range 50 {
 		for i := range 5 {
-			urls = append(urls, fmt.Sprintf("http://h%d.test/oai/%d", h, i))
+			// Different hostnames, one site: this is the split the guarantee
+			// rests on not happening.
+			urls = append(urls, fmt.Sprintf("http://r%d.s%d.test/oai/%d", i, s, i))
 		}
+		urls = append(urls, fmt.Sprintf("http://www.s%d.test/oai", s))
 	}
 	parts := partition(urls, 8)
 
@@ -504,18 +512,18 @@ func TestPartitionKeepsAHostTogether(t *testing.T) {
 	for i, part := range parts {
 		total += len(part)
 		for _, u := range part {
-			h := Host(u)
-			if seen, ok := where[h]; ok && seen != i {
-				t.Fatalf("host %s is split across partitions %d and %d", h, seen, i)
+			s := Site(u)
+			if seen, ok := where[s]; ok && seen != i {
+				t.Fatalf("site %s is split across partitions %d and %d", s, seen, i)
 			}
-			where[h] = i
+			where[s] = i
 		}
 	}
 	if total != len(urls) {
 		t.Errorf("partition returned %d URLs, want %d", total, len(urls))
 	}
 	// The assignment must not depend on a per-process seed: a sweep resumed
-	// after a kill hands the same hosts to the same workers.
+	// after a kill hands the same sites to the same workers.
 	for i, part := range partition(urls, 8) {
 		if len(part) != len(parts[i]) {
 			t.Fatal("partition is not deterministic across calls")

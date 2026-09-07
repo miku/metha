@@ -379,7 +379,7 @@ func TestSweepIsPoliteToARealHost(t *testing.T) {
 }
 
 // TestHarvesterSuffixesAreDistinctEndpoints guards an assumption the politeness
-// key rests on: two URLs on one host are one host, but they are still two
+// key rests on: two URLs on one host are one site, but they are still two
 // endpoints with two shards.
 func TestHarvesterSuffixesAreDistinctEndpoints(t *testing.T) {
 	srv := httptest.NewServer(&endpoint{earliest: "2026-08-30"})
@@ -394,8 +394,8 @@ func TestHarvesterSuffixesAreDistinctEndpoints(t *testing.T) {
 	if res := h.Attempt(context.Background(), b); res.Err != nil {
 		t.Fatal(res.Err)
 	}
-	if Host(a) != Host(b) {
-		t.Errorf("Host(%s) = %q, Host(%s) = %q; want one host", a, Host(a), b, Host(b))
+	if Site(a) != Site(b) {
+		t.Errorf("Site(%s) = %q, Site(%s) = %q; want one site", a, Site(a), b, Site(b))
 	}
 	for _, u := range []string{a, b} {
 		if _, err := store.Stat(dir, store.Identity{BaseURL: u, Format: "oai_dc"}); err != nil {

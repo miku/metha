@@ -202,7 +202,7 @@ func (r *Runner) Run(ctx context.Context, roster *Roster, sel Selector) (*Report
 	return out, errors.Join(errs...)
 }
 
-// bucketsPerJob is how many host buckets each worker's share is cut into.
+// bucketsPerJob is how many site buckets each worker's share is cut into.
 //
 // One bucket per worker is the obvious partition and it is what this did at
 // first. It makes a sweep as long as its unluckiest worker: the endpoints are
@@ -214,26 +214,47 @@ func (r *Runner) Run(ctx context.Context, roster *Roster, sel Selector) (*Report
 // the wall clock, and it is what an operator sees as a counter frozen at
 // 194/200 for minutes.
 //
-// Eight buckets each is enough to make that vanish - the tail is now one
-// bucket's worth of work rather than one worker's - and it costs nothing:
-// buckets are handed out as workers come free, so the imbalance that remains is
-// at most the last bucket each worker takes.
-const bucketsPerJob = 8
+// Eight buckets each made that vanish - the tail is one bucket's worth of work
+// rather than one worker's - and it cost nothing: buckets are handed out as
+// workers come free, so the imbalance that remains is at most the last bucket
+// each worker takes.
+//
+// Thirty-two, since the politeness key became the site. A site cannot be split
+// across buckets without giving up the guarantee, so the largest one is a floor
+// on the largest bucket, and coarsening the key raised that floor. More buckets
+// cannot lower the floor but they do stop unrelated sites piling in behind it.
+// Over the 245,025-endpoint roster, at 64 jobs:
+//
+//	buckets   key    max    p99   median
+//	    512   host  1,192  1,062      453    before
+//	    512   site  2,693  1,467      423    the regression this avoids
+//	  2,048   site  2,498    515       87    now
+//
+// The p99 is the number an operator feels, and it is now half what it was
+// before the key changed. The max is um.edu.my's 2,320 endpoints and stays
+// there: that is one operator, and asking it 64 questions at once is what this
+// change exists to stop.
+const bucketsPerJob = 32
 
 // sweep runs the pool and returns one report per worker.
 //
-// Work is bucketed by host rather than handed out endpoint by endpoint, which
-// is how "one in-flight request per host" holds without a lock: every endpoint
-// on a host lands in the same bucket, a bucket is held by one worker at a time
+// Work is bucketed by site rather than handed out endpoint by endpoint, which
+// is how "one in-flight request per site" holds without a lock: every endpoint
+// on a site lands in the same bucket, a bucket is held by one worker at a time
 // because it leaves the queue when taken, and a worker does one thing at a
-// time. It is the topology that guarantees it, so there is no per-host
+// time. It is the topology that guarantees it, so there is no per-site
 // semaphore to maintain and no way to forget to take one.
+//
+// The guarantee is only worth what the key is worth. Bucketing by hostname
+// gave 530 keys to one NII server and two to every host with a www. alias, and
+// the topology then dutifully ran all of them at once; see Site for what that
+// cost.
 //
 // The buckets outnumber the workers, and that is what buys back the work
 // stealing a fixed partition gives up: a worker that draws a slow bucket holds
 // up only that bucket, and the next one goes to whoever is free. Within a
 // bucket the selector's interleaving still holds - a worker's list alternates
-// between its hosts rather than working through one host's 784 endpoints back
+// between its sites rather than working through one site's 2,320 endpoints back
 // to back.
 func (r *Runner) sweep(ctx context.Context, roster *Roster, pol Policy, urls []string) ([]*Report, []error) {
 	jobs := r.jobs()
@@ -418,8 +439,8 @@ func (r *Runner) now() time.Time {
 	return time.Now().UTC()
 }
 
-// partition splits a selection into n buckets by host, keeping each bucket in
-// the order it was given. Every endpoint on a host lands in the same bucket,
+// partition splits a selection into n buckets by site, keeping each bucket in
+// the order it was given. Every endpoint on a site lands in the same bucket,
 // which is the whole point; see sweep. Empty buckets are ordinary - there are
 // more of them than workers on purpose - and the caller drops them.
 func partition(urls []string, n int) [][]string {
@@ -428,18 +449,18 @@ func partition(urls []string, n int) [][]string {
 	}
 	parts := make([][]string, n)
 	for _, u := range urls {
-		i := shard(Host(u), n)
+		i := shard(Site(u), n)
 		parts[i] = append(parts[i], u)
 	}
 	return parts
 }
 
-// shard maps a host to a worker. FNV rather than maphash because the assignment
+// shard maps a site to a worker. FNV rather than maphash because the assignment
 // has to be the same on every run: a sweep resumed after a kill should hand the
-// same hosts to the same workers, and a test that asserts one host never runs
+// same sites to the same workers, and a test that asserts one site never runs
 // twice at once should not depend on a per-process seed.
-func shard(host string, n int) int {
+func shard(site string, n int) int {
 	h := fnv.New32a()
-	_, _ = h.Write([]byte(host))
+	_, _ = h.Write([]byte(site))
 	return int(h.Sum32() % uint32(n))
 }

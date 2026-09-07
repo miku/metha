@@ -150,7 +150,7 @@ func TestInterleave(t *testing.T) {
 		{
 			// Scheme and port are not part of the politeness key: two URLs on
 			// one machine are one machine.
-			name: "scheme and port do not make a second host",
+			name: "scheme and port do not make a second site",
 			in: []string{
 				"http://a.test/1", "https://a.test/2", "http://a.test:8080/3",
 				"http://b.test/1",
@@ -161,16 +161,31 @@ func TestInterleave(t *testing.T) {
 			},
 		},
 		{
-			name: "case does not make a second host",
+			name: "case does not make a second site",
 			in:   []string{"http://A.TEST/1", "http://a.test/2", "http://b.test/1"},
 			want: []string{"http://A.TEST/1", "http://b.test/1", "http://a.test/2"},
 		},
 		{
+			// The failure this key exists for: a www. alias and a subdomain are
+			// the same operator. Keyed on the hostname these are three sites
+			// and the order comes back unchanged, which is how one AJOL server
+			// took 664 concurrent requests.
+			name: "www and subdomains do not make a second site",
+			in: []string{
+				"http://www.a.test/1", "http://a.test/2", "http://ojs.a.test/3",
+				"http://b.test/1",
+			},
+			want: []string{
+				"http://www.a.test/1", "http://b.test/1",
+				"http://a.test/2", "http://ojs.a.test/3",
+			},
+		},
+		{
 			// 778 lines of contrib/sites.tsv contain whitespace and a good many
-			// are not URLs at all. Each is its own host: it cannot be harvested
+			// are not URLs at all. Each is its own site: it cannot be harvested
 			// either, and serialising them against each other would be a
 			// politeness the machines involved never asked for.
-			name: "unparseable entries are their own hosts",
+			name: "unparseable entries are their own sites",
 			in:   []string{"not a url", "also not a url", "http://a.test/1"},
 			want: []string{"not a url", "also not a url", "http://a.test/1"},
 		},
@@ -189,10 +204,13 @@ func TestInterleave(t *testing.T) {
 // endpoint never harvested again, with nothing anywhere saying so.
 func TestInterleaveIsAPermutation(t *testing.T) {
 	var in []string
-	// The shape of the real corpus: one enormous host, a few medium ones, and a
-	// long tail of hosts with a single endpoint.
-	for i := range 784 {
-		in = append(in, fmt.Sprintf("http://big.test/oai/%d", i))
+	// The shape of the real corpus: one enormous site, a few medium ones, and a
+	// long tail of sites with a single endpoint. The big one is spread over
+	// subdomains, as um.edu.my and nii.ac.jp are - if interleave keyed on the
+	// hostname it would treat those 2,320 endpoints as 2,320 sites and space
+	// none of them out from each other.
+	for i := range 2320 {
+		in = append(in, fmt.Sprintf("http://r%d.big.test/oai/%d", i, i))
 	}
 	for h := range 40 {
 		for i := range 10 {
@@ -213,17 +231,17 @@ func TestInterleaveIsAPermutation(t *testing.T) {
 	if !slices.Equal(sorted, want) {
 		t.Error("interleave did not return a permutation of its input")
 	}
-	// And the property that matters: no host is asked twice before every other
-	// host has been asked once. With 5,041 distinct hosts here, the first 5,041
+	// And the property that matters: no site is asked twice before every other
+	// site has been asked once. With 5,041 distinct sites here, the first 5,041
 	// entries must name each of them exactly once - which is the guarantee that
-	// makes a per-host cap unnecessary.
-	const hosts = 1 + 40 + 5000
-	seen := make(map[string]bool, hosts)
-	for i, u := range got[:hosts] {
-		h := Host(u)
-		if seen[h] {
-			t.Fatalf("host %s appears twice within the first %d entries", h, i+1)
+	// makes a per-site cap unnecessary.
+	const sites = 1 + 40 + 5000
+	seen := make(map[string]bool, sites)
+	for i, u := range got[:sites] {
+		s := Site(u)
+		if seen[s] {
+			t.Fatalf("site %s appears twice within the first %d entries", s, i+1)
 		}
-		seen[h] = true
+		seen[s] = true
 	}
 }
