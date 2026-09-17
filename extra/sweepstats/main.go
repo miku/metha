@@ -1,7 +1,7 @@
-// sweepstats summarises a sweep roster: states, classes, TLDs, sites, record
-// counts, timings, schedules and the most common errors.
+// sweepstats summarises a sweep roster as markdown: states, classes, TLDs,
+// sites, record counts, timings, schedules and the most common errors.
 //
-//	$ go run ./extra/sweepstats sweep-post-resolve-2026-09-17.json.zst
+//	$ go run ./extra/sweepstats sweep-post-resolve-2026-09-17.json.zst > stats.md
 //	$ go run ./extra/sweepstats -n 40 ~/.cache/metha/sweep.json.zst
 //
 // The file is read as the roster writes it - zstd-compressed JSONL, a header
@@ -21,11 +21,12 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
-	"text/tabwriter"
 	"time"
+	"unicode/utf8"
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/miku/metha/sweep"
@@ -60,7 +61,10 @@ func main() {
 	if now.IsZero() {
 		now = time.Now().UTC()
 	}
-	r := &report{w: tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.AlignRight), n: *topN}
+	w := bufio.NewWriter(os.Stdout)
+	defer w.Flush()
+	r := &report{w: w, n: *topN}
+	fmt.Fprintf(w, "# Sweep stats: %s\n\n", filepath.Base(flag.Arg(0)))
 	r.overview(h, profiles, now)
 	r.states(profiles)
 	r.tlds(profiles)
@@ -109,7 +113,8 @@ func load(path string) (sweep.Header, []sweep.Profile, error) {
 	return h, profiles, sc.Err()
 }
 
-// counter counts string keys, and optionally which of them are live.
+// counter counts string keys, and which of them are active and hold how many
+// records.
 type counter struct {
 	total map[string]int
 	live  map[string]int
@@ -143,26 +148,115 @@ func top(m map[string]int, n int) []string {
 	return keys
 }
 
+// table is a markdown table, rendered with padded columns so the raw text reads
+// as well as the rendered one. Columns whose body is all numbers, percentages
+// or durations are right-aligned.
+type table struct {
+	header []string
+	rows   [][]string
+}
+
+func newTable(header ...string) *table { return &table{header: header} }
+
+func (t *table) add(cols ...any) {
+	row := make([]string, len(cols))
+	for i, c := range cols {
+		row[i] = cell(c)
+	}
+	t.rows = append(t.rows, row)
+}
+
+// cell formats one value for a table: numbers get thousands separators, and
+// pipes are escaped so they do not split the row.
+func cell(v any) string {
+	var s string
+	switch x := v.(type) {
+	case int:
+		s = thousands(x)
+	case time.Duration:
+		s = x.String()
+	default:
+		s = fmt.Sprint(x)
+	}
+	return strings.ReplaceAll(s, "|", `\|`)
+}
+
+func thousands(n int) string {
+	s := fmt.Sprint(n)
+	neg := strings.HasPrefix(s, "-")
+	s = strings.TrimPrefix(s, "-")
+	var b strings.Builder
+	for i, c := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			b.WriteByte(',')
+		}
+		b.WriteRune(c)
+	}
+	if neg {
+		return "-" + b.String()
+	}
+	return b.String()
+}
+
+var numeric = regexp.MustCompile(`^(-|[\d.,]+[\d.hmsµn%]*( \([\d.]+%\))?)$`)
+
+func (t *table) write(w io.Writer) {
+	width := make([]int, len(t.header))
+	right := make([]bool, len(t.header))
+	for i, h := range t.header {
+		width[i] = max(3, utf8.RuneCountInString(h))
+		right[i] = len(t.rows) > 0
+	}
+	for _, row := range t.rows {
+		for i, c := range row {
+			width[i] = max(width[i], utf8.RuneCountInString(c))
+			if !numeric.MatchString(c) {
+				right[i] = false
+			}
+		}
+	}
+	pad := func(s string, i int) string {
+		gap := strings.Repeat(" ", width[i]-utf8.RuneCountInString(s))
+		if right[i] {
+			return gap + s
+		}
+		return s + gap
+	}
+	line := func(cols []string) {
+		fmt.Fprint(w, "|")
+		for i, c := range cols {
+			fmt.Fprintf(w, " %s |", pad(c, i))
+		}
+		fmt.Fprintln(w)
+	}
+	line(t.header)
+	fmt.Fprint(w, "|")
+	for i := range t.header {
+		if right[i] {
+			fmt.Fprintf(w, " %s: |", strings.Repeat("-", width[i]-1))
+		} else {
+			fmt.Fprintf(w, " %s |", strings.Repeat("-", width[i]))
+		}
+	}
+	fmt.Fprintln(w)
+	for _, row := range t.rows {
+		line(row)
+	}
+	fmt.Fprintln(w)
+}
+
 type report struct {
-	w *tabwriter.Writer
+	w io.Writer
 	n int
 }
 
-func (r *report) section(title string) {
-	fmt.Printf("\n## %s\n\n", title)
-}
+func (r *report) section(title string) { fmt.Fprintf(r.w, "## %s\n\n", title) }
 
-func (r *report) row(cols ...any) {
-	for i, c := range cols {
-		if i > 0 {
-			fmt.Fprint(r.w, "\t")
-		}
-		fmt.Fprint(r.w, c)
-	}
-	fmt.Fprint(r.w, "\t\n")
-}
+func (r *report) sub(title string) { fmt.Fprintf(r.w, "### %s\n\n", title) }
 
-func (r *report) flush() { r.w.Flush() }
+func (r *report) para(format string, args ...any) {
+	fmt.Fprintf(r.w, format+"\n\n", args...)
+}
 
 func pct(a, b int) string {
 	if b == 0 {
@@ -170,6 +264,8 @@ func pct(a, b int) string {
 	}
 	return fmt.Sprintf("%.1f%%", 100*float64(a)/float64(b))
 }
+
+func withPct(a, b int) string { return fmt.Sprintf("%s (%s)", thousands(a), pct(a, b)) }
 
 func (r *report) overview(h sweep.Header, ps []sweep.Profile, now time.Time) {
 	r.section("Overview")
@@ -186,21 +282,22 @@ func (r *report) overview(h sweep.Header, ps []sweep.Profile, now time.Time) {
 		hosts[sweep.Host(p.URL)] = true
 		sites[sweep.Site(p.URL)] = true
 	}
-	r.row("version", h.Version)
-	r.row("format", h.Format)
+	t := newTable("metric", "value")
+	t.add("roster version", fmt.Sprint(h.Version))
+	t.add("format", "`"+h.Format+"`")
 	if h.Set != "" {
-		r.row("set", h.Set)
+		t.add("set", "`"+h.Set+"`")
 	}
-	r.row("compacted", h.Compacted.Format(time.RFC3339))
-	r.row("reference time", now.Format(time.RFC3339))
-	r.row("endpoints (header)", h.Endpoints)
-	r.row("endpoints (rows)", len(ps))
-	r.row("attempted", fmt.Sprintf("%d (%s)", attempted, pct(attempted, len(ps))))
-	r.row("ever ok", fmt.Sprintf("%d (%s)", everOK, pct(everOK, len(ps))))
-	r.row("hosts", len(hosts))
-	r.row("sites (eTLD+1)", len(sites))
-	r.row("records", records)
-	r.flush()
+	t.add("compacted", h.Compacted.Format(time.RFC3339))
+	t.add("reference time", now.Format(time.RFC3339))
+	t.add("endpoints (header)", h.Endpoints)
+	t.add("endpoints (rows)", len(ps))
+	t.add("attempted", withPct(attempted, len(ps)))
+	t.add("ever ok", withPct(everOK, len(ps)))
+	t.add("hosts", len(hosts))
+	t.add("sites (eTLD+1)", len(sites))
+	t.add("records", records)
+	t.write(r.w)
 }
 
 func (r *report) states(ps []sweep.Profile) {
@@ -209,10 +306,7 @@ func (r *report) states(ps []sweep.Profile) {
 	cross := map[[2]string]int{}
 	for _, p := range ps {
 		byState[string(p.State)]++
-		c := string(p.LastClass)
-		if c == "" {
-			c = "-"
-		}
+		c := cmp.Or(string(p.LastClass), "-")
 		byClass[c]++
 		cross[[2]string{string(p.State), c}]++
 	}
@@ -222,40 +316,35 @@ func (r *report) states(ps []sweep.Profile) {
 	}
 	classes = append(classes, "-")
 
-	header := []any{"state", "n", "%"}
-	for _, c := range classes {
-		header = append(header, c)
-	}
-	r.row(header...)
+	t := newTable(append([]string{"state", "endpoints", "%"}, classes...)...)
 	for _, s := range sweep.States() {
 		row := []any{s, byState[string(s)], pct(byState[string(s)], len(ps))}
 		for _, c := range classes {
 			row = append(row, cross[[2]string{string(s), c}])
 		}
-		r.row(row...)
+		t.add(row...)
 	}
-	total := []any{"total", len(ps), "100%"}
+	total := []any{"**total**", len(ps), "100%"}
 	for _, c := range classes {
 		total = append(total, byClass[c])
 	}
-	r.row(total...)
-	r.flush()
+	t.add(total...)
+	t.write(r.w)
 
-	// Consecutive failures, as a histogram.
-	fmt.Println()
+	r.sub("Consecutive failures")
 	fails := map[int]int{}
 	maxF := 0
 	for _, p := range ps {
 		fails[p.Failures]++
 		maxF = max(maxF, p.Failures)
 	}
-	r.row("consecutive failures", "endpoints")
+	t = newTable("failures", "endpoints", "%")
 	for i := 0; i <= maxF; i++ {
 		if fails[i] > 0 {
-			r.row(i, fails[i])
+			t.add(i, fails[i], pct(fails[i], len(ps)))
 		}
 	}
-	r.flush()
+	t.write(r.w)
 }
 
 // tld is the last label of a host, or "(ip)" for an address literal.
@@ -267,6 +356,14 @@ func tld(host string) string {
 		return host[i+1:]
 	}
 	return host
+}
+
+func (r *report) counterTable(label string, c *counter, total int) {
+	t := newTable(label, "endpoints", "%", "active", "active %", "records")
+	for _, k := range top(c.total, r.n) {
+		t.add(k, c.total[k], pct(c.total[k], total), c.live[k], pct(c.live[k], c.total[k]), c.recs[k])
+	}
+	t.write(r.w)
 }
 
 func (r *report) tlds(ps []sweep.Profile) {
@@ -285,39 +382,38 @@ func (r *report) tlds(ps []sweep.Profile) {
 			schemes[u.Scheme]++
 		}
 	}
-	fmt.Printf("%d distinct TLDs, %d distinct public suffixes\n\n", len(byTLD.total), len(bySuffix.total))
+	r.para("%s distinct TLDs, %s distinct public suffixes.",
+		thousands(len(byTLD.total)), thousands(len(bySuffix.total)))
+	r.sub(fmt.Sprintf("Top %d TLDs", r.n))
 	r.counterTable("tld", byTLD, len(ps))
-	fmt.Println()
+	r.sub(fmt.Sprintf("Top %d public suffixes", r.n))
 	r.counterTable("public suffix", bySuffix, len(ps))
-	fmt.Println()
-	r.row("scheme", "endpoints", "%")
+	r.sub("Scheme")
+	t := newTable("scheme", "endpoints", "%")
 	for _, s := range top(schemes, 0) {
-		r.row(s, schemes[s], pct(schemes[s], len(ps)))
+		t.add(s, schemes[s], pct(schemes[s], len(ps)))
 	}
-	r.flush()
-}
-
-func (r *report) counterTable(label string, c *counter, total int) {
-	r.row(label, "endpoints", "%", "active", "active%", "records")
-	for _, k := range top(c.total, r.n) {
-		r.row(k, c.total[k], pct(c.total[k], total), c.live[k], pct(c.live[k], c.total[k]), c.recs[k])
-	}
-	r.flush()
+	t.write(r.w)
 }
 
 func (r *report) sites(ps []sweep.Profile) {
-	r.section("Sites (politeness keys) and hosts")
+	r.section("Sites and hosts")
+	r.para("A site is the politeness key, `sweep.Site`: the registrable domain (eTLD+1).")
 	bySite, byHost := newCounter(), newCounter()
+	trans := map[string]int{}
 	for _, p := range ps {
 		bySite.add(sweep.Site(p.URL), p)
 		byHost.add(sweep.Host(p.URL), p)
+		if p.LastClass == sweep.ClassTransient {
+			trans[sweep.Site(p.URL)]++
+		}
 	}
+	r.sub(fmt.Sprintf("Top %d sites", r.n))
 	r.counterTable("site", bySite, len(ps))
-	fmt.Println()
+	r.sub(fmt.Sprintf("Top %d hosts", r.n))
 	r.counterTable("host", byHost, len(ps))
 
-	// How concentrated is the corpus: endpoints-per-site distribution.
-	fmt.Println()
+	r.sub("Endpoints per site")
 	buckets := []int{1, 2, 5, 10, 50, 100, 500, 1000}
 	counts := make([]int, len(buckets)+1)
 	epts := make([]int, len(buckets)+1)
@@ -326,41 +422,35 @@ func (r *report) sites(ps []sweep.Profile) {
 		counts[i]++
 		epts[i] += n
 	}
-	r.row("endpoints/site", "sites", "endpoints")
+	t := newTable("endpoints per site", "sites", "endpoints", "% of endpoints")
 	lo := 1
 	for i, b := range buckets {
-		label := fmt.Sprintf("%d-%d", lo, b)
+		label := fmt.Sprintf("%d–%d", lo, b)
 		if lo == b {
 			label = fmt.Sprint(b)
 		}
-		r.row(label, counts[i], epts[i])
+		t.add(label, counts[i], epts[i], pct(epts[i], len(ps)))
 		lo = b + 1
 	}
-	r.row(fmt.Sprintf(">%d", buckets[len(buckets)-1]), counts[len(buckets)], epts[len(buckets)])
-	r.flush()
+	last := len(buckets)
+	t.add(fmt.Sprintf("> %d", buckets[last-1]), counts[last], epts[last], pct(epts[last], len(ps)))
+	t.write(r.w)
 
-	// Sites that look like a shared server under strain rather than absence:
-	// many endpoints, mostly transient.
-	fmt.Println()
-	trans := map[string]int{}
-	for _, p := range ps {
-		if p.LastClass == sweep.ClassTransient {
-			trans[sweep.Site(p.URL)]++
-		}
-	}
-	fmt.Println("sites with >= 10 endpoints and > 50% transient:")
-	fmt.Println()
-	r.row("site", "endpoints", "transient", "active")
+	// Many endpoints, mostly transient: usually a shared server under strain
+	// rather than dead repositories.
+	r.sub("Mostly transient sites")
+	r.para("Sites with at least 10 endpoints, more than half of them transient.")
+	t = newTable("site", "endpoints", "transient", "transient %", "active")
 	shown := 0
 	for _, k := range top(trans, 0) {
 		if bySite.total[k] >= 10 && 2*trans[k] > bySite.total[k] {
-			r.row(k, bySite.total[k], trans[k], bySite.live[k])
+			t.add(k, bySite.total[k], trans[k], pct(trans[k], bySite.total[k]), bySite.live[k])
 			if shown++; shown == r.n {
 				break
 			}
 		}
 	}
-	r.flush()
+	t.write(r.w)
 }
 
 // platform guesses the repository software from the URL path alone.
@@ -389,14 +479,15 @@ func platform(rawurl string) string {
 	case strings.HasSuffix(p, "/oai"):
 		return "other /oai"
 	case strings.Contains(p, "oai"):
-		return "other *oai*"
+		return "other (oai in path)"
 	default:
 		return "unknown"
 	}
 }
 
 func (r *report) platforms(ps []sweep.Profile) {
-	r.section("Platform (guessed from path)")
+	r.section("Platform")
+	r.para("Guessed from the URL path alone.")
 	c := newCounter()
 	for _, p := range ps {
 		c.add(platform(p.URL), p)
@@ -418,22 +509,23 @@ func (r *report) records(ps []sweep.Profile) {
 			withRecs = append(withRecs, p)
 		}
 	}
-	r.row("records", "endpoints", "records")
-	r.row("0", counts[0], sums[0])
+	r.sub("Endpoints by record count")
+	t := newTable("records per endpoint", "endpoints", "records")
+	t.add("0", counts[0], sums[0])
 	for i := 1; i < len(buckets); i++ {
-		r.row(fmt.Sprintf("%d-%d", buckets[i-1]+1, buckets[i]), counts[i], sums[i])
+		t.add(fmt.Sprintf("%s–%s", thousands(buckets[i-1]+1), thousands(buckets[i])), counts[i], sums[i])
 	}
-	r.row(fmt.Sprintf(">%d", buckets[len(buckets)-1]), counts[len(buckets)], sums[len(buckets)])
-	r.flush()
+	last := len(buckets)
+	t.add("> "+thousands(buckets[last-1]), counts[last], sums[last])
+	t.write(r.w)
 
-	fmt.Println()
+	r.sub(fmt.Sprintf("Top %d endpoints by records", r.n))
 	slices.SortFunc(withRecs, func(a, b sweep.Profile) int { return cmp.Compare(b.Records, a.Records) })
-	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
-	fmt.Fprintf(w, "%10s\t%s\t%s\n", "records", "state", "url")
+	t = newTable("records", "state", "url")
 	for _, p := range withRecs[:min(r.n, len(withRecs))] {
-		fmt.Fprintf(w, "%10d\t%s\t%s\n", p.Records, p.State, p.URL)
+		t.add(p.Records, p.State, p.URL)
 	}
-	w.Flush()
+	t.write(r.w)
 }
 
 func quantiles(ds []time.Duration) []time.Duration {
@@ -446,7 +538,7 @@ func quantiles(ds []time.Duration) []time.Duration {
 }
 
 func (r *report) timing(ps []sweep.Profile) {
-	r.section("Elapsed per attempt, by last class")
+	r.section("Elapsed per attempt")
 	by := map[string][]time.Duration{}
 	var total time.Duration
 	for _, p := range ps {
@@ -456,64 +548,64 @@ func (r *report) timing(ps []sweep.Profile) {
 			total += p.Elapsed
 		}
 	}
-	r.row("class", "n", "min", "p50", "p90", "p99", "p99.9", "max")
+	r.para("By last class. Sum of last-attempt elapsed: %s.", total.Round(time.Second))
+	t := newTable("class", "n", "min", "p50", "p90", "p99", "p99.9", "max")
 	for _, c := range append([]sweep.Class{"all"}, sweep.Classes()...) {
 		ds := by[string(c)]
 		row := []any{c, len(ds)}
 		for _, d := range quantiles(ds) {
 			row = append(row, d.Round(time.Millisecond))
 		}
-		r.row(row...)
+		t.add(row...)
 	}
-	r.flush()
-	fmt.Printf("\nsum of last-attempt elapsed: %s\n", total.Round(time.Second))
+	t.write(r.w)
 }
 
-// ago buckets a duration relative to now.
+// ago buckets a duration.
 func ago(d time.Duration) string {
 	switch day := 24 * time.Hour; {
 	case d < 0:
 		return "future"
 	case d < day:
-		return "<1d"
+		return "< 1d"
 	case d < 7*day:
-		return "1-7d"
+		return "1–7d"
 	case d < 30*day:
-		return "7-30d"
+		return "7–30d"
 	case d < 90*day:
-		return "30-90d"
+		return "30–90d"
 	default:
-		return ">90d"
+		return "> 90d"
 	}
 }
 
 func (r *report) schedule(ps []sweep.Profile, now time.Time) {
-	r.section("Schedule (relative to reference time)")
-	order := []string{"never", "future", "<1d", "1-7d", "7-30d", "30-90d", ">90d"}
+	r.section("Schedule")
+	r.para("Relative to the reference time. An overdue endpoint has `next_due` before it.")
+	order := []string{"never", "future", "< 1d", "1–7d", "7–30d", "30–90d", "> 90d"}
 	lastAttempt, lastOK, nextDue := map[string]int{}, map[string]int{}, map[string]int{}
-	for _, p := range ps {
-		bucket := func(t time.Time, sign time.Duration) string {
-			if t.IsZero() {
-				return "never"
-			}
-			return ago(sign * now.Sub(t))
+	bucket := func(t time.Time, sign time.Duration) string {
+		if t.IsZero() {
+			return "never"
 		}
+		return ago(sign * now.Sub(t))
+	}
+	for _, p := range ps {
 		lastAttempt[bucket(p.LastAttempt, 1)]++
 		lastOK[bucket(p.LastOK, 1)]++
-		// For next_due, "future" means overdue: due before now.
 		nextDue[bucket(p.NextDue, -1)]++
 	}
-	r.row("bucket", "last attempt ago", "last ok ago", "next due in")
+	t := newTable("bucket", "last attempt ago", "last ok ago", "next due in")
 	for _, b := range order {
 		label := b
 		if b == "future" {
-			label = "future/overdue"
+			label = "future / overdue"
 		}
-		r.row(label, lastAttempt[b], lastOK[b], nextDue[b])
+		t.add(label, lastAttempt[b], lastOK[b], nextDue[b])
 	}
-	r.flush()
+	t.write(r.w)
 
-	fmt.Println()
+	r.sub("First seen")
 	firstSeen := map[string]int{}
 	for _, p := range ps {
 		firstSeen[p.FirstSeen.Format("2006-01-02")]++
@@ -523,11 +615,11 @@ func (r *report) schedule(ps []sweep.Profile, now time.Time) {
 		days = append(days, d)
 	}
 	slices.Sort(days)
-	r.row("first seen", "endpoints")
+	t = newTable("date", "endpoints")
 	for _, d := range days {
-		r.row(d, firstSeen[d])
+		t.add(d, firstSeen[d])
 	}
-	r.flush()
+	t.write(r.w)
 }
 
 func (r *report) quirks(ps []sweep.Profile) {
@@ -545,18 +637,19 @@ func (r *report) quirks(ps []sweep.Profile) {
 			identity++
 		}
 	}
-	fmt.Printf("profiles with quirks: %d, identity encoding forced: %d\n\n", with, identity)
-	r.row("granularity", "endpoints")
+	r.para("Profiles with quirks: %s. Identity encoding forced: %s.", thousands(with), thousands(identity))
+	r.sub("Granularity")
+	t := newTable("granularity", "endpoints")
 	for _, k := range top(gran, 0) {
-		r.row(k, gran[k])
+		t.add("`"+k+"`", gran[k])
 	}
-	r.flush()
-	fmt.Println()
-	r.row("deleted record", "endpoints")
+	t.write(r.w)
+	r.sub("Deleted record")
+	t = newTable("deleted record", "endpoints")
 	for _, k := range top(del, 0) {
-		r.row(k, del[k])
+		t.add("`"+k+"`", del[k])
 	}
-	r.flush()
+	t.write(r.w)
 }
 
 var (
@@ -572,14 +665,15 @@ func normalize(s string) string {
 	s = reLookup.ReplaceAllString(s, "lookup <host> on <resolver>")
 	s = reAddr.ReplaceAllString(s, "<addr>")
 	s = reNum.ReplaceAllString(s, "N")
-	if len(s) > 120 {
-		s = s[:120] + "..."
+	if utf8.RuneCountInString(s) > 120 {
+		s = string([]rune(s)[:120]) + "…"
 	}
 	return s
 }
 
 func (r *report) errors(ps []sweep.Profile) {
-	r.section("Most common errors (normalized)")
+	r.section("Most common errors")
+	r.para("URLs, hosts, addresses and numbers are normalized away.")
 	byClass := map[sweep.Class]map[string]int{}
 	for _, p := range ps {
 		if p.LastError == "" {
@@ -595,36 +689,44 @@ func (r *report) errors(ps []sweep.Profile) {
 		if len(m) == 0 {
 			continue
 		}
-		fmt.Printf("### %s (%d distinct)\n\n", c, len(m))
-		// Left-aligned: error strings read badly right-aligned.
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
+		r.sub(fmt.Sprintf("%s (%d distinct)", c, len(m)))
+		t := newTable("endpoints", "error")
 		for _, k := range top(m, min(r.n, 10)) {
-			fmt.Fprintf(w, "%8d\t%s\n", m[k], k)
+			// A code span keeps <url> from being read as HTML.
+			t.add(m[k], "`"+strings.ReplaceAll(k, "`", "'")+"`")
 		}
-		w.Flush()
-		fmt.Println()
+		t.write(r.w)
 	}
 }
 
 func (r *report) superseded(ps []sweep.Profile) {
 	r.section("Superseded")
-	moves := map[string]int{}
+	moves := map[[2]string]int{}
 	var n int
 	for _, p := range ps {
 		if p.State != sweep.StateSuperseded {
 			continue
 		}
 		n++
-		from, to := platform(p.URL), platform(p.SupersededBy)
-		moves[from+" -> "+to]++
+		moves[[2]string{platform(p.URL), platform(p.SupersededBy)}]++
 	}
-	fmt.Printf("superseded endpoints: %d\n\n", n)
+	r.para("Superseded endpoints: %s.", thousands(n))
 	if n == 0 {
 		return
 	}
-	r.row("platform move", "endpoints")
-	for _, k := range top(moves, r.n) {
-		r.row(k, moves[k])
+	keys := slices.Collect(func(yield func([2]string) bool) {
+		for k := range moves {
+			if !yield(k) {
+				return
+			}
+		}
+	})
+	slices.SortFunc(keys, func(a, b [2]string) int {
+		return cmp.Or(cmp.Compare(moves[b], moves[a]), cmp.Compare(a[0], b[0]), cmp.Compare(a[1], b[1]))
+	})
+	t := newTable("from", "to", "endpoints")
+	for _, k := range keys[:min(r.n, len(keys))] {
+		t.add(k[0], k[1], moves[k])
 	}
-	r.flush()
+	t.write(r.w)
 }
