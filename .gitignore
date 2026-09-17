@@ -12,5 +12,5 @@ digest.txt
 .env
 /metha
 
-sweep-post-resolve.json.zst
+sweep-post-resolve*.json.zst
 sweep.json.zst
