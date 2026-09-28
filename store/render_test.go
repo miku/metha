@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -198,6 +199,82 @@ func TestRenderJsonOutput(t *testing.T) {
 	}
 	if output := buf.String(); !strings.Contains(output, "\"identifier\":") {
 		t.Errorf("output doesn't look like JSON: %s", output)
+	}
+}
+
+// TestRenderWithXML: records whose harvested metadata spans lines still come
+// out one per line, with the XML intact. The body below is the one that broke
+// stripping newlines - "Deep\nlearning" lost its space, and the creator element
+// lost what separated its name from its attribute.
+func TestRenderWithXML(t *testing.T) {
+	body := "<dc:title>Deep\nlearning</dc:title>\n<dc:creator\nxml:lang=\"en\">Doe, Jane</dc:creator>"
+	resp := oai.Response{
+		ListRecords: oai.ListRecords{
+			Records: []oai.Record{
+				{
+					Header:   oai.Header{Identifier: "id1", DateStamp: "2023-01-01"},
+					Metadata: oai.Metadata{Body: []byte(body)},
+				},
+				{
+					Header:   oai.Header{Identifier: "id2", DateStamp: "2023-01-02"},
+					Metadata: oai.Metadata{Body: []byte(body)},
+				},
+			},
+		},
+	}
+	s := storeWith(t, resp)
+
+	var buf bytes.Buffer
+	opts := RenderOpts{Writer: &buf, UseJson: true, WithXML: true, Endpoint: "http://example.com"}
+	if err := Render(s, opts); err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+	lines := strings.Split(strings.TrimSuffix(buf.String(), "\n"), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("got %d lines, want 2: %s", len(lines), buf.String())
+	}
+	for i, line := range lines {
+		if strings.Contains(line, `\u003c`) {
+			t.Errorf("line %d has escaped angle brackets: %s", i, line)
+		}
+		var got struct {
+			Header   oai.Header `json:"header"`
+			Endpoint string     `json:"endpoint"`
+			XML      string     `json:"xml"`
+		}
+		if err := json.Unmarshal([]byte(line), &got); err != nil {
+			t.Fatalf("line %d is not JSON: %v", i, err)
+		}
+		if got.Header.Identifier == "" || got.Endpoint != "http://example.com" {
+			t.Errorf("line %d lost its JSON fields: %s", i, line)
+		}
+		if !strings.Contains(got.XML, body) {
+			t.Errorf("line %d xml does not hold the body as harvested: %q", i, got.XML)
+		}
+		var rec oai.Record
+		if err := xml.Unmarshal([]byte(got.XML), &rec); err != nil {
+			t.Errorf("line %d xml does not parse: %v", i, err)
+		}
+		if string(rec.Metadata.Body) != body {
+			t.Errorf("line %d metadata = %q, want %q", i, rec.Metadata.Body, body)
+		}
+	}
+}
+
+// TestRenderWithXMLNeedsJSON: without UseJson the option has nothing to add a
+// field to, and the output is the plain XML it always was.
+func TestRenderWithXMLNeedsJSON(t *testing.T) {
+	s := storeWith(t, twoRecords())
+
+	var plain, with bytes.Buffer
+	if err := Render(s, RenderOpts{Writer: &plain}); err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+	if err := Render(s, RenderOpts{Writer: &with, WithXML: true}); err != nil {
+		t.Fatalf("Render failed: %v", err)
+	}
+	if plain.String() != with.String() {
+		t.Errorf("WithXML changed XML output:\n%s\nvs\n%s", plain.String(), with.String())
 	}
 }
 

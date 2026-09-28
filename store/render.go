@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -18,6 +19,17 @@ type RenderOpts struct {
 	SetSpec string
 	Deleted DeletedPolicy
 	UseJson bool
+
+	// WithXML adds the record, marshalled as XML, to every JSON line as an
+	// "xml" string. It needs UseJson and is ignored without it.
+	//
+	// This is how to get XML records one per line. The XML itself cannot be
+	// put on a line by removing its newlines: the metadata is stored as it was
+	// harvested, and a newline there may be all that separates two words of a
+	// title, or an element name from its first attribute. As a JSON string
+	// the newlines are escaped instead, and "jq -r .xml" gives the record back
+	// byte for byte.
+	WithXML bool
 
 	// MaxRecordBytes and Oversize bound and report what one record may cost.
 	// See ReadOptions, which is where they take effect.
@@ -47,6 +59,7 @@ type RenderOpts struct {
 type jsonRecord struct {
 	oai.Record
 	Endpoint string `json:"endpoint,omitempty"`
+	XML      string `json:"xml,omitempty"`
 }
 
 // Render writes every record of s matching the datestamp bounds to the writer,
@@ -90,13 +103,14 @@ func renderRecord(rec oai.Record, opts RenderOpts) error {
 		err error
 	)
 	switch {
+	case opts.UseJson && opts.WithXML:
+		b, err = marshalWithXML(rec, opts.Endpoint)
 	case opts.UseJson && opts.Endpoint != "":
 		b, err = json.Marshal(jsonRecord{Record: rec, Endpoint: opts.Endpoint})
 	case opts.UseJson:
 		b, err = json.Marshal(rec)
 	default:
-		rec.XMLName = xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"}
-		b, err = xml.Marshal(rec)
+		b, err = marshalXML(rec)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to marshal record: %w", err)
@@ -105,4 +119,28 @@ func renderRecord(rec oai.Record, opts RenderOpts) error {
 		return fmt.Errorf("failed to write to output: %w", err)
 	}
 	return nil
+}
+
+// marshalXML renders a record as a namespaced record element.
+func marshalXML(rec oai.Record) ([]byte, error) {
+	rec.XMLName = xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"}
+	return xml.Marshal(rec)
+}
+
+// marshalWithXML renders the JSON line with the record's XML as a string field.
+// HTML escaping is off, or every angle bracket in the XML would arrive as
+// \u003c, and a line meant for grep could no longer be grepped for a tag.
+func marshalWithXML(rec oai.Record, endpoint string) ([]byte, error) {
+	x, err := marshalXML(rec)
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(jsonRecord{Record: rec, Endpoint: endpoint, XML: string(x)}); err != nil {
+		return nil, err
+	}
+	// Encode ends the value with a newline, and renderRecord adds its own.
+	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
 }

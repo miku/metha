@@ -21,6 +21,7 @@ func newCatCmd() *cobra.Command {
 		until       string
 		root        string
 		useJSON     bool
+		withXML     bool
 		setSpec     string
 		deleted     bool
 		onlyDeleted bool
@@ -66,7 +67,8 @@ func newCatCmd() *cobra.Command {
 				SetSpec:        setSpec,
 				Deleted:        policy,
 				Root:           root,
-				UseJson:        useJSON,
+				UseJson:        useJSON || withXML,
+				WithXML:        withXML,
 				MaxRecordBytes: maxRecordBytes,
 				// To stderr, so it does not land in the records on stdout.
 				Oversize: func(id string, n int) {
@@ -91,6 +93,7 @@ func newCatCmd() *cobra.Command {
 	f.StringVar(&until, "until", "", "ignore records after this date")
 	f.StringVar(&root, "root", "Records", "root element to wrap records into")
 	f.BoolVarP(&useJSON, "json", "j", false, "output json, not xml")
+	f.BoolVar(&withXML, "with-xml", false, "output json with each record as an xml string too, one per line; implies --json")
 	f.StringVar(&setSpec, "setspec", "", "only records carrying this setSpec")
 	f.BoolVar(&deleted, "deleted", false, "include records the endpoint marked deleted")
 	f.BoolVar(&onlyDeleted, "only-deleted", false, "emit only the records the endpoint marked deleted")
