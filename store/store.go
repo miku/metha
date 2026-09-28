@@ -88,10 +88,11 @@ const (
 // are widened to the second before being compared, because as text the two
 // forms do not line up - see widen.
 type ReadOptions struct {
-	From    string // inclusive lower bound on the record datestamp
-	Until   string // inclusive upper bound on the record datestamp
-	SetSpec string // only records carrying this setSpec
-	Deleted DeletedPolicy
+	From       string // inclusive lower bound on the record datestamp
+	Until      string // inclusive upper bound on the record datestamp
+	SetSpec    string // only records carrying this setSpec
+	Deleted    DeletedPolicy
+	CompactXml bool
 
 	// MaxRecordBytes drops a record whose raw metadata and about blocks come to
 	// more than this many bytes. Zero means no bound.

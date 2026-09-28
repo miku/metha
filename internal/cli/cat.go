@@ -24,6 +24,7 @@ func newCatCmd() *cobra.Command {
 		setSpec     string
 		deleted     bool
 		onlyDeleted bool
+		compactXML bool
 
 		// Unbounded by default, where export bounds by default. The asymmetry is
 		// the difference in what is being asked: export is a corpus dump over a
@@ -67,6 +68,7 @@ func newCatCmd() *cobra.Command {
 				Deleted:        policy,
 				Root:           root,
 				UseJson:        useJSON,
+				CompactXml:		compactXML,
 				MaxRecordBytes: maxRecordBytes,
 				// To stderr, so it does not land in the records on stdout.
 				Oversize: func(id string, n int) {
@@ -95,5 +97,6 @@ func newCatCmd() *cobra.Command {
 	f.BoolVar(&deleted, "deleted", false, "include records the endpoint marked deleted")
 	f.BoolVar(&onlyDeleted, "only-deleted", false, "emit only the records the endpoint marked deleted")
 	f.IntVar(&maxRecordBytes, "max-record-bytes", 0, "skip records whose metadata exceeds this many bytes; 0 for no bound")
+	f.BoolVar(&compactXML, "compact-xml", false, "remove newlines from record xml")
 	return cmd
 }

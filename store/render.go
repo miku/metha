@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -11,13 +12,14 @@ import (
 
 // RenderOpts controls output by the metha-cat command.
 type RenderOpts struct {
-	Writer  io.Writer
-	Root    string
-	From    string
-	Until   string
-	SetSpec string
-	Deleted DeletedPolicy
-	UseJson bool
+	Writer     io.Writer
+	Root       string
+	From       string
+	Until      string
+	SetSpec    string
+	Deleted    DeletedPolicy
+	UseJson    bool
+	CompactXml bool
 
 	// MaxRecordBytes and Oversize bound and report what one record may cost.
 	// See ReadOptions, which is where they take effect.
@@ -66,6 +68,7 @@ func Render(s Store, opts RenderOpts) error {
 		Deleted:        opts.Deleted,
 		MaxRecordBytes: opts.MaxRecordBytes,
 		Oversize:       opts.Oversize,
+		CompactXml:		opts.CompactXml,
 	}
 	for rec, err := range s.Records(read) {
 		if err != nil {
@@ -97,6 +100,9 @@ func renderRecord(rec oai.Record, opts RenderOpts) error {
 	default:
 		rec.XMLName = xml.Name{Local: "record", Space: "http://www.openarchives.org/OAI/2.0/"}
 		b, err = xml.Marshal(rec)
+		if err == nil && opts.CompactXml {
+			b = bytes.ReplaceAll(b, []byte("\n"), []byte(""))
+		}
 	}
 	if err != nil {
 		return fmt.Errorf("failed to marshal record: %w", err)
