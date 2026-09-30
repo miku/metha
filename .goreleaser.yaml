@@ -86,7 +86,9 @@ nfpms:
         dst: /usr/local/bin/metha-migrate
         type: symlink
     deb:
-      compression: zstd
+      # Not zstd: Debian's dpkg only reads zstd members from 1.21.18
+      # (bookworm) on, and older systems like buster/bullseye fail to unpack.
+      compression: xz
     rpm:
       compression: zstd
 
