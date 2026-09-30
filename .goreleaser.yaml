@@ -13,7 +13,7 @@ before:
   hooks:
     - go mod tidy
 
-# One build, linux/amd64+arm64 only. It feeds the nfpm packages below, which
+# One build, linux/amd64+arm64+arm only. It feeds the nfpm packages below, which
 # add the legacy names as symlinks to it. Before 0.5 this was one build per
 # command, and each one linked the whole program - the 11MB endpoint list
 # included - for about 186MB of binaries doing what 25MB does now.
@@ -29,7 +29,9 @@ builds:
     ldflags: [-s, -w, "-X github.com/miku/metha.Version={{.Version}}"]
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
-    goarch: [amd64, arm64]
+    goarch: [amd64, arm64, arm]
+    # 32bit arm as ARMv7 (hard float), packaged as armhf / armv7hl.
+    goarm: ["7"]
 
 # Linux packages, mirrors the previous nfpm.yaml.
 nfpms:
