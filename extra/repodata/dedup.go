@@ -9,10 +9,15 @@ package main
 //     member of a cluster, the canonical endpoint, keeps another role
 //   - subset:     the records of the cluster are (almost) all contained in a
 //     larger cluster, e.g. a HAL portal or a single OJS journal also served
-//     by a site-wide endpoint
+//     by a site-wide endpoint, or largely contained (by title) in a union
+//     endpoint at the same registered domain
 //   - aggregator: the unit re-publishes records of many other repositories,
 //     either on a curated list or detected by title overlap
 //   - primary:    everything else
+//
+// Endpoints form units: a primary endpoint together with its variants and
+// subsets. The deduplicated record set (records_primary) holds each record of
+// a non-aggregator unit once, attributed to the unit's primary endpoint.
 //
 // Records are matched across endpoints by rec_key, a hash of the OAI
 // identifier and the normalized title. Aggregators usually mint their own
@@ -45,8 +50,15 @@ const (
 	aggMinPartnerTitles = 20
 	// A unit with at least this share of its titles in a union endpoint of
 	// the same organization becomes a subset of it.
-	unionSubsetShare = 0.8
+	unionSubsetShare = 0.5
 )
+
+// knownUnions are endpoint URL fragments of platforms that host many
+// repositories of one organization or country and are primary deposit
+// locations, not aggregators.
+var knownUnions = []struct{ pattern, name string }{
+	{"archives-ouvertes.fr", "HAL"},
+}
 
 // knownAggregators are endpoint URL fragments of services that aggregate
 // metadata from other repositories.
@@ -186,31 +198,52 @@ func derive(db *sql.DB, connector *duckdb.Connector) error {
 	}
 	// Union endpoints serve many repositories of the same organization (HAL
 	// portals, faculty repositories, journals of an OJS installation). They
-	// stay primary; the units they contain become subsets.
+	// stay primary; the units they contain at their own domain are merged
+	// into them. Units on the knownUnions list are always treated this way.
+	known := "false"
+	for _, u := range knownUnions {
+		known += fmt.Sprintf(" OR c.container LIKE '%%%s%%'", u.pattern)
+	}
 	if err := timed(db, "union endpoint subsets", fmt.Sprintf(`UPDATE ep_role
 		SET role = CASE WHEN role = 'primary' THEN 'subset' ELSE role END,
 			reason = CASE WHEN role = 'primary' THEN 'titles contained in union endpoint ' || u.container ELSE reason END,
 			unit = u.container
 		FROM (SELECT DISTINCT ON (c.unit) c.unit, c.container FROM unit_contains c
 				JOIN unit_agg a ON a.unit = c.container
-				WHERE a.contained >= %d AND a.contained_same_domain >= 0.5 * a.contained
+				WHERE ((a.contained >= %d AND a.contained_same_domain >= 0.5 * a.contained) OR %s)
 					AND c.same_domain AND c.shared >= %f * c.titles
 				ORDER BY c.unit, a.titles DESC) u
-		WHERE ep_role.unit = u.unit`, aggMinContained, unionSubsetShare)); err != nil {
+		WHERE ep_role.unit = u.unit`, aggMinContained, known, unionSubsetShare)); err != nil {
 		return err
+	}
+	notKnown := "true"
+	for _, u := range knownUnions {
+		notKnown += fmt.Sprintf(" AND ep_role.unit NOT LIKE '%%%s%%'", u.pattern)
 	}
 	if err := timed(db, "flag detected aggregators", fmt.Sprintf(`UPDATE ep_role SET role = 'aggregator',
 			reason = 'detected: contains ' || a.contained || ' other repositories'
 		FROM unit_agg a WHERE ep_role.unit = a.unit AND ep_role.role = 'primary'
-			AND a.contained >= %d AND a.contained_same_domain < 0.5 * a.contained`,
-		aggMinContained)); err != nil {
+			AND a.contained >= %d AND a.contained_same_domain < 0.5 * a.contained AND %s`,
+		aggMinContained, notKnown)); err != nil {
 		return err
 	}
-	// The deduplicated record set: primary endpoints, one version per record.
+	// The deduplicated record set: all records of units whose canonical
+	// endpoint is primary, attributed to that endpoint. Within a unit, a
+	// record key is kept once (canonical endpoint and latest version first),
+	// and records of other members whose title also occurs at the canonical
+	// endpoint are dropped, since members merged by title use different
+	// identifiers.
 	if err := timed(db, "primary records", `CREATE TABLE records_primary AS
-		SELECT * EXCLUDE (rn) FROM (
-			SELECT *, row_number() OVER (PARTITION BY endpoint, rec_key ORDER BY datestamp DESC NULLS LAST) AS rn
-			FROM records WHERE endpoint IN (SELECT endpoint FROM ep_role WHERE role = 'primary'))
+		WITH r AS (
+			SELECT r.*, o.unit, r.endpoint = o.unit AS is_canon
+			FROM records r JOIN ep_role o USING (endpoint)
+			WHERE o.unit IN (SELECT endpoint FROM ep_role WHERE role = 'primary')),
+		canon_titles AS (SELECT DISTINCT unit, title_hash FROM r WHERE is_canon AND title_hash IS NOT NULL),
+		d AS (SELECT r.* FROM r LEFT JOIN canon_titles c ON c.unit = r.unit AND c.title_hash = r.title_hash
+			WHERE r.is_canon OR c.unit IS NULL)
+		SELECT * EXCLUDE (rn, is_canon, unit, endpoint), unit AS endpoint FROM (
+			SELECT *, row_number() OVER (PARTITION BY unit, rec_key ORDER BY is_canon DESC, datestamp DESC NULLS LAST) AS rn
+			FROM d)
 		WHERE rn = 1 OR rec_key IS NULL`); err != nil {
 		return err
 	}

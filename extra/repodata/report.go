@@ -87,6 +87,9 @@ func (r *rep) table(q string, headers ...string) {
 	}
 	defer rows.Close()
 	cols, _ := rows.Columns()
+	if headers == nil {
+		headers = cols
+	}
 	if len(headers) != len(cols) {
 		r.err = fmt.Errorf("got %d headers for %d columns: %s", len(headers), len(cols), q)
 		return
@@ -279,9 +282,9 @@ func secOverview(r *rep) {
 	r.p("heuristically (types, languages, licenses, identifier kinds, platforms), so treat\n")
 	r.p("categories as indicative rather than exact.\n\n")
 	if *scope == "primary" {
-		r.p("**Scope: primary endpoints.** One endpoint per repository; URL variants, endpoints whose\n")
-		r.p("records are contained in a larger endpoint, and aggregators are left out, and only the latest\n")
-		r.p("version of each record is kept (see *Deduplication and aggregators*).\n\n")
+		r.p("**Scope: deduplicated repositories.** Records of URL variants, subsets and union members are\n")
+		r.p("merged into one unit per repository and counted once; aggregators are left out (see\n")
+		r.p("*Deduplication and aggregators*). An endpoint here stands for such a unit.\n\n")
 	} else {
 		r.p("**Scope: all endpoints.** Repositories harvested under several URLs and aggregators are\n")
 		r.p("counted as is (see *Deduplication and aggregators*; use `-scope primary` for a deduplicated view).\n\n")
@@ -351,9 +354,12 @@ func secDedup(r *rep) {
 	r.p("* **aggregator**: on a curated list of aggregation services, or detected because it contains\n")
 	r.p("  at least half of the titles of ≥ %d other repositories (with ≥ %d titles each), mostly at\n", aggMinContained, aggMinPartnerTitles)
 	r.p("  other registered domains; if they are mostly at its own domain, it is a union endpoint instead\n")
-	r.p("* **primary**: everything else\n\n")
-	r.p("The deduplicated scope (`-scope primary`) keeps primary endpoints and, within each, only the\n")
-	r.p("latest version of every record. Records shared by more than %d endpoints are ignored for matching.\n", maxKeyFanout)
+	r.p("* **primary**: everything else; the canonical endpoint of a repository unit\n\n")
+	r.p("The deduplicated scope (`-scope primary`) merges each unit's endpoints (the primary one plus\n")
+	r.p("its variants and subsets) and keeps every record once: by record key, latest version first, and\n")
+	r.p("dropping records of other members whose title also occurs at the canonical endpoint. Platforms\n")
+	r.p("on a curated list of national union repositories (HAL) are never flagged as aggregators.\n")
+	r.p("Records shared by more than %d endpoints are ignored for matching.\n", maxKeyFanout)
 	r.p("\n### Endpoint roles\n")
 	r.table(fmt.Sprintf(`SELECT role, count(*), sum(n)::BIGINT, round(100.0 * sum(n) / %d, 2)
 		FROM ep_role JOIN ep_keys USING (endpoint) GROUP BY role ORDER BY 3 DESC`, allRecs),

@@ -52,6 +52,7 @@ var (
 	topN     = flag.Int("top", 30, "default number of rows in top-k tables")
 	noReport = flag.Bool("no-report", false, "only ingest, do not generate a report")
 	scope    = flag.String("scope", "all", "report scope: all (every endpoint) or primary (one endpoint per repository, no aggregators)")
+	query    = flag.String("q", "", "run an ad-hoc SQL query against the database, print a markdown table and exit")
 	rederive = flag.Bool("rederive", false, "recompute derived tables (deduplication, endpoint stats) without re-ingesting")
 )
 
@@ -177,6 +178,16 @@ func main() {
 	}
 	if err := derive(db, connector); err != nil {
 		log.Fatal(err)
+	}
+	if *query != "" {
+		bw := bufio.NewWriter(os.Stdout)
+		defer bw.Flush()
+		r := &rep{db: db, w: bw}
+		r.table(*query)
+		if r.err != nil {
+			log.Fatal(r.err)
+		}
+		return
 	}
 	if *noReport {
 		return
