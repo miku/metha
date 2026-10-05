@@ -46,13 +46,47 @@ It works in two stages:
 2. **Report**: SQL queries against the database render the markdown report.
    Per-endpoint aggregates are cached in an `ep_stats` table.
 
+3. **Deduplication** (`dedup.go`): endpoints are grouped into repository units.
+   Records are matched across endpoints by a hash of OAI identifier and
+   normalized title (`rec_key`). Every endpoint gets a role in `ep_role`:
+   *variant* (same normalized URL, or ≥ 90% shared records at similar size),
+   *subset* (≥ 90% of its records inside a larger endpoint, or ≥ 50% of its
+   titles inside a *union endpoint* at the same registered domain, like HAL
+   portals, faculty repositories or journals of one OJS installation),
+   *aggregator* (curated list, or detected: contains at least half the titles
+   of ≥ 10 repositories, mostly at other domains) or *primary*. The table
+   `records_primary` holds every record of a non-aggregator unit once,
+   attributed to the unit's primary endpoint. Thresholds and the curated lists
+   (`knownAggregators`, `knownUnions`) are at the top of `dedup.go`.
+
+Two report scopes:
+
+```
+$ ./repodata -i ../../metha-export-2026-10-04.json.zst -o report-2026-10-04.md
+$ ./repodata -i ../../metha-export-2026-10-04.json.zst -scope primary -o report-2026-10-04-primary.md
+```
+
+`-scope all` (default) counts every harvested record; `-scope primary` uses the
+deduplicated units. Both contain the *Deduplication and aggregators* section,
+including a side-by-side comparison of key metrics and lists of union
+endpoints, aggregators and near misses to review for the curated lists.
+
+After changing thresholds or lists, `-rederive` recomputes the derived tables
+(a few minutes) without re-ingesting. `-q 'SELECT …'` runs an ad-hoc query and
+prints a markdown table, e.g.:
+
+```
+$ ./repodata -i ../../metha-export-2026-10-04.json.zst \
+    -q "SELECT role, count(*) FROM ep_role GROUP BY 1"
+```
+
 The database is the cache: if it already contains a complete ingest of the
 same input (same name, size and mtime), the ingest is skipped and only the
 report is regenerated (seconds to minutes). Use `-f` to force a re-ingest, `-n
 N` to try things out on the first N records, `-no-report` to only ingest.
 
 The database can also be queried directly for ad-hoc questions, e.g. with the
-duckdb CLI (matching the version of the Go bindings) or a small Go program:
+duckdb CLI (matching the version of the Go bindings) or with `-q`:
 
 ```sql
 SELECT e.platform, count(*), avg(has_doi::INT)

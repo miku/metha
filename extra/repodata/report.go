@@ -353,7 +353,8 @@ func secDedup(r *rep) {
 	r.p("  *union endpoint* at the same registered domain\n")
 	r.p("* **aggregator**: on a curated list of aggregation services, or detected because it contains\n")
 	r.p("  at least half of the titles of ≥ %d other repositories (with ≥ %d titles each), mostly at\n", aggMinContained, aggMinPartnerTitles)
-	r.p("  other registered domains; if they are mostly at its own domain, it is a union endpoint instead\n")
+	r.p("  other registered domains, and ≥ %.0f%% of its own titles occur elsewhere; if the contained\n", 100*aggMinElsewhere)
+	r.p("  repositories are mostly at its own domain, it is a union endpoint instead\n")
 	r.p("* **primary**: everything else; the canonical endpoint of a repository unit\n\n")
 	r.p("The deduplicated scope (`-scope primary`) merges each unit's endpoints (the primary one plus\n")
 	r.p("its variants and subsets) and keeps every record once: by record key, latest version first, and\n")
@@ -399,11 +400,14 @@ func secDedup(r *rep) {
 		WHERE e.role = 'aggregator' ORDER BY k.n DESC LIMIT 40`,
 		"Endpoint", "Reason", "Records", "Titles elsewhere %", "Contained units", "Same domain")
 	r.p("### Near misses (for review)\n\n")
-	r.p("Primary units that contain %d – %d other units; candidates for the curated lists.\n", aggMinContained/2, aggMinContained-1)
+	r.p("Primary units that contain %d or more other units but were not classified as aggregator or union\n", aggMinContained/2)
+	r.p("endpoint; candidates for the curated lists.\n")
 	r.table(fmt.Sprintf(`SELECT e.endpoint, k.n, round(100.0 * a.titles_elsewhere / nullif(a.titles, 0), 1), a.contained, a.contained_same_domain
 		FROM ep_role e JOIN ep_keys k USING (endpoint) JOIN unit_agg a ON a.unit = e.endpoint
-		WHERE e.role = 'primary' AND a.contained BETWEEN %d AND %d ORDER BY a.contained DESC, k.n DESC LIMIT 25`,
-		aggMinContained/2, aggMinContained-1),
+		WHERE e.role = 'primary' AND a.contained >= %d
+			AND e.endpoint NOT IN (SELECT unit FROM ep_role WHERE reason LIKE 'titles contained in union endpoint%%')
+		ORDER BY a.contained DESC, k.n DESC LIMIT 30`,
+		aggMinContained/2),
 		"Endpoint", "Records", "Titles elsewhere %", "Contained units", "Same domain")
 
 	r.p("### All endpoints vs. primary endpoints\n")

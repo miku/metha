@@ -48,6 +48,9 @@ const (
 	// (each with at least aggMinPartnerTitles titles) is an aggregator.
 	aggMinContained     = 10
 	aggMinPartnerTitles = 20
+	// An aggregator mostly re-publishes, so most of its titles occur
+	// elsewhere; publisher platforms mirrored by many repositories do not.
+	aggMinElsewhere = 0.4
 	// A unit with at least this share of its titles in a union endpoint of
 	// the same organization becomes a subset of it.
 	unionSubsetShare = 0.5
@@ -87,7 +90,7 @@ var knownAggregators = []struct{ pattern, name string }{
 // derived lists tables and views computed from records and endpoints, in an
 // order that allows dropping them one by one.
 var derived = []string{
-	"endpoints_primary", "ep_stats_primary", "records_primary", "ep_stats", "unit_agg",
+	"endpoints_primary", "ep_stats_primary", "records_primary", "primary_keep", "ep_stats", "unit_agg",
 	"unit_contains", "unit_pairs", "unit_titles", "ep_role", "ep_pairs", "ep_keys",
 }
 
@@ -223,8 +226,9 @@ func derive(db *sql.DB, connector *duckdb.Connector) error {
 	if err := timed(db, "flag detected aggregators", fmt.Sprintf(`UPDATE ep_role SET role = 'aggregator',
 			reason = 'detected: contains ' || a.contained || ' other repositories'
 		FROM unit_agg a WHERE ep_role.unit = a.unit AND ep_role.role = 'primary'
-			AND a.contained >= %d AND a.contained_same_domain < 0.5 * a.contained AND %s`,
-		aggMinContained, notKnown)); err != nil {
+			AND a.contained >= %d AND a.contained_same_domain < 0.5 * a.contained
+			AND a.titles_elsewhere >= %f * a.titles AND %s`,
+		aggMinContained, aggMinElsewhere, notKnown)); err != nil {
 		return err
 	}
 	// The deduplicated record set: all records of units whose canonical
@@ -233,18 +237,27 @@ func derive(db *sql.DB, connector *duckdb.Connector) error {
 	// and records of other members whose title also occurs at the canonical
 	// endpoint are dropped, since members merged by title use different
 	// identifiers.
-	if err := timed(db, "primary records", `CREATE TABLE records_primary AS
+	// Selecting rows on narrow columns first keeps memory use low.
+	if err := timed(db, "primary record selection", `CREATE TABLE primary_keep AS
 		WITH r AS (
-			SELECT r.*, o.unit, r.endpoint = o.unit AS is_canon
+			SELECT r.rowid AS rid, o.unit, r.endpoint = o.unit AS is_canon, r.rec_key, r.title_hash, r.datestamp
 			FROM records r JOIN ep_role o USING (endpoint)
 			WHERE o.unit IN (SELECT endpoint FROM ep_role WHERE role = 'primary')),
 		canon_titles AS (SELECT DISTINCT unit, title_hash FROM r WHERE is_canon AND title_hash IS NOT NULL),
 		d AS (SELECT r.* FROM r LEFT JOIN canon_titles c ON c.unit = r.unit AND c.title_hash = r.title_hash
 			WHERE r.is_canon OR c.unit IS NULL)
-		SELECT * EXCLUDE (rn, is_canon, unit, endpoint), unit AS endpoint FROM (
-			SELECT *, row_number() OVER (PARTITION BY unit, rec_key ORDER BY is_canon DESC, datestamp DESC NULLS LAST) AS rn
+		SELECT rid, unit FROM (
+			SELECT rid, unit, rec_key,
+				row_number() OVER (PARTITION BY unit, rec_key ORDER BY is_canon DESC, datestamp DESC NULLS LAST) AS rn
 			FROM d)
 		WHERE rn = 1 OR rec_key IS NULL`); err != nil {
+		return err
+	}
+	if err := timed(db, "primary records", `CREATE TABLE records_primary AS
+		SELECT r.* EXCLUDE (endpoint), k.unit AS endpoint FROM records r JOIN primary_keep k ON r.rowid = k.rid`); err != nil {
+		return err
+	}
+	if _, err := db.Exec(`DROP TABLE primary_keep`); err != nil {
 		return err
 	}
 	return timed(db, "primary endpoints", `CREATE VIEW endpoints_primary AS SELECT * FROM endpoints
