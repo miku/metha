@@ -51,6 +51,8 @@ var (
 	memLimit = flag.String("m", "64GB", "duckdb memory limit")
 	topN     = flag.Int("top", 30, "default number of rows in top-k tables")
 	noReport = flag.Bool("no-report", false, "only ingest, do not generate a report")
+	scope    = flag.String("scope", "all", "report scope: all (every endpoint) or primary (one endpoint per repository, no aggregators)")
+	rederive = flag.Bool("rederive", false, "recompute derived tables (deduplication, endpoint stats) without re-ingesting")
 )
 
 // dcElements are the fifteen Dublin Core elements, in a stable order.
@@ -114,7 +116,8 @@ CREATE TABLE IF NOT EXISTS records (
 	has_url         BOOLEAN,
 	has_fulltext    BOOLEAN,
 	doi_prefix      VARCHAR,
-	extra_keys      VARCHAR[]
+	extra_keys      VARCHAR[],
+	rec_key         UBIGINT
 );
 CREATE TABLE IF NOT EXISTS ingest_meta (
 	input    VARCHAR,
@@ -164,6 +167,17 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+	if *scope != "all" && *scope != "primary" {
+		log.Fatalf("invalid -scope %q, want all or primary", *scope)
+	}
+	if *rederive {
+		if err := dropDerived(db); err != nil {
+			log.Fatal(err)
+		}
+	}
+	if err := derive(db, connector); err != nil {
+		log.Fatal(err)
+	}
 	if *noReport {
 		return
 	}
@@ -206,6 +220,11 @@ func cached(db *sql.DB) (bool, error) {
 	if err != nil || n == 0 {
 		return false, err
 	}
+	// Databases from older versions of this program lack newer columns.
+	err = db.QueryRow(`SELECT count(*) FROM information_schema.columns WHERE table_name = 'records' AND column_name = 'rec_key'`).Scan(&n)
+	if err != nil || n == 0 {
+		return false, err
+	}
 	size, mtime, err := inputStat()
 	if err != nil {
 		return false, err
@@ -240,11 +259,13 @@ func openInput() (io.ReadCloser, error) {
 
 func ingest(db *sql.DB, connector *duckdb.Connector) error {
 	started := time.Now().UTC()
+	if err := dropDerived(db); err != nil {
+		return err
+	}
 	for _, q := range []string{
 		"DROP TABLE IF EXISTS records",
 		"DROP TABLE IF EXISTS ingest_meta",
 		"DROP TABLE IF EXISTS endpoints",
-		"DROP TABLE IF EXISTS ep_stats",
 		schema,
 	} {
 		if _, err := db.Exec(q); err != nil {
@@ -372,9 +393,10 @@ func worker(connector *duckdb.Connector, batches <-chan [][]byte, numRecs, numEr
 
 type record struct {
 	Header struct {
-		Datestamp string `json:"datestamp"`
-		SetSpec   any    `json:"setSpec"`
-		Status    string `json:"status"`
+		Identifier string `json:"identifier"`
+		Datestamp  string `json:"datestamp"`
+		SetSpec    any    `json:"setSpec"`
+		Status     string `json:"status"`
 	} `json:"header"`
 	Metadata json.RawMessage `json:"metadata"`
 	Endpoint string          `json:"endpoint"`
@@ -523,14 +545,28 @@ func parse(line []byte) ([]driver.Value, error) {
 
 	// Title and description.
 	var titleLen, descLen int32
-	var titleHash any
+	var (
+		titleHash any
+		normT     string
+	)
 	if ts := fields["title"]; len(ts) > 0 {
 		titleLen = int32(len(ts[0]))
-		if norm := normTitle(ts[0]); len(norm) >= 15 {
+		if normT = normTitle(ts[0]); len(normT) >= 15 {
 			h := fnv.New64a()
-			h.Write([]byte(norm))
+			h.Write([]byte(normT))
 			titleHash = h.Sum64()
 		}
+	}
+	// The record key identifies the same record across endpoints. The title
+	// is included, so that unrelated repositories using the same simple
+	// identifiers (e.g. plain numbers) do not collide.
+	var recKey any
+	if rec.Header.Identifier != "" {
+		h := fnv.New64a()
+		h.Write([]byte(rec.Header.Identifier))
+		h.Write([]byte{0})
+		h.Write([]byte(normT))
+		recKey = h.Sum64()
 	}
 	for _, d := range fields["description"] {
 		descLen += int32(min(len(d), 1<<20))
@@ -664,7 +700,7 @@ func parse(line []byte) ([]driver.Value, error) {
 	if extra == nil {
 		extra = []string{}
 	}
-	row = append(row, extra)
+	row = append(row, extra, recKey)
 	return row, nil
 }
 
