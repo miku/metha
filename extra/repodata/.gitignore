@@ -1,0 +1,4 @@
+repodata
+*.duckdb
+*.duckdb.wal
+*.log
