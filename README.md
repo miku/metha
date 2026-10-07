@@ -39,7 +39,7 @@ The metha tool has been developed for [project finc](https://finc.info) at
 * Some harvesters would start to download all records anew, if I interrupted a running harvest.
 * There are many OAI
   [endpoints](https://raw.githubusercontent.com/miku/metha/master/contrib/sites.tsv) out
-  there. It is a widely used
+  there (a [report](extra/repodata/report-2026-10-07-primary.md)). It is a widely used
   [protocol](http://www.openarchives.org/OAI/openarchivesprotocol.html) and
   somewhat worth knowing.
 * I wanted something simple for the command line; also fast and robust, while not stressing servers too much
