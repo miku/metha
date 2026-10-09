@@ -103,12 +103,10 @@ func report(s *store.Stats) error {
 
 // statCache walks the whole cache, one line per endpoint, and totals it.
 func statCache(baseDir string, asJSON, failures bool) error {
-	tw := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
-	if !asJSON {
-		fmt.Fprintln(tw, "SIZE\tWINDOWS\tRECORDS\tDELETED\tFAILED\tLAST\tENDPOINT")
-	}
 	var (
 		total   store.Stats
+		rows    []*store.Stats
+		hasSet  bool
 		shards  int
 		skipped int
 	)
@@ -144,12 +142,29 @@ func statCache(baseDir string, asJSON, failures bool) error {
 			}
 			continue
 		}
-		fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%s\t%s\n",
-			humanBytes(stats.Bytes), stats.Windows, stats.Records,
-			stats.Deleted, stats.Failed, dash(stats.Last), stats.Identity.BaseURL)
+		rows = append(rows, stats)
+		hasSet = hasSet || stats.Identity.Set != ""
 	}
 	if asJSON {
 		return nil
+	}
+	// Whether there is a set column at all is known only once every row is in,
+	// so the rows are held and written here; the tabwriter would have held them
+	// all until its flush in any case.
+	tw := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
+	fmt.Fprint(tw, "SIZE\tWINDOWS\tRECORDS\tDELETED\tFAILED\tLAST\tFORMAT\t")
+	if hasSet {
+		fmt.Fprint(tw, "SET\t")
+	}
+	fmt.Fprintln(tw, "ENDPOINT")
+	for _, s := range rows {
+		fmt.Fprintf(tw, "%s\t%d\t%d\t%d\t%d\t%s\t%s\t",
+			humanBytes(s.Bytes), s.Windows, s.Records, s.Deleted, s.Failed,
+			dash(s.Last), dash(s.Identity.Format))
+		if hasSet {
+			fmt.Fprintf(tw, "%s\t", dash(s.Identity.Set))
+		}
+		fmt.Fprintln(tw, s.Identity.BaseURL)
 	}
 	// The table is one buffered write, and a listing of a quarter of a million
 	// shards truncated by a full disk or a closed pipe must not exit 0.
